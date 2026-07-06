@@ -1,0 +1,163 @@
+.wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* 3D Cylinder Shape Container */
+.cylinder {
+  width: 100%;
+  max-width: 960px;
+  background: linear-gradient(to bottom, var(--color-blue-4) 0%, var(--color-blue-5) 100%); /* Navy to Midnight Blue */
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 3D Landscape Canvas at top of Cylinder */
+.landscapeCanvas {
+  background-color: var(--color-grey-5); /* Black backdrop (#030202) */
+  border-bottom: 2px solid var(--primary-color); /* Orange divider ring */
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.svgLandscape {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.plateauText {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.balloonText {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* Cylinder Content Body */
+.cylinderBody {
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cylinderTitle {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.02em;
+  margin-bottom: 3.5rem;
+  background: linear-gradient(135deg, var(--text-color) 30%, var(--color-blue-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 3 Columns Grid */
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.2rem;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* Premium Button Styles */
+.expertBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.2rem 1.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  min-height: 5rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Highlighted central button */
+.pulseCenterBtn {
+  font-size: 1.05rem;
+  transform: scale(1.02);
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  animation: pulse-glow 3s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(234, 66, 95, 0.3);
+    transform: scale(1.02);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(234, 66, 95, 0.65), 0 0 10px rgba(237, 64, 237, 0.3);
+    transform: scale(1.04);
+  }
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .gridContainer {
+    gap: 1.5rem;
+  }
+  
+  .cylinderTitle {
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .cylinderBody {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+  
+  .column {
+    gap: 1.8rem;
+  }
+  
+  .expertBtn {
+    min-height: 4.5rem;
+  }
+  
+  .pulseCenterBtn {
+    transform: none;
+    animation: none;
+  }
+}

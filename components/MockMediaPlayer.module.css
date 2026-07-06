@@ -1,0 +1,295 @@
+.playerCard {
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Playback Screen Area */
+.screenFrame {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.videoBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 41, 63, 0.95) 0%, rgba(3, 2, 2, 0.9) 100%);
+  z-index: 1;
+}
+
+.waveSvg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dataNode {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-blue-2);
+  opacity: 0.3;
+  z-index: 2;
+  animation: pulse-node 3s infinite ease-in-out;
+}
+
+@keyframes pulse-node {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.6;
+    box-shadow: 0 0 10px var(--color-blue-2);
+  }
+}
+
+.videoHeader {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.2rem;
+  z-index: 10;
+  text-align: left;
+}
+
+.mediaTag {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-accent-green-mint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  display: block;
+}
+
+.mediaTitle {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+/* Central Play Button Overlay */
+.playButton {
+  position: relative;
+  z-index: 10;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-blue-1); /* Brand Blue #00507b */
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.playIconOffset {
+  margin-left: 4px;
+}
+
+.playButton:hover {
+  transform: scale(1.1);
+  background: var(--primary-color); /* Orange highlight */
+  border-color: var(--primary-color);
+  box-shadow: 
+    0 10px 25px rgba(255, 153, 0, 0.35),
+    0 0 15px rgba(255, 153, 0, 0.3);
+}
+
+.isPlayingBtn {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* Oscilloscope Bars Visualizer */
+.barsVisualizer {
+  position: absolute;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 25px;
+  z-index: 10;
+}
+
+.bar {
+  width: 3px;
+  height: 100%;
+  background-color: var(--color-accent-green-mint);
+  border-radius: 1px;
+  transform-origin: bottom;
+  animation: bounce-bar 1.2s ease-in-out infinite alternate;
+}
+
+.bar:nth-child(2) { animation-delay: 0.15s; }
+.bar:nth-child(3) { animation-delay: 0.3s; }
+.bar:nth-child(4) { animation-delay: 0.05s; }
+.bar:nth-child(5) { animation-delay: 0.2s; }
+.bar:nth-child(6) { animation-delay: 0.35s; }
+
+@keyframes bounce-bar {
+  0% {
+    transform: scaleY(0.2);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* Seek Controls */
+.controlPanel {
+  padding-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sliderWrapper {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.seekBar {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 5;
+}
+
+/* Custom Seek Progress Track Fill */
+.seekFill {
+  position: absolute;
+  height: 5px;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--color-blue-2); /* Sky Blue (#0089d2) */
+  border-radius: 3px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* SeekBar Thumb Styling */
+.seekBar::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-blue-2); /* Custom Blue circle node matching mockup seek handle */
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s;
+  z-index: 10;
+  position: relative;
+}
+
+.seekBar::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: var(--primary-color);
+}
+
+.seekBar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-blue-2);
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s;
+}
+
+/* Info and Utility Controls Row */
+.controlsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timeInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.timeDivider {
+  color: var(--text-dim);
+}
+
+.utilityBtns {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.utilBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+}
+
+.utilBtn:hover {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mediaMeta {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 0.8rem;
+}
+
+.metaDesc {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  text-align: left;
+}
