@@ -30,9 +30,9 @@
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(ellipse at bottom, rgba(66, 234, 134, 0.12) 0%, transparent 60%),
-    radial-gradient(circle at 75% 20%, rgba(0, 137, 210, 0.08) 0%, transparent 50%),
-    linear-gradient(to bottom, var(--bg-color) 0%, rgba(3, 2, 2, 0.75) 100%);
+    radial-gradient(ellipse at bottom, rgba(20, 163, 139, 0.18) 0%, transparent 60%),
+    radial-gradient(circle at 75% 20%, rgba(0, 137, 210, 0.1) 0%, transparent 50%),
+    linear-gradient(to bottom, var(--bg-color) 0%, rgba(3, 2, 2, 0.8) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -56,8 +56,8 @@
 }
 
 .heroHighlight {
-  color: var(--color-accent-green-mint); /* Teal/Mint Green highlight color */
-  text-shadow: 0 0 25px rgba(66, 234, 134, 0.25);
+  color: #14a38b; /* Vibrant Teal highlight color */
+  text-shadow: 0 0 25px rgba(20, 163, 139, 0.3);
 }
 
 .heroDesc {
@@ -71,6 +71,28 @@
 .heroActions {
   display: flex;
   justify-content: center;
+}
+
+.btnTeal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #14a38b; /* Teal button matching mockup */
+  color: #ffffff;
+  padding: 0.9rem 2.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-bounce);
+  box-shadow: 0 4px 15px rgba(20, 163, 139, 0.3);
+}
+
+.btnTeal:hover {
+  background-color: #118f7a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(20, 163, 139, 0.45);
 }
 
 /* Scroll indicator mockup */
@@ -89,18 +111,17 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--text-dim);
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-muted);
+  background: white;
+  color: #00293f;
   transition: var(--transition-bounce);
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .scrollCircle:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
   transform: translateY(3px);
-  box-shadow: 0 0 10px rgba(255, 153, 0, 0.3);
+  background: #14a38b;
+  color: white;
 }
 
 .scrollArrow {
@@ -118,7 +139,7 @@
 
 /* Section Common Styles */
 .section {
-  padding: 8rem 0;
+  padding: 7rem 0;
   position: relative;
   z-index: 10;
 }
@@ -129,7 +150,220 @@
   margin: 0 auto 4.5rem auto;
 }
 
-.sectionTagline {
+.sectionTitleLight {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: #00293f; /* Dark Navy */
+}
+
+.sectionDescLight {
+  color: var(--color-grey-4);
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+/* Badges row matching mockup image */
+.badgeRow {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.badge {
+  padding: 0.5rem 1.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+  display: inline-block;
+  color: #ffffff !important;
+}
+
+.badgeNavy {
+  background-color: #00293f;
+  color: #ffffff;
+}
+
+.badgeBlue {
+  background-color: #0089d2;
+  color: #ffffff;
+}
+
+.badgeTeal {
+  background-color: #14a38b;
+  color: #ffffff;
+}
+
+/* Section 2: 8 Circular Icon Cards Grid */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4rem 2rem;
+}
+
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  transition: var(--transition-bounce);
+}
+
+.serviceCard:hover {
+  transform: translateY(-6px);
+}
+
+.iconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  margin-bottom: 1.8rem;
+  border: 1.5px solid currentColor;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: var(--transition-bounce);
+}
+
+.serviceCard:hover .iconCircle {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #00293f; /* Deep Navy */
+  margin-bottom: 0.6rem;
+}
+
+.cardSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-grey-4);
+  line-height: 1.5;
+  max-width: 240px;
+}
+
+/* Section 3: About Us (Teal background section matching image) */
+.tealTitleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.titleLine {
+  display: inline-block;
+  width: 60px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.tealTitle {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.tealDesc {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* Team Grid Layout */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+}
+
+.memberCard {
+  background-color: #ffffff; /* Clean white card background */
+  border-radius: var(--radius-md);
+  padding: 0; /* Clear padding so image flushes to borders */
+  overflow: hidden; /* Clips image top corners */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  position: relative;
+  transition: var(--transition-bounce);
+}
+
+.memberCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+}
+
+.memberImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cardStampBadge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.memberInfo {
+  padding: 2rem 1.8rem 2.5rem 1.8rem;
+  text-align: center;
+}
+
+.memberName {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #000000 !important; /* Pure black text */
+  margin-bottom: 0.3rem;
+}
+
+.memberRole {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #14a38b !important; /* Specialization Teal */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.2rem;
+  display: block;
+}
+
+.memberBio {
+  font-size: 0.9rem;
+  color: #000000 !important; /* Pure black text for white background readability */
+  line-height: 1.6;
+}
+
+/* Contact Us Section */
+.contactTagline {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--primary-color);
@@ -139,181 +373,6 @@
   display: block;
 }
 
-.sectionTitle {
-  font-family: var(--font-display);
-  font-size: 2.8rem;
-  font-weight: 800;
-  margin-bottom: 1.2rem;
-}
-
-.sectionDesc {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-
-/* Savings Features Grid */
-.heroFeatures {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.heroFeatureCard {
-  padding: 2.5rem;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.featureIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
-}
-
-.iconBlue {
-  background: var(--accent-blue-glow);
-  color: var(--accent-blue);
-  border: 1px solid rgba(0, 137, 210, 0.2);
-}
-
-.iconGold {
-  background: var(--accent-gold-glow);
-  color: var(--accent-gold);
-  border: 1px solid rgba(255, 176, 57, 0.2);
-}
-
-.featureTitle {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 0.8rem;
-  color: var(--text-color);
-}
-
-.featureDesc {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  flex-grow: 1;
-  margin-bottom: 1.5rem;
-}
-
-.cardActionLink {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: var(--transition-smooth);
-}
-
-.cardActionLink:hover {
-  color: var(--color-orange-2);
-  gap: 0.6rem;
-}
-
-/* About Us Layout (matching mockup) */
-.teamGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
-}
-
-.memberCard {
-  background: var(--color-grey-1); /* White card background */
-  border-radius: var(--radius-md);
-  padding: 3rem 2rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  position: relative;
-  overflow: hidden;
-  transition: var(--transition-bounce);
-}
-
-.memberCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-}
-
-/* Small monogram logo in the top right of each card */
-.cardStamp {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  opacity: 0.25;
-  transition: var(--transition-smooth);
-}
-
-.memberCard:hover .cardStamp {
-  transform: rotate(15deg) scale(1.1);
-  opacity: 0.6;
-}
-
-.avatarWrapper {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  margin-bottom: 1.8rem;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-blue));
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: var(--color-grey-5); /* Dark background inside avatar */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.avatarPlaceholder {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--color-grey-1);
-}
-
-.memberName {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--color-blue-1); /* Deep Blue */
-  margin-bottom: 0.4rem;
-}
-
-.memberRole {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary-color); /* Orange specialization title */
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.2rem;
-  display: block;
-}
-
-.memberBio {
-  font-size: 0.9rem;
-  color: var(--color-grey-4); /* Dark grey description text */
-  line-height: 1.6;
-}
-
-/* Contact Us Section */
 .contactGrid {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
@@ -445,12 +504,21 @@
     font-size: 4rem;
   }
   
+  .servicesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .teamGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .servicesGrid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
   .teamGrid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
@@ -463,11 +531,6 @@
   
   .heroTitle {
     font-size: 3rem;
-  }
-  
-  .heroFeatures {
-    grid-template-columns: 1fr;
-    gap: 2rem;
   }
   
   .section {

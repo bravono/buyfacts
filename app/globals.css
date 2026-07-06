@@ -342,3 +342,20 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-grey-2);
 }
 
+.section-teal-bg {
+  background-color: #14a38b; /* Vibrant Teal/Green matching the mockup image */
+  color: #ffffff;
+}
+
+.section-teal-bg h1,
+.section-teal-bg h2,
+.section-teal-bg h3,
+.section-teal-bg h4 {
+  color: #ffffff;
+}
+
+.section-teal-bg p {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+
