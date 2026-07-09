@@ -53,7 +53,7 @@
 /* Page Layout Grid */
 .pageGrid {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: start;
   width: 100%;
@@ -103,13 +103,14 @@
 /* Specification Cards Row - matching mockup bottom outlines */
 .specGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 5rem;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
   width: 100%;
 }
 
 .specCard {
+  display: block;
   border: 1.5px solid var(--color-grey-2);
   background-color: rgba(255, 255, 255, 0.6);
   padding: 1.5rem 1.2rem;
@@ -118,6 +119,8 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-blue-1);
+  text-decoration: none;
+  cursor: pointer;
   transition: var(--transition-bounce);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
 }
@@ -135,16 +138,16 @@
     grid-template-columns: 1fr;
     gap: 4rem;
   }
-  
+
   .stickyWrapper {
     position: relative;
     top: 0;
   }
-  
+
   .specGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .title {
     font-size: 2.8rem;
   }
@@ -155,11 +158,11 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .title {
     font-size: 2.2rem;
   }
-  
+
   .sideTitle {
     font-size: 1.8rem;
   }
