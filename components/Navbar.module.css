@@ -70,11 +70,11 @@
 .navDesktop {
   display: flex;
   align-items: center;
-  gap: 2.2rem;
+  gap: 1rem;
 }
 
 .navLink {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-muted);
   position: relative;
