@@ -231,7 +231,7 @@ export default function Home() {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitleLight}>
               A Thought Leadership{" "}
-              <span style={{ color: "#14a38b" }}>Portfolio</span>
+              <span style={{ color: "var(--interactive-blue)" }}>Portfolio</span>
             </h2>
             <p className={styles.sectionDescLight}>
               Proven methods and tools for today&apos;s evolving insights and

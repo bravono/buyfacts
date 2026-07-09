@@ -89,14 +89,14 @@
   font-family: var(--font-display);
   font-size: 2.2rem;
   font-weight: 800;
-  color: var(--color-blue-1); /* Deep Blue */
+  color: var(--interactive-blue); /* Brand Blue (#00507b) */
   margin-bottom: 1rem;
 }
 
 .sideDesc {
   font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--color-grey-4); /* Dark grey */
+  color: var(--text-muted); /* Gray secondary text */
   margin-bottom: 2rem;
 }
 
@@ -111,14 +111,14 @@
 
 .specCard {
   display: block;
-  border: 1.5px solid var(--color-grey-2);
-  background-color: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-alt);
   padding: 1.5rem 1.2rem;
   border-radius: var(--radius-md);
   text-align: center;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-blue-1);
+  color: var(--interactive-blue);
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition-bounce);
@@ -128,8 +128,8 @@
 .specCard:hover {
   transform: translateY(-4px);
   border-color: var(--primary-color);
-  background-color: white;
-  box-shadow: 0 8px 20px rgba(255, 153, 0, 0.1);
+  background-color: var(--bg-color);
+  box-shadow: 0 8px 20px var(--primary-glow);
 }
 
 /* Responsive Overrides */

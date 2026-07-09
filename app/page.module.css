@@ -19,7 +19,7 @@
   justify-content: center;
   padding-top: 80px;
   overflow: hidden;
-  background-color: var(--color-grey-5); /* Dark background */
+  background-color: var(--bg-color); /* Neutral canvas background */
 }
 
 /* Simulated crowd silhouette lighting backdrop overlay */
@@ -30,9 +30,8 @@
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(ellipse at bottom, rgba(20, 163, 139, 0.18) 0%, transparent 60%),
-    radial-gradient(circle at 75% 20%, rgba(0, 137, 210, 0.1) 0%, transparent 50%),
-    linear-gradient(to bottom, var(--bg-color) 0%, rgba(3, 2, 2, 0.8) 100%);
+    radial-gradient(ellipse at bottom, rgba(255, 153, 0, 0.04) 0%, transparent 60%),
+    radial-gradient(circle at 75% 20%, rgba(0, 80, 123, 0.03) 0%, transparent 50%);
   z-index: 1;
   pointer-events: none;
 }
@@ -56,8 +55,7 @@
 }
 
 .heroHighlight {
-  color: #14a38b; /* Vibrant Teal highlight color */
-  text-shadow: 0 0 25px rgba(20, 163, 139, 0.3);
+  color: var(--interactive-blue); /* Brand blue interactive accent */
 }
 
 .heroDesc {
@@ -77,7 +75,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #14a38b; /* Teal button matching mockup */
+  background-color: var(--interactive-orange); /* Brand orange */
   color: #ffffff;
   padding: 0.9rem 2.5rem;
   font-family: var(--font-sans);
@@ -86,13 +84,13 @@
   letter-spacing: 0.08em;
   border-radius: var(--radius-sm);
   transition: var(--transition-bounce);
-  box-shadow: 0 4px 15px rgba(20, 163, 139, 0.3);
+  box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .btnTeal:hover {
-  background-color: #118f7a;
+  background-color: #e08800;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(20, 163, 139, 0.45);
+  box-shadow: 0 8px 25px rgba(255, 153, 0, 0.35);
 }
 
 /* Scroll indicator mockup */
@@ -111,17 +109,19 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: white;
-  color: #00293f;
+  background: var(--bg-alt);
+  color: var(--interactive-blue);
   transition: var(--transition-bounce);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .scrollCircle:hover {
   transform: translateY(3px);
-  background: #14a38b;
+  background: var(--interactive-orange);
   color: white;
+  border-color: var(--interactive-orange);
 }
 
 .scrollArrow {
@@ -155,7 +155,7 @@
   font-size: 3rem;
   font-weight: 800;
   margin-bottom: 1rem;
-  color: #00293f; /* Dark Navy */
+  color: var(--interactive-blue); /* Brand Blue */
 }
 
 .sectionDescLight {
@@ -183,17 +183,17 @@
 }
 
 .badgeNavy {
-  background-color: #00293f;
+  background-color: var(--interactive-blue);
   color: #ffffff;
 }
 
 .badgeBlue {
-  background-color: #0089d2;
+  background-color: var(--interactive-orange);
   color: #ffffff;
 }
 
 .badgeTeal {
-  background-color: #14a38b;
+  background-color: var(--text-muted);
   color: #ffffff;
 }
 
@@ -239,7 +239,7 @@
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 800;
-  color: #00293f; /* Deep Navy */
+  color: var(--interactive-blue); /* Brand Blue */
   margin-bottom: 0.6rem;
 }
 
@@ -263,18 +263,18 @@
   display: inline-block;
   width: 60px;
   height: 2px;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: var(--border-color);
 }
 
 .tealTitle {
   font-family: var(--font-display);
   font-size: 3rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--interactive-blue);
 }
 
 .tealDesc {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-muted);
   font-size: 1.1rem;
   line-height: 1.7;
   max-width: 780px;
@@ -342,14 +342,14 @@
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 800;
-  color: #000000 !important; /* Pure black text */
+  color: var(--text-color) !important;
   margin-bottom: 0.3rem;
 }
 
 .memberRole {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #14a38b !important; /* Specialization Teal */
+  color: var(--interactive-blue) !important; /* Brand Blue */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 1.2rem;
@@ -358,7 +358,7 @@
 
 .memberBio {
   font-size: 0.9rem;
-  color: #000000 !important; /* Pure black text for white background readability */
+  color: var(--text-muted) !important;
   line-height: 1.6;
 }
 
@@ -412,9 +412,9 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--card-border);
-  color: var(--primary-color);
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  color: var(--interactive-orange);
   flex-shrink: 0;
 }
 
@@ -452,8 +452,8 @@
 }
 
 .input, .textarea {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--card-border);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 0.9rem 1.2rem;
   color: var(--text-color);
@@ -463,8 +463,8 @@
 
 .input:focus, .textarea:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: var(--primary-color);
+  background: var(--bg-color);
+  border-color: var(--interactive-orange);
   box-shadow: 0 0 12px var(--primary-glow);
 }
 

@@ -4,7 +4,7 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -186,7 +186,7 @@
   appearance: none;
   -webkit-appearance: none;
   height: 5px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-color);
   border-radius: 3px;
   outline: none;
   cursor: pointer;
@@ -201,7 +201,7 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  background-color: var(--color-blue-2); /* Sky Blue (#0089d2) */
+  background-color: var(--interactive-blue); /* Brand Blue */
   border-radius: 3px;
   z-index: 4;
   pointer-events: none;
@@ -214,10 +214,10 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--color-blue-2); /* Custom Blue circle node matching mockup seek handle */
+  background: var(--interactive-blue); /* Brand Blue */
   border: 2px solid white;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
   z-index: 10;
   position: relative;
@@ -232,10 +232,10 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--color-blue-2);
+  background: var(--interactive-blue);
   border: 2px solid white;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
 }
 
@@ -279,11 +279,11 @@
 
 .utilBtn:hover {
   color: var(--text-color);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .mediaMeta {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   padding-top: 0.8rem;
 }
 

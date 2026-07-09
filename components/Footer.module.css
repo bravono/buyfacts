@@ -1,6 +1,6 @@
 .footer {
-  background: hsl(222, 47%, 3%);
-  border-top: 1px solid var(--card-border);
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border-color);
   padding: 5rem 0 3rem 0;
   position: relative;
   z-index: 10;
@@ -68,7 +68,7 @@
 }
 
 .linksList a {
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 0.9rem;
   transition: var(--transition-smooth);
 }
@@ -79,7 +79,7 @@
 }
 
 .bottomSection {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   padding-top: 2rem;
   display: flex;
   flex-direction: column;
@@ -89,12 +89,13 @@
 }
 
 .copyright {
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .disclaimer {
-  color: hsla(215, 16%, 55%, 0.6);
+  color: var(--text-muted);
+  opacity: 0.8;
   font-size: 0.75rem;
   max-width: 600px;
   line-height: 1.4;

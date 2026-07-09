@@ -4,65 +4,33 @@
   --font-sans: 'Josefin Sans', sans-serif;
   --font-display: 'Josefin Sans', sans-serif;
 
-  /* Brand Palette from Image */
-  --brand-orange-base: #ff9900;
-  --brand-blue-base: #00507b;
+  /* Global UI Theme (Neutral Canvas) */
+  --bg-color: #FFFFFF;
+  --bg-alt: #F8F8F8;
+  --text-color: #1A1A1A;
+  --text-muted: #6E6E73;
+  --text-dim: #9F9E9E;
+  --border-color: #E6E6E6;
+  --interactive-orange: #ff9900;
+  --interactive-blue: #00507b;
 
-  /* Row 1: Oranges/Browns */
-  --color-orange-1: #ff9900;
-  --color-orange-2: #ffc164;
-  --color-orange-3: #ffb039;
-  --color-orange-4: #c67600;
-  --color-orange-5: #9b5d00;
-
-  /* Row 2: Blues */
-  --color-blue-1: #00507b;
-  --color-blue-2: #0089d2;
-  --color-blue-3: #006398;
-  --color-blue-4: #003e60;
-  --color-blue-5: #00293f;
-
-  /* Row 3: Greys/Blacks */
-  --color-grey-1: #ffffff;
-  --color-grey-2: #9f9e9e;
-  --color-grey-3: #6d6d6d;
-  --color-grey-4: #363636;
-  --color-grey-5: #030202;
-
-  /* Row 4: Accents */
-  --color-accent-blue-neon: #3f3fef;
-  --color-accent-blue-bright: #4097ed;
-  --color-accent-green-mint: #42ea86;
-  --color-accent-green-lime: #b0e843;
-  --color-accent-orange-coral: #e57a45;
-
-  /* Row 5: Accents */
-  --color-accent-magenta: #ed40ed;
-  --color-accent-crimson: #ea425f;
-  --color-accent-plum: #532254;
-
-  /* Layout Theme Setup using Palette Colors */
-  --bg-color: var(--color-blue-5);             /* Midnight Blue (#00293f) */
-  --bg-glow-1: var(--color-grey-5);            /* Black (#030202) */
-  --text-color: var(--color-grey-1);           /* White (#ffffff) */
-  --text-muted: var(--color-grey-2);           /* Light Grey (#9f9e9e) */
-  --text-dim: var(--color-grey-3);             /* Medium Grey (#6d6d6d) */
-  
-  --primary-color: var(--color-orange-1);      /* Brand Orange (#ff9900) */
+  /* Core Interactive States & Fallbacks */
+  --primary-color: var(--interactive-orange);
   --primary-glow: rgba(255, 153, 0, 0.15);
-  
-  --accent-blue: var(--color-blue-2);          /* Sky Blue (#0089d2) */
-  --accent-blue-glow: rgba(0, 137, 210, 0.15);
-  
-  --accent-gold: var(--color-orange-3);        /* Accent Gold (#ffb039) */
-  --accent-gold-glow: rgba(255, 176, 57, 0.15);
+  --accent-color: var(--interactive-blue);
+  --accent-glow: rgba(0, 80, 123, 0.15);
 
-  --card-bg: rgba(0, 62, 96, 0.35);            /* Translucent Navy Blue (#003e60) */
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-hover-border: rgba(255, 153, 0, 0.3);
+  --accent-blue: var(--interactive-blue);
+  --accent-blue-glow: rgba(0, 80, 123, 0.15);
+  --accent-gold: var(--interactive-orange);
+  --accent-gold-glow: rgba(255, 153, 0, 0.15);
+
+  --card-bg: var(--bg-alt);
+  --card-border: var(--border-color);
+  --card-hover-border: var(--interactive-orange);
   
-  --glass-bg: rgba(0, 41, 63, 0.8);            /* Semi-transparent Midnight Blue (#00293f) */
-  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: var(--border-color);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -71,6 +39,60 @@
   
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Original Color Palette References (For legacy components/icons) */
+  --color-orange-1: #ff9900;
+  --color-orange-2: #ffc164;
+  --color-orange-3: #ffb039;
+  --color-orange-4: #c67600;
+  --color-orange-5: #9b5d00;
+  --color-blue-1: #00507b;
+  --color-blue-2: #0089d2;
+  --color-blue-3: #006398;
+  --color-blue-4: #003e60;
+  --color-blue-5: #00293f;
+  --color-grey-1: #ffffff;
+  --color-grey-2: #9f9e9e;
+  --color-grey-3: #6d6d6d;
+  --color-grey-4: #363636;
+  --color-grey-5: #030202;
+  --color-accent-blue-neon: #3f3fef;
+  --color-accent-blue-bright: #4097ed;
+  --color-accent-green-mint: #42ea86;
+  --color-accent-green-lime: #b0e843;
+  --color-accent-orange-coral: #e57a45;
+  --color-accent-magenta: #ed40ed;
+  --color-accent-crimson: #ea425f;
+  --color-accent-plum: #532254;
+}
+
+/* Product Specific Color Registries */
+[data-product-theme="Research Libs"] {
+  --product-primary: #323c46;
+  --product-accent: #fc4f00;
+  --primary-color: var(--product-accent);
+  --accent-color: var(--product-primary);
+}
+
+[data-product-theme="Rule of Three"] {
+  --product-primary: #01459a;
+  --product-accent: #0a2945;
+  --primary-color: var(--product-primary);
+  --accent-color: var(--product-accent);
+}
+
+[data-product-theme="TRIAD"] {
+  --product-primary: #797539;
+  --product-accent: #2c2E3A;
+  --primary-color: var(--product-primary);
+  --accent-color: var(--product-accent);
+}
+
+[data-product-theme="Cubicon"] {
+  --product-primary: #d5dce6;
+  --product-accent: #8099af;
+  --primary-color: var(--product-accent);
+  --accent-color: var(--product-primary);
 }
 
 /* Reset and Base Styles */
@@ -123,19 +145,18 @@ button, input, textarea {
   font-family: inherit;
 }
 
-/* Glowing Background Blobs */
+/* Soft Background Glow Blobs for light mode */
 .glow-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(140px);
   z-index: 0;
   pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: screen;
+  opacity: 0.06;
 }
 
 .blob-green {
-  background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--interactive-orange) 0%, transparent 70%);
   width: 500px;
   height: 500px;
   top: -10%;
@@ -143,21 +164,19 @@ button, input, textarea {
 }
 
 .blob-blue {
-  background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--interactive-blue) 0%, transparent 70%);
   width: 600px;
   height: 600px;
   top: 40%;
   right: -10%;
-  opacity: 0.35;
 }
 
 .blob-gold {
-  background: radial-gradient(circle, var(--accent-gold) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--interactive-orange) 0%, transparent 70%);
   width: 450px;
   height: 450px;
   bottom: 10%;
   left: 5%;
-  opacity: 0.25;
 }
 
 /* Core Typography Utility Classes */
@@ -166,17 +185,18 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: var(--text-color);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--text-color) 30%, var(--primary-color) 70%, var(--accent-blue) 100%);
+  background: linear-gradient(135deg, var(--interactive-blue) 0%, var(--interactive-orange) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-gold {
-  background: linear-gradient(135deg, var(--text-color) 40%, var(--accent-gold) 100%);
+  background: linear-gradient(135deg, var(--text-color) 40%, var(--interactive-orange) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -188,7 +208,7 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
 }
 
 .glass-card {
@@ -211,16 +231,15 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.03));
+  background: linear-gradient(135deg, transparent, rgba(0, 0, 0, 0.01));
   pointer-events: none;
   z-index: -1;
 }
 
 .glass-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), 
-              0 0 20px 0 rgba(160, 84%, 39%, 0.1);
+  border-color: var(--interactive-orange);
+  box-shadow: 0 12px 40px 0 rgba(0, 80, 123, 0.08);
 }
 
 /* Buttons styling */
@@ -240,27 +259,28 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--color-orange-4) 100%);
+  background: var(--interactive-orange);
   color: white;
   border: none;
   box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .btn-primary:hover {
+  background: #e08800; /* Subtle hover state */
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 153, 0, 0.35);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-alt);
   color: var(--text-color);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f0f0f0;
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--text-muted);
 }
 
 /* Animations */
@@ -290,7 +310,7 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Grid layout background */
+/* Grid layout background for light canvas */
 .grid-bg {
   position: absolute;
   top: 0;
@@ -298,8 +318,8 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   background-size: 50px 50px;
   background-position: center;
   z-index: 0;
@@ -308,54 +328,59 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black, transparent 80%);
 }
 
-/* Theme block utilities */
+/* Theme block utilities (Neutral canvas alignment) */
 .section-light {
-  background-color: var(--color-grey-1);
-  color: var(--color-grey-5);
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 .section-light h1,
 .section-light h2,
 .section-light h3,
 .section-light h4 {
-  color: var(--color-blue-1); /* Deep Blue (#00507b) */
+  color: var(--interactive-blue);
 }
 
 .section-light p,
 .section-light span {
-  color: var(--color-grey-4); /* Dark grey (#363636) */
+  color: var(--text-muted);
 }
 
 .section-brand-bg {
-  background-color: var(--color-blue-1); /* Deep Blue (#00507b) */
-  color: var(--color-grey-1);
+  background-color: var(--bg-alt);
+  color: var(--text-color);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section-brand-bg h1,
 .section-brand-bg h2,
 .section-brand-bg h3,
 .section-brand-bg h4 {
-  color: var(--color-grey-1);
+  color: var(--interactive-blue);
 }
 
 .section-brand-bg p {
-  color: var(--color-grey-2);
+  color: var(--text-muted);
 }
 
 .section-teal-bg {
-  background-color: #14a38b; /* Vibrant Teal/Green matching the mockup image */
-  color: #ffffff;
+  background-color: var(--bg-alt);
+  color: var(--text-color);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section-teal-bg h1,
 .section-teal-bg h2,
 .section-teal-bg h3,
 .section-teal-bg h4 {
-  color: #ffffff;
+  color: var(--interactive-blue);
 }
 
 .section-teal-bg p {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-muted);
 }
+
 
 
