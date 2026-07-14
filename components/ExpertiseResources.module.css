@@ -73,14 +73,7 @@
   text-align: center;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
-  background: linear-gradient(
-    135deg,
-    var(--text-color) 30%,
-    var(--color-blue-2) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff !important;
 }
 
 /* 3 Columns Grid */
@@ -103,37 +96,49 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.2rem 0.4rem;
+  padding: 0.8rem 1.2rem;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   border-radius: var(--radius-md);
-  min-height: 4rem;
+  min-height: 4.5rem;
   cursor: pointer;
   outline: none;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: var(--transition-bounce);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+}
+
+.expertBtn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 25px var(--primary-glow);
+  transform: translateY(-3px) scale(1.02);
 }
 
 /* Highlighted central button */
 .pulseCenterBtn {
-  font-size: 1.05rem;
+  font-size: 1rem;
   transform: scale(1.02);
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border: 1.5px solid var(--primary-color) !important;
   animation: pulse-glow 3s infinite;
 }
 
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 12px rgba(234, 66, 95, 0.3);
+    box-shadow: 0 0 12px rgba(255, 153, 0, 0.3);
     transform: scale(1.02);
   }
   50% {
     box-shadow:
-      0 0 25px rgba(234, 66, 95, 0.65),
-      0 0 10px rgba(237, 64, 237, 0.3);
+      0 0 25px rgba(255, 153, 0, 0.65),
+      0 0 10px rgba(255, 153, 0, 0.3);
     transform: scale(1.04);
+    border-color: var(--primary-color);
   }
 }
 

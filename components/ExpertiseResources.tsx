@@ -175,20 +175,7 @@ export default function ExpertiseResources({ title, buttons }: ExpertiseResource
               {col1.map((btn, index) => (
                 <button
                   key={`col1-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" ? styles.pulseCenterBtn : ""}`}
-                  style={{ 
-                    background: btn.color,
-                    color: btn.textColor,
-                    border: `1.5px solid ${btn.color === "var(--color-orange-2)" || btn.color === "var(--color-accent-green-lime)" ? "transparent" : "rgba(255, 255, 255, 0.15)"}`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = btn.hoverShadow;
-                    e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.transform = "none";
-                  }}
+                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
                 >
                   {btn.label}
                 </button>
@@ -200,20 +187,7 @@ export default function ExpertiseResources({ title, buttons }: ExpertiseResource
               {col2.map((btn, index) => (
                 <button
                   key={`col2-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" ? styles.pulseCenterBtn : ""}`}
-                  style={{ 
-                    background: btn.color,
-                    color: btn.textColor,
-                    border: `1.5px solid ${btn.color === "var(--color-orange-2)" || btn.color === "var(--color-accent-green-lime)" ? "transparent" : "rgba(255, 255, 255, 0.15)"}`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = btn.hoverShadow;
-                    e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.transform = "none";
-                  }}
+                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
                 >
                   {btn.label}
                 </button>
@@ -225,20 +199,7 @@ export default function ExpertiseResources({ title, buttons }: ExpertiseResource
               {col3.map((btn, index) => (
                 <button
                   key={`col3-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" ? styles.pulseCenterBtn : ""}`}
-                  style={{ 
-                    background: btn.color,
-                    color: btn.textColor,
-                    border: `1.5px solid ${btn.color === "var(--color-orange-2)" || btn.color === "var(--color-accent-green-lime)" ? "transparent" : "rgba(255, 255, 255, 0.15)"}`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = btn.hoverShadow;
-                    e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.transform = "none";
-                  }}
+                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
                 >
                   {btn.label}
                 </button>
