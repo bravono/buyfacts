@@ -1,9 +1,8 @@
-"use client";
-
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ExpertiseResources from "@/components/ExpertiseResources";
+import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
 import MockMediaPlayer from "@/components/MockMediaPlayer";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -79,10 +78,11 @@ export default function ServicesPage() {
         <div className={styles.pageGrid}>
           {/* Left Column: ExpertiseResources component carrying custom buttons */}
           <div className={styles.columnLeft}>
-            <ExpertiseResources
+            {/* <ExpertiseResources
               title="BuyFacts Service and Tool Areas"
               buttons={customButtons}
-            />
+            /> */}
+            <RangeOfResponsibilities />
           </div>
 
           {/* Right Column: MockMediaPlayer component */}

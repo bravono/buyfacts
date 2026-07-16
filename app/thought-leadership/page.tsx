@@ -1,12 +1,10 @@
-"use client";
-
-import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ExpertiseResources from "@/components/ExpertiseResources";
 import MockMediaPlayer from "@/components/MockMediaPlayer";
 import Link from "next/link";
 import styles from "./page.module.css";
+import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
 
 export default function PortfolioPage() {
   return (
@@ -26,7 +24,8 @@ export default function PortfolioPage() {
         <div className={styles.pageGrid}>
           {/* Left Column: ExpertiseResources component carrying original default buttons */}
           <div className={styles.columnLeft}>
-            <ExpertiseResources title="BuyFacts Expertise and Resources" />
+            {/* <ExpertiseResources title="BuyFacts Expertise and Resources" /> */}
+            <RangeOfResponsibilities />
           </div>
 
           {/* Right Column: MockMediaPlayer component configured as Audio */}
