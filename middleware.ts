@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
  * To disable: remove this file (or set COMING_SOON=false in your env).
  */
 
-const COMING_SOON = false;
+const COMING_SOON = true;
 
 // Routes that should never be redirected (API, static files, etc.)
 const BYPASS_PREFIXES = ["/api/", "/_next/", "/favicon.ico"];

@@ -28,7 +28,7 @@ import styles from "./page.module.css";
 // Toggle Coming Soon mode.
 // Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
 // ─────────────────────────────────────────────────────────────────────────────
-const COMING_SOON = false;
+const COMING_SOON = true;
 
 interface ServiceCardData {
   id: string;
