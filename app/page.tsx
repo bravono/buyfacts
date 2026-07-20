@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import ComingSoon from "./ComingSoon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
-  ArrowRight,
   Send,
   Building2,
   Mail,
@@ -20,8 +20,15 @@ import {
   Users,
   ShieldCheck,
   TrendingUp,
+  ArrowRight,
 } from "lucide-react";
 import styles from "./page.module.css";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toggle Coming Soon mode.
+// Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
+// ─────────────────────────────────────────────────────────────────────────────
+const COMING_SOON = false;
 
 interface ServiceCardData {
   id: string;
@@ -33,6 +40,7 @@ interface ServiceCardData {
 }
 
 export default function Home() {
+  if (COMING_SOON) return <ComingSoon />;
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -190,12 +198,19 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
+            <div className={styles.heroEyebrow}>
+              <span className={styles.heroEyebrowDot}></span>
+              The Early Recognition Company
+              <span className={styles.heroEyebrowDot}></span>
+            </div>
             <h1 className={styles.heroTitle}>
-              We Build <span className={styles.heroHighlight}>Brand</span>
+              Saving Time So You{" "}
+              <span className={styles.heroHighlight}>Have the Time</span>
             </h1>
             <p className={styles.heroDesc}>
               BuyFacts helps you identify meaningful movement earlier, so you
-              can make better decisions, faster.
+              can make better decisions, faster — and focus your energy where it
+              matters most.
             </p>
 
             <div className={styles.heroActions}>
@@ -231,7 +246,9 @@ export default function Home() {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitleLight}>
               A Thought Leadership{" "}
-              <span style={{ color: "var(--interactive-blue)" }}>Portfolio</span>
+              <span style={{ color: "var(--interactive-blue)" }}>
+                Portfolio
+              </span>
             </h2>
             <p className={styles.sectionDescLight}>
               Proven methods and tools for today&apos;s evolving insights and
@@ -276,6 +293,166 @@ export default function Home() {
                 <p className={styles.cardSubtitle}>{card.subTitle}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2.5: Cubicon Founding Client Invitation Banner */}
+      <section
+        className="section-brand-bg"
+        id="founding-client-banner"
+        style={{
+          padding: "4rem 0",
+          background:
+            "linear-gradient(135deg, rgba(0, 80, 123, 0.03) 0%, rgba(255, 153, 0, 0.05) 100%)",
+          borderTop: "1px solid var(--border-color)",
+          borderBottom: "1px solid var(--border-color)",
+        }}
+      >
+        <div className={styles.container}>
+          <div
+            className="glass-card"
+            style={{
+              padding: "3.5rem 3rem",
+              background: "linear-gradient(135deg, #00507b 0%, #003e60 100%)",
+              color: "#ffffff",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "0 20px 50px rgba(0, 80, 123, 0.25)",
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: "2.5rem",
+              alignItems: "center",
+              justifyContent: "space-between",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Background Accent Glow */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-40%",
+                right: "-10%",
+                width: "400px",
+                height: "400px",
+                background:
+                  "radial-gradient(circle, rgba(255, 153, 0, 0.25) 0%, transparent 70%)",
+                borderRadius: "50%",
+                pointerEvents: "none",
+              }}
+            />
+
+            <div style={{ flex: "1 1 500px" }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  backgroundColor: "rgba(255, 153, 0, 0.2)",
+                  border: "1px solid var(--interactive-orange)",
+                  padding: "0.4rem 1rem",
+                  borderRadius: "30px",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  color: "#ffc164",
+                  marginBottom: "1rem",
+                }}
+              >
+                <span>EXCLUSIVE INVITATION</span>
+              </div>
+              <h2
+                style={{
+                  color: "#ffffff",
+                  fontSize: "2.2rem",
+                  fontWeight: "700",
+                  marginBottom: "1rem",
+                  lineHeight: "1.2",
+                }}
+              >
+                Cubicon™ Founding Client Program
+              </h2>
+              <p
+                style={{
+                  color: "rgba(255, 255, 255, 0.9)",
+                  fontSize: "1.05rem",
+                  maxWidth: "720px",
+                  lineHeight: "1.6",
+                }}
+              >
+                Experience the future of survey participant validation. BuyFacts
+                is inviting qualified B2B organizations to become founding users
+                of Cubicon&apos;s visual validation methods prior to pending
+                commercial launch.
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1.5rem",
+                  marginTop: "1.5rem",
+                  flexWrap: "wrap",
+                  fontSize: "0.95rem",
+                  color: "rgba(255, 255, 255, 0.85)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <ShieldCheck
+                    size={18}
+                    style={{ color: "var(--interactive-orange)" }}
+                  />{" "}
+                  30% Wholesale Discount
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <ShieldCheck
+                    size={18}
+                    style={{ color: "var(--interactive-orange)" }}
+                  />{" "}
+                  Risk-Free Taste Test
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <ShieldCheck
+                    size={18}
+                    style={{ color: "var(--interactive-orange)" }}
+                  />{" "}
+                  100% Refund Guarantee
+                </div>
+              </div>
+            </div>
+
+            <div style={{ flex: "0 0 auto" }}>
+              <a
+                href="/cubicon"
+                className="btn btn-primary"
+                id="banner-cta-cubicon"
+                style={{
+                  padding: "1rem 2.2rem",
+                  fontSize: "1.05rem",
+                  fontWeight: "700",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 10px 25px rgba(255, 153, 0, 0.4)",
+                }}
+              >
+                BECOME A FOUNDING CLIENT <ArrowRight size={18} />
+              </a>
+            </div>
           </div>
         </div>
       </section>

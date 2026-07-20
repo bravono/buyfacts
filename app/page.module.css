@@ -44,6 +44,32 @@
   margin: 0 auto;
 }
 
+.heroEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--interactive-orange);
+  margin-bottom: 1.4rem;
+  padding: 0.45rem 1.4rem;
+  border: 1px solid rgba(255, 153, 0, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 153, 0, 0.07);
+  backdrop-filter: blur(4px);
+}
+
+.heroEyebrowDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--interactive-orange);
+  flex-shrink: 0;
+}
+
 .heroTitle {
   font-family: var(--font-display);
   font-size: 5.5rem;
