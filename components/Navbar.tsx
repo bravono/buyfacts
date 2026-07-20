@@ -59,6 +59,10 @@ export default function Navbar() {
             THOUGHT LEADERSHIP / BEST PRACTICES
           </a>
 
+          <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
+            FOUNDING INVITATION
+          </a>
+
           <a href="/press" className={styles.navLink} id="nav-link-press">
             PRESS
           </a>
@@ -94,12 +98,12 @@ export default function Navbar() {
       >
         <nav className={styles.navMobile}>
           <a
-            href="/#time-savings"
+            href="/"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
-            id="mob-link-time-savings"
+            id="mob-link-home"
           >
-            SAVINGS
+            HOME
           </a>
           <a
             href="/services"
@@ -110,20 +114,20 @@ export default function Navbar() {
             SERVICES
           </a>
           <a
+            href="/cubicon"
+            onClick={closeMobileMenu}
+            className={styles.mobileNavLink}
+            id="mob-link-cubicon"
+          >
+            FOUNDING INVITATION
+          </a>
+          <a
             href="/#about"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
             id="mob-link-about"
           >
             ABOUT
-          </a>
-          <a
-            href="/portfolio"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
-            id="mob-link-portfolio"
-          >
-            PORTFOLIO
           </a>
           <a
             href="/#contact"

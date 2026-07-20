@@ -1,0 +1,405 @@
+.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  width: 100%;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  padding: 10rem 0 6rem 0;
+  background: linear-gradient(180deg, rgba(0, 80, 123, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
+  border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.heroContent {
+  max-width: 850px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 153, 0, 0.1);
+  border: 1px solid var(--interactive-orange);
+  color: var(--interactive-orange);
+  padding: 0.5rem 1.2rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--interactive-blue);
+  margin-bottom: 1.5rem;
+}
+
+.heroHighlight {
+  color: var(--interactive-orange);
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 2.5rem;
+}
+
+.heroCTA {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Section Header */
+.sectionHeader {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem auto;
+}
+
+.sectionTag {
+  display: inline-block;
+  color: var(--interactive-orange);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--interactive-blue);
+  margin-bottom: 1rem;
+}
+
+.sectionDesc {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Why Cubicon Grid */
+.whyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.whyCard {
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  transition: var(--transition-bounce);
+}
+
+.whyCard:hover {
+  transform: translateY(-5px);
+  border-color: var(--interactive-blue);
+  box-shadow: 0 12px 30px rgba(0, 80, 123, 0.08);
+}
+
+.cardIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--interactive-blue);
+  margin-bottom: 0.75rem;
+}
+
+.cardText {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.98rem;
+}
+
+/* Benefits Grid */
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.benefitCard {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  position: relative;
+  transition: var(--transition-bounce);
+}
+
+.benefitCard:hover {
+  border-color: var(--interactive-orange);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 153, 0, 0.1);
+}
+
+.benefitBadge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 153, 0, 0.1);
+  color: var(--interactive-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.benefitIcon {
+  color: var(--interactive-orange);
+  margin-bottom: 1.2rem;
+}
+
+.benefitTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--interactive-blue);
+  margin-bottom: 0.75rem;
+}
+
+.benefitDesc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Requirements Section */
+.requirementsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.reqCard {
+  background: linear-gradient(135deg, #00507b 0%, #003e60 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.reqNumber {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: rgba(255, 153, 0, 0.9);
+  margin-bottom: 0.5rem;
+}
+
+.reqTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  margin-bottom: 0.75rem;
+}
+
+.reqDesc, .reqDesc strong {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.6;
+}
+
+/* Form Styles */
+.formContainer {
+  background: var(--bg-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 3rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.04);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--interactive-blue);
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  background-color: #ffffff;
+  color: var(--text-color);
+  transition: var(--transition-smooth);
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--interactive-orange);
+  box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--interactive-orange);
+  cursor: pointer;
+}
+
+/* Contact Areas Multi-select Sections */
+.areaSection {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.areaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.areaTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--interactive-blue);
+}
+
+.areaWeightBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(0, 80, 123, 0.08);
+  color: var(--interactive-blue);
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.optionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+/* Dynamic Priority Score Card */
+.scoreStickyCard {
+  position: sticky;
+  top: 100px;
+  background: linear-gradient(135deg, #00507b 0%, #00293f 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 80, 123, 0.2);
+  margin-bottom: 2rem;
+}
+
+.scoreValue {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--interactive-orange);
+  line-height: 1;
+  margin: 0.5rem 0;
+}
+
+.scoreLabel {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.formStatusSuccess {
+  padding: 1rem;
+  background: rgba(20, 163, 139, 0.1);
+  border: 1px solid #14a38b;
+  color: #14a38b;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.formStatusError {
+  padding: 1rem;
+  background: rgba(234, 66, 95, 0.1);
+  border: 1px solid #ea425f;
+  color: #ea425f;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.2rem;
+  }
+  .sectionTitle {
+    font-size: 1.8rem;
+  }
+  .formContainer {
+    padding: 1.5rem;
+  }
+}
