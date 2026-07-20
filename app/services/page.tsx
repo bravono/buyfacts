@@ -24,7 +24,7 @@ export default function ServicesPage() {
       hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     },
     {
-      label: "Bot Recognition",
+      label: "Respondent Validation",
       color: "var(--color-orange-2)", // Light Orange #ffc164
       textColor: "var(--color-blue-5)",
       hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
@@ -56,13 +56,13 @@ export default function ServicesPage() {
       hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     },
     {
-      label: "Leverage It",
+      label: "Apply It",
       color: "var(--color-accent-plum)", // Plum #532254
       textColor: "white",
       hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     },
     {
-      label: "Affinity Measurement",
+      label: "Buyer Drivers",
       color: "var(--color-accent-green-mint)", // Mint Green #42ea86
       textColor: "var(--color-blue-5)",
       hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
@@ -78,11 +78,11 @@ export default function ServicesPage() {
         <div className={styles.pageGrid}>
           {/* Left Column: ExpertiseResources component carrying custom buttons */}
           <div className={styles.columnLeft}>
-            {/* <ExpertiseResources
+            <ExpertiseResources
               title="BuyFacts Service and Tool Areas"
               buttons={customButtons}
-            /> */}
-            <RangeOfResponsibilities />
+            />
+            {/* <RangeOfResponsibilities /> */}
           </div>
 
           {/* Right Column: MockMediaPlayer component */}

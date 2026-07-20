@@ -24,8 +24,8 @@ export default function PortfolioPage() {
         <div className={styles.pageGrid}>
           {/* Left Column: ExpertiseResources component carrying original default buttons */}
           <div className={styles.columnLeft}>
-            {/* <ExpertiseResources title="BuyFacts Expertise and Resources" /> */}
-            <RangeOfResponsibilities />
+            <ExpertiseResources title="BuyFacts Expertise and Resources" />
+            {/* <RangeOfResponsibilities /> */}
           </div>
 
           {/* Right Column: MockMediaPlayer component configured as Audio */}

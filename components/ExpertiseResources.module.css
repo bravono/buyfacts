@@ -80,14 +80,8 @@
 .gridContainer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
   gap: 1rem;
+  width: 100%;
 }
 
 /* Premium Button Styles */
@@ -161,10 +155,6 @@
 @media (max-width: 768px) {
   .gridContainer {
     grid-template-columns: 1fr;
-    gap: 1.8rem;
-  }
-
-  .column {
     gap: 1.8rem;
   }
 
