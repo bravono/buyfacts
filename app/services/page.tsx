@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ExpertiseResources from "@/components/ExpertiseResources";
+import DashboardAnimation from "@/components/DashboardAnimation";
 import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
 import MockMediaPlayer from "@/components/MockMediaPlayer";
 import Link from "next/link";
@@ -76,12 +76,9 @@ export default function ServicesPage() {
       {/* Two-Column layout block - Light Theme matching mockup */}
       <section className="section-light" style={{ padding: "9rem 0 6rem 0" }}>
         <div className={styles.pageGrid}>
-          {/* Left Column: ExpertiseResources component carrying custom buttons */}
+          {/* Left Column: interactive service / tool areas graphic */}
           <div className={styles.columnLeft}>
-            <ExpertiseResources
-              title="BuyFacts Service and Tool Areas"
-              buttons={customButtons}
-            />
+            <DashboardAnimation className={styles.dashboardAnimation} />
             {/* <RangeOfResponsibilities /> */}
           </div>
 

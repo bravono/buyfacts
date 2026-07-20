@@ -66,6 +66,14 @@
   width: 100%;
 }
 
+.dashboardAnimation {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 875px;
+  margin: 0 auto;
+}
+
 .columnRight {
   width: 100%;
 }
