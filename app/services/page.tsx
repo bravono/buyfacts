@@ -3,10 +3,27 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import DashboardAnimation from "@/components/DashboardAnimation";
+import DashboardAnimation, {
+  type DashboardButton,
+} from "@/components/DashboardAnimation";
 import MockMediaPlayer from "@/components/MockMediaPlayer";
 import Link from "next/link";
 import styles from "./page.module.css";
+
+const PLACEHOLDER = "https://www.buyfacts.com/";
+
+/** Per-page button labels + URLs for the services dashboard graphic */
+const SERVICE_BUTTONS: DashboardButton[] = [
+  { label: "Define It", href: PLACEHOLDER },
+  { label: "Host", href: PLACEHOLDER },
+  { label: "Bot", href: PLACEHOLDER },
+  { label: "Refine It", href: PLACEHOLDER },
+  { label: "Analyze It", href: PLACEHOLDER },
+  { label: "Story Based", href: PLACEHOLDER },
+  { label: "Build It", href: PLACEHOLDER },
+  { label: "Leverage", href: PLACEHOLDER },
+  { label: "Affinity", href: PLACEHOLDER },
+];
 
 export default function ServicesPage() {
   return (
@@ -18,7 +35,10 @@ export default function ServicesPage() {
         <div className={styles.pageGrid}>
           {/* Left Column: interactive service / tool areas graphic */}
           <div className={styles.columnLeft}>
-            <DashboardAnimation className={styles.dashboardAnimation} />
+            <DashboardAnimation
+              className={styles.dashboardAnimation}
+              buttons={SERVICE_BUTTONS}
+            />
           </div>
 
           {/* Right Column: MockMediaPlayer component */}
