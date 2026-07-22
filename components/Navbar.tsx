@@ -62,10 +62,6 @@ export default function Navbar() {
           <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
             FOUNDING INVITATION
           </a>
-
-          <a href="/press" className={styles.navLink} id="nav-link-press">
-            PRESS
-          </a>
           <a href="/#about" className={styles.navLink} id="nav-link-about">
             ABOUT
           </a>
