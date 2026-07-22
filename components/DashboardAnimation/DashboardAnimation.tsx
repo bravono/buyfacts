@@ -15,7 +15,7 @@ export type DashboardButton = {
   /** Button label. Use \n for a second line. */
   label: string;
   /** Link URL for this button */
-  href: string;
+  mediaUrl: string;
 };
 
 /**
@@ -26,15 +26,15 @@ export type DashboardButton = {
  * 0–2 left column, 3–5 center column, 6–8 right column
  */
 export const DEFAULT_BUTTONS: DashboardButton[] = [
-  { label: "Define It", href: "https://www.buyfacts.com/" },
-  { label: "Host", href: "https://www.buyfacts.com/" },
-  { label: "Bot", href: "https://www.buyfacts.com/" },
-  { label: "Refine It", href: "https://www.buyfacts.com/" },
-  { label: "Analyze It", href: "https://www.buyfacts.com/" },
-  { label: "Story Based", href: "https://www.buyfacts.com/" },
-  { label: "Build It", href: "https://www.buyfacts.com/" },
-  { label: "Leverage", href: "https://www.buyfacts.com/" },
-  { label: "Affinity", href: "https://www.buyfacts.com/" },
+  { label: "Define It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Host", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Respondent Validation", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Refine It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Analyze It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Story Based", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Build It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Apply It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Buyer Drivers", mediaUrl: "https://www.buyfacts.com/" },
 ];
 
 /** @deprecated Use DEFAULT_BUTTONS */
@@ -49,14 +49,15 @@ export type DashboardAnimationProps = SVGProps<SVGSVGElement> & {
    * Missing slots fall back to DEFAULT_BUTTONS.
    */
   buttons?: DashboardButton[];
+  selectedButtonIndex?: number;
+  onSelectButton?: (index: number) => void;
 };
 
 /**
  * Arc the title follows — letter spacing is handled by SVG textPath,
  * so any title string renders without overlapping glyphs.
  */
-const TITLE_ARC_PATH =
-  "M 190 552 C 310 598, 565 598, 685 552";
+const TITLE_ARC_PATH = "M 190 552 C 310 598, 565 598, 685 552";
 const TITLE_ARC_PATH_ID = "dashboard-title-arc";
 
 type ButtonSlotMeta = {
@@ -74,22 +75,19 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
   {
     id: "slot-0",
     d: "m64.52,523v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
-    textTransform:
-      "translate(168 608) rotate(20) scale(1.06 .94) skewX(17.82)",
+    textTransform: "translate(168 608) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
   },
   {
     id: "slot-1",
     d: "m64.52,613.32v67.78c0,4.62,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-8.96-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
-    textTransform:
-      "translate(168 698) rotate(20) scale(1.06 .94) skewX(17.82)",
+    textTransform: "translate(168 698) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
   },
   {
     id: "slot-2",
     d: "m67.59,704.59v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
-    textTransform:
-      "translate(171 789) rotate(20) scale(1.06 .94) skewX(17.82)",
+    textTransform: "translate(171 789) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
   },
   {
@@ -136,7 +134,11 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
 function renderButtonLabel(label: string): React.ReactNode {
   const lines = label.split("\n");
   if (lines.length < 2) {
-    return <tspan x={0} y={0}>{label}</tspan>;
+    return (
+      <tspan x={0} y={0}>
+        {label}
+      </tspan>
+    );
   }
   return (
     <>
@@ -156,7 +158,7 @@ function resolveButtons(buttons?: DashboardButton[]): DashboardButton[] {
     const fallback = DEFAULT_BUTTONS[index];
     return {
       label: provided?.label ?? fallback.label,
-      href: provided?.href ?? fallback.href,
+      mediaUrl: provided?.mediaUrl ?? fallback.mediaUrl,
     };
   });
 }
@@ -164,6 +166,8 @@ function resolveButtons(buttons?: DashboardButton[]): DashboardButton[] {
 export default function DashboardAnimation({
   title = TITLE,
   buttons,
+  selectedButtonIndex,
+  onSelectButton,
   className,
   ...props
 }: DashboardAnimationProps) {
@@ -182,9 +186,11 @@ export default function DashboardAnimation({
       <defs>
         <path id={titlePathId} d={TITLE_ARC_PATH} fill="none" />
         <style>{`
-          .dashboard-btn { cursor: pointer; }
-          .dashboard-btn:hover { opacity: 0.85; }
-          .dashboard-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+          .dashboard-btn { cursor: pointer; outline: none; }
+          .dashboard-btn path { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+          .dashboard-btn:hover path { stroke: var(--primary-color, #ff9900); fill: rgba(255, 153, 0, 0.05); }
+          .dashboard-btn.selected path { stroke: var(--primary-color, #ff9900); fill: rgba(255, 153, 0, 0.15); stroke-width: 3.5px; }
+          .dashboard-btn:focus-visible path { stroke: #fff; stroke-width: 3px; }
         `}</style>
       </defs>
 
@@ -230,22 +236,37 @@ export default function DashboardAnimation({
 
       {resolvedButtons.map((btn, index) => {
         const slot = BUTTON_SLOTS[index];
+        const isSelected = selectedButtonIndex === index;
+
+        const handleClick = (e: React.MouseEvent) => {
+          e.preventDefault();
+          if (onSelectButton) {
+            onSelectButton(index);
+          }
+        };
+
+        const handleKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            if (onSelectButton) {
+              onSelectButton(index);
+            }
+          }
+        };
+
         return (
-          <a
+          <g
             key={slot.id}
-            href={btn.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="dashboard-btn"
+            role="button"
+            tabIndex={0}
+            className={`dashboard-btn ${isSelected ? "selected" : ""}`}
             aria-label={btn.label.replace(/\n/g, " ")}
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            style={{ outline: "none" }}
           >
             <g id={slot.id}>
-              <path
-                d={slot.d}
-                fill="none"
-                stroke="#fff"
-                strokeWidth={2}
-              />
+              <path d={slot.d} fill="none" stroke="#fff" strokeWidth={2} />
               <text
                 transform={slot.textTransform}
                 fill="#fff"
@@ -258,7 +279,7 @@ export default function DashboardAnimation({
                 {renderButtonLabel(btn.label)}
               </text>
             </g>
-          </a>
+          </g>
         );
       })}
     </svg>

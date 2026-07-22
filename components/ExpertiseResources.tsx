@@ -8,14 +8,23 @@ interface ButtonData {
   color: string;
   textColor: string;
   hoverShadow: string;
+  mediaUrl?: string;
+  mediaType?: "video" | "audio" | "image" | "pdf";
 }
 
 interface ExpertiseResourcesProps {
   title?: string;
   buttons?: ButtonData[];
+  selectedButtonIndex?: number;
+  onSelectButton?: (index: number) => void;
 }
 
-export default function ExpertiseResources({ title, buttons }: ExpertiseResourcesProps) {
+export default function ExpertiseResources({
+  title,
+  buttons,
+  selectedButtonIndex,
+  onSelectButton,
+}: ExpertiseResourcesProps) {
   // Default title
   const displayTitle = title || "BuyFacts Expertise and Resources";
 
@@ -170,41 +179,27 @@ export default function ExpertiseResources({ title, buttons }: ExpertiseResource
 
           {/* Grid Layout conforming to the 3 columns of buttons in the mockup */}
           <div className={styles.gridContainer}>
-            {/* Column 1 */}
-            <div className={styles.column}>
-              {col1.map((btn, index) => (
+            {displayButtons.map((btn, index) => {
+              const isSelected = selectedButtonIndex === index;
+              const hasCustomBg = btn.color.startsWith("var") || btn.color.includes("gradient") || btn.color.startsWith("#") || btn.color.startsWith("rgb");
+              
+              return (
                 <button
-                  key={`col1-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
+                  key={`btn-${index}`}
+                  className={`${styles.expertBtn} ${isSelected ? styles.selectedBtn : ""}`}
+                  style={{
+                    background: hasCustomBg ? btn.color : undefined,
+                    backgroundColor: !hasCustomBg ? btn.color : undefined,
+                    color: btn.textColor,
+                    boxShadow: isSelected ? btn.hoverShadow : undefined,
+                    borderColor: isSelected ? (btn.textColor === "white" ? "rgba(255, 255, 255, 0.8)" : btn.textColor) : undefined,
+                  }}
+                  onClick={() => onSelectButton && onSelectButton(index)}
                 >
                   {btn.label}
                 </button>
-              ))}
-            </div>
-
-            {/* Column 2 */}
-            <div className={styles.column}>
-              {col2.map((btn, index) => (
-                <button
-                  key={`col2-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Column 3 */}
-            <div className={styles.column}>
-              {col3.map((btn, index) => (
-                <button
-                  key={`col3-${index}`}
-                  className={`${styles.expertBtn} ${btn.label === "Range of BuyFacts Services" || btn.label === "Analyze It" ? styles.pulseCenterBtn : ""}`}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
