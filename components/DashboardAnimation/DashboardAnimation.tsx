@@ -14,8 +14,9 @@ export const TITLE = "Range of Responsibilities";
 export type DashboardButton = {
   /** Button label. Use \n for a second line. */
   label: string;
-  /** Link URL for this button */
-  mediaUrl: string;
+  /** Optional media / link URL associated with this button */
+  mediaUrl?: string;
+  href?: string;
 };
 
 /**
@@ -27,11 +28,11 @@ export type DashboardButton = {
  */
 export const DEFAULT_BUTTONS: DashboardButton[] = [
   { label: "Define It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Host", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Host It", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Respondent Validation", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Refine It", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Analyze It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Story Based", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Story-Based Surveys", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Build It", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Apply It", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Buyer Drivers", mediaUrl: "https://www.buyfacts.com/" },
@@ -65,6 +66,8 @@ type ButtonSlotMeta = {
   d: string;
   textTransform: string;
   fontSize: number;
+  /** Approx usable text width in SVG units (after transforms). */
+  maxWidth: number;
 };
 
 /**
@@ -77,36 +80,42 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     d: "m64.52,523v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
     textTransform: "translate(168 608) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
+    maxWidth: 150,
   },
   {
     id: "slot-1",
     d: "m64.52,613.32v67.78c0,4.62,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-8.96-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
     textTransform: "translate(168 698) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
+    maxWidth: 150,
   },
   {
     id: "slot-2",
     d: "m67.59,704.59v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
     textTransform: "translate(171 789) rotate(20) scale(1.06 .94) skewX(17.82)",
     fontSize: 28,
+    maxWidth: 150,
   },
   {
     id: "slot-3",
     d: "m542.15,602.28c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
     textTransform: "translate(434 647)",
     fontSize: 26,
+    maxWidth: 170,
   },
   {
     id: "slot-4",
     d: "m542.15,696.45c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
     textTransform: "translate(434 741)",
     fontSize: 26,
+    maxWidth: 170,
   },
   {
     id: "slot-5",
     d: "m541.75,790.82c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
     textTransform: "translate(434 836)",
     fontSize: 26,
+    maxWidth: 170,
   },
   {
     id: "slot-6",
@@ -114,6 +123,7 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     textTransform:
       "translate(700 608) rotate(-20) scale(1.06 .94) skewX(-17.82)",
     fontSize: 26,
+    maxWidth: 150,
   },
   {
     id: "slot-7",
@@ -121,6 +131,7 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     textTransform:
       "translate(700 699) rotate(-20) scale(1.06 .94) skewX(-17.82)",
     fontSize: 26,
+    maxWidth: 150,
   },
   {
     id: "slot-8",
@@ -128,28 +139,102 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     textTransform:
       "translate(700 791) rotate(-20) scale(1.06 .94) skewX(-17.82)",
     fontSize: 26,
+    maxWidth: 150,
   },
 ];
 
-function renderButtonLabel(label: string): React.ReactNode {
-  const lines = label.split("\n");
-  if (lines.length < 2) {
-    return (
-      <tspan x={0} y={0}>
-        {label}
-      </tspan>
+/** Approx glyph advance for Roboto Medium relative to font-size. */
+const CHAR_WIDTH_RATIO = 0.55;
+const MIN_FONT_SIZE = 13;
+
+function estimateWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * CHAR_WIDTH_RATIO;
+}
+
+/** Split a long label into up to 2 lines at the best space/hyphen near the middle. */
+function wrapLabel(label: string): string[] {
+  const explicit = label
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (explicit.length > 1) return explicit.slice(0, 3);
+
+  const text = explicit[0] ?? label.trim();
+  const breakChars = [" ", "-"];
+  const mid = text.length / 2;
+  let best = -1;
+  let bestDist = Number.POSITIVE_INFINITY;
+
+  for (let i = 0; i < text.length; i++) {
+    if (!breakChars.includes(text[i])) continue;
+    const dist = Math.abs(i - mid);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+
+  if (best === -1) return [text];
+
+  if (text[best] === "-") {
+    return [text.slice(0, best + 1).trim(), text.slice(best + 1).trim()];
+  }
+  return [text.slice(0, best).trim(), text.slice(best + 1).trim()];
+}
+
+function fitButtonLabel(
+  label: string,
+  baseFontSize: number,
+  maxWidth: number,
+): { lines: string[]; fontSize: number } {
+  const single = label.replace(/\n/g, " ").trim();
+  let lines: string[];
+
+  if (label.includes("\n")) {
+    lines = wrapLabel(label);
+  } else if (estimateWidth(single, baseFontSize) > maxWidth) {
+    lines = wrapLabel(single);
+    const widest = lines.reduce((a, b) => (a.length >= b.length ? a : b));
+    if (estimateWidth(widest, baseFontSize) > maxWidth) {
+      const words = single.split(/\s+/).filter(Boolean);
+      if (words.length >= 3) {
+        const third = Math.ceil(words.length / 3);
+        lines = [
+          words.slice(0, third).join(" "),
+          words.slice(third, third * 2).join(" "),
+          words.slice(third * 2).join(" "),
+        ].filter(Boolean);
+      }
+    }
+  } else {
+    lines = [single];
+  }
+
+  const maxLineLen = Math.max(...lines.map((line) => line.length), 1);
+  let fontSize = baseFontSize;
+  if (maxLineLen * fontSize * CHAR_WIDTH_RATIO > maxWidth) {
+    fontSize = Math.max(
+      MIN_FONT_SIZE,
+      maxWidth / (maxLineLen * CHAR_WIDTH_RATIO),
     );
   }
-  return (
-    <>
-      <tspan x={0} y={-12}>
-        {lines[0]}
-      </tspan>
-      <tspan x={0} y={16}>
-        {lines.slice(1).join(" ")}
-      </tspan>
-    </>
-  );
+
+  return { lines, fontSize };
+}
+
+function renderButtonLabel(lines: string[], fontSize: number): React.ReactNode {
+  if (lines.length === 1) {
+    return <tspan x={0} y={0}>{lines[0]}</tspan>;
+  }
+
+  const lineHeight = fontSize * 1.15;
+  const startY = -((lines.length - 1) * lineHeight) / 2;
+
+  return lines.map((line, i) => (
+    <tspan key={`${i}-${line}`} x={0} y={startY + i * lineHeight}>
+      {line}
+    </tspan>
+  ));
 }
 
 function resolveButtons(buttons?: DashboardButton[]): DashboardButton[] {
@@ -158,7 +243,7 @@ function resolveButtons(buttons?: DashboardButton[]): DashboardButton[] {
     const fallback = DEFAULT_BUTTONS[index];
     return {
       label: provided?.label ?? fallback.label,
-      mediaUrl: provided?.mediaUrl ?? fallback.mediaUrl,
+      mediaUrl: provided?.mediaUrl ?? provided?.href ?? fallback.mediaUrl,
     };
   });
 }
@@ -236,21 +321,18 @@ export default function DashboardAnimation({
 
       {resolvedButtons.map((btn, index) => {
         const slot = BUTTON_SLOTS[index];
+        const fitted = fitButtonLabel(btn.label, slot.fontSize, slot.maxWidth);
         const isSelected = selectedButtonIndex === index;
 
         const handleClick = (e: React.MouseEvent) => {
           e.preventDefault();
-          if (onSelectButton) {
-            onSelectButton(index);
-          }
+          onSelectButton?.(index);
         };
 
         const handleKeyDown = (e: React.KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            if (onSelectButton) {
-              onSelectButton(index);
-            }
+            onSelectButton?.(index);
           }
         };
 
@@ -271,12 +353,12 @@ export default function DashboardAnimation({
                 transform={slot.textTransform}
                 fill="#fff"
                 fontFamily="Roboto, sans-serif"
-                fontSize={slot.fontSize}
+                fontSize={fitted.fontSize}
                 fontWeight={500}
                 textAnchor="middle"
                 dominantBaseline="middle"
               >
-                {renderButtonLabel(btn.label)}
+                {renderButtonLabel(fitted.lines, fitted.fontSize)}
               </text>
             </g>
           </g>
