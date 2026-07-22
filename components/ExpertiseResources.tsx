@@ -8,16 +8,22 @@ interface ButtonData {
   color: string;
   textColor: string;
   hoverShadow: string;
+  mediaUrl?: string;
+  mediaType?: "video" | "audio" | "image" | "pdf";
 }
 
 interface ExpertiseResourcesProps {
   title?: string;
   buttons?: ButtonData[];
+  selectedButtonIndex?: number;
+  onSelectButton?: (index: number) => void;
 }
 
 export default function ExpertiseResources({
   title,
   buttons,
+  selectedButtonIndex,
+  onSelectButton,
 }: ExpertiseResourcesProps) {
   // Default title
   const displayTitle = title || "BuyFacts Expertise and Resources";
@@ -269,14 +275,27 @@ export default function ExpertiseResources({
 
           {/* Grid Layout conforming to the 2 buttons per row */}
           <div className={styles.gridContainer}>
-            {displayButtons.map((btn, index) => (
-              <button
-                key={`btn-${index}`}
-                className={styles.expertBtn}
-              >
-                {btn.label}
-              </button>
-            ))}
+            {displayButtons.map((btn, index) => {
+              const isSelected = selectedButtonIndex === index;
+              const hasCustomBg = btn.color.startsWith("var") || btn.color.includes("gradient") || btn.color.startsWith("#") || btn.color.startsWith("rgb");
+              
+              return (
+                <button
+                  key={`btn-${index}`}
+                  className={`${styles.expertBtn} ${isSelected ? styles.selectedBtn : ""}`}
+                  style={{
+                    background: hasCustomBg ? btn.color : undefined,
+                    backgroundColor: !hasCustomBg ? btn.color : undefined,
+                    color: btn.textColor,
+                    boxShadow: isSelected ? btn.hoverShadow : undefined,
+                    borderColor: isSelected ? (btn.textColor === "white" ? "rgba(255, 255, 255, 0.8)" : btn.textColor) : undefined,
+                  }}
+                  onClick={() => onSelectButton && onSelectButton(index)}
+                >
+                  {btn.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
