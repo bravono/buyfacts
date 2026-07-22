@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import BorderFrame from "@/components/BorderFrame";
 
 export const metadata: Metadata = {
   title: "BuyFacts® | B2B Research Methods, Tools & Return on Effort Framework",
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ margin: 0, padding: 0 }}>
+        <BorderFrame />
         {children}
       </body>
     </html>
