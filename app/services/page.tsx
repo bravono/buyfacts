@@ -20,7 +20,8 @@ export default function ServicesPage() {
       textColor: "white",
       hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
       mediaType: "video" as const,
-      mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      mediaUrl:
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
       subtitle: "Interactive pipeline routing validation demonstration.",
     },
     {
@@ -29,7 +30,8 @@ export default function ServicesPage() {
       textColor: "var(--color-blue-5)",
       hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
       mediaType: "image" as const,
-      mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+      mediaUrl:
+        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
       subtitle: "High-performance hosting platform architecture layout.",
     },
     {
@@ -57,7 +59,8 @@ export default function ServicesPage() {
       textColor: "white",
       hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
       mediaType: "video" as const,
-      mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      mediaUrl:
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
       subtitle: "Detailed overview demonstrating deep data analytics capabilities.",
     },
     {
@@ -66,8 +69,10 @@ export default function ServicesPage() {
       textColor: "white",
       hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
       mediaType: "image" as const,
-      mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
-      subtitle: "Mock design demonstrating user flow logic in story-based surveys.",
+      mediaUrl:
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+      subtitle:
+        "Mock design demonstrating user flow logic in story-based surveys.",
     },
     // Column 3
     {
@@ -85,8 +90,10 @@ export default function ServicesPage() {
       textColor: "white",
       hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
       mediaType: "pdf" as const,
-      mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      subtitle: "A practical guide and reference PDF document on data application.",
+      mediaUrl:
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      subtitle:
+        "A practical guide and reference PDF document on data application.",
     },
     {
       label: "Buyer Drivers",
@@ -94,7 +101,8 @@ export default function ServicesPage() {
       textColor: "var(--color-blue-5)",
       hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
       mediaType: "video" as const,
-      mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      mediaUrl:
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
       subtitle: "Study showing how primary buying indicators are identified.",
     },
   ];
