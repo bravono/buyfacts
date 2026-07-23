@@ -16,14 +16,14 @@
 /* Hero Section */
 .hero {
   position: relative;
-  padding: 10rem 0 6rem 0;
-  background: linear-gradient(180deg, rgba(0, 80, 123, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
+  padding: 8rem 0 4rem 0;
+  background: linear-gradient(180deg, rgba(0, 80, 123, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
 }
 
 .heroContent {
-  max-width: 850px;
+  max-width: 900px;
   margin: 0 auto;
   text-align: center;
 }
@@ -32,7 +32,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: rgba(255, 153, 0, 0.1);
+  background-color: rgba(255, 153, 0, 0.12);
   border: 1px solid var(--interactive-orange);
   color: var(--interactive-orange);
   padding: 0.5rem 1.2rem;
@@ -49,31 +49,177 @@
   font-weight: 800;
   line-height: 1.15;
   color: var(--interactive-blue);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .heroHighlight {
   color: var(--interactive-orange);
+  background: linear-gradient(135deg, #ff9900 0%, #ff5500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .heroSubtitle {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   line-height: 1.6;
   color: var(--text-muted);
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
-.heroCTA {
+/* Mode Switcher Tabs */
+.viewSwitcher {
   display: flex;
-  gap: 1rem;
   justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0 1rem 0;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: var(--interactive-blue);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.tabBtn:hover {
+  transform: translateY(-2px);
+  border-color: var(--interactive-blue);
+  box-shadow: 0 6px 16px rgba(0, 80, 123, 0.12);
+}
+
+.activeTabBtn {
+  background: linear-gradient(135deg, #00507b 0%, #003653 100%);
+  color: #ffffff;
+  border-color: #00507b;
+  box-shadow: 0 8px 20px rgba(0, 80, 123, 0.25);
+}
+
+.activeTabBtn:hover {
+  color: #ffffff;
+}
+
+/* App Viewport Container */
+.appViewportSection {
+  padding: 2rem 0 5rem 0;
+}
+
+.appFrameWrapper {
+  background: #0f141c;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.appFrameHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.5rem;
+  background: #171d27;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.appTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.liveIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(20, 163, 139, 0.2);
+  color: #20d5b5;
+  border: 1px solid rgba(32, 213, 181, 0.3);
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  background-color: #20d5b5;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #20d5b5;
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.appControls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.appIframe {
+  width: 100%;
+  height: 780px;
+  border: none;
+  display: block;
+  background: #0f141c;
+}
+
+.appIframeFullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  border-radius: 0;
 }
 
 /* Section Header */
 .sectionHeader {
   text-align: center;
   max-width: 800px;
-  margin: 0 auto 4rem auto;
+  margin: 0 auto 3.5rem auto;
 }
 
 .sectionTag {
@@ -401,5 +547,8 @@
   }
   .formContainer {
     padding: 1.5rem;
+  }
+  .appIframe {
+    height: 550px;
   }
 }

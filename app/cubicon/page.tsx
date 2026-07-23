@@ -21,6 +21,12 @@ import {
   Phone,
   Clock,
   Sparkles,
+  Maximize2,
+  Minimize2,
+  RotateCcw,
+  ExternalLink,
+  Box,
+  ClipboardList,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -129,6 +135,10 @@ const WEIGHTING_MULTIPLES: Record<number, number> = {
 };
 
 export default function CubiconPage() {
+  const [activeTab, setActiveTab] = useState<"app" | "register">("app");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+
   const [formState, setFormState] = useState({
     firstName: "",
     lastName: "",
@@ -299,6 +309,14 @@ export default function CubiconPage() {
     }
   };
 
+  const reloadApp = () => {
+    setIframeKey((prev) => prev + 1);
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
+
   return (
     <div className={styles.main}>
       <Navbar />
@@ -308,31 +326,87 @@ export default function CubiconPage() {
         <div className={styles.container}>
           <div className={styles.heroContent}>
             <div className={styles.heroBadge}>
-              <Sparkles size={16} /> Exclusive Founding Client Invitation
+              <Sparkles size={16} /> Interactive 3D Validation Technology
             </div>
             <h1 className={styles.heroTitle}>
-              CUBICON FOUNDING CLIENT <span className={styles.heroHighlight}>INVITATION</span>
+              CUBICON 3D <span className={styles.heroHighlight}>VALIDATION APP</span>
             </h1>
             <p className={styles.heroSubtitle}>
-              Become a Founding client and experience the future of survey participant validation.
-              BuyFacts is inviting qualified organizations to become the first users of Cubicon&apos;s
-              revolutionary validation method, designed to insure genuine human survey participation
-              prior to pending commercial launch.
+              Experience Cubicon&apos;s revolutionary 3D visual validation system. Designed to ensure
+              100% genuine human survey participation by deploying interactive 3D spatial tasks that automated bots are incapable of solving.
             </p>
-            <div className={styles.heroCTA}>
-              <a href="#register-form" className="btn btn-primary" id="cubicon-hero-cta">
-                REGISTER FOR FOUNDING CLIENT TRIAL <Send size={16} />
-              </a>
+
+            {/* View Switcher Tabs */}
+            <div className={styles.viewSwitcher}>
+              <button
+                className={`${styles.tabBtn} ${activeTab === "app" ? styles.activeTabBtn : ""}`}
+                onClick={() => setActiveTab("app")}
+              >
+                <Box size={18} /> Interactive 3D App
+              </button>
+              <button
+                className={`${styles.tabBtn} ${activeTab === "register" ? styles.activeTabBtn : ""}`}
+                onClick={() => setActiveTab("register")}
+              >
+                <ClipboardList size={18} /> Founding Client Invitation
+              </button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Interactive App Viewport Section */}
+      {activeTab === "app" && (
+        <section className={styles.appViewportSection}>
+          <div className={styles.container}>
+            <div className={styles.appFrameWrapper}>
+              <div className={styles.appFrameHeader}>
+                <div className={styles.appTitleGroup}>
+                  <span className={styles.liveIndicator}>
+                    <span className={styles.pulseDot}></span> LIVE 3D ENGINE
+                  </span>
+                  <span style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: 500 }}>
+                    Cubicon Interactive Spatial Solver v1.0
+                  </span>
+                </div>
+                <div className={styles.appControls}>
+                  <button className={styles.controlBtn} onClick={reloadApp} title="Reload 3D App">
+                    <RotateCcw size={14} /> Restart Scene
+                  </button>
+                  <button className={styles.controlBtn} onClick={toggleFullscreen} title="Toggle Fullscreen">
+                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  </button>
+                  <a
+                    href="/cubicon-app/index.html"
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.controlBtn}
+                    title="Open in new window"
+                  >
+                    <ExternalLink size={14} /> Launch Standalone
+                  </a>
+                </div>
+              </div>
+
+              {/* Embedded Deployed Cubicon App */}
+              <iframe
+                key={iframeKey}
+                src="/cubicon-app/index.html"
+                title="Cubicon 3D Interactive App"
+                className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* WHY WE CREATED CUBICON */}
       <section className="section-light" style={{ padding: "6rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionTag}>RATIONALE & MISSION</span>
+            <span className={styles.sectionTag}>RATIONALE &amp; MISSION</span>
             <h2 className={styles.sectionTitle}>Why We Created Cubicon</h2>
             <p className={styles.sectionDesc}>
               Organizations are placing increasing reliance on online research. Before organizations can place confidence in what people say, there must be confidence that people, rather than automated bots, are the participants.
@@ -395,7 +469,7 @@ export default function CubiconPage() {
 
           <div className={styles.benefitsGrid}>
             <div className={styles.benefitCard}>
-              <span className={benefitBadgeClass(styles)}>PERMANENT</span>
+              <span className={styles.benefitBadge}>PERMANENT</span>
               <div className={styles.benefitIcon}>
                 <Zap size={32} />
               </div>
@@ -406,7 +480,7 @@ export default function CubiconPage() {
             </div>
 
             <div className={styles.benefitCard}>
-              <span className={benefitBadgeClass(styles)}>EVALUATION</span>
+              <span className={styles.benefitBadge}>EVALUATION</span>
               <div className={styles.benefitIcon}>
                 <Gift size={32} />
               </div>
@@ -417,7 +491,7 @@ export default function CubiconPage() {
             </div>
 
             <div className={styles.benefitCard}>
-              <span className={benefitBadgeClass(styles)}>REFERRAL BONUS</span>
+              <span className={styles.benefitBadge}>REFERRAL BONUS</span>
               <div className={styles.benefitIcon}>
                 <Star size={32} />
               </div>
@@ -428,7 +502,7 @@ export default function CubiconPage() {
             </div>
 
             <div className={styles.benefitCard}>
-              <span className={benefitBadgeClass(styles)}>INNOVATION</span>
+              <span className={styles.benefitBadge}>INNOVATION</span>
               <div className={styles.benefitIcon}>
                 <Award size={32} />
               </div>
@@ -485,6 +559,7 @@ export default function CubiconPage() {
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>APPLY NOW</span>
+            <h2 className={styles.sectionTitle}>Founding Client Registration</h2>
             <p className={styles.sectionDesc}>
               Please complete your contact information and select your contact areas below to calculate your respondent priority score and register for the Cubicon Founding Client invitation.
             </p>
@@ -719,8 +794,4 @@ export default function CubiconPage() {
       <Footer />
     </div>
   );
-}
-
-function benefitBadgeClass(styles: any) {
-  return styles.benefitBadge;
 }
