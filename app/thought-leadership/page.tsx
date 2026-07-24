@@ -84,7 +84,7 @@ export default function PortfolioPage() {
       <section
         className={styles.section}
         id="best-practices"
-        style={{ padding: "9rem 0 6rem 0" }}
+        style={{ padding: "5rem 0 3rem 0" }}
       >
         <div className={styles.pageGrid}>
           {/* Left Column: ExpertiseResources component carrying original default buttons */}
@@ -101,38 +101,34 @@ export default function PortfolioPage() {
           {/* Right Column: MockMediaPlayer component configured dynamically */}
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
-              <span className={styles.sideLabel}>Methodology Overview</span>
-              <h3 className={styles.sideTitle}>Audio Walkthrough</h3>
-              <p className={styles.sideDesc}>
-                Play the audio presentation below to hear a detailed breakdown
-                of the BuyFacts B2B verification logic, executive panel
-                audits, and return on effort analytics.
-              </p>
               <MockMediaPlayer
                 title={currentMedia.label}
                 subtitle={currentMedia.subtitle}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                onNextMedia={() =>
+                  setSelectedButtonIndex((prev) => (prev + 1) % thoughtLeadershipButtons.length)
+                }
+                onExploreClick={(action) => {
+                  if (action === "see_more") {
+                    const idx = thoughtLeadershipButtons.findIndex(
+                      (b) => b.mediaType === "video" || b.mediaType === "image"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  } else if (action === "hear_more") {
+                    const idx = thoughtLeadershipButtons.findIndex(
+                      (b) => b.mediaType === "audio"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  } else if (action === "read_more") {
+                    const idx = thoughtLeadershipButtons.findIndex(
+                      (b) => b.mediaType === "pdf"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  }
+                }}
               />
             </div>
-          </div>
-        </div>
-
-        <div className={styles.container}>
-          {/* Outline cards row matching mockup footer grids (adapted for dark theme) */}
-          <div className={styles.specGrid}>
-            <div className={styles.specCard}>Read More </div>
-            <div className={styles.specCard}>Hear More</div>
-            <div className={styles.specCard}>See More</div>
-            <Link href="/#contact" className={styles.specCard}>
-              Contact Us
-            </Link>
-            <Link href="/thought-leadership" className={styles.specCard}>
-              Best Practices
-            </Link>
-            <Link href="/thought-leadership" className={styles.specCard}>
-              Thought Leadership
-            </Link>
           </div>
         </div>
       </section>

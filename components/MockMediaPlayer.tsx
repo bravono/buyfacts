@@ -1,17 +1,31 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
 
 interface MockMediaPlayerProps {
   title?: string;
   subtitle?: string;
+  rightTitle?: string;
+  rightSubtitle?: string;
   mediaType?: "video" | "audio" | "image" | "pdf";
   mediaUrl?: string;
+  onExploreClick?: (action: string) => void;
+  onNextMedia?: () => void;
 }
 
-export default function MockMediaPlayer({ title, subtitle, mediaType = "video", mediaUrl }: MockMediaPlayerProps) {
+export default function MockMediaPlayer({
+  title,
+  subtitle,
+  rightTitle,
+  rightSubtitle,
+  mediaType = "video",
+  mediaUrl,
+  onExploreClick,
+  onNextMedia,
+}: MockMediaPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,6 +37,8 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
 
   const displayTitle = title || "Operational Demonstration";
   const displaySubtitle = subtitle || "BuyFacts® B2B Validation Pipeline Walkthrough";
+  const displayRightTitle = rightTitle || `${mediaType.toUpperCase()} PREVIEW`;
+  const displayRightSubtitle = rightSubtitle || (mediaType === "video" || mediaType === "audio" ? "Interactive Audio / Video Stream" : "Interactive Document Stream");
 
   // Reset playback states on media change
   useEffect(() => {
@@ -30,8 +46,7 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
-    
-    // Explicitly load the new media source
+
     if (videoRef.current) {
       videoRef.current.load();
     }
@@ -118,11 +133,34 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
 
   const isPlayable = mediaType === "video" || mediaType === "audio";
 
+  const handleExploreAction = (action: string) => {
+    if (onExploreClick) {
+      onExploreClick(action);
+    }
+  };
+
   return (
-    <div className={`${styles.playerCard} glass-card`}>
-      {/* Player Screen Frame */}
-      <div className={styles.screenFrame}>
-        
+    <div className={styles.playerCard}>
+      {/* 1. Header Banner Box matching image layout */}
+      <div className={styles.headerBanner}>
+        <div className={styles.headerLeft}>
+          <h3 className={styles.headerTitle}>{displayTitle}</h3>
+          <p className={styles.headerSubtitle}>{displaySubtitle}</p>
+        </div>
+        <div className={styles.headerRight}>
+          <span className={styles.headerRightTitle}>{displayRightTitle}</span>
+          <span className={styles.headerRightSubtitle}>{displayRightSubtitle}</span>
+        </div>
+      </div>
+
+      {/* 2. Player Screen Frame */}
+      <div
+        className={`${styles.screenFrame} ${
+          mediaType === "video" || mediaType === "image"
+            ? styles.videoScreenFrame
+            : styles.audioScreenFrame
+        }`}
+      >
         {/* Video Render */}
         {mediaType === "video" && mediaUrl && (
           <video
@@ -152,7 +190,7 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
           />
         )}
 
-        {/* Audio / Default Visualizer Background */}
+        {/* Visualizer Background for Audio or Default */}
         {(mediaType === "audio" || !mediaUrl) && (
           <div className={styles.videoBackground}>
             <div className={styles.dataNode} style={{ top: "30%", left: "20%", animationDelay: "0s" }}></div>
@@ -197,18 +235,10 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
           </div>
         )}
 
-        {/* Screen Header (shows metadata badge) */}
-        <div className={styles.videoHeader}>
-          <span className={styles.mediaTag}>
-            {mediaType.toUpperCase()} {isPlayable ? (isPlaying ? "PLAYING" : "PAUSED") : "PREVIEW"}
-          </span>
-          <h4 className={styles.mediaTitle}>{displayTitle}</h4>
-        </div>
-
-        {/* Large Central Play Button (Only for video/audio) */}
+        {/* Large Central Play Button (For video/audio) */}
         {isPlayable && (
-          <button 
-            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""}`} 
+          <button
+            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""}`}
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
             id="mock-media-play-btn"
@@ -220,6 +250,16 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
             )}
           </button>
         )}
+
+        {/* Right Arrow Translucent Action Circle Button as seen in mockup */}
+        <button
+          className={styles.nextMediaButton}
+          onClick={onNextMedia}
+          aria-label="Next media option"
+          title="Next slide"
+        >
+          <ChevronRight size={22} color="#ffffff" />
+        </button>
 
         {/* Audio Oscilloscope visualizer when playing audio */}
         {mediaType === "audio" && isPlaying && (
@@ -235,9 +275,8 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
       </div>
 
       {/* Seek Control Panel (Only for playables: video/audio) */}
-      {isPlayable ? (
+      {isPlayable && (
         <div className={styles.controlPanel}>
-          {/* Slider element representing the handle in mockup */}
           <div className={styles.sliderWrapper}>
             <input
               type="range"
@@ -249,11 +288,9 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
               className={styles.seekBar}
               id="mock-media-seek-bar"
             />
-            {/* Re-fills the custom progress track background color */}
             <div className={styles.seekFill} style={{ width: `${progress}%` }}></div>
           </div>
 
-          {/* Time and Utility Controls */}
           <div className={styles.controlsRow}>
             <div className={styles.timeInfo}>
               <span className={styles.timeText}>{formatTime(currentTime)}</span>
@@ -275,17 +312,58 @@ export default function MockMediaPlayer({ title, subtitle, mediaType = "video", 
               )}
             </div>
           </div>
-
-          <div className={styles.mediaMeta}>
-            <p className={styles.metaDesc}>{displaySubtitle}</p>
-          </div>
-        </div>
-      ) : (
-        /* Dynamic static info panel for image/pdf to show subtitle */
-        <div className={styles.staticMetaPanel}>
-          <p className={styles.metaDesc}>{displaySubtitle}</p>
         </div>
       )}
+
+      {/* 3. Horizontal Separator Line */}
+      <hr className={styles.divider} />
+
+      {/* 4. EXPLORE Section Grid Layout */}
+      <div className={styles.exploreSection}>
+        <h4 className={styles.exploreTitle}>EXPLORE</h4>
+        <p className={styles.exploreSubtitle}>Go deeper with practical takeaways you can use.</p>
+
+        {/* Row 1: 3 pastel rectangular buttons */}
+        <div className={styles.buttonRow3}>
+          <button
+            className={`${styles.exploreBtn} ${styles.btnBlue}`}
+            onClick={() => handleExploreAction("see_more")}
+          >
+            See More
+          </button>
+          <button
+            className={`${styles.exploreBtn} ${styles.btnGreen}`}
+            onClick={() => handleExploreAction("hear_more")}
+          >
+            Hear More
+          </button>
+          <button
+            className={`${styles.exploreBtn} ${styles.btnPurple}`}
+            onClick={() => handleExploreAction("read_more")}
+          >
+            Read More
+          </button>
+        </div>
+
+        {/* Row 2: 2 wider pastel rectangular buttons */}
+        <div className={styles.buttonRow2}>
+          <Link
+            href="/"
+            className={`${styles.exploreBtn} ${styles.btnPeach}`}
+            onClick={() => handleExploreAction("home")}
+          >
+            Home
+          </Link>
+          <Link
+            href="/#contact"
+            className={`${styles.exploreBtn} ${styles.btnSoftBlue}`}
+            onClick={() => handleExploreAction("contact_us")}
+          >
+            Contact Us
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
+

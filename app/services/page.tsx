@@ -115,7 +115,7 @@ export default function ServicesPage() {
       <Navbar />
 
       {/* Two-Column layout block - Light Theme matching mockup */}
-      <section className="section-light" style={{ padding: "9rem 0 6rem 0" }}>
+      <section className="section-light" style={{ padding: "5rem 0 3rem 0" }}>
         <div className={styles.pageGrid}>
           {/* Left Column: interactive service / tool areas graphic */}
           <div className={styles.columnLeft}>
@@ -131,38 +131,35 @@ export default function ServicesPage() {
           {/* Right Column: MockMediaPlayer component */}
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
-              <span className={styles.sideLabel}>Service Walkthrough</span>
-              <h3 className={styles.sideTitle}>Operational Demo</h3>
-              <p className={styles.sideDesc}>
-                Play the interactive walkthrough below to examine how the
-                BuyFacts pipeline runs survey routing, validates respondents,
-                and isolates bot telemetry.
-              </p>
+            
               <MockMediaPlayer
                 title={currentMedia.label}
                 subtitle={currentMedia.subtitle}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                onNextMedia={() =>
+                  setSelectedButtonIndex((prev) => (prev + 1) % customButtons.length)
+                }
+                onExploreClick={(action) => {
+                  if (action === "see_more") {
+                    const idx = customButtons.findIndex(
+                      (b) => b.mediaType === "video" || b.mediaType === "image"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  } else if (action === "hear_more") {
+                    const idx = customButtons.findIndex(
+                      (b) => b.mediaType === "audio"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  } else if (action === "read_more") {
+                    const idx = customButtons.findIndex(
+                      (b) => b.mediaType === "pdf"
+                    );
+                    if (idx !== -1) setSelectedButtonIndex(idx);
+                  }
+                }}
               />
             </div>
-          </div>
-        </div>
-
-        <div className={styles.container}>
-          {/* Outline cards row matching mockup footer grids */}
-          <div className={styles.specGrid}>
-            <div className={styles.specCard}>Read More </div>
-            <div className={styles.specCard}>Hear More</div>
-            <div className={styles.specCard}>See More</div>
-            <Link href="/#contact" className={styles.specCard}>
-              Contact Us
-            </Link>
-            <Link href="/thought-leadership" className={styles.specCard}>
-              Best Practices
-            </Link>
-            <Link href="/thought-leadership" className={styles.specCard}>
-              Thought Leadership
-            </Link>
           </div>
         </div>
       </section>
