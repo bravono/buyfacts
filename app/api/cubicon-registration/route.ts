@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +41,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // Save to SQLite database using Prisma
+    let dbRecord;
+    try {
+      dbRecord = await prisma.cubiconRegistration.create({
+        data: {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone: (phone || "").trim(),
+          email: email.trim().toLowerCase(),
+          urgency: urgency || "Medium",
+          requestConfirmation: !!requestConfirmation,
+          isEighteen: true,
+          priorityScore: Number(priorityScore) || 0,
+          selectedAreas: JSON.stringify(selectedAreas || {}),
+        },
+      });
+    } catch (dbErr) {
+      console.warn("Database save warning (proceeding with JSON fallback):", dbErr);
+    }
+
     // Save submission to a local JSON file in data/cubicon_registrations.json
     const dirPath = path.join(process.cwd(), "data");
     const filePath = path.join(dirPath, "cubicon_registrations.json");
@@ -55,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     const newRegistration = {
-      id: `cubicon_reg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      id: dbRecord?.id || `cubicon_reg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       phone: (phone || "").trim(),

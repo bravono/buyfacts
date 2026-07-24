@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -13,8 +12,67 @@ datasource db {
 }
 
 model User {
-  id	Int @id @default(autoincrement())
-  email	String @unique
-  name	String?
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
   createdAt DateTime @default(now())
 }
+
+// 1. Contact Form (Main Page & Contact Us)
+model ContactInquiry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String?
+  interest  String   @default("General Inquiry")
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// 2. Coming Soon Notification Form
+model NotificationSubscription {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// 3. Cubicon Founding Client Registration Form
+model CubiconRegistration {
+  id                  String   @id @default(uuid())
+  firstName           String
+  lastName            String
+  email               String
+  phone               String?
+  urgency             String   @default("Medium")
+  requestConfirmation Boolean  @default(true)
+  isEighteen          Boolean  @default(true)
+  priorityScore       Float    @default(0.0)
+  selectedAreas       String?  // JSON formatted text representation of selected contact areas
+  createdAt           DateTime @default(now())
+}
+
+// 4. Feedback Form (Cubicon App)
+model FeedbackSubmission {
+  id               String   @id @default(uuid())
+  positiveFeedback String
+  negativeFeedback String
+  rating           String   // e.g. "good", "moderate", "bad"
+  createdAt        DateTime @default(now())
+}
+
+// 5. Cubicon Admin Configuration Form
+model CubiconConfig {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  actionRequired String   @default("tap")
+  shape          String   @default("square")
+  pause          Int?
+  rotationType   String?
+  puzzleType     String?
+  threshold      Float?
+  welcomeMessage String?
+  selectedImage  String?
+  createdAt      DateTime @default(now())
+}
+

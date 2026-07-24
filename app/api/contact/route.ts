@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +25,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Save to SQLite database using Prisma
+    let dbRecord;
+    try {
+      dbRecord = await prisma.contactInquiry.create({
+        data: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          company: (company || "").trim(),
+          interest: interest || "General Inquiry",
+          message: message.trim(),
+        },
+      });
+    } catch (dbErr) {
+      console.warn("Database save warning (proceeding with JSON fallback):", dbErr);
+    }
+
     // Save submission to a local JSON file in the project workspace
     const dirPath = path.join(process.cwd(), "data");
     const filePath = path.join(dirPath, "contact_inquiries.json");
@@ -40,7 +57,7 @@ export async function POST(request: Request) {
     }
 
     const newSubmission = {
-      id: `inq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: dbRecord?.id || `inq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       company: (company || "").trim(),
