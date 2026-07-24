@@ -585,11 +585,12 @@ export default function Home() {
                     Corporate Head Office
                   </h4>
                   <p className={styles.infoTextVal}>
-                    BuyFacts Research Group LLC
+                    BuyFacts Inc.
                     <br />
-                    Financial Center, Suite 1100
+                    <span style={{ fontSize: "0.7rem" }}>
+                      A Delaware Corporation
+                    </span>
                     <br />
-                    New York, NY 10005
                   </p>
                 </div>
               </div>
