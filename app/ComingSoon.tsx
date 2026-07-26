@@ -37,15 +37,37 @@ export default function ComingSoon() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("You're on the list — we'll be in touch!");
 
   const handleNotify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    // Simulate a brief async submit (wire up to your API as needed)
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitted(true);
-    setLoading(false);
+    setErrorMsg("");
+
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.message) {
+          setSuccessMsg(data.message);
+        }
+        setSubmitted(true);
+      } else {
+        setErrorMsg(data.error || "Failed to submit. Please try again.");
+      }
+    } catch (err) {
+      setErrorMsg("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,36 +138,43 @@ export default function ComingSoon() {
 
         {/* Notify form */}
         {!submitted ? (
-          <form
-            className={styles.notifyForm}
-            onSubmit={handleNotify}
-            id="coming-soon-notify-form"
-          >
-            <input
-              type="email"
-              id="coming-soon-email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your business email"
-              className={styles.notifyInput}
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className={styles.notifyBtn}
-              id="coming-soon-notify-btn"
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <form
+              className={styles.notifyForm}
+              onSubmit={handleNotify}
+              id="coming-soon-notify-form"
             >
-              {loading ? "Sending…" : (
-                <>Notify Me <Send size={14} /></>
-              )}
-            </button>
-          </form>
+              <input
+                type="email"
+                id="coming-soon-email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your business email"
+                className={styles.notifyInput}
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className={styles.notifyBtn}
+                id="coming-soon-notify-btn"
+              >
+                {loading ? "Sending…" : (
+                  <>Notify Me <Send size={14} /></>
+                )}
+              </button>
+            </form>
+            {errorMsg && (
+              <p style={{ color: "#ef4444", fontSize: "0.85rem", marginTop: "-1rem", marginBottom: "1.5rem" }}>
+                {errorMsg}
+              </p>
+            )}
+          </div>
         ) : (
           <p className={styles.successMsg}>
             <CheckCircle size={16} />
-            You&apos;re on the list — we&apos;ll be in touch!
+            {successMsg}
           </p>
         )}
 
