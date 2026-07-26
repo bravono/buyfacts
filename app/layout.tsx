@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   description: "BuyFacts® is a professional framework of B2B research methods and tools designed to help organizations recognize market movement early, reduce uncertainty, and maximize Return on Effort.",
   keywords: ["BuyFacts", "B2B Research", "Cubicon", "TRIAD", "Research Tools", "Survey Hosting", "Rule of Three", "Value Quantification", "Return on Effort", "Market Insights"],
   authors: [{ name: "BuyFacts Team" }],
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "BuyFacts® | B2B Research Methods, Tools & Return on Effort",
     description: "Recognize meaningful movement earlier, reduce uncertainty, and improve Return on Effort through faster, easier, and better research.",

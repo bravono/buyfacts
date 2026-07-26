@@ -62,6 +62,7 @@ export default function ComingSoon() {
       <div className={styles.content}>
         {/* Logo */}
         <div className={styles.logo}>
+          <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "48px" }} />
           <span className={styles.logoText}>
             Buy<span className={styles.logoTextAccent}>Facts</span>
             <sup style={{ fontSize: "0.55em", verticalAlign: "super" }}>®</sup>
