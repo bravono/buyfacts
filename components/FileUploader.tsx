@@ -84,6 +84,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadSuccessResult | null>(null);
   const [uploadMethod, setUploadMethod] = useState<'presigned' | 'server'>('presigned');
+  const [selectedMediaType, setSelectedMediaType] = useState<'video' | 'image' | 'audio' | 'pdf'>('video');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
@@ -107,6 +108,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     if (file) {
       setSelectedFile(file);
       setValue('file', file, { shouldValidate: true });
+
+      // Auto-detect media type
+      const mime = file.type || '';
+      const name = file.name.toLowerCase();
+      if (mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name)) {
+        setSelectedMediaType('image');
+      } else if (mime.startsWith('video/') || /\.(mp4|webm|ogg|mov|mkv)$/i.test(name)) {
+        setSelectedMediaType('video');
+      } else if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(name)) {
+        setSelectedMediaType('audio');
+      } else if (mime === 'application/pdf' || /\.pdf$/i.test(name)) {
+        setSelectedMediaType('pdf');
+      } else {
+        setSelectedMediaType('video'); // default fallback
+      }
     } else {
       setSelectedFile(null);
       setValue('file', null as any, { shouldValidate: true });
@@ -292,9 +308,14 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         result = await uploadViaServer(selectedFile);
       }
 
-      setUploadResult(result);
+      const finalResult = {
+        ...result,
+        fileType: selectedMediaType,
+      };
+
+      setUploadResult(finalResult);
       if (onUploadSuccess) {
-        onUploadSuccess(result);
+        onUploadSuccess(finalResult);
       }
     } catch (err: any) {
       console.error('File upload error:', err);
@@ -329,7 +350,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           <div className={styles.headerText}>
             <h3>
               <UploadCloud className="w-5 h-5" />
-              MinIO File Ingestion
+              File Ingestion
             </h3>
             <p>
               Direct browser upload to S3-compatible cloud storage
@@ -471,6 +492,37 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               </div>
             )}
 
+            {/* Media Type Override Selector */}
+            {selectedFile && !uploadResult && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-color)', letterSpacing: '0.05em' }}>
+                  Choose Media Category
+                </label>
+                <select
+                  value={selectedMediaType}
+                  onChange={(e) => setSelectedMediaType(e.target.value as any)}
+                  disabled={isUploading}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    background: '#FFFFFF',
+                    color: 'var(--text-color)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="video">🎞️ Video (MP4/WebM)</option>
+                  <option value="image">🖼️ Image (PNG/JPEG/SVG/WebP)</option>
+                  <option value="audio">🎵 Audio (MP3/WAV)</option>
+                  <option value="pdf">📄 PDF Document</option>
+                </select>
+              </div>
+            )}
+
             {/* Upload Progress Bar */}
             {isUploading && (
               <div className={styles.progressContainer}>
@@ -524,7 +576,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   </>
                 ) : (
                   <>
-                    Upload to MinIO <ArrowRight className="w-4 h-4" />
+                    Upload Media <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>

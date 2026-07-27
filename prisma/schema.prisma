@@ -76,4 +76,24 @@ model CubiconConfig {
   selectedImage  String?
   createdAt      DateTime @default(now())
 }
+// 6. Interactive Dashboard Buttons configuration
+model DashboardButton {
+  id        String   @id @default(uuid())
+  label     String
+  mediaUrl  String
+  mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
+  subtitle  String?
+  category  String   @default("Services") // e.g. "Services", "Thought Leadership"
+  color     String?  // Optional visual color configuration
+  updatedAt DateTime @updatedAt
+}
 
+// 7. Uploaded Assets history log
+model MediaAsset {
+  id         String   @id @default(uuid())
+  publicUrl  String
+  fileName   String
+  fileType   String
+  fileSize   Int
+  uploadedAt DateTime @default(now())
+}

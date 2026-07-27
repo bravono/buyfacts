@@ -30,58 +30,157 @@ interface SavedRecord {
   uploadedAt: string;
 }
 
+import { useEffect } from "react";
+
+interface DatabaseButton {
+  id: string;
+  label: string;
+  mediaUrl: string;
+  mediaType: string;
+  subtitle: string | null;
+  category: string;
+}
+
 export default function FileUploadDemoPage() {
   const [savedRecords, setSavedRecords] = useState<SavedRecord[]>([]);
   const [lastUploadedUrl, setLastUploadedUrl] = useState<string | null>(null);
-  const [assigningButtonId, setAssigningButtonId] = useState<number | null>(null);
+  const [assigningButtonId, setAssigningButtonId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>("");
+  const [mockButtons, setMockButtons] = useState<DatabaseButton[]>([]);
 
-  // Active button list matching Dashboard / Services buttons + Thought Leadership buttons
-  const [mockButtons, setMockButtons] = useState([
-    { id: 1, label: "Define It", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 2, label: "Host", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 3, label: "Respondent Validation", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 4, label: "Refine It", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 5, label: "Analyze It", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 6, label: "Story Based", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 7, label: "Build It", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 8, label: "Apply It", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 9, label: "Buyer Drivers", mediaUrl: "https://www.buyfacts.com/", icon: Globe, category: "Services" },
-    { id: 10, label: "Survey Respondent Engagement", mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", icon: Volume2, category: "Thought Leadership" },
-    { id: 11, label: "Content Creation", mediaUrl: "https://www.orimi.com/pdf-test.pdf", icon: FileText, category: "Thought Leadership" },
-    { id: 12, label: "Research Methods", mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", icon: MonitorPlay, category: "Thought Leadership" },
-    { id: 13, label: "Research Speed", mediaUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80", icon: Globe, category: "Thought Leadership" },
-    { id: 14, label: "Hybrid Marketing", mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", icon: MonitorPlay, category: "Thought Leadership" },
-    { id: 15, label: "Marketing Influence", mediaUrl: "https://pdfobject.com/pdf/sample.pdf", icon: FileText, category: "Thought Leadership" },
-  ]);
+  // Fetch buttons and history log on mount
+  useEffect(() => {
+    fetchButtons();
+    fetchHistory();
+  }, []);
 
-  // Callback when a file is successfully uploaded
-  const handleUploadSuccess = (result: UploadSuccessResult) => {
-    const newRecord: SavedRecord = {
-      id: Math.random().toString(36).substring(2, 9),
-      publicUrl: result.publicUrl,
-      fileName: result.fileName,
-      fileType: result.fileType,
-      fileSize: result.fileSize,
-      uploadedAt: new Date().toLocaleTimeString(),
-    };
-
-    setSavedRecords((prev) => [newRecord, ...prev]);
-    setLastUploadedUrl(result.publicUrl);
+  const fetchButtons = async () => {
+    try {
+      const res = await fetch("/api/buttons");
+      const data = await res.json();
+      if (data.success) {
+        setMockButtons(data.buttons);
+      }
+    } catch (err) {
+      console.error("Error fetching buttons:", err);
+    }
   };
 
-  const handleAssignUrl = (buttonId: number, url: string) => {
-    setMockButtons((prev) =>
-      prev.map((btn) => (btn.id === buttonId ? { ...btn, mediaUrl: url } : btn))
-    );
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch("/api/media-assets");
+      const data = await res.json();
+      if (data.success) {
+        // Map database model to SavedRecord interface
+        const records: SavedRecord[] = data.assets.map((item: any) => ({
+          id: item.id,
+          publicUrl: item.publicUrl,
+          fileName: item.fileName,
+          fileType: item.fileType,
+          fileSize: item.fileSize,
+          uploadedAt: new Date(item.uploadedAt).toLocaleTimeString(),
+        }));
+        setSavedRecords(records);
+      }
+    } catch (err) {
+      console.error("Error fetching upload history:", err);
+    }
+  };
+
+  // Callback when a file is successfully uploaded
+  const handleUploadSuccess = async (result: UploadSuccessResult) => {
+    try {
+      // 1. Log to database
+      const res = await fetch("/api/media-assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          publicUrl: result.publicUrl,
+          fileName: result.fileName,
+          fileType: result.fileType,
+          fileSize: result.fileSize,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // 2. Stage the new URL
+        setLastUploadedUrl(result.publicUrl);
+        // 3. Refresh history log
+        fetchHistory();
+      }
+    } catch (err) {
+      console.error("Failed to log upload:", err);
+      // Fallback local state if API fails
+      const newRecord: SavedRecord = {
+        id: Math.random().toString(36).substring(2, 9),
+        publicUrl: result.publicUrl,
+        fileName: result.fileName,
+        fileType: result.fileType,
+        fileSize: result.fileSize,
+        uploadedAt: new Date().toLocaleTimeString(),
+      };
+      setSavedRecords((prev) => [newRecord, ...prev]);
+      setLastUploadedUrl(result.publicUrl);
+    }
+  };
+
+  const handleAssignUrl = async (buttonId: string, url: string) => {
     setAssigningButtonId(buttonId);
-    setTimeout(() => setAssigningButtonId(null), 1500);
+    try {
+      const targetBtn = mockButtons.find(b => b.id === buttonId);
+      const res = await fetch("/api/buttons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: buttonId,
+          mediaUrl: url,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // Update local state
+        setMockButtons(prev =>
+          prev.map(btn => (btn.id === buttonId ? { ...btn, mediaUrl: url } : btn))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to assign URL to button:", err);
+    } finally {
+      setTimeout(() => setAssigningButtonId(null), 1500);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      const res = await fetch("/api/media-assets", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setSavedRecords([]);
+      }
+    } catch (err) {
+      console.error("Failed to clear history:", err);
+    }
   };
 
   const triggerPreview = (url: string, label: string) => {
     setPreviewUrl(url);
     setPreviewName(label);
+  };
+
+  const getIconForType = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "video":
+        return MonitorPlay;
+      case "audio":
+        return Volume2;
+      case "pdf":
+        return FileText;
+      default:
+        return Globe;
+    }
   };
 
   return (
@@ -172,7 +271,7 @@ export default function FileUploadDemoPage() {
                 {mockButtons
                   .filter((btn) => btn.category === category)
                   .map((btn) => {
-                    const BtnIcon = btn.icon;
+                    const BtnIcon = getIconForType(btn.mediaType);
                     return (
                       <div key={btn.id} className={styles.card}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -248,7 +347,7 @@ export default function FileUploadDemoPage() {
             {savedRecords.length > 0 && (
               <button
                 type="button"
-                onClick={() => setSavedRecords([])}
+                onClick={handleClearHistory}
                 className={styles.clearBtn}
               >
                 Clear History
