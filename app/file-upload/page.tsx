@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FileUploader, UploadSuccessResult } from "@/components/FileUploader";
@@ -19,6 +19,11 @@ import {
   X,
   Sparkles,
   Grid,
+  Lock,
+  User,
+  Mail,
+  Loader2,
+  LogOut
 } from "lucide-react";
 
 interface SavedRecord {
@@ -29,8 +34,6 @@ interface SavedRecord {
   fileSize: number;
   uploadedAt: string;
 }
-
-import { useEffect } from "react";
 
 interface DatabaseButton {
   id: string;
@@ -48,12 +51,68 @@ export default function FileUploadDemoPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>("");
   const [mockButtons, setMockButtons] = useState<DatabaseButton[]>([]);
+  
+  // Auth State
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  // Fetch buttons and history log on mount
+  // Check existing session
   useEffect(() => {
-    fetchButtons();
-    fetchHistory();
+    const checkSession = () => {
+      const storedSession = localStorage.getItem("uploadAuth");
+      if (storedSession === "true") {
+        setIsAuthorized(true);
+      }
+      setIsCheckingSession(false);
+    };
+    checkSession();
   }, []);
+
+  // Fetch buttons and history log on mount (only if authorized)
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchButtons();
+      fetchHistory();
+    }
+  }, [isAuthorized]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setIsVerifying(true);
+
+    try {
+      const res = await fetch("/api/auth/verify-uploader", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authEmail, name: authName }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthorized(true);
+        localStorage.setItem("uploadAuth", "true");
+      } else {
+        setAuthError(data.error || "Authorization failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setAuthError("Network error. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("uploadAuth");
+    setIsAuthorized(false);
+    setAuthEmail("");
+    setAuthName("");
+  };
 
   const fetchButtons = async () => {
     try {
@@ -72,7 +131,6 @@ export default function FileUploadDemoPage() {
       const res = await fetch("/api/media-assets");
       const data = await res.json();
       if (data.success) {
-        // Map database model to SavedRecord interface
         const records: SavedRecord[] = data.assets.map((item: any) => ({
           id: item.id,
           publicUrl: item.publicUrl,
@@ -91,7 +149,6 @@ export default function FileUploadDemoPage() {
   // Callback when a file is successfully uploaded
   const handleUploadSuccess = async (result: UploadSuccessResult) => {
     try {
-      // 1. Log to database
       const res = await fetch("/api/media-assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,14 +162,11 @@ export default function FileUploadDemoPage() {
 
       const data = await res.json();
       if (data.success) {
-        // 2. Stage the new URL
         setLastUploadedUrl(result.publicUrl);
-        // 3. Refresh history log
         fetchHistory();
       }
     } catch (err) {
       console.error("Failed to log upload:", err);
-      // Fallback local state if API fails
       const newRecord: SavedRecord = {
         id: Math.random().toString(36).substring(2, 9),
         publicUrl: result.publicUrl,
@@ -129,7 +183,6 @@ export default function FileUploadDemoPage() {
   const handleAssignUrl = async (buttonId: string, url: string) => {
     setAssigningButtonId(buttonId);
     try {
-      const targetBtn = mockButtons.find(b => b.id === buttonId);
       const res = await fetch("/api/buttons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,7 +194,6 @@ export default function FileUploadDemoPage() {
 
       const data = await res.json();
       if (data.success) {
-        // Update local state
         setMockButtons(prev =>
           prev.map(btn => (btn.id === buttonId ? { ...btn, mediaUrl: url } : btn))
         );
@@ -172,16 +224,107 @@ export default function FileUploadDemoPage() {
 
   const getIconForType = (type: string) => {
     switch (type?.toLowerCase()) {
-      case "video":
-        return MonitorPlay;
-      case "audio":
-        return Volume2;
-      case "pdf":
-        return FileText;
-      default:
-        return Globe;
+      case "video": return MonitorPlay;
+      case "audio": return Volume2;
+      case "pdf": return FileText;
+      default: return Globe;
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.loaderWrapper}>
+          <Loader2 className={styles.loaderIcon} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className={styles.wrapper}>
+        <div className="glow-blob blob-blue" style={{ zIndex: 0, opacity: 0.08 }} />
+        <div className="glow-blob blob-green" style={{ zIndex: 0, opacity: 0.08 }} />
+        
+        <div className={styles.navWrapper}>
+          <Navbar />
+        </div>
+
+        <main className={styles.loginContainer}>
+          <div className={styles.loginCard}>
+            <div className={styles.loginHeader}>
+              <div className={styles.loginIcon}>
+                <Lock className="w-6 h-6" />
+              </div>
+              <h1 className={styles.loginTitle}>Restricted Access</h1>
+              <p className={styles.loginSubtitle}>
+                Please verify your identity to access the Media Console.
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className={styles.loginForm}>
+              {authError && (
+                <div className={styles.loginError}>
+                  {authError}
+                </div>
+              )}
+              
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>
+                  Full Name
+                </label>
+                <div className={styles.inputWrapper}>
+                  <User className={styles.inputIcon} />
+                  <input
+                    type="text"
+                    value={authName}
+                    onChange={(e) => setAuthName(e.target.value)}
+                    required
+                    className={styles.inputField}
+                    placeholder="John Doe"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>
+                  Email Address
+                </label>
+                <div className={styles.inputWrapper}>
+                  <Mail className={styles.inputIcon} />
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    required
+                    className={styles.inputField}
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isVerifying}
+                className={styles.loginSubmitBtn}
+              >
+                {isVerifying ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</>
+                ) : (
+                  "Access Console"
+                )}
+              </button>
+            </form>
+          </div>
+        </main>
+
+        <div className={styles.navWrapper}>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -189,7 +332,7 @@ export default function FileUploadDemoPage() {
       <div className="glow-blob blob-blue" style={{ zIndex: 0, opacity: 0.08 }} />
       <div className="glow-blob blob-green" style={{ zIndex: 0, opacity: 0.08 }} />
       
-      <div className="w-full relative z-50">
+      <div className={styles.navWrapper}>
         <Navbar />
       </div>
 
@@ -198,8 +341,16 @@ export default function FileUploadDemoPage() {
         
         {/* Page Header */}
         <div className={styles.header}>
-          <div className={styles.badge}>
-            <Sparkles className="w-3.5 h-3.5" /> Media Console
+          <div className="flex flex-col items-center gap-4">
+            <div className={styles.badge}>
+              <Sparkles className="w-3.5 h-3.5" /> Media Console
+            </div>
+            <button 
+              onClick={handleLogout}
+              className={styles.logoutBtn}
+            >
+              <LogOut className="w-3 h-3" /> Logout
+            </button>
           </div>
           <h1 className={`${styles.title} text-gradient`}>
             Asset Ingestion & Linking
@@ -418,7 +569,7 @@ export default function FileUploadDemoPage() {
         </div>
       )}
 
-      <div className="w-full relative z-50">
+      <div className={styles.navWrapper}>
         <Footer />
       </div>
 
