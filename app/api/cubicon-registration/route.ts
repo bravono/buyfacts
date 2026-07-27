@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
@@ -41,56 +42,62 @@ export async function POST(request: Request) {
       );
     }
 
+    const submissionId = crypto.randomUUID();
+
     // Save to SQLite database using Prisma
-    let dbRecord;
-    try {
-      dbRecord = await prisma.cubiconRegistration.create({
-        data: {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          phone: (phone || "").trim(),
-          email: email.trim().toLowerCase(),
-          urgency: urgency || "Medium",
-          requestConfirmation: !!requestConfirmation,
-          isEighteen: true,
-          priorityScore: Number(priorityScore) || 0,
-          selectedAreas: JSON.stringify(selectedAreas || {}),
-        },
-      });
-    } catch (dbErr) {
+    const dbPromise = prisma.cubiconRegistration.create({
+      data: {
+        id: submissionId,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: (phone || "").trim(),
+        email: email.trim().toLowerCase(),
+        urgency: urgency || "Medium",
+        requestConfirmation: !!requestConfirmation,
+        isEighteen: true,
+        priorityScore: Number(priorityScore) || 0,
+        selectedAreas: JSON.stringify(selectedAreas || {}),
+      },
+    }).catch(dbErr => {
       console.warn("Database save warning (proceeding with JSON fallback):", dbErr);
-    }
+      return null;
+    });
 
     // Save submission to a local JSON file in data/cubicon_registrations.json
-    const dirPath = path.join(process.cwd(), "data");
-    const filePath = path.join(dirPath, "cubicon_registrations.json");
+    const jsonPromise = (async () => {
+      const dirPath = path.join(process.cwd(), "data");
+      const filePath = path.join(dirPath, "cubicon_registrations.json");
 
-    await fs.mkdir(dirPath, { recursive: true });
+      await fs.mkdir(dirPath, { recursive: true });
 
-    let currentData = [];
-    try {
-      const fileContents = await fs.readFile(filePath, "utf-8");
-      currentData = JSON.parse(fileContents);
-    } catch (err) {
-      // File doesn't exist yet
-    }
+      let currentData = [];
+      try {
+        const fileContents = await fs.readFile(filePath, "utf-8");
+        currentData = JSON.parse(fileContents);
+      } catch (err) {
+        // File doesn't exist yet
+      }
 
-    const newRegistration = {
-      id: dbRecord?.id || `cubicon_reg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      phone: (phone || "").trim(),
-      email: email.trim().toLowerCase(),
-      urgency: urgency || "Medium",
-      requestConfirmation: !!requestConfirmation,
-      isEighteen: true,
-      selectedAreas: selectedAreas || {},
-      priorityScore: priorityScore || 0,
-      timestamp: new Date().toISOString(),
-    };
+      const newRegistration = {
+        id: submissionId,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: (phone || "").trim(),
+        email: email.trim().toLowerCase(),
+        urgency: urgency || "Medium",
+        requestConfirmation: !!requestConfirmation,
+        isEighteen: true,
+        selectedAreas: selectedAreas || {},
+        priorityScore: priorityScore || 0,
+        timestamp: new Date().toISOString(),
+      };
 
-    currentData.push(newRegistration);
-    await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+      currentData.push(newRegistration);
+      await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+      return newRegistration;
+    })();
+
+    const [dbRecord, newRegistration] = await Promise.all([dbPromise, jsonPromise]);
 
     console.log(`[Cubicon Registration] Saved registration ${newRegistration.id} for ${newRegistration.email}`);
 
