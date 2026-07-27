@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl } from '@/lib/minio';
+import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensureBucketExists } from '@/lib/minio';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
@@ -24,6 +24,13 @@ export async function POST(req: NextRequest) {
     const s3Client = getMinioClient();
     const bucket = getMinioBucket();
     const objectKey = generateObjectKey(file.name, prefix);
+
+    // Auto-create bucket and set policy if it doesn't exist, proceed if permissions restrict checking
+    try {
+      await ensureBucketExists(s3Client, bucket);
+    } catch (bucketError) {
+      console.warn('Bucket existence check failed (likely due to HeadBucket/CORS restriction). Proceeding with upload:', bucketError);
+    }
 
     await s3Client.send(
       new PutObjectCommand({

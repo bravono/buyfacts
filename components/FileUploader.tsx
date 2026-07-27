@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { FilePreview } from './FilePreview';
+import styles from './FileUploader.module.css';
 
 // 100MB File Size Limit in Bytes
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
@@ -319,45 +320,37 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   };
 
   return (
-    <div className={`w-full max-w-2xl mx-auto space-y-6 ${className}`}>
+    <div className={`${styles.uploaderContainer} ${className}`}>
       {/* Container Card */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-[var(--border-color)] space-y-6 shadow-xl relative overflow-hidden">
+      <div className={styles.uploadCard}>
         
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
-          <div>
-            <h3 className="text-xl font-bold text-[var(--text-color)] flex items-center gap-2">
-              <UploadCloud className="w-6 h-6 text-[var(--interactive-orange)]" />
-              MinIO File Uploader
+        <div className={styles.headerRow}>
+          <div className={styles.headerText}>
+            <h3>
+              <UploadCloud className="w-5 h-5" />
+              MinIO File Ingestion
             </h3>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Upload images, videos, audio, PDFs & docs up to 100MB
+            <p>
+              Direct browser upload to S3-compatible cloud storage
             </p>
           </div>
 
           {/* Mode Selector */}
-          <div className="flex items-center bg-[var(--bg-alt)] p-1 rounded-lg border border-[var(--border-color)] text-xs">
+          <div className={styles.modeToggle}>
             <button
               type="button"
               onClick={() => setUploadMethod('presigned')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${
-                uploadMethod === 'presigned'
-                  ? 'bg-white dark:bg-zinc-800 text-[var(--interactive-orange)] shadow-sm font-semibold'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-color)]'
-              }`}
+              className={`${styles.toggleBtn} ${uploadMethod === 'presigned' ? styles.toggleBtnActive : ''}`}
               title="Uploads directly from browser to MinIO using S3 presigned URL"
             >
               <Zap className="w-3.5 h-3.5" />
-              Presigned PUT
+              Direct PUT
             </button>
             <button
               type="button"
               onClick={() => setUploadMethod('server')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${
-                uploadMethod === 'server'
-                  ? 'bg-white dark:bg-zinc-800 text-[var(--interactive-orange)] shadow-sm font-semibold'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-color)]'
-              }`}
+              className={`${styles.toggleBtn} ${uploadMethod === 'server' ? styles.toggleBtnActive : ''}`}
               title="Streams upload through Next.js Server Route Handler"
             >
               <Server className="w-3.5 h-3.5" />
@@ -368,12 +361,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
         {/* Successful Upload State */}
         {uploadResult ? (
-          <div className="space-y-6 animate-fade-in-up">
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-6 h-6 shrink-0" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className={styles.successBanner}>
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
               <div>
-                <h4 className="font-semibold text-sm">Upload Successful!</h4>
-                <p className="text-xs opacity-90">File is stored in MinIO and accessible via public URL.</p>
+                <h4 className={styles.successTitle}>Upload Successful</h4>
+                <p className={styles.successText}>File is stored in MinIO and accessible via public URL.</p>
               </div>
             </div>
 
@@ -385,11 +378,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               fileSize={uploadResult.fileSize}
             />
 
-            <div className="flex justify-end pt-2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
               <button
                 type="button"
                 onClick={handleReset}
-                className="btn btn-secondary text-sm flex items-center gap-2"
+                className="btn btn-secondary text-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
               >
                 <RefreshCw className="w-4 h-4" /> Upload Another File
               </button>
@@ -397,7 +391,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </div>
         ) : (
           /* Form & Dropzone State */
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Drag and Drop Zone */}
             <div
               onDragEnter={handleDrag}
@@ -405,11 +399,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               onDragOver={handleDrag}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-3 ${
-                dragActive
-                  ? 'border-[var(--interactive-orange)] bg-[var(--interactive-orange)]/10 scale-[1.01]'
-                  : 'border-[var(--border-color)] hover:border-[var(--interactive-orange)] hover:bg-[var(--bg-alt)]'
-              } ${selectedFile ? 'bg-[var(--bg-alt)]/50' : ''}`}
+              className={`${styles.dropzone} ${dragActive ? styles.dropzoneActive : ''}`}
             >
               <input
                 ref={fileInputRef}
@@ -423,40 +413,43 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 }}
               />
 
-              <div className="w-14 h-14 rounded-2xl bg-[var(--interactive-blue)]/10 text-[var(--interactive-blue)] flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                <UploadCloud className="w-8 h-8 text-[var(--interactive-orange)]" />
+              <div className={styles.iconCircle}>
+                <UploadCloud className="w-7 h-7" />
               </div>
 
               <div>
-                <p className="font-semibold text-base text-[var(--text-color)]">
+                <p className={styles.dropzoneTitle}>
                   {dragActive ? 'Drop your file here...' : 'Click to upload or drag & drop'}
                 </p>
-                <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Supports Images, MP4/WebM Videos, MP3 Audio, PDFs, Office files & ZIP (Max 100MB)
+                <p className={styles.dropzoneSubtitle}>
+                  Supports Images, Videos, Audio, PDFs & Documents (Max 100MB)
                 </p>
               </div>
             </div>
 
             {/* Validation Error Message */}
             {errors.file && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2.5 text-red-600 dark:text-red-400 text-xs font-medium">
+              <div className={styles.errorBox}>
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errors.file.message}</span>
+                <div>
+                  <div className={styles.errorTitle}>Validation Error</div>
+                  <div>{errors.file.message}</div>
+                </div>
               </div>
             )}
 
             {/* Selected File Card */}
             {selectedFile && !uploadResult && (
-              <div className="p-4 bg-[var(--bg-alt)] border border-[var(--border-color)] rounded-xl flex items-center justify-between gap-3 shadow-sm">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-2 bg-[var(--interactive-orange)]/10 text-[var(--interactive-orange)] rounded-lg shrink-0">
-                    <FileIcon className="w-5 h-5" />
+              <div className={styles.fileCard}>
+                <div className={styles.fileCardInfo}>
+                  <div className={styles.fileIconWrapper}>
+                    <FileIcon className="w-4 h-4" />
                   </div>
-                  <div className="truncate">
-                    <p className="text-sm font-semibold truncate text-[var(--text-color)]" title={selectedFile.name}>
+                  <div className={styles.fileDetails}>
+                    <p className={styles.fileName} title={selectedFile.name}>
                       {selectedFile.name}
                     </p>
-                    <p className="text-xs text-[var(--text-muted)]">
+                    <p className={styles.fileSize}>
                       {formatBytes(selectedFile.size)} • {selectedFile.type || 'Unknown MIME'}
                     </p>
                   </div>
@@ -469,7 +462,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                       e.stopPropagation();
                       handleRemoveFile();
                     }}
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className={styles.removeBtn}
                     title="Remove file"
                   >
                     <X className="w-4 h-4" />
@@ -480,17 +473,17 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
             {/* Upload Progress Bar */}
             {isUploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-semibold text-[var(--text-color)]">
-                  <span className="flex items-center gap-2">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--interactive-orange)]" />
+              <div className={styles.progressContainer}>
+                <div className={styles.progressHeader}>
+                  <span className={styles.progressIndicator}>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--interactive-orange)' }} />
                     Uploading to MinIO...
                   </span>
                   <span>{uploadProgress}%</span>
                 </div>
-                <div className="w-full h-3 bg-[var(--border-color)] rounded-full overflow-hidden p-0.5">
+                <div className={styles.progressBarBg}>
                   <div
-                    className="h-full bg-gradient-to-r from-[var(--interactive-blue)] to-[var(--interactive-orange)] rounded-full transition-all duration-300 ease-out"
+                    className={styles.progressBarFill}
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -499,21 +492,31 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
             {/* General Error Display */}
             {uploadError && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3 text-red-600 dark:text-red-400 text-xs">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Upload Failed</p>
+              <div className={styles.errorBox}>
+                <AlertCircle className="w-4 h-4 shrink-0" style={{ marginTop: '0.15rem' }} />
+                <div>
+                  <p className={styles.errorTitle}>Upload Failed</p>
                   <p>{uploadError}</p>
                 </div>
               </div>
             )}
 
             {/* Submit Button */}
-            <div className="pt-2">
+            <div style={{ paddingTop: '0.5rem' }}>
               <button
                 type="submit"
                 disabled={!selectedFile || isUploading}
-                className="w-full btn btn-primary py-3 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '0.9rem',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.85rem'
+                }}
               >
                 {isUploading ? (
                   <>

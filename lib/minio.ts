@@ -1,4 +1,4 @@
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3Client, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3';
 
 /**
  * MinIO Configuration from Environment Variables
@@ -45,6 +45,50 @@ export function getMinioClient(): S3Client {
  */
 export function getMinioBucket(): string {
   return process.env.MINIO_BUCKET || MINIO_CONFIG.bucket;
+}
+
+/**
+ * Verifies if the target bucket exists, and creates it with public read policy if not.
+ */
+export async function ensureBucketExists(s3Client: S3Client, bucketName: string) {
+  try {
+    await s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
+  } catch (error: any) {
+    // If bucket doesn't exist, create it
+    if (error.name === 'NoSuchBucket' || error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+      try {
+        console.log(`Bucket "${bucketName}" not found. Creating it...`);
+        await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
+        
+        // Define public read policy so files can be rendered directly by URLs
+        const publicReadPolicy = {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Sid: 'PublicRead',
+              Effect: 'Allow',
+              Principal: '*',
+              Action: ['s3:GetObject'],
+              Resource: [`arn:aws:s3:::${bucketName}/*`],
+            },
+          ],
+        };
+
+        await s3Client.send(
+          new PutBucketPolicyCommand({
+            Bucket: bucketName,
+            Policy: JSON.stringify(publicReadPolicy),
+          })
+        );
+        console.log(`Bucket "${bucketName}" created and public read policy applied successfully.`);
+      } catch (createErr: any) {
+        console.error(`Error auto-creating bucket:`, createErr);
+        throw new Error(`Bucket "${bucketName}" does not exist, and automatic creation failed: ${createErr.message}`);
+      }
+    } else {
+      throw error;
+    }
+  }
 }
 
 /**
