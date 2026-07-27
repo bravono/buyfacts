@@ -190,7 +190,17 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             fileSize: file.size,
           });
         } else {
-          reject(new Error(`MinIO Upload failed with HTTP status ${xhr.status}. Check CORS settings.`));
+          let errorMsg = `MinIO Upload failed with HTTP status ${xhr.status}.`;
+          try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xhr.responseText, 'text/xml');
+            const code = xmlDoc.getElementsByTagName('Code')[0]?.textContent;
+            const message = xmlDoc.getElementsByTagName('Message')[0]?.textContent;
+            if (code && message) {
+              errorMsg = `${code}: ${message}`;
+            }
+          } catch (_) {}
+          reject(new Error(errorMsg));
         }
       };
 
@@ -242,7 +252,14 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             reject(new Error('Failed to parse server upload response.'));
           }
         } else {
-          reject(new Error(`Server upload failed with status ${xhr.status}.`));
+          let errorMsg = `Server upload failed with status ${xhr.status}.`;
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            if (errData.error) {
+              errorMsg = errData.error;
+            }
+          } catch (_) {}
+          reject(new Error(errorMsg));
         }
       };
 
