@@ -20,13 +20,14 @@ model User {
 
 // 1. Contact Form (Main Page & Contact Us)
 model ContactInquiry {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  company   String?
-  interest  String   @default("General Inquiry")
-  message   String
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  company    String?
+  interest   String   @default("General Inquiry")
+  message    String
+  isEighteen Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
 
 // 2. Coming Soon Notification Form
