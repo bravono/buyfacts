@@ -113,6 +113,12 @@
   transform: translateY(-3px) scale(1.02);
 }
 
+.selectedBtn {
+  transform: translateY(-3px) scale(1.02);
+  border-width: 2.5px !important;
+  opacity: 1 !important;
+}
+
 /* Highlighted central button */
 .pulseCenterBtn {
   font-size: 1rem;
