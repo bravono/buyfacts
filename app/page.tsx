@@ -47,6 +47,7 @@ export default function Home() {
     company: "",
     message: "",
     interest: "General Inquiry",
+    isEighteen: false,
   });
   const [formStatus, setFormStatus] = useState<{
     type: "success" | "error" | null;
@@ -125,10 +126,27 @@ export default function Home() {
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formState.name || !formState.email || !formState.message) {
+    if (!formState.name.trim() || !formState.email.trim() || !formState.message.trim()) {
       setFormStatus({
         type: "error",
         message: "Please fill out all required fields (Name, Email, Message).",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    if (!formState.isEighteen) {
+      setFormStatus({
+        type: "error",
+        message: "You must certify that you are 18 years of age or older to submit this form.",
       });
       return;
     }
@@ -157,6 +175,7 @@ export default function Home() {
           company: "",
           message: "",
           interest: "General Inquiry",
+          isEighteen: false,
         });
       } else {
         setFormStatus({
@@ -179,8 +198,13 @@ export default function Home() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormState((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormState((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -599,6 +623,7 @@ export default function Home() {
             {/* Contact Form */}
             <div className="glass-card" style={{ padding: "3rem" }}>
               <form
+                noValidate
                 onSubmit={handleSubmit}
                 className={styles.contactForm}
                 id="contact-form"
@@ -764,6 +789,36 @@ export default function Home() {
                       }}
                     />
                   </div>
+                </div>
+
+                <div style={{ margin: "1.2rem 0" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      cursor: "pointer",
+                      fontSize: "0.95rem",
+                      color: "var(--text-main)",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      name="isEighteen"
+                      checked={formState.isEighteen}
+                      onChange={handleInputChange}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        accentColor: "var(--interactive-blue)",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span>
+                      I certify that I am eighteen (18) years old or older{" "}
+                      <span style={{ color: "var(--primary-color)" }}>*</span>
+                    </span>
+                  </label>
                 </div>
 
                 <button

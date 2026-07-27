@@ -226,10 +226,19 @@ export default function CubiconPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formState.firstName || !formState.lastName || !formState.email) {
+    if (!formState.firstName.trim() || !formState.lastName.trim() || !formState.email.trim()) {
       setFormStatus({
         type: "error",
-        message: "Please fill out all required personal fields.",
+        message: "Please fill out all required personal fields (First Name, Last Name, Email).",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message: "Please enter a valid email address.",
       });
       return;
     }
@@ -248,7 +257,7 @@ export default function CubiconPage() {
     if (!formState.isEighteen) {
       setFormStatus({
         type: "error",
-        message: "You must certify that you are 18 years of age or older.",
+        message: "You must certify that you are 18 years of age or older to submit this form.",
       });
       return;
     }
@@ -568,7 +577,7 @@ export default function CubiconPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "2.5rem", alignItems: "start" }}>
             {/* Main Form */}
             <div className={styles.formContainer}>
-              <form onSubmit={handleSubmit} id="cubicon-registration-form">
+              <form noValidate onSubmit={handleSubmit} id="cubicon-registration-form">
                 {/* Personal Information */}
                 <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", marginBottom: "1.5rem" }}>
                   1. Contact Information

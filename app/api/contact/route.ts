@@ -6,12 +6,19 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, company, interest, message } = body;
+    const { name, email, company, interest, message, isEighteen } = body;
 
     // Server-side validation
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: "Validation error: Name, Email, and Message are required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!isEighteen) {
+      return NextResponse.json(
+        { error: "Validation error: You must certify that you are 18 years of age or older." },
         { status: 400 }
       );
     }
@@ -35,6 +42,7 @@ export async function POST(request: Request) {
           company: (company || "").trim(),
           interest: interest || "General Inquiry",
           message: message.trim(),
+          isEighteen: !!isEighteen,
         },
       });
     } catch (dbErr) {
@@ -63,6 +71,7 @@ export async function POST(request: Request) {
       company: (company || "").trim(),
       interest: interest || "General Inquiry",
       message: message.trim(),
+      isEighteen: !!isEighteen,
       timestamp: new Date().toISOString()
     };
 
