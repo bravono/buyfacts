@@ -97,3 +97,22 @@ model MediaAsset {
   fileSize   Int
   uploadedAt DateTime @default(now())
 }
+
+// 8. Cubicon Puzzle Tasks
+model CubiconTask {
+  id               String   @id @default(uuid())
+  taskIndex        Int      @unique
+  heading          String
+  description      String
+  screen           String
+  image            String
+  rotation         String   @default("left")
+  rotationInterval Int      @default(10)
+  targetX          Float?
+  targetY          Float?
+  targetZ          Float?
+  targetPoints     String?  // JSON array of checkpoint coordinates [{x,y,z}, ...] (e.g. start, mid, end)
+  tolerance        Float    @default(0.5)
+  isFinal          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}

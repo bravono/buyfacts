@@ -1,45 +1,13 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
-// Puzzle task definitions – one per face of the cubicon.
-// The `image` URLs resolve to /cubicon-app/arts/PuzzleN.png which are
-// served as static public assets by Next.js.
-// The `screen` field corresponds to the GLB material name for each face of the
-// cubicon, mapping each puzzle to a different side.
+// Puzzle task definitions – fetched from the database.
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
-const PUZZLES = [
-  {
-    screen: "Active_front",
-    image: `${BASE_URL}/cubicon-app/arts/Puzzle1.png`,
-    heading: "Puzzle 1 of 4",
-    description: "Tap the highlighted area on the cube to continue.",
-  },
-  {
-    screen: "Active_side_r",
-    image: `${BASE_URL}/cubicon-app/arts/Puzzle2.png`,
-    heading: "Puzzle 2 of 4",
-    description: "Tap the highlighted area on the cube to continue.",
-  },
-  {
-    screen: "Active_back",
-    image: `${BASE_URL}/cubicon-app/arts/Puzzle3.png`,
-    heading: "Puzzle 3 of 4",
-    description: "Tap the highlighted area on the cube to continue.",
-  },
-  {
-    screen: "Active_side_l",
-    image: `${BASE_URL}/cubicon-app/arts/Puzzle4.png`,
-    heading: "Puzzle 4 of 4",
-    description: "Well done! You have completed all four puzzles.",
-  },
-];
-
-// In-memory session store (per-process). For production use a shared store /
-// database – but this is sufficient for the iframe-embedded use-case where
-// the session lives within a single page load.
+// In-memory session store (per-process).
 const sessions: Record<string, { taskIndex: number; startTime: number }> = {};
 
 function generateSessionId(): string {
@@ -48,22 +16,13 @@ function generateSessionId(): string {
 
 // ---------------------------------------------------------------------------
 // POST /api/cubicon-data
-//
-// The cubicon app sends two types of requests (both as POST with a
-// `data=JSON.stringify({...})` body):
-//
-//   1. Init:  { sessionId: undefined, task: "init", ... }
-//      Returns the first puzzle and a new sessionId.
-//
-//   2. Task:  { sessionId: "sess_...", start: <ISO>, clicks: {...} }
-//      Returns the next puzzle in the cycle (or a completion payload).
 // ---------------------------------------------------------------------------
 export async function POST(request: Request) {
   try {
     const text = await request.text();
 
     // The cubicon app encodes the body as `data=<JSON>` (URLSearchParams style)
-    let parsed: Record<string, unknown> = {};
+    let parsed: Record<string, any> = {};
     if (text.startsWith("data=")) {
       const jsonStr = decodeURIComponent(text.slice("data=".length));
       parsed = JSON.parse(jsonStr);
@@ -71,31 +30,38 @@ export async function POST(request: Request) {
       parsed = JSON.parse(text);
     }
 
-    const isInit =
-      parsed.task === "init" || !parsed.sessionId;
+    console.log("[cubicon-data] Received task payload from client:", parsed);
+
+    const isInit = parsed.task === "init" || !parsed.sessionId;
+    const allTasks = await prisma.cubiconTask.findMany({ orderBy: { taskIndex: 'asc' } });
+    
+    if (allTasks.length === 0) {
+      return NextResponse.json({ error: "No tasks configured in database" }, { status: 500, ...corsHeaders() });
+    }
 
     // ── Init request ─────────────────────────────────────────────────────────
     if (isInit) {
       const sessionId = generateSessionId();
       sessions[sessionId] = { taskIndex: 0, startTime: Date.now() };
 
-      const puzzle = PUZZLES[0];
-      return NextResponse.json(
-        {
-          sessionId,
-          ofTasks: PUZZLES.length,
-          heading: puzzle.heading,
-          description: puzzle.description,
-          screen: puzzle.screen,
-          image: puzzle.image,
-          rotation: [0, 0, 0],
-          rotationInterval: 10,
-          rotationDirection: "left",
-          redirectUrl: "",
-          result: null,
-        },
-        corsHeaders()
-      );
+      const puzzle = allTasks[0];
+      const responseData = {
+        sessionId,
+        ofTasks: allTasks.length,
+        task: puzzle.taskIndex + 1,
+        heading: puzzle.heading,
+        description: puzzle.description,
+        screen: puzzle.screen,
+        image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
+        rotation: [0, 0, 0],
+        rotationInterval: puzzle.rotationInterval,
+        rotationDirection: puzzle.rotation,
+        isFinal: puzzle.isFinal,
+        redirectUrl: "",
+        result: null,
+      };
+      console.log("[cubicon-data] Returning init task:", responseData);
+      return NextResponse.json(responseData, corsHeaders());
     }
 
     // ── Task submission ───────────────────────────────────────────────────────
@@ -106,71 +72,134 @@ export async function POST(request: Request) {
       // Unknown / expired session – restart from puzzle 1
       const newSessionId = generateSessionId();
       sessions[newSessionId] = { taskIndex: 1, startTime: Date.now() };
-      const puzzle = PUZZLES[0];
-      return NextResponse.json(
-        {
-          sessionId: newSessionId,
-          heading: puzzle.heading,
-          description: puzzle.description,
-          screen: puzzle.screen,
-          image: puzzle.image,
-          rotation: [0, 0, 0],
-          rotationInterval: 10,
-          rotationDirection: "left",
-          redirectUrl: "",
-          result: null,
-        },
-        corsHeaders()
-      );
-    }
-
-    // Advance to next puzzle
-    session.taskIndex += 1;
-    const nextIndex = session.taskIndex;
-
-    if (nextIndex >= PUZZLES.length) {
-      // All puzzles completed – send a "passed" result
-      return NextResponse.json(
-        {
-          sessionId,
-          heading: "Congratulations!",
-          description: "You have successfully completed all four Cubicon puzzles.",
-          screen: PUZZLES[PUZZLES.length - 1].screen,
-          image: PUZZLES[PUZZLES.length - 1].image,
-          rotation: [0, 0, 0],
-          rotationInterval: 0,
-          rotationDirection: "left",
-          redirectUrl: "",
-          result: "p",
-        },
-        corsHeaders()
-      );
-    }
-
-    const puzzle = PUZZLES[nextIndex];
-    return NextResponse.json(
-      {
-        sessionId,
+      const puzzle = allTasks[0];
+      const responseData = {
+        sessionId: newSessionId,
+        ofTasks: allTasks.length,
+        task: puzzle.taskIndex + 1,
         heading: puzzle.heading,
         description: puzzle.description,
         screen: puzzle.screen,
-        image: puzzle.image,
+        image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
         rotation: [0, 0, 0],
-        rotationInterval: 10,
-        rotationDirection: nextIndex % 2 === 0 ? "left" : "right",
+        rotationInterval: puzzle.rotationInterval,
+        rotationDirection: puzzle.rotation,
+        isFinal: puzzle.isFinal,
         redirectUrl: "",
         result: null,
-      },
-      corsHeaders()
-    );
+      };
+      console.log("[cubicon-data] Session reset. Returning task 1:", responseData);
+      return NextResponse.json(responseData, corsHeaders());
+    }
+
+    // Validate the coordinates against single target or multi-point checkpoint array (e.g. start, mid, end)
+    const currentPuzzle = allTasks.find(t => t.taskIndex === session.taskIndex);
+    let passed = false;
+
+    if (currentPuzzle) {
+      const clicksObj = parsed.clicks || {};
+      const clicks: Array<{ x: number; y: number; z: number }> = Object.values(clicksObj);
+
+      let targetPointsArray: Array<{ x: number; y: number; z: number }> = [];
+      if (currentPuzzle.targetPoints) {
+        try {
+          targetPointsArray = JSON.parse(currentPuzzle.targetPoints);
+        } catch {
+          targetPointsArray = [];
+        }
+      }
+
+      const tol = currentPuzzle.tolerance ?? 0.5;
+
+      if (targetPointsArray.length > 0) {
+        let matchedCheckpoints = 0;
+        for (const tp of targetPointsArray) {
+          const hit = clicks.some(c => {
+            if (c && c.x !== undefined) {
+              const dx = c.x - tp.x;
+              const dy = c.y - tp.y;
+              const dz = c.z - tp.z;
+              return Math.sqrt(dx * dx + dy * dy + dz * dz) <= tol;
+            }
+            return false;
+          });
+          if (hit) matchedCheckpoints++;
+        }
+        passed = matchedCheckpoints >= Math.ceil(targetPointsArray.length * 0.8);
+      } else if (
+        currentPuzzle.targetX !== null &&
+        currentPuzzle.targetY !== null &&
+        currentPuzzle.targetZ !== null
+      ) {
+        const tx = currentPuzzle.targetX;
+        const ty = currentPuzzle.targetY;
+        const tz = currentPuzzle.targetZ;
+        passed = clicks.some(c => {
+          if (c && c.x !== undefined) {
+            const dx = c.x - tx;
+            const dy = c.y - ty;
+            const dz = c.z - tz;
+            return Math.sqrt(dx * dx + dy * dy + dz * dz) <= tol;
+          }
+          return false;
+        });
+      } else {
+        passed = true;
+      }
+    }
+
+    // Advance to next puzzle unconditionally
+    session.taskIndex += 1;
+    const nextIndex = session.taskIndex;
+
+    if (nextIndex >= allTasks.length) {
+      // All puzzles completed – constant rotation with no waiting gap
+      const lastPuzzle = allTasks[allTasks.length - 1];
+      const constantInterval = 1;
+
+      const responseData = {
+        sessionId,
+        ofTasks: allTasks.length,
+        task: allTasks.length,
+        heading: "Congratulations!",
+        description: "You have successfully completed all four Cubicon puzzles.",
+        screen: lastPuzzle.screen,
+        image: lastPuzzle.image.startsWith("http") ? lastPuzzle.image : `${BASE_URL}${lastPuzzle.image}`,
+        rotation: [0, 0, 0],
+        rotationInterval: constantInterval,
+        rotationDirection: lastPuzzle.rotation,
+        isFinal: true,
+        redirectUrl: "",
+        result: passed ? "p" : "f",
+      };
+      console.log("[cubicon-data] All tasks completed. Returning final result:", responseData);
+      return NextResponse.json(responseData, corsHeaders());
+    }
+
+    const puzzle = allTasks[nextIndex];
+    const responseData = {
+      sessionId,
+      ofTasks: allTasks.length,
+      task: puzzle.taskIndex + 1,
+      heading: puzzle.heading,
+      description: puzzle.description,
+      screen: puzzle.screen,
+      image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
+      rotation: [0, 0, 0],
+      rotationInterval: puzzle.rotationInterval,
+      rotationDirection: puzzle.rotation,
+      isFinal: puzzle.isFinal,
+      redirectUrl: "",
+      result: passed ? "p" : "f",
+    };
+    console.log("[cubicon-data] Returning next task:", responseData);
+    return NextResponse.json(responseData, corsHeaders());
   } catch (err) {
     console.error("[cubicon-data] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500, ...corsHeaders() });
   }
 }
 
-// Allow the iframe-embedded cubicon app to reach this route cross-origin
-// during local development (the iframe is same-origin in production via /cubicon-app/).
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders().headers });
 }
