@@ -14,6 +14,14 @@ function generateSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+// Maps rotation direction so "left" rotates in the other direction as requested
+function mapRotationDirection(dir: string): string {
+  const norm = (dir || "left").toLowerCase();
+  if (norm === "left") return "right";
+  if (norm === "right") return "left";
+  return dir;
+}
+
 // ---------------------------------------------------------------------------
 // POST /api/cubicon-data
 // ---------------------------------------------------------------------------
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
         image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
         rotation: [0, 0, 0],
         rotationInterval: puzzle.rotationInterval,
-        rotationDirection: puzzle.rotation,
+        rotationDirection: mapRotationDirection(puzzle.rotation),
         isFinal: puzzle.isFinal,
         redirectUrl: "",
         result: null,
@@ -83,7 +91,7 @@ export async function POST(request: Request) {
         image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
         rotation: [0, 0, 0],
         rotationInterval: puzzle.rotationInterval,
-        rotationDirection: puzzle.rotation,
+        rotationDirection: mapRotationDirection(puzzle.rotation),
         isFinal: puzzle.isFinal,
         redirectUrl: "",
         result: null,
@@ -153,9 +161,8 @@ export async function POST(request: Request) {
     const nextIndex = session.taskIndex;
 
     if (nextIndex >= allTasks.length) {
-      // All puzzles completed – constant rotation with no waiting gap
+      // All puzzles completed – rotationInterval: 0 stops further backend calls!
       const lastPuzzle = allTasks[allTasks.length - 1];
-      const constantInterval = 1;
 
       const responseData = {
         sessionId,
@@ -166,8 +173,8 @@ export async function POST(request: Request) {
         screen: lastPuzzle.screen,
         image: lastPuzzle.image.startsWith("http") ? lastPuzzle.image : `${BASE_URL}${lastPuzzle.image}`,
         rotation: [0, 0, 0],
-        rotationInterval: constantInterval,
-        rotationDirection: lastPuzzle.rotation,
+        rotationInterval: 0, // Stop backend calls on final completion!
+        rotationDirection: mapRotationDirection(lastPuzzle.rotation),
         isFinal: true,
         redirectUrl: "",
         result: passed ? "p" : "f",
@@ -177,6 +184,8 @@ export async function POST(request: Request) {
     }
 
     const puzzle = allTasks[nextIndex];
+    const isFinalTask = puzzle.isFinal || nextIndex === allTasks.length - 1;
+
     const responseData = {
       sessionId,
       ofTasks: allTasks.length,
@@ -186,9 +195,9 @@ export async function POST(request: Request) {
       screen: puzzle.screen,
       image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
       rotation: [0, 0, 0],
-      rotationInterval: puzzle.rotationInterval,
-      rotationDirection: puzzle.rotation,
-      isFinal: puzzle.isFinal,
+      rotationInterval: isFinalTask ? 0 : puzzle.rotationInterval, // Stop backend calls if this is the final task
+      rotationDirection: mapRotationDirection(puzzle.rotation),
+      isFinal: isFinalTask,
       redirectUrl: "",
       result: passed ? "p" : "f",
     };
