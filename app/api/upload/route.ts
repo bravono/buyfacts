@@ -4,9 +4,21 @@ import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensure
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
+export const maxDuration = 60; // 60 seconds timeout for large uploads
+
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch (parseError: any) {
+      console.error('FormData parsing error:', parseError);
+      return NextResponse.json(
+        { error: 'Failed to parse upload request body. The file might be truncated or exceed server limits.' },
+        { status: 400 }
+      );
+    }
+
     const file = formData.get('file') as File | null;
     const prefix = (formData.get('prefix') as string) || 'uploads';
 
