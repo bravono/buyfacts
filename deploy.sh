@@ -8,7 +8,7 @@ git pull origin staging
 
 npm install
 
-npx prisma migrate deploy
+npx prisma migrate dev
 
 npx prisma generate
 
