@@ -8,6 +8,10 @@ git pull origin staging
 
 npm install
 
+npx prisma migrate deploy
+
+npx prisma generate
+
 npm run build
 
 pm2 restart next-app
