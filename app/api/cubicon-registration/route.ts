@@ -3,6 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { sendCubiconRegistrationEmails } from "@/lib/resend";
+
 
 export async function POST(request: Request) {
   try {
@@ -101,6 +103,20 @@ export async function POST(request: Request) {
 
     console.log(`[Cubicon Registration] Saved registration ${newRegistration.id} for ${newRegistration.email}`);
 
+    // Send transactional confirmation email via Resend
+    sendCubiconRegistrationEmails({
+      id: newRegistration.id,
+      firstName: newRegistration.firstName,
+      lastName: newRegistration.lastName,
+      email: newRegistration.email,
+      phone: newRegistration.phone,
+      urgency: newRegistration.urgency,
+      selectedAreas: newRegistration.selectedAreas,
+      priorityScore: newRegistration.priorityScore,
+    }).catch(err => {
+      console.error("[Cubicon Registration] Failed to send email via Resend:", err);
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -109,6 +125,7 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
+
   } catch (error) {
     console.error("Error in Cubicon registration API route:", error);
     return NextResponse.json(

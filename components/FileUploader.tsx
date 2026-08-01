@@ -297,13 +297,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     try {
       let result: UploadSuccessResult;
       if (uploadMethod === 'presigned') {
-        try {
-          result = await uploadViaPresignedUrl(selectedFile);
-        } catch (presignErr: any) {
-          console.warn('Presigned upload failed, attempting fallback to direct server upload:', presignErr);
-          // Fallback automatically to server route if presigned upload fails (e.g. CORS)
-          result = await uploadViaServer(selectedFile);
-        }
+        result = await uploadViaPresignedUrl(selectedFile);
       } else {
         result = await uploadViaServer(selectedFile);
       }

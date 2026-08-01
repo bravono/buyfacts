@@ -3,6 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { sendContactEmails } from "@/lib/resend";
+
 
 export async function POST(request: Request) {
   try {
@@ -88,10 +90,23 @@ export async function POST(request: Request) {
     // Log the contact submission to server stdout
     console.log(`[Contact Submission] Saved submission ${newSubmission.id} from ${newSubmission.email}`);
 
+    // Send transactional confirmation email via Resend
+    sendContactEmails({
+      id: newSubmission.id,
+      name: newSubmission.name,
+      email: newSubmission.email,
+      company: newSubmission.company,
+      interest: newSubmission.interest,
+      message: newSubmission.message,
+    }).catch(err => {
+      console.error("[Contact Submission] Failed to send email via Resend:", err);
+    });
+
     return NextResponse.json(
       { success: true, message: "Inquiry saved successfully.", id: newSubmission.id },
       { status: 200 }
     );
+
   } catch (error) {
     console.error("Error in contact API route:", error);
     return NextResponse.json(
