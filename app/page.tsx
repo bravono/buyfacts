@@ -37,6 +37,8 @@ interface ServiceCardData {
   icon: React.ReactNode;
   iconColor: string;
   bgColor: string;
+  showMoreDetails?: boolean;
+  moreDetailsUrl?: string;
 }
 
 export default function Home() {
@@ -315,6 +317,14 @@ export default function Home() {
 
                 <h3 className={styles.cardTitle}>{card.title}</h3>
                 <p className={styles.cardSubtitle}>{card.subTitle}</p>
+                {card.showMoreDetails !== false && (
+                  <a
+                    href={card.moreDetailsUrl || `/services#${card.id}`}
+                    className={styles.cardMoreDetailsLink}
+                  >
+                    MORE DETAILS <ArrowRight size={14} />
+                  </a>
+                )}
               </div>
             ))}
           </div>
