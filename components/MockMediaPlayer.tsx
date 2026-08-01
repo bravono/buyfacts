@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
 
@@ -12,6 +12,8 @@ interface MockMediaPlayerProps {
   rightSubtitle?: string;
   mediaType?: "video" | "audio" | "image" | "pdf";
   mediaUrl?: string;
+  pdfUrl?: string;
+  pdfLabel?: string;
   onExploreClick?: (action: string) => void;
   onNextMedia?: () => void;
 }
@@ -23,6 +25,8 @@ export default function MockMediaPlayer({
   rightSubtitle,
   mediaType = "video",
   mediaUrl,
+  pdfUrl,
+  pdfLabel,
   onExploreClick,
   onNextMedia,
 }: MockMediaPlayerProps) {
@@ -312,6 +316,28 @@ export default function MockMediaPlayer({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* PDF Download Option below Player */}
+      {pdfUrl && (
+        <div className={styles.pdfDownloadBanner}>
+          <div className={styles.pdfDownloadInfo}>
+            <FileText className={styles.pdfDownloadIcon} size={24} />
+            <div>
+              <span className={styles.pdfDownloadTag}>Detailed Documentation</span>
+              <h5 className={styles.pdfDownloadTitle}>{pdfLabel || "A Deeper Preview"}</h5>
+            </div>
+          </div>
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className={styles.pdfDownloadBtn}
+          >
+            <Download size={18} /> Download PDF
+          </a>
         </div>
       )}
 

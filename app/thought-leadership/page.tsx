@@ -158,6 +158,8 @@ export default function PortfolioPage() {
                 subtitle={currentMedia.subtitle}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
+                pdfLabel="A Deeper Preview"
                 onNextMedia={() =>
                   setSelectedButtonIndex((prev) => (prev + 1) % thoughtLeadershipButtons.length)
                 }

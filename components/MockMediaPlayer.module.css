@@ -426,14 +426,78 @@
   margin-bottom: 0.8rem;
 }
 
+/* PDF Download Banner below Player Screen */
+.pdfDownloadBanner {
+  margin-top: 0.85rem;
+  background: linear-gradient(135deg, rgba(0, 80, 123, 0.06) 0%, rgba(255, 153, 0, 0.08) 100%);
+  border: 1px dashed rgba(0, 80, 123, 0.3);
+  border-radius: var(--radius-md, 10px);
+  padding: 0.85rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pdfDownloadInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.pdfDownloadIcon {
+  color: var(--interactive-blue, #00507b);
+  flex-shrink: 0;
+}
+
+.pdfDownloadTag {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--interactive-orange, #ff9900);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+}
+
+.pdfDownloadTitle {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--interactive-blue, #00507b);
+}
+
+.pdfDownloadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--interactive-blue, #00507b);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem); /* Responsive, slightly larger text */
+  font-weight: 700;
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 80, 123, 0.2);
+}
+
+.pdfDownloadBtn:hover {
+  background: var(--interactive-orange, #ff9900);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 153, 0, 0.35);
+}
+
 .pdfLink {
   display: inline-block;
   background: var(--color-blue-1, #00507b);
   color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 1.6rem; /* Doubled size */
   font-weight: 600;
-  padding: 0.4rem 1rem;
+  padding: 0.6rem 1.4rem;
   border-radius: var(--radius-sm, 6px);
   text-decoration: none;
   transition: all 0.3s ease;
@@ -498,11 +562,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem 0.8rem;
+  padding: 0.75rem 0.9rem;
   border-radius: var(--radius-sm, 8px);
   border: none;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: clamp(0.98rem, 1.3vw, 1.15rem); /* Responsive, slightly larger text */
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
