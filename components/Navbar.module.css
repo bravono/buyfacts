@@ -20,6 +20,12 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
+.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .container {
   width: 100%;
   max-width: 1200px;

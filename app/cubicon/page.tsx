@@ -328,7 +328,7 @@ export default function CubiconPage() {
 
   return (
     <div className={styles.main}>
-      <Navbar />
+      <Navbar hideOnScroll={true} />
 
       {/* Hero Section */}
       <section className={styles.hero}>

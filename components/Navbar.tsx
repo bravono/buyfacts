@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
-export default function Navbar() {
+export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -29,7 +29,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
+    <header className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}>
       <div className={styles.container}>
         <a href="#hero" className={styles.logo} id="nav-logo-link">
           <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "50px" }} />

@@ -50,26 +50,24 @@ export async function POST(request: Request) {
     // ── Init request ─────────────────────────────────────────────────────────
     if (isInit) {
       const sessionId = generateSessionId();
-      sessions[sessionId] = { taskIndex: 0, startTime: Date.now() };
+      sessions[sessionId] = { taskIndex: -1, startTime: Date.now() };
 
-      const puzzle = allTasks[0];
-      const responseData = {
-        sessionId,
-        ofTasks: allTasks.length,
-        task: puzzle.taskIndex + 1,
-        heading: puzzle.heading,
-        description: puzzle.description,
-        screen: puzzle.screen,
-        image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
-        rotation: [0, 0, 0],
-        rotationInterval: puzzle.rotationInterval,
-        rotationDirection: mapRotationDirection(puzzle.rotation),
-        isFinal: puzzle.isFinal,
-        redirectUrl: "",
-        result: null,
-      };
-      console.log("[cubicon-data] Returning init task:", responseData);
-      return NextResponse.json(responseData, corsHeaders());
+      return NextResponse.json(
+        {
+          sessionId,
+          ofTasks: allTasks.length,
+          heading: "Welcome to Cubicon",
+          description: "Press Start to begin your puzzle.",
+          screen: "Active_front",
+          image: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
+          rotation: [0, 0, 0],
+          rotationInterval: 0,
+          rotationDirection: "left",
+          redirectUrl: "",
+          result: null,
+        },
+        corsHeaders()
+      );
     }
 
     // ── Task submission ───────────────────────────────────────────────────────
@@ -79,7 +77,7 @@ export async function POST(request: Request) {
     if (!session) {
       // Unknown / expired session – restart from puzzle 1
       const newSessionId = generateSessionId();
-      sessions[newSessionId] = { taskIndex: 1, startTime: Date.now() };
+      sessions[newSessionId] = { taskIndex: 0, startTime: Date.now() };
       const puzzle = allTasks[0];
       const responseData = {
         sessionId: newSessionId,
@@ -173,7 +171,7 @@ export async function POST(request: Request) {
         screen: lastPuzzle.screen,
         image: lastPuzzle.image.startsWith("http") ? lastPuzzle.image : `${BASE_URL}${lastPuzzle.image}`,
         rotation: [0, 0, 0],
-        rotationInterval: 0, // Stop backend calls on final completion!
+        rotationInterval: 0.1, // Fast spin on completion!
         rotationDirection: mapRotationDirection(lastPuzzle.rotation),
         isFinal: true,
         redirectUrl: "",

@@ -28,6 +28,27 @@
       src="https://kit.fontawesome.com/ea5f6dcb80.js"
       crossorigin="anonymous"
     ></script>
+    <script>
+      const originalAddEventListener = EventTarget.prototype.addEventListener;
+      EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (type === 'wheel' || type === 'mousewheel' || type === 'DOMMouseScroll') {
+          if (typeof options === 'object') {
+            options.passive = true;
+          } else {
+            options = { passive: true };
+          }
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+    </script>
+    <style>
+      canvas {
+        touch-action: pan-y !important;
+      }
+      #root > div {
+        touch-action: pan-y !important;
+      }
+    </style>
     <script type="module" crossorigin src="./assets/index-DQS34Hxf.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-Do5xKSQC.css">
     <style>
