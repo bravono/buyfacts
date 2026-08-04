@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -135,6 +136,7 @@ const WEIGHTING_MULTIPLES: Record<number, number> = {
 };
 
 export default function CubiconPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"app" | "register">("app");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
@@ -278,30 +280,18 @@ export default function CubiconPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.id) {
+        const clientEmail = formState.email.trim();
+        const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
+        
         setFormStatus({
           type: "success",
-          message:
-            "Thank you! Your Cubicon Founding Client registration has been submitted successfully.",
+          message: "Registration successful! Redirecting to payment checkout...",
         });
-        setFormState({
-          firstName: "",
-          lastName: "",
-          phone: "",
-          email: "",
-          emailConfirm: "",
-          urgency: "Medium",
-          requestConfirmation: true,
-          isEighteen: false,
-        });
-        setSelectedOptions({
-          interest: [],
-          need: [],
-          source: [],
-          profile: [],
-          history: [],
-          goal: [],
-        });
+
+        // Instant automatic redirect to dedicated payment page
+        const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
+        router.push(checkoutUrl);
       } else {
         setFormStatus({
           type: "error",

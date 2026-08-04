@@ -49,6 +49,10 @@ model CubiconRegistration {
   isEighteen          Boolean  @default(true)
   priorityScore       Float    @default(0.0)
   selectedAreas       String?  // JSON formatted text representation of selected contact areas
+  paymentStatus       String   @default("UNPAID") // UNPAID, COMPLETED, FAILED
+  paypalOrderId       String?
+  amountPaid          Float    @default(100.00)
+  paidAt              DateTime?
   createdAt           DateTime @default(now())
 }
 
