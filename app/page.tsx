@@ -166,10 +166,10 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
+        const firstName = formState.name.trim().split(" ")[0] || "there";
         setFormStatus({
           type: "success",
-          message:
-            "Thank you! Your message has been received. Our team will contact you shortly.",
+          message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
         });
         setFormState({
           name: "",

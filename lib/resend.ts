@@ -74,22 +74,21 @@ export async function sendContactEmails(data: ContactSubmissionData) {
               </tr>
               <tr>
                 <td style="padding: 32px;">
-                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Thank you for contacting us, ${escapeHtml(name)}!</h2>
+                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Thank you for getting in touch, ${escapeHtml(name)}!</h2>
                   <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
-                    We have successfully received your inquiry regarding <strong>${escapeHtml(interest || "General Inquiry")}</strong>. Our research team will review your message and get back to you shortly.
+                    We've received your note regarding <strong>${escapeHtml(interest || "General Inquiry")}</strong>. Our team will review the details of your request and follow up with you as soon as possible.
                   </p>
                   
                   <div style="background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 20px; margin: 24px 0;">
-                    <h3 style="margin: 0 0 12px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Submission Summary</h3>
-                    <p style="margin: 4px 0; color: #e2e8f0; font-size: 14px;"><strong>Reference ID:</strong> ${escapeHtml(id)}</p>
+                    <h3 style="margin: 0 0 12px 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Summary of Your Request</h3>
                     ${company ? `<p style="margin: 4px 0; color: #e2e8f0; font-size: 14px;"><strong>Company:</strong> ${escapeHtml(company)}</p>` : ""}
                     <p style="margin: 4px 0; color: #e2e8f0; font-size: 14px;"><strong>Topic:</strong> ${escapeHtml(interest || "General Inquiry")}</p>
-                    <p style="margin: 12px 0 4px 0; color: #94a3b8; font-size: 13px;"><strong>Message:</strong></p>
+                    <p style="margin: 12px 0 4px 0; color: #94a3b8; font-size: 13px;"><strong>Your Message:</strong></p>
                     <div style="color: #cbd5e1; font-size: 14px; line-height: 1.5; white-space: pre-wrap; font-style: italic;">"${escapeHtml(message)}"</div>
                   </div>
 
                   <p style="margin: 24px 0 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5;">
-                    If you have any urgent questions, feel free to reply directly to this email.
+                    If you have any additional thoughts or updates to share in the meantime, feel free to reply directly to this email.
                   </p>
                 </td>
               </tr>
