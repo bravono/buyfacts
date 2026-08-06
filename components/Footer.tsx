@@ -7,7 +7,8 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.topSection}>
           <div className={styles.brandCol}>
-            <div className={styles.logo}>
+            <div className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "40px" }} />
               <span className={styles.logoText}>
                 Buy<span className={styles.logoHighlight}>Facts</span>
                 <span className={styles.trademark}>®</span>
@@ -31,10 +32,10 @@ export default function Footer() {
           <div className={styles.methodsCol}>
             <h4 className={styles.colTitle}>Core Methodologies</h4>
             <ul className={styles.linksList}>
-              <li><a href="#services?tab=best-practices">Cubicon™</a></li>
-              <li><a href="#services?tab=thought-leadership">Research Libs™</a></li>
-              <li><a href="#services?tab=research-tools">TRIAD™</a></li>
-              <li><a href="#services?tab=best-practices">Rule of Three®</a></li>
+              <li><a href="/cubicon">Cubicon™ Invitation</a></li>
+              <li><a href="/services?tab=thought-leadership">Research Libs™</a></li>
+              <li><a href="/services?tab=research-tools">TRIAD™</a></li>
+              <li><a href="/services?tab=best-practices">Rule of Three®</a></li>
             </ul>
           </div>
         </div>

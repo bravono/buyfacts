@@ -37,6 +37,8 @@ interface ServiceCardData {
   icon: React.ReactNode;
   iconColor: string;
   bgColor: string;
+  showMoreDetails?: boolean;
+  moreDetailsUrl?: string;
 }
 
 export default function Home() {
@@ -47,6 +49,7 @@ export default function Home() {
     company: "",
     message: "",
     interest: "General Inquiry",
+    isEighteen: false,
   });
   const [formStatus, setFormStatus] = useState<{
     type: "success" | "error" | null;
@@ -125,10 +128,27 @@ export default function Home() {
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formState.name || !formState.email || !formState.message) {
+    if (!formState.name.trim() || !formState.email.trim() || !formState.message.trim()) {
       setFormStatus({
         type: "error",
         message: "Please fill out all required fields (Name, Email, Message).",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    if (!formState.isEighteen) {
+      setFormStatus({
+        type: "error",
+        message: "You must certify that you are 18 years of age or older to submit this form.",
       });
       return;
     }
@@ -146,10 +166,10 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
+        const firstName = formState.name.trim().split(" ")[0] || "there";
         setFormStatus({
           type: "success",
-          message:
-            "Thank you! Your message has been received. Our team will contact you shortly.",
+          message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
         });
         setFormState({
           name: "",
@@ -157,6 +177,7 @@ export default function Home() {
           company: "",
           message: "",
           interest: "General Inquiry",
+          isEighteen: false,
         });
       } else {
         setFormStatus({
@@ -179,8 +200,13 @@ export default function Home() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormState((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormState((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -291,6 +317,14 @@ export default function Home() {
 
                 <h3 className={styles.cardTitle}>{card.title}</h3>
                 <p className={styles.cardSubtitle}>{card.subTitle}</p>
+                {card.showMoreDetails !== false && (
+                  <a
+                    href={card.moreDetailsUrl || `/services#${card.id}`}
+                    className={styles.cardMoreDetailsLink}
+                  >
+                    MORE DETAILS <ArrowRight size={14} />
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -585,11 +619,12 @@ export default function Home() {
                     Corporate Head Office
                   </h4>
                   <p className={styles.infoTextVal}>
-                    BuyFacts Research Group LLC
+                    BuyFacts Inc.
                     <br />
-                    Financial Center, Suite 1100
+                    <span style={{ fontSize: "0.7rem" }}>
+                      A Delaware Corporation
+                    </span>
                     <br />
-                    New York, NY 10005
                   </p>
                 </div>
               </div>
@@ -598,6 +633,7 @@ export default function Home() {
             {/* Contact Form */}
             <div className="glass-card" style={{ padding: "3rem" }}>
               <form
+                noValidate
                 onSubmit={handleSubmit}
                 className={styles.contactForm}
                 id="contact-form"
@@ -763,6 +799,36 @@ export default function Home() {
                       }}
                     />
                   </div>
+                </div>
+
+                <div style={{ margin: "1.2rem 0" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      cursor: "pointer",
+                      fontSize: "0.95rem",
+                      color: "var(--text-main)",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      name="isEighteen"
+                      checked={formState.isEighteen}
+                      onChange={handleInputChange}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        accentColor: "var(--interactive-blue)",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span>
+                      I certify that I am eighteen (18) years old or older{" "}
+                      <span style={{ color: "var(--primary-color)" }}>*</span>
+                    </span>
+                  </label>
                 </div>
 
                 <button

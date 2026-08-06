@@ -1,0 +1,84 @@
+.frameContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.topBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background-color: #00507b;
+}
+
+.bottomBorder {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background-color: #00507b;
+}
+
+.corner {
+  position: absolute;
+  width: clamp(140px, 20vw, 300px);
+  pointer-events: none;
+}
+
+.topLeft {
+  top: 16px;
+  left: 0;
+  height: clamp(56px, 8vw, 120px);
+}
+
+.topRight {
+  top: 16px;
+  right: 0;
+  height: clamp(75px, 10vw, 160px);
+}
+
+.bottomLeft {
+  bottom: 16px;
+  left: 0;
+  height: clamp(75px, 10vw, 160px);
+}
+
+.bottomRight {
+  bottom: 16px;
+  right: 0;
+  height: clamp(56px, 8vw, 120px);
+}
+
+/* On extra small screens, scale down the corners to keep content readable */
+@media (max-width: 480px) {
+  .topBorder,
+  .bottomBorder {
+    height: 10px;
+  }
+  .topLeft,
+  .topRight {
+    top: 10px;
+  }
+  .bottomLeft,
+  .bottomRight {
+    bottom: 10px;
+  }
+  .corner {
+    width: 100px;
+  }
+  .topLeft,
+  .bottomRight {
+    height: 40px;
+  }
+  .topRight,
+  .bottomLeft {
+    height: 53px;
+  }
+}

@@ -9,12 +9,19 @@ import { sendContactEmails } from "@/lib/resend";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, company, interest, message } = body;
+    const { name, email, company, interest, message, isEighteen } = body;
 
     // Server-side validation
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: "Validation error: Name, Email, and Message are required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!isEighteen) {
+      return NextResponse.json(
+        { error: "Validation error: You must certify that you are 18 years of age or older." },
         { status: 400 }
       );
     }
@@ -28,33 +35,57 @@ export async function POST(request: Request) {
       );
     }
 
+    const submissionId = crypto.randomUUID();
+
+    // Save to SQLite database using Prisma
+    const dbPromise = prisma.contactInquiry.create({
+      data: {
+        id: submissionId,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        company: (company || "").trim(),
+        interest: interest || "General Inquiry",
+        message: message.trim(),
+        isEighteen: !!isEighteen,
+      },
+    }).catch(dbErr => {
+      console.warn("Database save warning (proceeding with JSON fallback):", dbErr);
+      return null;
+    });
+
     // Save submission to a local JSON file in the project workspace
-    const dirPath = path.join(process.cwd(), "data");
-    const filePath = path.join(dirPath, "contact_inquiries.json");
+    const jsonPromise = (async () => {
+      const dirPath = path.join(process.cwd(), "data");
+      const filePath = path.join(dirPath, "contact_inquiries.json");
 
-    // Ensure the data directory exists
-    await fs.mkdir(dirPath, { recursive: true });
+      // Ensure the data directory exists
+      await fs.mkdir(dirPath, { recursive: true });
 
-    let currentData = [];
-    try {
-      const fileContents = await fs.readFile(filePath, "utf-8");
-      currentData = JSON.parse(fileContents);
-    } catch (err) {
-      // File doesn't exist yet, proceed with empty array
-    }
+      let currentData = [];
+      try {
+        const fileContents = await fs.readFile(filePath, "utf-8");
+        currentData = JSON.parse(fileContents);
+      } catch (err) {
+        // File doesn't exist yet, proceed with empty array
+      }
 
-    const newSubmission = {
-      id: `inq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      company: (company || "").trim(),
-      interest: interest || "General Inquiry",
-      message: message.trim(),
-      timestamp: new Date().toISOString()
-    };
+      const newSubmission = {
+        id: submissionId,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        company: (company || "").trim(),
+        interest: interest || "General Inquiry",
+        message: message.trim(),
+        isEighteen: !!isEighteen,
+        timestamp: new Date().toISOString()
+      };
 
-    currentData.push(newSubmission);
-    await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+      currentData.push(newSubmission);
+      await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+      return newSubmission;
+    })();
+
+    const [dbRecord, newSubmission] = await Promise.all([dbPromise, jsonPromise]);
 
     // Log the contact submission to server stdout
     console.log(`[Contact Submission] Saved submission ${newSubmission.id} from ${newSubmission.email}`);

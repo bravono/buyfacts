@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
-export default function Navbar() {
+export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -29,7 +29,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
+    <header className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}>
       <div className={styles.container}>
         <a href="#hero" className={styles.logo} id="nav-logo-link">
           <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "50px" }} />
@@ -59,8 +59,8 @@ export default function Navbar() {
             THOUGHT LEADERSHIP / BEST PRACTICES
           </a>
 
-          <a href="/press" className={styles.navLink} id="nav-link-press">
-            PRESS
+          <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
+            FOUNDING INVITATION
           </a>
           <a href="/#about" className={styles.navLink} id="nav-link-about">
             ABOUT
@@ -94,12 +94,12 @@ export default function Navbar() {
       >
         <nav className={styles.navMobile}>
           <a
-            href="/#time-savings"
+            href="/"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
-            id="mob-link-time-savings"
+            id="mob-link-home"
           >
-            SAVINGS
+            HOME
           </a>
           <a
             href="/services"
@@ -110,20 +110,20 @@ export default function Navbar() {
             SERVICES
           </a>
           <a
+            href="/cubicon"
+            onClick={closeMobileMenu}
+            className={styles.mobileNavLink}
+            id="mob-link-cubicon"
+          >
+            FOUNDING INVITATION
+          </a>
+          <a
             href="/#about"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
             id="mob-link-about"
           >
             ABOUT
-          </a>
-          <a
-            href="/portfolio"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
-            id="mob-link-portfolio"
-          >
-            PORTFOLIO
           </a>
           <a
             href="/#contact"

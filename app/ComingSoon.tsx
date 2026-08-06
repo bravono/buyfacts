@@ -84,6 +84,7 @@ export default function ComingSoon() {
       <div className={styles.content}>
         {/* Logo */}
         <div className={styles.logo}>
+          <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "48px" }} />
           <span className={styles.logoText}>
             Buy<span className={styles.logoTextAccent}>Facts</span>
             <sup style={{ fontSize: "0.55em", verticalAlign: "super" }}>®</sup>
@@ -138,43 +139,36 @@ export default function ComingSoon() {
 
         {/* Notify form */}
         {!submitted ? (
-          <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <form
-              className={styles.notifyForm}
-              onSubmit={handleNotify}
-              id="coming-soon-notify-form"
+          <form
+            className={styles.notifyForm}
+            onSubmit={handleNotify}
+            id="coming-soon-notify-form"
+          >
+            <input
+              type="email"
+              id="coming-soon-email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your business email"
+              className={styles.notifyInput}
+              required
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className={styles.notifyBtn}
+              id="coming-soon-notify-btn"
             >
-              <input
-                type="email"
-                id="coming-soon-email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your business email"
-                className={styles.notifyInput}
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className={styles.notifyBtn}
-                id="coming-soon-notify-btn"
-              >
-                {loading ? "Sending…" : (
-                  <>Notify Me <Send size={14} /></>
-                )}
-              </button>
-            </form>
-            {errorMsg && (
-              <p style={{ color: "#ef4444", fontSize: "0.85rem", marginTop: "-1rem", marginBottom: "1.5rem" }}>
-                {errorMsg}
-              </p>
-            )}
-          </div>
+              {loading ? "Sending…" : (
+                <>Notify Me <Send size={14} /></>
+              )}
+            </button>
+          </form>
         ) : (
           <p className={styles.successMsg}>
             <CheckCircle size={16} />
-            {successMsg}
+            You&apos;re on the list — we&apos;ll be in touch!
           </p>
         )}
 

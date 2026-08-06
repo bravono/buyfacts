@@ -308,13 +308,46 @@ export default function CubiconPage() {
     }
   };
 
+  const appFrameWrapperRef = React.useRef<HTMLDivElement>(null);
+
   const reloadApp = () => {
     setIframeKey((prev) => prev + 1);
   };
 
   const toggleFullscreen = () => {
-    setIsFullscreen((prev) => !prev);
+    if (!isFullscreen) {
+      if (appFrameWrapperRef.current && appFrameWrapperRef.current.requestFullscreen) {
+        appFrameWrapperRef.current.requestFullscreen().catch(() => {
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
   };
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) {
+        setIsFullscreen(true);
+      } else {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className={styles.main}>
@@ -358,7 +391,17 @@ export default function CubiconPage() {
       {activeTab === "app" && (
         <section className={styles.appViewportSection}>
           <div className={styles.container}>
-            <div className={styles.appFrameWrapper}>
+            <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
+              {isFullscreen && (
+                <button
+                  className={styles.exitFullscreenFloatingBtn}
+                  onClick={toggleFullscreen}
+                  title="Exit Fullscreen Mode"
+                >
+                  <Minimize2 size={16} /> Exit Fullscreen
+                </button>
+              )}
+
               <div className={styles.appFrameHeader}>
                 <div className={styles.appTitleGroup}>
                   <span className={styles.liveIndicator}>
@@ -394,7 +437,7 @@ export default function CubiconPage() {
                 src="/cubicon-app/index.html"
                 title="Cubicon 3D Interactive App"
                 className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               />
             </div>
           </div>

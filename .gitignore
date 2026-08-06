@@ -31,7 +31,15 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env*.local
+# database & local data backups
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+/scripts
+/data
 
 # vercel
 .vercel
@@ -39,6 +47,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
 
 # others
 subscribers.json

@@ -276,6 +276,25 @@
   max-width: 240px;
 }
 
+.cardMoreDetailsLink {
+  margin-top: 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--interactive-orange);
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: var(--transition-bounce);
+  text-transform: uppercase;
+}
+
+.cardMoreDetailsLink:hover {
+  color: var(--interactive-blue);
+  transform: translateX(3px);
+}
+
 /* Section 3: About Us (Teal background section matching image) */
 .tealTitleWrapper {
   display: flex;
