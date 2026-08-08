@@ -28,7 +28,7 @@ import styles from "./page.module.css";
 // Toggle Coming Soon mode.
 // Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
 // ─────────────────────────────────────────────────────────────────────────────
-const COMING_SOON = true;
+const COMING_SOON = false;
 
 interface ServiceCardData {
   id: string;
@@ -110,7 +110,7 @@ export default function Home() {
     {
       id: "human-validation",
       title: "Human Validation",
-      subTitle: "Real people. Real validation. Real confidence.",
+      subTitle: "Confirm That Survey Respondents Are Real People",
       icon: <ShieldCheck size={32} />,
       iconColor: "#14a38b", // Teal
       bgColor: "rgba(20, 163, 139, 0.08)",
@@ -230,22 +230,87 @@ export default function Home() {
               <span className={styles.heroEyebrowDot}></span>
             </div>
             <h1 className={styles.heroTitle}>
-              Saving Time So You{" "}
+              Saving You Time So You{" "}
               <span className={styles.heroHighlight}>Have the Time</span>
             </h1>
             <p className={styles.heroDesc}>
-              BuyFacts helps you identify meaningful movement earlier, so you
-              can make better decisions, faster — and focus your energy where it
-              matters most.
+              Everything we do is designed to save you time and enable earlier decisions about what to do and when to do it. Click to Explore How, Click for Individual Benefits, or Click for B2B Benefits below.
             </p>
 
-            <div className={styles.heroActions}>
-              <a
-                href="/services"
-                className={styles.btnTeal}
-                id="hero-cta-explore"
-              >
-                LEARN MORE
+            <div className={styles.shoutoutWrapper}>
+              <a href="/cubicon" className={styles.shoutoutBtn}>
+                🔥 Click Here to Beat the Survey Bots
+              </a>
+            </div>
+
+            <div className={styles.choiceGrid}>
+              <a href="#about" className={styles.miniFrameCard}>
+                <div className={styles.miniFrameTopBorder} />
+                <div className={styles.miniFrameBottomBorder} />
+                
+                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
+                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
+                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
+                </svg>
+
+                <h3 className={styles.choiceTitle}>Who We Are</h3>
+                <p className={styles.choiceDesc}>Meet the team of methodologists and researchers dedicated to human validation.</p>
+              </a>
+              
+              <a href="/thought-leadership" className={styles.miniFrameCard}>
+                <div className={styles.miniFrameTopBorder} />
+                <div className={styles.miniFrameBottomBorder} />
+                
+                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
+                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
+                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
+                </svg>
+
+                <h3 className={styles.choiceTitle}>How We Help</h3>
+                <p className={styles.choiceDesc}>Explore our frameworks that validate respondents and save you time.</p>
+              </a>
+
+              <a href="/services" className={styles.miniFrameCard}>
+                <div className={styles.miniFrameTopBorder} />
+                <div className={styles.miniFrameBottomBorder} />
+                
+                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
+                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
+                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
+                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
+                </svg>
+                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
+                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
+                </svg>
+
+                <h3 className={styles.choiceTitle}>What We Provide</h3>
+                <p className={styles.choiceDesc}>Deploy B2B survey designs, validation tools, and priority analytics.</p>
               </a>
             </div>
           </div>
@@ -500,7 +565,7 @@ export default function Home() {
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
-            style={{ marginBottom: "4rem" }}
+            style={{ marginBottom: "2rem" }}
           >
             <div className={styles.tealTitleWrapper}>
               <span className={styles.titleLine}></span>
@@ -513,71 +578,11 @@ export default function Home() {
               uncertainty, and improve Return on Effort through faster, easier,
               and better research.
             </p>
-          </div>
-
-          {/* 3 Team Profile Cards */}
-          <div className={styles.teamGrid}>
-            <div className={styles.memberCard} id="team-member-guduspa">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/guduspa.jpg"
-                  alt="Guduspa Kumar"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Guduspa Kumar</h3>
-                <span className={styles.memberRole}>
-                  Analysis and Analytics
-                </span>
-                <p className={styles.memberBio}>
-                  Guduspa translates raw data patterns into predictive models.
-                  He designs quantitative scoring mechanisms to visualize B2B
-                  buyer intent.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.memberCard} id="team-member-robert">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/robert.jpg"
-                  alt="Robert M Johnson"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Robert M Johnson</h3>
-                <span className={styles.memberRole}>
-                  Survey Methods and Tools
-                </span>
-                <p className={styles.memberBio}>
-                  Robert designs robust, bias-free questionnaires. He develops
-                  frameworks that ensure quantitative datasets align with
-                  commercial research guidelines.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.memberCard} id="team-member-bernie">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/bernie.jpg"
-                  alt="Bernie Rudolph"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Bernie Rudolph</h3>
-                <span className={styles.memberRole}>
-                  Survey Hosting and Research Quality
-                </span>
-                <p className={styles.memberBio}>
-                  Bernie supervises secure cloud servers and routing mechanisms.
-                  He conducts strict quality control protocols for every
-                  participant panel.
-                </p>
-              </div>
+            
+            <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
+              <a href="#team" className={styles.btnSecondary}>
+                Meet Our Team <ArrowRight size={16} style={{ marginLeft: "0.5rem" }} />
+              </a>
             </div>
           </div>
         </div>
@@ -849,6 +854,87 @@ export default function Home() {
                   </div>
                 )}
               </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5: Our Team (Relocated to the bottom) */}
+      <section
+        className={styles.teamSection}
+        id="team"
+        style={{ padding: "6rem 0" }}
+      >
+        <div className={styles.container}>
+          <div className={styles.sectionHeader} style={{ marginBottom: "4rem" }}>
+            <h2 className={styles.sectionTitleLight}>Our Team</h2>
+            <p className={styles.sectionDescLight}>
+              Meet the methodologists, researchers, and engineers who build BuyFacts.
+            </p>
+          </div>
+          
+          <div className={styles.teamGrid}>
+            <div className={styles.memberCard} id="team-member-guduspa">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/guduspa.jpg"
+                  alt="Guduspa Kumar"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Guduspa Kumar</h3>
+                <span className={styles.memberRole}>
+                  Analysis and Analytics
+                </span>
+                <p className={styles.memberBio}>
+                  Guduspa translates raw data patterns into predictive models.
+                  He designs quantitative scoring mechanisms to visualize B2B
+                  buyer intent.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.memberCard} id="team-member-robert">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/robert.jpg"
+                  alt="Robert M Johnson"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Robert M Johnson</h3>
+                <span className={styles.memberRole}>
+                  Survey Methods and Tools
+                </span>
+                <p className={styles.memberBio}>
+                  Robert designs robust, bias-free questionnaires. He develops
+                  frameworks that ensure quantitative datasets align with
+                  commercial research guidelines.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.memberCard} id="team-member-bernie">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/bernie.jpg"
+                  alt="Bernie Rudolph"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Bernie Rudolph</h3>
+                <span className={styles.memberRole}>
+                  Survey Hosting and Research Quality
+                </span>
+                <p className={styles.memberBio}>
+                  Bernie supervises secure cloud servers and routing mechanisms.
+                  He conducts strict quality control protocols for every
+                  participant panel.
+                </p>
+              </div>
             </div>
           </div>
         </div>

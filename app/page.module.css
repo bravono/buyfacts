@@ -72,12 +72,13 @@
 
 .heroTitle {
   font-family: var(--font-display);
-  font-size: 5.5rem;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   font-weight: 800;
-  line-height: 1;
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin-bottom: 1.2rem;
+  letter-spacing: -0.02em;
   color: var(--text-color);
+  white-space: nowrap;
 }
 
 .heroHighlight {
@@ -85,16 +86,195 @@
 }
 
 .heroDesc {
-  font-size: 1.35rem;
-  line-height: 1.7;
+  font-size: 1.15rem;
+  line-height: 1.6;
   color: var(--text-muted);
-  max-width: 700px;
-  margin: 0 auto 3rem auto;
+  max-width: 760px;
+  margin: 0 auto 1.5rem auto;
 }
 
 .heroActions {
   display: flex;
   justify-content: center;
+}
+
+/* Shoutout Button */
+.shoutoutWrapper {
+  margin: 0 0 2.5rem 0;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  position: relative;
+}
+
+.shoutoutBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 153, 0, 0.12) 0%, rgba(0, 80, 123, 0.06) 100%);
+  border: 1.5px solid var(--interactive-orange);
+  color: var(--interactive-orange);
+  padding: 0.6rem 1.8rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(255, 153, 0, 0.1);
+  animation: pulse-orange 2.5s infinite;
+}
+
+.shoutoutBtn:hover {
+  background: var(--interactive-orange);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 0, 0.3);
+}
+
+@keyframes pulse-orange {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 153, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 153, 0, 0);
+  }
+}
+
+/* Choice Grid & Mini Border Frame Cards */
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.miniFrameCard {
+  position: relative;
+  background: var(--bg-alt);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  min-height: 180px;
+}
+
+.miniFrameCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 80, 123, 0.12);
+  background: #ffffff;
+}
+
+.miniFrameTopBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-color: #00507b;
+}
+
+.miniFrameBottomBorder {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-color: #00507b;
+}
+
+.miniCorner {
+  position: absolute;
+  width: 45px;
+  height: auto;
+  pointer-events: none;
+}
+
+.miniTopLeft {
+  top: 8px;
+  left: 0;
+}
+
+.miniTopRight {
+  top: 8px;
+  right: 0;
+}
+
+.miniBottomLeft {
+  bottom: 8px;
+  left: 0;
+}
+
+.miniBottomRight {
+  bottom: 8px;
+  right: 0;
+}
+
+.choiceTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--interactive-blue);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.choiceDesc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Secondary Button (for Team scroll) */
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--interactive-blue);
+  border: 1px solid var(--interactive-blue);
+  padding: 0.75rem 2rem;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background-color: var(--interactive-blue);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 80, 123, 0.15);
+}
+
+.teamSection {
+  background-color: var(--bg-alt);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  z-index: 10;
 }
 
 .btnTeal {
@@ -546,7 +726,7 @@
 /* Responsive Overrides */
 @media (max-width: 1024px) {
   .heroTitle {
-    font-size: 4rem;
+    white-space: nowrap;
   }
   
   .servicesGrid {
@@ -555,6 +735,10 @@
   
   .teamGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .choiceGrid {
+    gap: 1.2rem;
   }
 }
 
@@ -575,7 +759,13 @@
   }
   
   .heroTitle {
-    font-size: 3rem;
+    font-size: 1.8rem;
+    white-space: normal; /* wraps to two lines on mobile */
+  }
+
+  .choiceGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
   .section {

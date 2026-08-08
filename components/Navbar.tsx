@@ -60,7 +60,7 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
           </a>
 
           <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
-            FOUNDING INVITATION
+            SPECIAL OFFER
           </a>
           <a href="/#about" className={styles.navLink} id="nav-link-about">
             ABOUT
@@ -115,7 +115,7 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             className={styles.mobileNavLink}
             id="mob-link-cubicon"
           >
-            FOUNDING INVITATION
+            SPECIAL OFFER
           </a>
           <a
             href="/#about"
