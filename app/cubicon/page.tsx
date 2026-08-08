@@ -28,6 +28,9 @@ import {
   ExternalLink,
   Box,
   ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  Play,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -135,11 +138,78 @@ const WEIGHTING_MULTIPLES: Record<number, number> = {
   6: 0.3,
 };
 
+interface SlideItem {
+  heading: string;
+  image: string;
+  description: string;
+  details: string;
+}
+
+const SLIDES: SlideItem[] = [
+  {
+    heading: " Introduction to Cubicon",
+    image: "/cubicon-app/cubicon_logo.png",
+    description: "Welcome to Cubicon",
+    details: "Experience Cubicon's revolutionary 3D visual validation system. Designed to ensure 100% genuine human survey participation by deploying interactive 3D spatial tasks that automated bots are incapable of solving.",
+  },
+  {
+    heading: " Front-Face Alignment",
+    image: "/cubicon-app/arts/Puzzle1.png",
+    description: "Who gets concerned by howling?",
+    details: "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
+  },
+  {
+    heading: " Right-Profile Selection",
+    image: "/cubicon-app/arts/Puzzle2.png",
+    description: "Who's in line for a change of shirt?",
+    details: "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
+  },
+  {
+    heading: " Back-Face Verification",
+    image: "/cubicon-app/arts/Puzzle3.png",
+    description: "Who gets concerned by howling?",
+    details: "Complete the final validation test. Locate the target character on the back face of the cube and circle them to confirm spatial verification.",
+  },
+];
+
 export default function CubiconPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"app" | "register">("app");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  
+  const [showLiveApp, setShowLiveApp] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideAnimationKey, setSlideAnimationKey] = useState(0);
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev === SLIDES.length - 1 ? 0 : prev + 1));
+    setSlideAnimationKey((prev) => prev + 1);
+  };
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? SLIDES.length - 1 : prev - 1));
+    setSlideAnimationKey((prev) => prev + 1);
+  };
+
+  const handleSeeLiveClick = () => {
+    setShowLiveApp(true);
+    
+    // Set a tiny timeout to allow React to mount the iframe container before triggering fullscreen.
+    // Modern browsers allow fullscreen requests within click handlers even inside short timers.
+    setTimeout(() => {
+      if (appFrameWrapperRef.current) {
+        const elem = appFrameWrapperRef.current;
+        const requestMethod = elem.requestFullscreen || 
+                              (elem as any).webkitRequestFullscreen || 
+                              (elem as any).msRequestFullscreen;
+        if (requestMethod) {
+          requestMethod.call(elem).catch((err: any) => {
+            console.warn("Fullscreen request blocked or failed:", err);
+          });
+        }
+      }
+    }, 50);
+  };
 
   const [formState, setFormState] = useState({
     firstName: "",
@@ -353,96 +423,133 @@ export default function CubiconPage() {
     <div className={styles.main}>
       <Navbar hideOnScroll={true} />
 
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.container}>
-          <div className={styles.heroContent}>
-            <div className={styles.heroBadge}>
-              <Sparkles size={16} /> Interactive 3D Validation Technology
-            </div>
-            <h1 className={styles.heroTitle}>
-              CUBICON 3D <span className={styles.heroHighlight}>VALIDATION APP</span>
-            </h1>
-            <p className={styles.heroSubtitle}>
-              Experience Cubicon&apos;s revolutionary 3D visual validation system. Designed to ensure
-              100% genuine human survey participation by deploying interactive 3D spatial tasks that automated bots are incapable of solving.
-            </p>
-
-            {/* View Switcher Tabs */}
-            <div className={styles.viewSwitcher}>
-              <button
-                className={`${styles.tabBtn} ${activeTab === "app" ? styles.activeTabBtn : ""}`}
-                onClick={() => setActiveTab("app")}
-              >
-                <Box size={18} /> Interactive 3D App
-              </button>
-              <button
-                className={`${styles.tabBtn} ${activeTab === "register" ? styles.activeTabBtn : ""}`}
-                onClick={() => setActiveTab("register")}
-              >
-                <ClipboardList size={18} /> Founding Client Invitation
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Interactive App Viewport Section */}
-      {activeTab === "app" && (
-        <section className={styles.appViewportSection}>
+      <section className={styles.appViewportSection} style={{ paddingTop: "8rem", paddingBottom: "4rem" }}>
           <div className={styles.container}>
-            <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
-              {isFullscreen && (
-                <button
-                  className={styles.exitFullscreenFloatingBtn}
-                  onClick={toggleFullscreen}
-                  title="Exit Fullscreen Mode"
-                >
-                  <Minimize2 size={16} /> Exit Fullscreen
-                </button>
-              )}
+            {!showLiveApp ? (
+              <div className={styles.slideshowWrapper}>
+                <div key={slideAnimationKey} className={`${styles.slideshowContent} ${styles.slideFadeIn}`}>
+                  <div className={styles.slideImageContainer}>
+                    <img
+                      src={SLIDES[currentSlide].image}
+                      alt={SLIDES[currentSlide].heading}
+                      className={styles.slideImage}
+                    />
+                  </div>
+                  <div className={styles.slideDetailsContainer}>
+                    <div>
+                      <div className={styles.slideMeta}>
+                        <Sparkles size={14} /> Slide {currentSlide + 1} of 4
+                      </div>
+                      <h3 className={styles.slideTitle}>{SLIDES[currentSlide].heading}</h3>
+                      <p className={styles.slideText}>{SLIDES[currentSlide].details}</p>
+                    </div>
 
-              <div className={styles.appFrameHeader}>
-                <div className={styles.appTitleGroup}>
-                  <span className={styles.liveIndicator}>
-                    <span className={styles.pulseDot}></span> LIVE 3D ENGINE
-                  </span>
-                  <span style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: 500 }}>
-                    Cubicon Interactive Spatial Solver v1.0
-                  </span>
-                </div>
-                <div className={styles.appControls}>
-                  <button className={styles.controlBtn} onClick={reloadApp} title="Reload 3D App">
-                    <RotateCcw size={14} /> Restart Scene
-                  </button>
-                  <button className={styles.controlBtn} onClick={toggleFullscreen} title="Toggle Fullscreen">
-                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                    {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                  </button>
-                  <a
-                    href="/cubicon-app/index.html"
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.controlBtn}
-                    title="Open in new window"
-                  >
-                    <ExternalLink size={14} /> Launch Standalone
-                  </a>
+                    {currentSlide === SLIDES.length - 1 && (
+                      <div className={styles.seeLiveCallout}>
+                        <span className={styles.seeLiveTitle}>Experience it yourself</span>
+                        <button
+                          className={styles.seeLiveBtn}
+                          onClick={handleSeeLiveClick}
+                          title="Launch Cubicon in 3D Live Screen"
+                        >
+                          <Play size={18} fill="#ffffff" /> SEE CUBICON LIVE!
+                        </button>
+                        <span className={styles.seeLiveSubtitle}>
+                          Interactive 3D application will launch in full screen
+                        </span>
+                      </div>
+                    )}
+
+                    <div className={styles.slideNavControls}>
+                      <button
+                        className={styles.slideArrowBtn}
+                        onClick={handlePrevSlide}
+                        title="Previous Puzzle"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      
+                      <div className={styles.slideDots}>
+                        {SLIDES.map((_, index) => (
+                          <button
+                            key={index}
+                            className={`${styles.slideDot} ${
+                              currentSlide === index ? styles.activeSlideDot : ""
+                            }`}
+                            onClick={() => {
+                              setCurrentSlide(index);
+                              setSlideAnimationKey((prev) => prev + 1);
+                            }}
+                            title={`Go to slide ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        className={styles.slideArrowBtn}
+                        onClick={handleNextSlide}
+                        title="Next Puzzle"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ) : (
+              <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
+                {isFullscreen && (
+                  <button
+                    className={styles.exitFullscreenFloatingBtn}
+                    onClick={toggleFullscreen}
+                    title="Exit Fullscreen Mode"
+                  >
+                    <Minimize2 size={16} /> Exit Fullscreen
+                  </button>
+                )}
 
-              {/* Embedded Deployed Cubicon App */}
-              <iframe
-                key={iframeKey}
-                src="/cubicon-app/index.html"
-                title="Cubicon 3D Interactive App"
-                className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              />
-            </div>
+                <div className={styles.appFrameHeader}>
+                  <div className={styles.appTitleGroup}>
+                    <span className={styles.liveIndicator}>
+                      <span className={styles.pulseDot}></span> LIVE 3D ENGINE
+                    </span>
+                    <span style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: 500 }}>
+                      Cubicon Interactive Spatial Solver v1.0
+                    </span>
+                  </div>
+                  <div className={styles.appControls}>
+                    <button className={styles.controlBtn} onClick={reloadApp} title="Reload 3D App">
+                      <RotateCcw size={14} /> Restart Scene
+                    </button>
+                    <button className={styles.controlBtn} onClick={toggleFullscreen} title="Toggle Fullscreen">
+                      {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                      {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                    </button>
+                    <a
+                      href="/cubicon-app/index.html"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.controlBtn}
+                      title="Open in new window"
+                    >
+                      <ExternalLink size={14} /> Launch Standalone
+                    </a>
+                  </div>
+                </div>
+
+                {/* Embedded Deployed Cubicon App */}
+                <iframe
+                  key={iframeKey}
+                  src="/cubicon-app/index.html"
+                  title="Cubicon 3D Interactive App"
+                  className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                />
+              </div>
+            )}
           </div>
         </section>
-      )}
 
       {/* WHY WE CREATED CUBICON */}
       <section className="section-light" style={{ padding: "6rem 0" }}>
