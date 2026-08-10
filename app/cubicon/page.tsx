@@ -239,6 +239,40 @@ export default function CubiconPage() {
   }>({ type: null, message: "" });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStep, setFormStep] = useState(1);
+  const totalSteps = 3;
+  const [showForm, setShowForm] = useState(false);
+
+  const nextStep = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (formStep === 1) {
+      if (!formState.firstName.trim() || !formState.lastName.trim() || !formState.email.trim() || !formState.emailConfirm.trim()) {
+        setFormStatus({ type: "error", message: "Please fill out all required fields." });
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formState.email.trim())) {
+        setFormStatus({ type: "error", message: "Please enter a valid email address." });
+        return;
+      }
+      if (formState.email.trim().toLowerCase() !== formState.emailConfirm.trim().toLowerCase()) {
+        setFormStatus({ type: "error", message: "Emails do not match." });
+        return;
+      }
+    } else if (formStep === 2) {
+      if (!formState.isEighteen) {
+        setFormStatus({ type: "error", message: "You must certify that you are 18 or older." });
+        return;
+      }
+    }
+    setFormStatus({ type: null, message: "" });
+    setFormStep(prev => prev + 1);
+  };
+
+  const prevStep = () => {
+    setFormStatus({ type: null, message: "" });
+    setFormStep(prev => prev - 1);
+  };
 
   // Toggle checkbox option in an area
   const toggleOption = (areaId: string, label: string) => {
@@ -297,6 +331,11 @@ export default function CubiconPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formStep !== totalSteps) {
+      nextStep();
+      return;
+    }
 
     if (!formState.firstName.trim() || !formState.lastName.trim() || !formState.email.trim()) {
       setFormStatus({
@@ -710,18 +749,38 @@ export default function CubiconPage() {
             <span className={styles.sectionTag}>APPLY NOW</span>
             <h2 className={styles.sectionTitle}>Founding Client Registration</h2>
             <p className={styles.sectionDesc}>
-              Please complete your contact information and select your contact areas below to calculate your respondent priority score and register for the Cubicon Founding Client invitation.
+              Please complete your contact information and select your contact areas below to register for the Cubicon Founding Client invitation.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "2.5rem", alignItems: "start" }}>
+          {!showForm ? (
+            <div style={{ textAlign: "center", marginTop: "1rem", marginBottom: "4rem" }}>
+              <button 
+                onClick={() => setShowForm(true)} 
+                className="btn btn-primary" 
+                style={{ padding: "1.2rem 2.5rem", fontSize: "1.1rem" }}
+              >
+                Begin Application (Takes ~1 minute)
+              </button>
+            </div>
+          ) : (
+          <div style={{ maxWidth: "800px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr", gap: "2.5rem", alignItems: "start" }}>
             {/* Main Form */}
             <div className={styles.formContainer}>
               <form noValidate onSubmit={handleSubmit} id="cubicon-registration-form">
-                {/* Personal Information */}
-                <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", marginBottom: "1.5rem" }}>
-                  1. Contact Information
-                </h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                  <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", margin: 0 }}>
+                    {formStep === 1 && "Contact Information"}
+                    {formStep === 2 && "Details & Verification"}
+                    {formStep === 3 && "Contact Areas & Priorities"}
+                  </h3>
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, background: "rgba(255,255,255,0.05)", padding: "0.3rem 0.8rem", borderRadius: "20px" }}>
+                    Part {formStep} of {totalSteps}
+                  </span>
+                </div>
+
+                {formStep === 1 && (
+                  <>
 
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
@@ -790,7 +849,11 @@ export default function CubiconPage() {
                     />
                   </div>
                 </div>
+                  </>
+                )}
 
+                {formStep === 2 && (
+                  <>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label htmlFor="phone" className={styles.label}>
@@ -851,13 +914,11 @@ export default function CubiconPage() {
                     </span>
                   </label>
                 </div>
+                  </>
+                )}
 
-                <hr style={{ margin: "2.5rem 0", borderColor: "var(--border-color)" }} />
-
-                {/* Contact Areas (Excel Grid) */}
-                <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", marginBottom: "0.5rem" }}>
-                  2. Contact Areas &amp; Priorities
-                </h3>
+                {formStep === 3 && (
+                  <>
                 <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", marginBottom: "1.5rem" }}>
                   Check all elements that apply to your organization. Multiple selections adjust factors automatically according to the BuyFacts weighting model.
                 </p>
@@ -887,17 +948,42 @@ export default function CubiconPage() {
                     </div>
                   </div>
                 ))}
+                  </>
+                )}
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn btn-primary"
-                  style={{ width: "100%", padding: "1.1rem", fontSize: "1.1rem", marginTop: "1rem" }}
-                  id="submit-cubicon-form"
-                >
-                  {isSubmitting ? "Submitting Registration..." : "REGISTER AS FOUNDING CLIENT"}{" "}
-                  <Send size={18} />
-                </button>
+                <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
+                  {formStep > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={prevStep} 
+                      style={{ padding: "1.1rem", fontSize: "1rem", flex: 1, background: "transparent", border: "1px solid var(--interactive-blue)", color: "var(--interactive-blue)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}
+                    >
+                      Back
+                    </button>
+                  )}
+                  {formStep < totalSteps ? (
+                    <button 
+                      key="continue-btn"
+                      type="button" 
+                      onClick={nextStep} 
+                      className="btn btn-primary" 
+                      style={{ padding: "1.1rem", fontSize: "1.1rem", flex: 2 }}
+                    >
+                      Continue
+                    </button>
+                  ) : (
+                    <button
+                      key="submit-btn"
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="btn btn-primary"
+                      style={{ padding: "1.1rem", fontSize: "1.1rem", flex: 2 }}
+                      id="submit-cubicon-form"
+                    >
+                      {isSubmitting ? "Submitting..." : "REGISTER AS FOUNDING CLIENT"} <Send size={18} />
+                    </button>
+                  )}
+                </div>
 
                 {formStatus.type && (
                   <div
@@ -913,30 +999,8 @@ export default function CubiconPage() {
               </form>
             </div>
 
-            {/* Priority Score Sidebar Card */}
-            <div>
-              <div className={styles.scoreStickyCard}>
-                <Calculator size={36} style={{ color: "var(--interactive-orange)", margin: "0 auto" }} />
-                <div className={styles.scoreLabel}>RESPONDENT PRIORITY SCORE</div>
-                <div className={styles.scoreValue}>{priorityScore}</div>
-                <p style={{ fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.75)", lineHeight: "1.5" }}>
-                  Calculated in real-time from your selected contact areas using the BuyFacts model.
-                </p>
-
-                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.15)", textAlign: "left", fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.85)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> 100% Refundable Guarantee
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> US B2B Headquartered
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> 60-Day Start Window
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+          )}
         </div>
       </section>
 
