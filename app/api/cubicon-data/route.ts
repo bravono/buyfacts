@@ -22,6 +22,18 @@ function mapRotationDirection(dir: string): string {
   return dir;
 }
 
+function formatImageUrl(imagePath: string): string {
+  if (!imagePath) return "";
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://") || imagePath.startsWith("data:")) {
+    return imagePath;
+  }
+  const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  if (cleanPath.startsWith("/arts/")) {
+    return `/cubicon-app${cleanPath}`;
+  }
+  return `${BASE_URL}${cleanPath}`;
+}
+
 // ---------------------------------------------------------------------------
 // POST /api/cubicon-data
 // ---------------------------------------------------------------------------
@@ -86,7 +98,7 @@ export async function POST(request: Request) {
         heading: puzzle.heading,
         description: puzzle.description,
         screen: puzzle.screen,
-        image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
+        image: formatImageUrl(puzzle.image),
         rotation: [0, 0, 0],
         rotationInterval: puzzle.rotationInterval,
         rotationDirection: mapRotationDirection(puzzle.rotation),
@@ -169,7 +181,7 @@ export async function POST(request: Request) {
         heading: "Congratulations!",
         description: "You have successfully completed all four Cubicon puzzles.",
         screen: lastPuzzle.screen,
-        image: lastPuzzle.image.startsWith("http") ? lastPuzzle.image : `${BASE_URL}${lastPuzzle.image}`,
+        image: formatImageUrl(lastPuzzle.image),
         rotation: [0, 0, 0],
         rotationInterval: 0.1, // Fast spin on completion!
         rotationDirection: mapRotationDirection(lastPuzzle.rotation),
@@ -191,7 +203,7 @@ export async function POST(request: Request) {
       heading: puzzle.heading,
       description: puzzle.description,
       screen: puzzle.screen,
-      image: puzzle.image.startsWith("http") ? puzzle.image : `${BASE_URL}${puzzle.image}`,
+      image: formatImageUrl(puzzle.image),
       rotation: [0, 0, 0],
       rotationInterval: isFinalTask ? 0 : puzzle.rotationInterval, // Stop backend calls if this is the final task
       rotationDirection: mapRotationDirection(puzzle.rotation),

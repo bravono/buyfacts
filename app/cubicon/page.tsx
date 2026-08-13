@@ -160,13 +160,13 @@ const SLIDES: SlideItem[] = [
   },
   {
     heading: " Right-Profile Selection",
-    image: "/cubicon-app/arts/Puzzle2.png",
+    image: "/cubicon-app/arts/Puzzle1.png",
     description: "Who's in line for a change of shirt?",
     details: "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
     heading: " Back-Face Verification",
-    image: "/cubicon-app/arts/Puzzle3.png",
+    image: "/cubicon-app/arts/Puzzle1.png",
     description: "Who gets concerned by howling?",
     details: "Complete the final validation test. Locate the target character on the back face of the cube and circle them to confirm spatial verification.",
   },
