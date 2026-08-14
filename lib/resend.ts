@@ -307,6 +307,90 @@ export async function sendPaymentReceiptEmail(data: PaymentReceiptData) {
   }
 }
 
+interface CubiconShareData {
+  senderName: string;
+  receiverName: string;
+  receiverEmail: string;
+}
+
+/**
+ * Send Transactional Invitation Email for Cubicon 3D Spatial Validation
+ */
+export async function sendCubiconShareEmail(data: CubiconShareData) {
+  try {
+    const resend = getResendClient();
+    const { senderName, receiverName, receiverEmail } = data;
+    const appUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://buyfacts.com"}/cubicon`;
+
+    const emailRes = await resend.emails.send({
+      from: DEFAULT_FROM_EMAIL,
+      to: [receiverEmail],
+      subject: `${senderName} invited you to try Cubicon 3D Spatial Validation - BuyFacts®`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Cubicon 3D Invitation</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0d1117; color: #e6edf3; margin: 0; padding: 24px;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; overflow: hidden;">
+              <tr>
+                <td style="padding: 32px; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border-bottom: 2px solid #8b5cf6;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">BuyFacts® Cubicon</h1>
+                  <p style="margin: 6px 0 0 0; color: #a78bfa; font-size: 14px; font-weight: 500;">3D Interactive Human Survey Verification</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 32px;">
+                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Hello ${escapeHtml(receiverName)},</h2>
+                  <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    <strong>${escapeHtml(senderName)}</strong> has invited you to experience <strong>Cubicon</strong> — our revolutionary 3D visual validation system designed to ensure 100% genuine human survey participation by filtering out automated bots.
+                  </p>
+
+                  <div style="background-color: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                    <h3 style="margin: 0 0 16px 0; color: #38bdf8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">How to Use Cubicon</h3>
+                    <ol style="margin: 0; padding-left: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.8;">
+                      <li style="margin-bottom: 10px;"><strong>Launch the 3D Canvas:</strong> Click the button below to open the Cubicon 3D spatial view in your browser.</li>
+                      <li style="margin-bottom: 10px;"><strong>Rotate & Inspect:</strong> Click and drag anywhere across the 3D model to rotate 360° and inspect all faces of the cube.</li>
+                      <li style="margin-bottom: 10px;"><strong>Read the Puzzle Prompt:</strong> Each puzzle specifies a target subject or question located on a specific cube face.</li>
+                      <li style="margin-bottom: 10px;"><strong>Circle or Select Target:</strong> Click directly or draw a precise circle around the designated target area on the active face.</li>
+                      <li style="margin-bottom: 0;"><strong>Submit & Verify:</strong> Click <em>Submit</em> to validate your spatial responses and verify your human response authenticity.</li>
+                    </ol>
+                  </div>
+
+                  <div style="text-align: center; margin: 32px 0 16px 0;">
+                    <a href="${appUrl}" target="_blank" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                      Launch Cubicon 3D Spatial App
+                    </a>
+                  </div>
+
+                  <p style="margin: 24px 0 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5; text-align: center;">
+                    If the button above does not work, copy and paste this link into your browser:<br>
+                    <a href="${appUrl}" style="color: #38bdf8; word-break: break-all;">${appUrl}</a>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 20px 32px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center; color: #64748b; font-size: 12px;">
+                  © ${new Date().getFullYear()} BuyFacts®. All rights reserved.
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    console.log("[Resend] Cubicon share invitation sent to", receiverEmail, emailRes);
+    return emailRes;
+  } catch (error) {
+    console.error("[Resend] Error sending Cubicon share email:", error);
+    return null;
+  }
+}
+
 
 /**
  * Diagnostic/Test Email Sender
