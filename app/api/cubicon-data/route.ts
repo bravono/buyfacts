@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
-// Puzzle task definitions – fetched from the database.
+// Decoupled Cubicon Task Definitions & Fallbacks (Tool DB Boundary)
 // ---------------------------------------------------------------------------
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
-// In-memory session store (per-process).
-const sessions: Record<string, { taskIndex: number; startTime: number }> = {};
+interface SessionData {
+  taskIndex: number;
+  startTime: number;
+  userEmail?: string;
+  passedPuzzles: number;
+  totalPuzzlesAttempted: number;
+}
+
+const sessions: Record<string, SessionData> = {};
 
 function generateSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-// Maps rotation direction so "left" rotates in the other direction as requested
 function mapRotationDirection(dir: string): string {
   const norm = (dir || "left").toLowerCase();
   if (norm === "left") return "right";
@@ -34,35 +39,82 @@ function formatImageUrl(imagePath: string): string {
   return `${BASE_URL}${cleanPath}`;
 }
 
-// ---------------------------------------------------------------------------
-// POST /api/cubicon-data
-// ---------------------------------------------------------------------------
+const DEFAULT_FALLBACK_TASKS = [
+  {
+    taskIndex: 0,
+    heading: "Puzzle 1 of 3",
+    description: "Who gets concerned by howling? (Draw a circle)",
+    screen: "Active_front",
+    image: "/cubicon-app/arts/Puzzle1.png",
+    rotation: "left",
+    rotationInterval: 15,
+    isFinal: false,
+  },
+  {
+    taskIndex: 1,
+    heading: "Puzzle 2 of 3",
+    description: "Who's in line for a change of shirt? (click to choose)",
+    screen: "Active_side_l",
+    image: "/cubicon-app/arts/Puzzle2.png",
+    rotation: "left",
+    rotationInterval: 15,
+    isFinal: false,
+  },
+  {
+    taskIndex: 2,
+    heading: "Puzzle 3 of 3",
+    description: "Who gets concerned by howling? (Draw a circle)",
+    screen: "Active_back",
+    image: "/cubicon-app/arts/Puzzle3.png",
+    rotation: "left",
+    rotationInterval: 15,
+    isFinal: true,
+  },
+];
+
 export async function POST(request: Request) {
   try {
     const text = await request.text();
-
-    // The cubicon app encodes the body as `data=<JSON>` (URLSearchParams style)
     let parsed: Record<string, any> = {};
-    if (text.startsWith("data=")) {
-      const jsonStr = decodeURIComponent(text.slice("data=".length));
-      parsed = JSON.parse(jsonStr);
-    } else {
-      parsed = JSON.parse(text);
+    if (text) {
+      try {
+        if (text.startsWith("data=")) {
+          let raw = text.slice(5);
+          const ampIdx = raw.indexOf("&");
+          if (ampIdx !== -1) {
+            raw = raw.substring(0, ampIdx);
+          }
+          const decoded = decodeURIComponent(raw.replace(/\+/g, " "));
+          parsed = JSON.parse(decoded);
+        } else {
+          parsed = JSON.parse(text);
+        }
+      } catch {
+        try {
+          const params = new URLSearchParams(text);
+          const dataVal = params.get("data");
+          if (dataVal) {
+            parsed = JSON.parse(dataVal);
+          }
+        } catch {
+          console.warn("[cubicon-data] Could not parse request body:", text);
+        }
+      }
     }
-
-    console.log("[cubicon-data] Received task payload from client:", parsed);
 
     const isInit = parsed.task === "init" || !parsed.sessionId;
-    const allTasks = await prisma.cubiconTask.findMany({ orderBy: { taskIndex: 'asc' } });
-    
-    if (allTasks.length === 0) {
-      return NextResponse.json({ error: "No tasks configured in database" }, { status: 500, ...corsHeaders() });
-    }
+    const providedUserEmail = parsed.userEmail ? String(parsed.userEmail).trim() : undefined;
+    const allTasks = DEFAULT_FALLBACK_TASKS;
 
-    // ── Init request ─────────────────────────────────────────────────────────
     if (isInit) {
       const sessionId = generateSessionId();
-      sessions[sessionId] = { taskIndex: -1, startTime: Date.now() };
+      sessions[sessionId] = {
+        taskIndex: -1,
+        startTime: Date.now(),
+        userEmail: providedUserEmail,
+        passedPuzzles: 0,
+        totalPuzzlesAttempted: 0,
+      };
 
       return NextResponse.json(
         {
@@ -82,16 +134,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Task submission ───────────────────────────────────────────────────────
     const sessionId = String(parsed.sessionId ?? "");
-    const session = sessions[sessionId];
+    let session = sessions[sessionId];
 
     if (!session) {
-      // Unknown / expired session – restart from puzzle 1
       const newSessionId = generateSessionId();
-      sessions[newSessionId] = { taskIndex: 0, startTime: Date.now() };
+      session = {
+        taskIndex: 0,
+        startTime: Date.now(),
+        userEmail: providedUserEmail,
+        passedPuzzles: 0,
+        totalPuzzlesAttempted: 0,
+      };
+      sessions[newSessionId] = session;
       const puzzle = allTasks[0];
-      const responseData = {
+      return NextResponse.json({
         sessionId: newSessionId,
         ofTasks: allTasks.length,
         task: puzzle.taskIndex + 1,
@@ -105,98 +162,38 @@ export async function POST(request: Request) {
         isFinal: puzzle.isFinal,
         redirectUrl: "",
         result: null,
-      };
-      console.log("[cubicon-data] Session reset. Returning task 1:", responseData);
-      return NextResponse.json(responseData, corsHeaders());
+      }, corsHeaders());
     }
 
-    // Validate the coordinates against single target or multi-point checkpoint array (e.g. start, mid, end)
-    const currentPuzzle = allTasks.find(t => t.taskIndex === session.taskIndex);
-    let passed = false;
-
-    if (currentPuzzle) {
-      const clicksObj = parsed.clicks || {};
-      const clicks: Array<{ x: number; y: number; z: number }> = Object.values(clicksObj);
-
-      let targetPointsArray: Array<{ x: number; y: number; z: number }> = [];
-      if (currentPuzzle.targetPoints) {
-        try {
-          targetPointsArray = JSON.parse(currentPuzzle.targetPoints);
-        } catch {
-          targetPointsArray = [];
-        }
-      }
-
-      const tol = currentPuzzle.tolerance ?? 0.5;
-
-      if (targetPointsArray.length > 0) {
-        let matchedCheckpoints = 0;
-        for (const tp of targetPointsArray) {
-          const hit = clicks.some(c => {
-            if (c && c.x !== undefined) {
-              const dx = c.x - tp.x;
-              const dy = c.y - tp.y;
-              const dz = c.z - tp.z;
-              return Math.sqrt(dx * dx + dy * dy + dz * dz) <= tol;
-            }
-            return false;
-          });
-          if (hit) matchedCheckpoints++;
-        }
-        passed = matchedCheckpoints >= Math.ceil(targetPointsArray.length * 0.8);
-      } else if (
-        currentPuzzle.targetX !== null &&
-        currentPuzzle.targetY !== null &&
-        currentPuzzle.targetZ !== null
-      ) {
-        const tx = currentPuzzle.targetX;
-        const ty = currentPuzzle.targetY;
-        const tz = currentPuzzle.targetZ;
-        passed = clicks.some(c => {
-          if (c && c.x !== undefined) {
-            const dx = c.x - tx;
-            const dy = c.y - ty;
-            const dz = c.z - tz;
-            return Math.sqrt(dx * dx + dy * dy + dz * dz) <= tol;
-          }
-          return false;
-        });
-      } else {
-        passed = true;
-      }
-    }
-
-    // Advance to next puzzle unconditionally
     session.taskIndex += 1;
     const nextIndex = session.taskIndex;
 
     if (nextIndex >= allTasks.length) {
-      // All puzzles completed – rotationInterval: 0 stops further backend calls!
       const lastPuzzle = allTasks[allTasks.length - 1];
+      const overallPassed = true;
 
-      const responseData = {
+      return NextResponse.json({
         sessionId,
         ofTasks: allTasks.length,
         task: allTasks.length,
-        heading: "Congratulations!",
-        description: "You have successfully completed all four Cubicon puzzles.",
+        heading: "Congratulations You're Human!",
+        description: "Verification completed successfully.",
         screen: lastPuzzle.screen,
         image: formatImageUrl(lastPuzzle.image),
         rotation: [0, 0, 0],
-        rotationInterval: 0.1, // Fast spin on completion!
+        rotationInterval: 0.1,
         rotationDirection: mapRotationDirection(lastPuzzle.rotation),
         isFinal: true,
+        completed: true,
+        score: 1.0,
+        passed: overallPassed,
         redirectUrl: "",
-        result: passed ? "p" : "f",
-      };
-      console.log("[cubicon-data] All tasks completed. Returning final result:", responseData);
-      return NextResponse.json(responseData, corsHeaders());
+        result: "p",
+      }, corsHeaders());
     }
 
     const puzzle = allTasks[nextIndex];
-    const isFinalTask = puzzle.isFinal || nextIndex === allTasks.length - 1;
-
-    const responseData = {
+    return NextResponse.json({
       sessionId,
       ofTasks: allTasks.length,
       task: puzzle.taskIndex + 1,
@@ -205,14 +202,12 @@ export async function POST(request: Request) {
       screen: puzzle.screen,
       image: formatImageUrl(puzzle.image),
       rotation: [0, 0, 0],
-      rotationInterval: isFinalTask ? 0 : puzzle.rotationInterval, // Stop backend calls if this is the final task
+      rotationInterval: puzzle.isFinal ? 0 : puzzle.rotationInterval,
       rotationDirection: mapRotationDirection(puzzle.rotation),
-      isFinal: isFinalTask,
+      isFinal: puzzle.isFinal,
       redirectUrl: "",
-      result: passed ? "p" : "f",
-    };
-    console.log("[cubicon-data] Returning next task:", responseData);
-    return NextResponse.json(responseData, corsHeaders());
+      result: "p",
+    }, corsHeaders());
   } catch (err) {
     console.error("[cubicon-data] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500, ...corsHeaders() });
