@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,6 +9,7 @@ datasource db {
   provider = "sqlite"
 }
 
+// 1. Core User Identity
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -18,7 +17,7 @@ model User {
   createdAt DateTime @default(now())
 }
 
-// 1. Contact Form (Main Page & Contact Us)
+// 2. Contact Form (Main Page & Contact Us)
 model ContactInquiry {
   id         String   @id @default(uuid())
   name       String
@@ -30,57 +29,14 @@ model ContactInquiry {
   createdAt  DateTime @default(now())
 }
 
-// 2. Coming Soon Notification Form
+// 3. Coming Soon Notification Form
 model NotificationSubscription {
   id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now())
 }
 
-// 3. Cubicon Founding Client Registration Form
-model CubiconRegistration {
-  id                  String   @id @default(uuid())
-  firstName           String
-  lastName            String
-  email               String
-  phone               String?
-  urgency             String   @default("Medium")
-  requestConfirmation Boolean  @default(true)
-  isEighteen          Boolean  @default(true)
-  priorityScore       Float    @default(0.0)
-  selectedAreas       String?  // JSON formatted text representation of selected contact areas
-  paymentStatus       String   @default("UNPAID") // UNPAID, COMPLETED, FAILED
-  paypalOrderId       String?
-  amountPaid          Float    @default(100.00)
-  paidAt              DateTime?
-  createdAt           DateTime @default(now())
-}
-
-// 4. Feedback Form (Cubicon App)
-model FeedbackSubmission {
-  id               String   @id @default(uuid())
-  positiveFeedback String
-  negativeFeedback String
-  rating           String   // e.g. "good", "moderate", "bad"
-  createdAt        DateTime @default(now())
-}
-
-// 5. Cubicon Admin Configuration Form
-model CubiconConfig {
-  id             String   @id @default(uuid())
-  title          String
-  description    String?
-  actionRequired String   @default("tap")
-  shape          String   @default("square")
-  pause          Int?
-  rotationType   String?
-  puzzleType     String?
-  threshold      Float?
-  welcomeMessage String?
-  selectedImage  String?
-  createdAt      DateTime @default(now())
-}
-// 6. Interactive Dashboard Buttons configuration
+// 4. Interactive Dashboard Buttons configuration
 model DashboardButton {
   id        String   @id @default(uuid())
   label     String
@@ -92,7 +48,7 @@ model DashboardButton {
   updatedAt DateTime @updatedAt
 }
 
-// 7. Uploaded Assets history log
+// 5. Uploaded Assets history log
 model MediaAsset {
   id         String   @id @default(uuid())
   publicUrl  String
@@ -100,23 +56,4 @@ model MediaAsset {
   fileType   String
   fileSize   Int
   uploadedAt DateTime @default(now())
-}
-
-// 8. Cubicon Puzzle Tasks
-model CubiconTask {
-  id               String   @id @default(uuid())
-  taskIndex        Int      @unique
-  heading          String
-  description      String
-  screen           String
-  image            String
-  rotation         String   @default("left")
-  rotationInterval Int      @default(10)
-  targetX          Float?
-  targetY          Float?
-  targetZ          Float?
-  targetPoints     String?  // JSON array of checkpoint coordinates [{x,y,z}, ...] (e.g. start, mid, end)
-  tolerance        Float    @default(0.5)
-  isFinal          Boolean  @default(false)
-  createdAt        DateTime @default(now())
 }

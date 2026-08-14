@@ -1,12 +1,21 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
-// Pass the database file URL directly to the driver adapter
-const adapter = new PrismaBetterSqlite3({ url: 'file:./prisma/dev.db' })
+import path from 'path'
+
+const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
+const rawPath = dbUrl.replace(/^file:/, "");
+const dbPath = path.isAbsolute(rawPath)
+  ? rawPath
+  : rawPath.startsWith("prisma") || rawPath.startsWith("./prisma")
+    ? path.join(process.cwd(), rawPath)
+    : path.join(process.cwd(), "prisma", rawPath);
+
+const adapter = new PrismaBetterSqlite3({ url: dbPath })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log("🌱 Starting database seed for all tables...\n");
+  console.log("🌱 Starting BuyFacts Core DB seed...\n");
 
   // 1. Users
   console.log("1. Seeding Users...");
@@ -100,66 +109,7 @@ async function main() {
   }
   console.log(`   ✓ Seeded ${mediaAssets.length} Media Assets`);
 
-  // 4. Cubicon Tasks
-  console.log("4. Seeding Cubicon Tasks...");
-  const cubiconTasks = [
-    {
-      id: "task-uuid-001",
-      taskIndex: 0,
-      screen: "Active_front",
-      image: "/cubicon-app/arts/Puzzle1.png",
-      heading: "Puzzle 1 of 3",
-      description: "Who gets concerned by howling? (Draw a circle)",
-      targetX: 0,
-      targetY: 0,
-      targetZ: 0,
-      tolerance: 0.5,
-      rotationInterval: 15,
-      rotation: "left",
-      isFinal: false,
-    },
-    {
-      id: "task-uuid-002",
-      taskIndex: 1,
-      screen: "Active_side_r",
-      image: "/cubicon-app/arts/Puzzle2.png",
-      heading: "Puzzle 2 of 3",
-      description: "Who’s in line for a change of shirt? (click to choose)",
-      targetX: 0,
-      targetY: 0,
-      targetZ: 0,
-      tolerance: 0.5,
-      rotationInterval: 15,
-      rotation: "left",
-      isFinal: false,
-    },
-    {
-      id: "task-uuid-003",
-      taskIndex: 2,
-      screen: "Active_back",
-      image: "/cubicon-app/arts/Puzzle3.png",
-      heading: "Puzzle 3 of 3",
-      description: "Who gets concerned by howling? (Draw a circle)",
-      targetX: 0,
-      targetY: 0,
-      targetZ: 0,
-      tolerance: 0.5,
-      rotationInterval: 15,
-      rotation: "left",
-      isFinal: true,
-    },
-  ];
-
-  for (const task of cubiconTasks) {
-    await prisma.cubiconTask.upsert({
-      where: { taskIndex: task.taskIndex },
-      update: task,
-      create: task,
-    });
-  }
-  console.log(`   ✓ Seeded ${cubiconTasks.length} Cubicon Tasks`);
-
-  console.log("\n🎉 Database seeding completed successfully!");
+  console.log("\n🎉 BuyFacts Core DB seeding completed successfully!");
 }
 
 main()
