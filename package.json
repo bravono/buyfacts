@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run embed-cubicon\" \"next dev\"",
+    "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "embed-cubicon": "node scripts/bundle-cubicon.js"
+    "embed-cubicon": "node scripts/bundle-cubicon.js",
+    "embed-narrative": "node scripts/bundle-narrative.js",
+    "embed-tools": "npm run embed-cubicon && npm run embed-narrative",
+    "dev-embed-cubicon": "concurrently \"npm run embed-cubicon\" \"next dev\""
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
