@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -13,10 +12,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const registration = await prisma.cubiconRegistration.findUnique({
-      where: { id: registrationId },
-    }).catch(() => null);
-
     const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
     const mode = process.env.PAYPAL_MODE || "sandbox";
@@ -25,7 +20,6 @@ export async function POST(request: Request) {
       ? "https://api-m.paypal.com" 
       : "https://api-m.sandbox.paypal.com";
 
-    // Standard $100 Founding Client charge
     const chargeAmount = Number(amount) > 0 ? Number(amount).toFixed(2) : "100.00";
 
     let orderId: string;
@@ -36,7 +30,6 @@ export async function POST(request: Request) {
     const cancelUrl = `${reqOrigin}/payment?status=cancelled`;
 
     if (clientId && clientSecret && !clientId.startsWith("sb_your_")) {
-      // 1. Get OAuth Access Token from PayPal API
       const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
       const tokenResponse = await fetch(`${baseApi}/v1/oauth2/token`, {
         method: "POST",
@@ -54,7 +47,6 @@ export async function POST(request: Request) {
       const tokenData = await tokenResponse.json();
       const accessToken = tokenData.access_token;
 
-      // 2. Create PayPal/Venmo Checkout Order
       const orderResponse = await fetch(`${baseApi}/v2/checkout/orders`, {
         method: "POST",
         headers: {
@@ -98,21 +90,8 @@ export async function POST(request: Request) {
       orderId = orderData.id;
       approveUrl = orderData.links?.find((l: any) => l.rel === "payer-action" || l.rel === "approve")?.href || null;
     } else {
-      // Development Fallback Order ID if PayPal keys are not populated yet
       orderId = `MOCK_VENMO_ORDER_${Date.now()}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
       console.log(`[Venmo Order API] Created fallback order ID: ${orderId} for registration ${registrationId}`);
-    }
-
-    // Save order details to SQLite via Prisma if record exists
-    if (registration) {
-      await prisma.cubiconRegistration.update({
-        where: { id: registrationId },
-        data: {
-          paypalOrderId: orderId,
-          amountPaid: parseFloat(chargeAmount),
-          paymentStatus: "PENDING",
-        },
-      }).catch(err => console.warn("Failed to update pending payment status:", err));
     }
 
     return NextResponse.json({
