@@ -9,8 +9,7 @@
     "lint": "eslint",
     "embed-cubicon": "node scripts/bundle-cubicon.js",
     "embed-narrative": "node scripts/bundle-narrative.js",
-    "embed-tools": "npm run embed-cubicon && npm run embed-narrative",
-    "dev-embed-cubicon": "concurrently \"npm run embed-cubicon\" \"next dev\""
+    "embed-tools": "npm run embed-cubicon && npm run embed-narrative"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
