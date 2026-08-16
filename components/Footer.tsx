@@ -33,7 +33,7 @@ export default function Footer() {
             <h4 className={styles.colTitle}>Core Methodologies</h4>
             <ul className={styles.linksList}>
               <li><a href="/cubicon">Cubicon™ Invitation</a></li>
-              <li><a href="/services?tab=thought-leadership">Research Libs™</a></li>
+              <li><a href="/research-lib">Research Libs™</a></li>
               <li><a href="/services?tab=research-tools">TRIAD™</a></li>
               <li><a href="/services?tab=best-practices">Rule of Three®</a></li>
             </ul>

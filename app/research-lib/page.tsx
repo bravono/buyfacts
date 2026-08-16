@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Narrative | BuyFacts Research Lib",
+  title: "BuyFacts Research Lib",
   description: "Interactive storytelling, guided tours, and survey participation app.",
 };
 
@@ -26,7 +26,7 @@ export default function NarrativePage() {
           <SubAppContainer
             appName="narrative"
             appUrl="/narrative-app/index.html"
-            title="Narrative Research Lib"
+            title="Research Lib"
           />
         </div>
       </div>
