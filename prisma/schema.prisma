@@ -44,7 +44,7 @@ model DashboardButton {
   mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"
-  color     String?  // Optional visual color configuration
+  color     String? // Optional visual color configuration
   updatedAt DateTime @updatedAt
 }
 
