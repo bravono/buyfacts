@@ -31,6 +31,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  LogOut,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -443,6 +444,21 @@ export default function CubiconPage() {
     }
   };
 
+  const handleExitLiveApp = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    setIsFullscreen(false);
+    setShowLiveApp(false);
+
+    setTimeout(() => {
+      const benefitsSection = document.getElementById("founding-client-benefits");
+      if (benefitsSection) {
+        benefitsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  };
+
   React.useEffect(() => {
     const handleFullscreenChange = () => {
       if (document.fullscreenElement) {
@@ -452,9 +468,17 @@ export default function CubiconPage() {
       }
     };
 
+    const handleCubiconMessage = (event: MessageEvent) => {
+      if (event.data?.type === "CUBICON_EXIT" || event.data === "CUBICON_EXIT") {
+        handleExitLiveApp();
+      }
+    };
+
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("message", handleCubiconMessage);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("message", handleCubiconMessage);
     };
   }, []);
 
@@ -539,13 +563,24 @@ export default function CubiconPage() {
             ) : (
               <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
                 {isFullscreen && (
-                  <button
-                    className={styles.exitFullscreenFloatingBtn}
-                    onClick={toggleFullscreen}
-                    title="Exit Fullscreen Mode"
-                  >
-                    <Minimize2 size={16} /> Exit Fullscreen
-                  </button>
+                  <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 10000, display: "flex", gap: "10px" }}>
+                    <button
+                      className={styles.exitFullscreenFloatingBtn}
+                      style={{ position: "static" }}
+                      onClick={toggleFullscreen}
+                      title="Exit Fullscreen Mode"
+                    >
+                      <Minimize2 size={16} /> Exit Fullscreen
+                    </button>
+                    <button
+                      className={styles.exitFullscreenFloatingBtn}
+                      style={{ position: "static", background: "rgba(234, 66, 95, 0.9)", borderColor: "rgba(255, 255, 255, 0.5)" }}
+                      onClick={handleExitLiveApp}
+                      title="Exit Live Demo and view benefits"
+                    >
+                      <LogOut size={16} /> Exit Demo
+                    </button>
+                  </div>
                 )}
 
                 <div className={styles.appFrameHeader}>
@@ -574,6 +609,9 @@ export default function CubiconPage() {
                     >
                       <ExternalLink size={14} /> Launch Standalone
                     </a>
+                    <button className={styles.exitBtn} onClick={handleExitLiveApp} title="Exit Live Demo and view benefits">
+                      <LogOut size={14} /> Exit
+                    </button>
                   </div>
                 </div>
 
@@ -645,7 +683,7 @@ export default function CubiconPage() {
       </section>
 
       {/* FOUNDING CLIENT BENEFITS */}
-      <section className="section-brand-bg" style={{ padding: "6rem 0" }}>
+      <section className="section-brand-bg" id="founding-client-benefits" style={{ padding: "6rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>EXCLUSIVE PRIVILEGES</span>
