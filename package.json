@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "embed-cubicon": "node scripts/bundle-cubicon.js",
-    "embed-narrative": "node scripts/bundle-narrative.js",
-    "embed-tools": "npm run embed-cubicon && npm run embed-narrative"
+    "embed-research-lib": "node scripts/bundle-narrative.js",
+    "embed-tools": "npm run embed-cubicon && npm run embed-research-lib"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
