@@ -99,10 +99,10 @@ const DEFAULT_SURVEYS = [
 ];
 
 async function ensureSeedSurveys() {
-  const count = await prisma.narrativeSurvey.count();
+  const count = await prisma.researchLibSurvey.count();
   if (count === 0) {
     for (const item of DEFAULT_SURVEYS) {
-      await prisma.narrativeSurvey.create({ data: item });
+      await prisma.researchLibSurvey.create({ data: item });
     }
   }
 }
@@ -120,16 +120,17 @@ export async function GET(request: NextRequest) {
     await ensureSeedSurveys();
 
     // Completed responses count for this user
-    const completedCount = await prisma.narrativeResponse.count({
+    const completedCount = await prisma.researchLibResponse.count({
       where: { user_id: userId },
     });
 
-    const surveys = await prisma.narrativeSurvey.findMany({
+    const surveys = await prisma.researchLibSurvey.findMany({
       where: {
         OR: [{ user_id: userId }, { user_id: "system_default" }],
       },
       orderBy: { id: "asc" },
     });
+
 
     const activeSurvey = surveys[completedCount] || surveys[0];
 
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
     delete answers.user_id;
 
     // Save response into narrative_responses table
-    await prisma.narrativeResponse.create({
+    await prisma.researchLibResponse.create({
       data: {
         user_id: userId,
         survey_id: payload.survey_id ? Number(payload.survey_id) : null,
@@ -220,16 +221,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const completedCount = await prisma.narrativeResponse.count({
+    const completedCount = await prisma.researchLibResponse.count({
       where: { user_id: userId },
     });
 
-    const surveys = await prisma.narrativeSurvey.findMany({
+    const surveys = await prisma.researchLibSurvey.findMany({
       where: {
         OR: [{ user_id: userId }, { user_id: "system_default" }],
       },
       orderBy: { id: "asc" },
     });
+
 
     const nextSurvey = surveys[completedCount];
 
