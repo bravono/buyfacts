@@ -57,3 +57,62 @@ model MediaAsset {
   fileSize   Int
   uploadedAt DateTime @default(now())
 }
+
+// 6. ResearchLib / Research Lib Embedded Survey Platform
+model ResearchLibSurvey {
+  id            Int      @id @default(autoincrement())
+  user_id       String   @default("system_default")
+  heading       String
+  instruction   String
+  widget        String
+  story         String
+  combo         String
+  blanks        String   // JSON string of blanks and choices
+  durationInMin String?  @default("30")
+  pauseDuration String?  @default("3")
+  timeCounter   String?  @default("down")
+  isFollowup    Int?     @default(1)
+  createdAt     DateTime @default(now())
+
+  @@map("research_lib_surveys")
+}
+
+model ResearchLibResponse {
+  id        Int      @id @default(autoincrement())
+  user_id   String
+  survey_id Int?
+  answers   String   // JSON string of answers
+  story     String?
+  createdAt DateTime @default(now())
+
+  @@map("research_lib_responses")
+}
+
+model ResearchLibTimer {
+  id           Int      @id @default(autoincrement())
+  user_id      String   @unique
+  sessionTimer String?  @default("{}")
+  pauseTimer   String?  @default("{}")
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@map("research_lib_timers")
+}
+
+model ResearchLibElement {
+  id        Int      @id @default(autoincrement())
+  user_id   String   @unique
+  state     String?  @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("research_lib_elements")
+}
+
+model ResearchLibAppState {
+  id        Int      @id @default(autoincrement())
+  user_id   String   @unique
+  state     String?  @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("research_lib_app_states")
+}
+
