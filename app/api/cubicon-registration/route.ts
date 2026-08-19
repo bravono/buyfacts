@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
 import { sendCubiconRegistrationEmails } from "@/lib/resend";
 
 export async function POST(request: Request) {
@@ -43,6 +44,26 @@ export async function POST(request: Request) {
 
     const submissionId = crypto.randomUUID();
 
+    // Persist into Prisma database (cubicon_registrations table)
+    try {
+      await prisma.cubiconRegistration.create({
+        data: {
+          id: submissionId,
+          name: `${firstName.trim()} ${lastName.trim()}`,
+          email: email.trim().toLowerCase(),
+          role: urgency || "Medium",
+          notes: JSON.stringify({
+            phone: (phone || "").trim(),
+            selectedAreas: selectedAreas || {},
+            priorityScore: priorityScore || 0,
+            requestConfirmation: !!requestConfirmation,
+          }),
+        },
+      });
+    } catch (dbErr) {
+      console.warn("[Cubicon Registration] DB Save warning:", dbErr);
+    }
+
     const dirPath = path.join(process.cwd(), "data");
     const filePath = path.join(dirPath, "cubicon_registrations.json");
 
@@ -72,6 +93,7 @@ export async function POST(request: Request) {
 
     currentData.push(newRegistration);
     await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+
 
     console.log(`[Cubicon Registration] Saved registration ${newRegistration.id} for ${newRegistration.email}`);
 

@@ -109,8 +109,60 @@ async function main() {
   }
   console.log(`   ✓ Seeded ${mediaAssets.length} Media Assets`);
 
+  // 4. Cubicon 3D Tasks
+  console.log("4. Seeding Cubicon 3D Tasks...");
+  const cubiconTasks = [
+    {
+      taskIndex: 0,
+      task_number: 1,
+      heading: "Puzzle 1 of 3",
+      description: "Who gets concerned by howling? (Draw a circle)",
+      screen: "Active_front",
+      image: "/cubicon-app/arts/Puzzle1.png",
+      rotation: "left",
+      rotationInterval: 15,
+      question_type: "Selection",
+      isFinal: false,
+    },
+    {
+      taskIndex: 1,
+      task_number: 2,
+      heading: "Puzzle 2 of 3",
+      description: "Who's in line for a change of shirt? (click to choose)",
+      screen: "Active_side_l",
+      image: "/cubicon-app/arts/Puzzle2.png",
+      rotation: "left",
+      rotationInterval: 15,
+      question_type: "Selection",
+      isFinal: false,
+    },
+    {
+      taskIndex: 2,
+      task_number: 3,
+      heading: "Puzzle 3 of 3",
+      description: "Who gets concerned by howling? (Draw a circle)",
+      screen: "Active_back",
+      image: "/cubicon-app/arts/Puzzle3.png",
+      rotation: "left",
+      rotationInterval: 15,
+      question_type: "Selection",
+      isFinal: true,
+    },
+  ];
+
+  const existingCubiconTasks = await prisma.cubiconTask.count();
+  if (existingCubiconTasks === 0) {
+    for (const t of cubiconTasks) {
+      await prisma.cubiconTask.create({ data: t });
+    }
+    console.log(`   ✓ Seeded ${cubiconTasks.length} Cubicon Tasks`);
+  } else {
+    console.log(`   ✓ ${existingCubiconTasks} Cubicon Tasks already exist`);
+  }
+
   console.log("\n🎉 BuyFacts Core DB seeding completed successfully!");
 }
+
 
 main()
   .then(async () => {

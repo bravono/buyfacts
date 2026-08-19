@@ -116,3 +116,61 @@ model ResearchLibAppState {
   @@map("research_lib_app_states")
 }
 
+// 7. Cubicon 3D Interactive Survey & Verification Platform
+model CubiconTask {
+  id               Int      @id @default(autoincrement())
+  taskIndex        Int      @default(0)
+  task_number      Int?
+  heading          String
+  description      String
+  screen           String?  @default("")
+  image            String
+  rotation         String?  @default("left")
+  rotationInterval Int?     @default(15)
+  question_type    String?  @default("Selection")
+  isFinal          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@map("cubicon_tasks")
+}
+
+model CubiconSession {
+  id                    Int      @id @default(autoincrement())
+  session_id            String   @unique
+  taskIndex             Int      @default(0)
+  user_email            String?  @default("")
+  passedPuzzles         Int      @default(0)
+  totalPuzzlesAttempted Int      @default(0)
+  previous_result       String?  @default("")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
+
+  @@map("cubicon_sessions")
+}
+
+model CubiconAttempt {
+  id           Int      @id @default(autoincrement())
+  session_id   String
+  taskIndex    Int
+  user_email   String?
+  clicks_data  String?  @default("{}")
+  start_time   String?
+  result       String
+  submitted_at DateTime @default(now())
+
+  @@map("cubicon_attempts")
+}
+
+model CubiconRegistration {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String?
+  role      String?
+  interest  String?  @default("Founding Client")
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@map("cubicon_registrations")
+}
+
