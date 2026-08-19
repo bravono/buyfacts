@@ -8,6 +8,8 @@ interface SubAppContainerProps {
   appUrl: string; // e.g. "/cubicon-app" or "/narrative-app"
   title?: string;
   className?: string;
+  style?: React.CSSProperties;
+  iframeStyle?: React.CSSProperties;
   onAppEvent?: (eventData: unknown) => void;
 }
 
@@ -16,6 +18,8 @@ export const SubAppContainer: React.FC<SubAppContainerProps> = ({
   appUrl,
   title = "Tool Application",
   className,
+  style,
+  iframeStyle,
   onAppEvent,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -82,7 +86,10 @@ export const SubAppContainer: React.FC<SubAppContainerProps> = ({
   }, [appName, token, onAppEvent]);
 
   return (
-    <div className={`${styles.container} ${className || ""}`}>
+    <div
+      className={`${styles.container} ${className || ""}`}
+      style={{ width: "100%", height: "100%", ...style }}
+    >
       {isLoading && (
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner} />
@@ -94,6 +101,14 @@ export const SubAppContainer: React.FC<SubAppContainerProps> = ({
         src={appUrl}
         title={title}
         className={styles.iframe}
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: "100%",
+          border: "none",
+          display: "block",
+          ...iframeStyle,
+        }}
         onLoad={() => setIsLoading(false)}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; microphone; camera"
       />
