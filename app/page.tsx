@@ -226,20 +226,21 @@ export default function Home() {
           <div className={`${styles.heroContent} animate-fade-in-up`}>
             <div className={styles.heroEyebrow}>
               <span className={styles.heroEyebrowDot}></span>
-              The Early Recognition Company
+              BuyFacts® Research Group
               <span className={styles.heroEyebrowDot}></span>
             </div>
             <h1 className={styles.heroTitle}>
-              Saving You Time So You{" "}
-              <span className={styles.heroHighlight}>Have the Time</span>
+              The Early <span className={styles.heroHighlight}>Recognition</span> Company
             </h1>
-            <p className={styles.heroDesc}>
-              Everything we do is designed to save you time and enable earlier decisions about what to do and when to do it. Click to Explore How, Click for Individual Benefits, or Click for B2B Benefits below.
+            <p className={styles.heroSubtitle}>
+              Saving You Time So You{" "}
+              <span className={styles.heroSubtitleHighlight}>Have the Time</span>
             </p>
+            
 
             <div className={styles.shoutoutWrapper}>
               <a href="/cubicon" className={styles.shoutoutBtn}>
-                🔥 Click Here to Beat the Survey Bots
+                Click Here to Beat the Survey Bots
               </a>
             </div>
 
