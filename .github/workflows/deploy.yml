@@ -3,7 +3,8 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main
+      - master
+      - staging
 
 jobs:
   deploy:
@@ -21,8 +22,8 @@ jobs:
             cd /var/www/buyfacts          # ← change this to your actual project path on the server
 
             echo "→ Pulling latest code..."
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
 
             echo "→ Installing dependencies..."
             npm ci
