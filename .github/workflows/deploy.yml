@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   push:
@@ -13,17 +13,32 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ github.ref == 'refs/heads/main' && secrets.PROD_HOST || secrets.STAGING_HOST }}
+          username: ${{ github.ref == 'refs/heads/main' && secrets.PROD_USERNAME || secrets.STAGING_USERNAME }}
+          key: ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
           port: 22
           script: |
             set -e
-            cd /var/www/buyfacts          # ← change this to your actual project path on the server
+
+            # Choose the correct directory and PM2 name based on the branch
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              PROJECT_DIR="/var/www/buyfacts"          # ← change if needed
+              PM2_NAME="buyfacts"
+              BRANCH="main"
+            else
+              PROJECT_DIR="/var/www/buyfacts-staging"  # ← change if needed
+              PM2_NAME="buyfacts-staging"
+              BRANCH="staging"
+            fi
+
+            echo "→ Deploying branch: $BRANCH"
+            echo "→ Project directory: $PROJECT_DIR"
+
+            cd $PROJECT_DIR
 
             echo "→ Pulling latest code..."
-            git fetch origin ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
+            git fetch origin $BRANCH
+            git reset --hard origin/$BRANCH
 
             echo "→ Installing dependencies..."
             npm ci
@@ -35,6 +50,6 @@ jobs:
             npm run build
 
             echo "→ Reloading PM2..."
-            pm2 reload buyfacts --update-env || pm2 start npm --name "buyfacts" -- start
+            pm2 reload $PM2_NAME --update-env || pm2 start npm --name "$PM2_NAME" -- start
 
-            echo "→ Deployment completed successfully!"
+            echo "→ Deployment to $BRANCH completed successfully!"
