@@ -245,7 +245,7 @@ export default function Home() {
             </div>
 
             <div className={styles.choiceGrid}>
-              <a href="#about" className={styles.miniFrameCard}>
+              <a href="/services" className={styles.miniFrameCard}>
                 <div className={styles.miniFrameTopBorder} />
                 <div className={styles.miniFrameBottomBorder} />
                 
@@ -264,8 +264,19 @@ export default function Home() {
                   <polygon points="0,120 300,120 300,30" fill="#00507b" />
                 </svg>
 
-                <h3 className={styles.choiceTitle}>Who We Are</h3>
-                <p className={styles.choiceDesc}>Meet the team of methodologists and researchers dedicated to human validation.</p>
+                <div className={styles.choiceIconWrapper}>
+                  {/* Replace src with your CDN icon link when ready */}
+                  <img 
+                    src="" 
+                    alt="" 
+                    className={styles.choiceIcon}
+                    style={{ display: "none" }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                  <TrendingUp className={styles.choiceIconFallback} size={28} />
+                </div>
+                <h3 className={styles.choiceTitle}>Early Recognition</h3>
+                <p className={styles.choiceDesc}>What is beginning to matter?</p>
               </a>
               
               <a href="/thought-leadership" className={styles.miniFrameCard}>
@@ -287,8 +298,19 @@ export default function Home() {
                   <polygon points="0,120 300,120 300,30" fill="#00507b" />
                 </svg>
 
-                <h3 className={styles.choiceTitle}>How We Help</h3>
-                <p className={styles.choiceDesc}>Explore our frameworks that validate respondents and save you time.</p>
+                <div className={styles.choiceIconWrapper}>
+                  {/* Replace src with your CDN icon link when ready */}
+                  <img 
+                    src="" 
+                    alt="" 
+                    className={styles.choiceIcon}
+                    style={{ display: "none" }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                  <FileText className={styles.choiceIconFallback} size={28} />
+                </div>
+                <h3 className={styles.choiceTitle}>Story-Based Research</h3>
+                <p className={styles.choiceDesc}>What can we learn from people who actually know and experience it?</p>
               </a>
 
               <a href="/services" className={styles.miniFrameCard}>
@@ -310,10 +332,25 @@ export default function Home() {
                   <polygon points="0,120 300,120 300,30" fill="#00507b" />
                 </svg>
 
-                <h3 className={styles.choiceTitle}>What We Provide</h3>
-                <p className={styles.choiceDesc}>Deploy B2B survey designs, validation tools, and priority analytics.</p>
+                <div className={styles.choiceIconWrapper}>
+                  {/* Replace src with your CDN icon link when ready */}
+                  <img 
+                    src="" 
+                    alt="" 
+                    className={styles.choiceIcon}
+                    style={{ display: "none" }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                  <Compass className={styles.choiceIconFallback} size={28} />
+                </div>
+                <h3 className={styles.choiceTitle}>TRIAD</h3>
+                <p className={styles.choiceDesc}>How can we capture differences in perspective so patterns can emerge?</p>
               </a>
             </div>
+
+            <p className={styles.heroFootnote}>
+              Recognize meaningful patterns in human experience earlier.
+            </p>
           </div>
         </div>
 
