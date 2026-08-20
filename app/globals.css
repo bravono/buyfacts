@@ -122,13 +122,14 @@ body {
 
 /* Base Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-color);
+  background: var(--bg-alt); /* Light gray track background */
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 80, 123, 0.25); /* Brand blue accent color with transparency */
+  border: 2px solid var(--bg-alt); /* Padding within the track */
   border-radius: var(--radius-sm);
 }
 ::-webkit-scrollbar-thumb:hover {
