@@ -148,10 +148,10 @@ interface SlideItem {
 
 const SLIDES: SlideItem[] = [
   {
-    heading: " Introduction to Cubicon",
+    heading: "Introduction to Cubicon",
     image: "/cubicon-app/cubicon_logo.png",
     description: "Welcome to Cubicon",
-    details: "Experience Cubicon's revolutionary 3D visual validation system. Designed to ensure 100% genuine human survey participation by deploying interactive 3D spatial tasks that automated bots are incapable of solving.",
+    details: "In the next 30sec we will show you examples of the Cubicon sequence.",
   },
   {
     heading: "Puzzle 1 of 3",
@@ -501,9 +501,6 @@ export default function CubiconPage() {
                   </div>
                   <div className={styles.slideDetailsContainer}>
                     <div>
-                      <div className={styles.slideMeta}>
-                        <Sparkles size={14} /> Slide {currentSlide + 1} of 4
-                      </div>
                       <h3 className={styles.slideTitle}>{SLIDES[currentSlide].heading}</h3>
                       <p className={styles.slideText}>{SLIDES[currentSlide].details}</p>
                     </div>
