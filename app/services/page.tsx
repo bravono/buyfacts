@@ -11,108 +11,117 @@ import styles from "./page.module.css";
 
 interface ButtonData {
   label: string;
+  tagline: string;
+  description: string;
   color: string;
   textColor: string;
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf";
   mediaUrl: string;
-  subtitle: string;
 }
 
-// Fallback hardcoded buttons mapping to the Page 2 requirements with random media mockup URLs
 const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
   {
-    label: "Define It",
-    color: "var(--color-orange-5)", // Dark Brown #9b5d00
+    label: "Survey Define IT",
+    tagline: "Inclusive Research Definition",
+    description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
+    color: "var(--color-orange-5)",
     textColor: "white",
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "video",
     mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    subtitle: "Interactive pipeline routing validation demonstration.",
   },
   {
-    label: "Host",
-    color: "var(--color-accent-green-lime)", // Lime Green #b0e843
-    textColor: "var(--color-blue-5)",
-    hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
-    mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
-    subtitle: "High-performance hosting platform architecture layout.",
-  },
-  {
-    label: "Respondent Validation",
-    color: "var(--color-orange-2)", // Light Orange #ffc164
-    textColor: "var(--color-blue-5)",
-    hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
-    mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    subtitle: "Executive briefing explaining respondent validation procedures.",
-  },
-  {
-    label: "Refine It",
-    color: "var(--color-blue-3)", // Medium Blue #006398
+    label: "Survey Refine IT",
+    tagline: "Increase the Return on Research",
+    description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
+    color: "var(--color-blue-3)",
     textColor: "white",
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "pdf",
     mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
-    subtitle: "Technical documentation covering the data refinement process.",
   },
   {
-    label: "Analyze It",
-    color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)", // Highlighted rose gradient
-    textColor: "white",
-    hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
-    mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    subtitle: "Detailed overview demonstrating deep data analytics capabilities.",
-  },
-  {
-    label: "Story Based",
-    color: "var(--color-orange-1)", // Brand Orange #ff9900
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
-    mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
-    subtitle: "Mock design demonstrating user flow logic in story-based surveys.",
-  },
-  {
-    label: "Build It",
-    color: "var(--color-accent-crimson)", // Crimson #ea425f
+    label: "Survey Build IT",
+    tagline: "Make Each Question Actionable",
+    description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
+    color: "var(--color-accent-crimson)",
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "audio",
     mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    subtitle: "Briefing call explaining custom project builder patterns.",
   },
   {
-    label: "Apply It",
-    color: "var(--color-accent-plum)", // Plum #532254
+    label: "Survey Field IT",
+    tagline: "Quality-Centric Survey Execution",
+    description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
+    color: "var(--color-accent-green-lime)",
+    textColor: "var(--color-blue-5)",
+    hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Recognize IT",
+    tagline: "Active Pattern Analytics",
+    description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
+    color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)",
+    textColor: "white",
+    hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
+    mediaType: "video",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  },
+  {
+    label: "Validate IT",
+    tagline: "Opportunity Validation",
+    description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
+    color: "var(--color-accent-plum)",
     textColor: "white",
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "pdf",
     mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    subtitle: "A practical guide and reference PDF document on data application.",
   },
   {
-    label: "Buyer Drivers",
-    color: "var(--color-accent-green-mint)", // Mint Green #42ea86
+    label: "Respondent Validation",
+    tagline: "Play Cubicon Puzzle Games",
+    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to guarantee 100% human-verified respondent participation.",
+    color: "var(--color-orange-2)",
+    textColor: "var(--color-blue-5)",
+    hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
+    mediaType: "audio",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  },
+  {
+    label: "Story-Based Surveys",
+    tagline: "Execute a Dual-Based Survey Model",
+    description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
+    color: "var(--color-orange-1)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Content Assessment",
+    tagline: "Maximize the Return on Content",
+    description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
+    color: "var(--color-accent-green-mint)",
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "video",
     mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    subtitle: "Study showing how primary buying indicators are identified.",
   },
 ];
 
 const PRESET_COLORS = [
   { color: "var(--color-orange-5)", textColor: "white", hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)" },
-  { color: "var(--color-accent-green-lime)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)" },
-  { color: "var(--color-orange-2)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)" },
   { color: "var(--color-blue-3)", textColor: "white", hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)" },
-  { color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)", textColor: "white", hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)" },
-  { color: "var(--color-orange-1)", textColor: "white", hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)" },
   { color: "var(--color-accent-crimson)", textColor: "white", hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)" },
+  { color: "var(--color-accent-green-lime)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)" },
+  { color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)", textColor: "white", hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)" },
   { color: "var(--color-accent-plum)", textColor: "white", hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)" },
+  { color: "var(--color-orange-2)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)" },
+  { color: "var(--color-orange-1)", textColor: "white", hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)" },
   { color: "var(--color-accent-green-mint)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)" },
 ];
 
@@ -125,19 +134,21 @@ export default function ServicesPage() {
       try {
         const res = await fetch("/api/buttons");
         const data = await res.json();
-        if (data.success) {
+        if (data.success && Array.isArray(data.buttons)) {
           const apiServices = data.buttons
             .filter((btn: any) => btn.category === "Services")
             .map((btn: any, idx: number) => {
+              const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
               return {
-                label: btn.label,
+                label: btn.label || defaultFallback.label,
+                tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
+                description: btn.description || defaultFallback.description,
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: (btn.mediaType || "video") as "video" | "image" | "audio" | "pdf",
-                mediaUrl: btn.mediaUrl,
-                subtitle: btn.subtitle || "",
+                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf",
+                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
               };
             });
 
@@ -167,7 +178,7 @@ export default function ServicesPage() {
             <DashboardAnimation
               className={styles.dashboardAnimation}
               buttons={customButtons}
-              title="Services and Tools"
+              title="Products and Services"
               selectedButtonIndex={selectedButtonIndex}
               onSelectButton={setSelectedButtonIndex}
             />
@@ -176,10 +187,10 @@ export default function ServicesPage() {
           {/* Right Column: MockMediaPlayer component */}
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
-            
               <MockMediaPlayer
                 title={currentMedia.label}
-                subtitle={currentMedia.subtitle}
+                tagline={currentMedia.tagline}
+                description={currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
@@ -187,24 +198,6 @@ export default function ServicesPage() {
                 onNextMedia={() =>
                   setSelectedButtonIndex((prev) => (prev + 1) % customButtons.length)
                 }
-                onExploreClick={(action) => {
-                  if (action === "see_more") {
-                    const idx = customButtons.findIndex(
-                      (b) => b.mediaType === "video" || b.mediaType === "image"
-                    );
-                    if (idx !== -1) setSelectedButtonIndex(idx);
-                  } else if (action === "hear_more") {
-                    const idx = customButtons.findIndex(
-                      (b) => b.mediaType === "audio"
-                    );
-                    if (idx !== -1) setSelectedButtonIndex(idx);
-                  } else if (action === "read_more") {
-                    const idx = customButtons.findIndex(
-                      (b) => b.mediaType === "pdf"
-                    );
-                    if (idx !== -1) setSelectedButtonIndex(idx);
-                  }
-                }}
               />
             </div>
           </div>

@@ -1,32 +1,50 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download, Mail, Video } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
 
-interface MockMediaPlayerProps {
+export interface MockMediaPlayerProps {
   title?: string;
+  tagline?: string;
   subtitle?: string;
+  description?: string;
   rightTitle?: string;
   rightSubtitle?: string;
   mediaType?: "video" | "audio" | "image" | "pdf";
   mediaUrl?: string;
   pdfUrl?: string;
   pdfLabel?: string;
+  moreDetailUrl?: string;
+  moreDetailIconUrl?: string;
+  videoIconUrl?: string;
+  contactIconUrl?: string;
+  onMoreDetailClick?: () => void;
+  onVideoClick?: () => void;
+  onContactClick?: () => void;
   onExploreClick?: (action: string) => void;
   onNextMedia?: () => void;
 }
 
 export default function MockMediaPlayer({
   title,
+  tagline,
   subtitle,
+  description,
   rightTitle,
   rightSubtitle,
   mediaType = "video",
   mediaUrl,
   pdfUrl,
   pdfLabel,
+  moreDetailUrl,
+  moreDetailIconUrl,
+  videoIconUrl,
+  contactIconUrl,
+  onMoreDetailClick,
+  onVideoClick,
+  onContactClick,
   onExploreClick,
   onNextMedia,
 }: MockMediaPlayerProps) {
@@ -40,9 +58,13 @@ export default function MockMediaPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const displayTitle = title || "Operational Demonstration";
-  const displaySubtitle = subtitle || "BuyFacts® B2B Validation Pipeline Walkthrough";
+  const displayTagline = tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
   const displayRightTitle = rightTitle || `${mediaType.toUpperCase()} PREVIEW`;
-  const displayRightSubtitle = rightSubtitle || (mediaType === "video" || mediaType === "audio" ? "Interactive Audio / Video Stream" : "Interactive Document Stream");
+  const displayRightSubtitle =
+    rightSubtitle ||
+    (mediaType === "video" || mediaType === "audio"
+      ? "Interactive Audio / Video Stream"
+      : "Interactive Document Stream");
 
   // Reset playback states on media change
   useEffect(() => {
@@ -137,19 +159,41 @@ export default function MockMediaPlayer({
 
   const isPlayable = mediaType === "video" || mediaType === "audio";
 
-  const handleExploreAction = (action: string) => {
-    if (onExploreClick) {
-      onExploreClick(action);
+  const handleMoreDetail = () => {
+    if (onMoreDetailClick) {
+      onMoreDetailClick();
+    } else if (onExploreClick) {
+      onExploreClick("more_detail");
+    } else if (pdfUrl || moreDetailUrl) {
+      window.open(pdfUrl || moreDetailUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleVideoAction = () => {
+    if (onVideoClick) {
+      onVideoClick();
+    } else if (onExploreClick) {
+      onExploreClick("video");
+    } else {
+      togglePlay();
+    }
+  };
+
+  const handleContactAction = () => {
+    if (onContactClick) {
+      onContactClick();
+    } else if (onExploreClick) {
+      onExploreClick("contact_us");
     }
   };
 
   return (
     <div className={styles.playerCard}>
-      {/* 1. Header Banner Box matching image layout */}
+      {/* 1. Header Banner Box with Button Label and Tagline Combination */}
       <div className={styles.headerBanner}>
         <div className={styles.headerLeft}>
           <h3 className={styles.headerTitle}>{displayTitle}</h3>
-          <p className={styles.headerSubtitle}>{displaySubtitle}</p>
+          <p className={styles.headerSubtitle}>{displayTagline}</p>
         </div>
         <div className={styles.headerRight}>
           <span className={styles.headerRightTitle}>{displayRightTitle}</span>
@@ -255,7 +299,7 @@ export default function MockMediaPlayer({
           </button>
         )}
 
-        {/* Right Arrow Translucent Action Circle Button as seen in mockup */}
+        {/* Right Arrow Translucent Action Circle Button */}
         <button
           className={styles.nextMediaButton}
           onClick={onNextMedia}
@@ -319,7 +363,7 @@ export default function MockMediaPlayer({
         </div>
       )}
 
-      {/* PDF Download Option below Player */}
+      {/* PDF Download Option below Player Screen */}
       {pdfUrl && (
         <div className={styles.pdfDownloadBanner}>
           <div className={styles.pdfDownloadInfo}>
@@ -341,55 +385,70 @@ export default function MockMediaPlayer({
         </div>
       )}
 
-      {/* 3. Horizontal Separator Line */}
+      {/* 3. Top-to-Bottom Rapid Reveal Description Paragraph Panel */}
+      {description && (
+        <div key={displayTitle} className={styles.revealContainer}>
+          <p className={styles.descriptionParagraph}>
+            <span className={styles.descriptionHighlight}>{displayTitle}: </span>
+            {description}
+          </p>
+        </div>
+      )}
+
+      {/* 4. Horizontal Separator Divider */}
       <hr className={styles.divider} />
 
-      {/* 4. EXPLORE Section Grid Layout */}
-      <div className={styles.exploreSection}>
-        <h4 className={styles.exploreTitle}>EXPLORE</h4>
-        <p className={styles.exploreSubtitle}>Go deeper with practical takeaways you can use.</p>
+      {/* 5. Bottom Action Buttons: Three Rounded Corner Buttons with Left Icons */}
+      <div className={styles.actionSection}>
+        <div className={styles.actionButtonsRow}>
+          {/* Button 1: More Detail */}
+          <button
+            type="button"
+            className={`${styles.roundedActionBtn} ${styles.btnMoreDetail}`}
+            onClick={handleMoreDetail}
+            aria-label="More Detail"
+          >
+            {moreDetailIconUrl ? (
+              <img src={moreDetailIconUrl} alt="" className={styles.btnIconImage} />
+            ) : (
+              <FileText size={17} className={styles.btnIconPlaceholder} />
+            )}
+            <span>More Detail</span>
+          </button>
 
-        {/* Row 1: 3 pastel rectangular buttons */}
-        <div className={styles.buttonRow3}>
+          {/* Button 2: 3-Minute Video */}
           <button
-            className={`${styles.exploreBtn} ${styles.btnBlue}`}
-            onClick={() => handleExploreAction("see_more")}
+            type="button"
+            className={`${styles.roundedActionBtn} ${styles.btnVideo}`}
+            onClick={handleVideoAction}
+            aria-label="3-Minute Video"
           >
-            See More
+            {videoIconUrl ? (
+              <img src={videoIconUrl} alt="" className={styles.btnIconImage} />
+            ) : (
+              <Video size={17} className={styles.btnIconPlaceholder} />
+            )}
+            <span>3-Minute Video</span>
           </button>
-          <button
-            className={`${styles.exploreBtn} ${styles.btnGreen}`}
-            onClick={() => handleExploreAction("hear_more")}
-          >
-            Hear More
-          </button>
-          <button
-            className={`${styles.exploreBtn} ${styles.btnPurple}`}
-            onClick={() => handleExploreAction("read_more")}
-          >
-            Read More
-          </button>
-        </div>
 
-        {/* Row 2: 2 wider pastel rectangular buttons */}
-        <div className={styles.buttonRow2}>
-          <Link
-            href="/"
-            className={`${styles.exploreBtn} ${styles.btnPeach}`}
-            onClick={() => handleExploreAction("home")}
-          >
-            Home
-          </Link>
+          {/* Button 3: Contact Us */}
           <Link
             href="/#contact"
-            className={`${styles.exploreBtn} ${styles.btnSoftBlue}`}
-            onClick={() => handleExploreAction("contact_us")}
+            className={`${styles.roundedActionBtn} ${styles.btnContact}`}
+            onClick={handleContactAction}
+            aria-label="Contact Us"
           >
-            Contact Us
+            {contactIconUrl ? (
+              <img src={contactIconUrl} alt="" className={styles.btnIconImage} />
+            ) : (
+              <Mail size={17} className={styles.btnIconPlaceholder} />
+            )}
+            <span>Contact Us</span>
           </Link>
         </div>
       </div>
     </div>
   );
 }
+
 

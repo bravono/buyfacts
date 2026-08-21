@@ -508,6 +508,45 @@
   transform: translateY(-2px);
 }
 
+/* Rapid Reveal Description Panel */
+.revealContainer {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  background: linear-gradient(135deg, rgba(237, 244, 252, 0.85) 0%, rgba(227, 239, 250, 0.65) 100%);
+  border-left: 4px solid var(--primary-color, #ff9900);
+  border-radius: var(--radius-sm, 8px);
+  animation: rapidReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+  box-shadow: 0 2px 8px rgba(0, 80, 123, 0.05);
+}
+
+@keyframes rapidReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.96);
+    clip-path: inset(0 0 100% 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    clip-path: inset(0 0 0% 0);
+  }
+}
+
+.descriptionParagraph {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(0.86rem, 1vw, 0.95rem);
+  line-height: 1.45;
+  color: var(--color-blue-1, #00507b);
+  font-weight: 500;
+  margin: 0;
+}
+
+.descriptionHighlight {
+  color: var(--primary-color, #ff9900);
+  font-weight: 700;
+}
+
 /* 3. Horizontal Separator Divider */
 .divider {
   border: none;
@@ -517,94 +556,94 @@
   width: 100%;
 }
 
-/* 4. EXPLORE Section Grid */
-.exploreSection {
+/* 4. Action Buttons (3 Rounded Corner Buttons) */
+.actionSection {
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
-.exploreTitle {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--color-blue-1, #00507b);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 0.15rem;
-}
-
-.exploreSubtitle {
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  color: var(--text-muted, #55687d);
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
-}
-
-/* Row 1: 3 Column Buttons */
-.buttonRow3 {
+.actionButtonsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
+  gap: 0.65rem;
 }
 
-/* Row 2: 2 Column Buttons */
-.buttonRow2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
-}
-
-/* Base styling for EXPLORE rectangular buttons */
-.exploreBtn {
-  display: flex;
+/* Base styling for rounded action buttons with icons */
+.roundedActionBtn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-sm, 8px);
-  border: none;
-  font-family: var(--font-sans);
-  font-size: clamp(0.98rem, 1.3vw, 1.15rem); /* Responsive, slightly larger text */
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 9999px; /* Strictly rounded corners */
+  border: 1.5px solid transparent;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(0.85rem, 1.05vw, 0.96rem);
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
   text-align: center;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
 }
 
-.exploreBtn:hover {
+.roundedActionBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  filter: brightness(0.96);
+  filter: brightness(0.97);
 }
 
-/* Color palettes for buttons matching reference image */
-.btnBlue {
+.btnIconImage {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.btnIconPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Button 1: More Detail */
+.btnMoreDetail {
   background-color: #dbe7f7;
-  color: #1e3a60;
+  color: #00507b;
+  border-color: rgba(0, 80, 123, 0.2);
 }
 
-.btnGreen {
+.btnMoreDetail:hover {
+  background-color: #00507b;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 80, 123, 0.25);
+}
+
+/* Button 2: 3-Minute Video */
+.btnVideo {
+  background: linear-gradient(135deg, #ff9900 0%, #ff7700 100%);
+  color: #ffffff;
+  border-color: rgba(255, 153, 0, 0.3);
+}
+
+.btnVideo:hover {
+  background: linear-gradient(135deg, #ffaa1a 0%, #ff8800 100%);
+  box-shadow: 0 6px 18px rgba(255, 153, 0, 0.35);
+}
+
+/* Button 3: Contact Us */
+.btnContact {
   background-color: #d9ebd9;
   color: #1b4d24;
+  border-color: rgba(27, 77, 36, 0.2);
 }
 
-.btnPurple {
-  background-color: #e2daf5;
-  color: #3b2861;
-}
-
-.btnPeach {
-  background-color: #f7d6bd;
-  color: #5a2e12;
-}
-
-.btnSoftBlue {
-  background-color: #c7daf3;
-  color: #16365c;
+.btnContact:hover {
+  background-color: #1b4d24;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(27, 77, 36, 0.25);
 }
 
 @media (max-width: 640px) {
@@ -615,12 +654,19 @@
   .headerRight {
     text-align: left;
   }
-  .buttonRow3 {
-    grid-template-columns: 1fr;
+  .revealContainer {
+    max-height: 140px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .buttonRow2 {
+  .actionButtonsRow {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .roundedActionBtn {
+    width: 100%;
   }
 }
+
 
 

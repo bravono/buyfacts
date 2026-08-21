@@ -27,15 +27,15 @@ export type DashboardButton = {
  * 0–2 left column, 3–5 center column, 6–8 right column
  */
 export const DEFAULT_BUTTONS: DashboardButton[] = [
-  { label: "Define It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Host It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Survey Define IT", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Survey Field IT", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Respondent Validation", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Refine It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Analyze It", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Survey Refine IT", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Recognize IT", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Story-Based Surveys", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Build It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Apply It", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Buyer Drivers", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Survey Build IT", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Validate IT", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Content Assessment", mediaUrl: "https://www.buyfacts.com/" },
 ];
 
 /** @deprecated Use DEFAULT_BUTTONS */
