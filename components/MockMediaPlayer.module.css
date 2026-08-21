@@ -510,6 +510,20 @@
   box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
 }
 
+.pdfDownloadActionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.audioDownloadBtn {
+  background: var(--color-blue-2, #39789a);
+}
+
+.audioDownloadBtn:hover {
+  background: var(--interactive-orange, #ff9900);
+}
+
 /* Rapid Reveal Description Panel */
 .revealContainer {
   margin-top: 0.55rem;

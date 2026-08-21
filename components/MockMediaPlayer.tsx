@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download, Mail, Video } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download, Mail, Video, Headphones } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
 
@@ -363,7 +363,7 @@ export default function MockMediaPlayer({
         </div>
       )}
 
-      {/* PDF Download Option below Player Screen */}
+      {/* PDF / Audio Download Option below Player Screen */}
       {pdfUrl && (
         <div className={styles.pdfDownloadBanner}>
           <div className={styles.pdfDownloadInfo}>
@@ -373,15 +373,26 @@ export default function MockMediaPlayer({
               <h5 className={styles.pdfDownloadTitle}>{pdfLabel || "A Deeper Preview"}</h5>
             </div>
           </div>
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            download
-            className={styles.pdfDownloadBtn}
-          >
-            <Download size={18} /> Download PDF
-          </a>
+          <div className={styles.pdfDownloadActionGroup}>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className={styles.pdfDownloadBtn}
+            >
+              <Download size={18} /> Download PDF
+            </a>
+            <a
+              href={mediaUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className={`${styles.pdfDownloadBtn} ${styles.audioDownloadBtn}`}
+            >
+              <Headphones size={18} /> Audio Recording
+            </a>
+          </div>
         </div>
       )}
 
