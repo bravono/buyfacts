@@ -13,21 +13,21 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ github.ref == 'refs/heads/main' && secrets.PROD_HOST || secrets.STAGING_HOST }}
-          username: ${{ github.ref == 'refs/heads/main' && secrets.PROD_USERNAME || secrets.STAGING_USERNAME }}
-          key: ${{ github.ref == 'refs/heads/main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
+          host: ${{ github.ref == 'refs/heads/master' && secrets.PROD_HOST || secrets.STAGING_HOST }}
+          username: ${{ github.ref == 'refs/heads/master' && secrets.PROD_USERNAME || secrets.STAGING_USERNAME }}
+          key: ${{ github.ref == 'refs/heads/master' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
           port: 22
           script: |
             set -e
 
             # Choose the correct directory and PM2 name based on the branch
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            if [ "${{ github.ref }}" = "refs/heads/master" ]; then
               PROJECT_DIR="/var/www/buyfacts"          # ← change if needed
               PM2_NAME="buyfacts"
-              BRANCH="main"
+              BRANCH="master"
             else
-              PROJECT_DIR="/var/www/buyfacts-staging"  # ← change if needed
-              PM2_NAME="buyfacts-staging"
+              PROJECT_DIR="/var/www/buyfacts"          # ← change if needed
+              PM2_NAME="buyfacts"
               BRANCH="staging"
             fi
 
