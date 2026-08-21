@@ -171,7 +171,7 @@ export default function ServicesPage() {
       <Navbar />
 
       {/* Two-Column layout block - Light Theme matching mockup */}
-      <section className="section-light" style={{ padding: "5rem 0 3rem 0" }}>
+      <section className={`${styles.dashboardSection} section-light`}>
         <div className={styles.pageGrid}>
           {/* Left Column: interactive service / tool areas graphic */}
           <div className={styles.columnLeft}>

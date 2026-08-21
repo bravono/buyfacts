@@ -176,9 +176,8 @@ export default function PortfolioPage() {
 
       {/* Two-Column layout block - Dark Theme matching mockup */}
       <section
-        className={styles.section}
+        className={styles.dashboardSection}
         id="best-practices"
-        style={{ padding: "5rem 0 3rem 0" }}
       >
         <div className={styles.pageGrid}>
           {/* Left Column: DashboardAnimation component carrying Research Imperatives buttons */}

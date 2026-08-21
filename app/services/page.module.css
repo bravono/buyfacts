@@ -50,47 +50,81 @@
   color: var(--text-muted);
 }
 
+.dashboardSection {
+  min-height: calc(100vh - 75px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0 3rem 0; /* Restored original padding for Pavilion */
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-height: 820px) {
+  .dashboardSection {
+    padding: 5rem 0 1.5rem 0; /* 2rem top padding for ZBook */
+  }
+}
+
 /* Page Layout Grid */
 .pageGrid {
   display: grid;
-  grid-template-columns: 2fr 3fr;
-  gap: 4rem;
-  align-items: start;
+  grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.3fr);
+  gap: clamp(1.5rem, 3vw, 3.5rem);
+  align-items: center;
   width: 100%;
-  max-width: 1600px;
+  max-width: 1550px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1rem, 2vw, 2.5rem);
 }
 
 .columnLeft {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dashboardAnimation {
   width: 100%;
   height: auto;
-  display: block;
   max-width: 875px;
+  display: block;
   margin: 0 auto;
+}
+
+@media (max-height: 820px) {
+  .dashboardAnimation {
+    max-height: clamp(340px, 78vh, 620px);
+    object-fit: contain;
+  }
 }
 
 .columnRight {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 1024px) {
+  .dashboardSection {
+    min-height: auto;
+    overflow: visible;
+    padding: 2rem 0;
+  }
+
   .pageGrid {
     grid-template-columns: 1fr;
-    gap: 4rem;
+    gap: 3rem;
   }
 }
 
 .stickyWrapper {
-  position: sticky;
-  top: 90px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   text-align: left;
 }
 
