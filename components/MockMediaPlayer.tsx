@@ -1,7 +1,20 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronRight, FileText, Download, Mail, Video, Headphones } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  RotateCcw,
+  ChevronRight,
+  FileText,
+  Download,
+  Mail,
+  Video,
+  Headphones,
+} from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
 
@@ -58,13 +71,8 @@ export default function MockMediaPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const displayTitle = title || "Operational Demonstration";
-  const displayTagline = tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
-  const displayRightTitle = rightTitle || `${mediaType.toUpperCase()} PREVIEW`;
-  const displayRightSubtitle =
-    rightSubtitle ||
-    (mediaType === "video" || mediaType === "audio"
-      ? "Interactive Audio / Video Stream"
-      : "Interactive Document Stream");
+  const displayTagline =
+    tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
 
   // Reset playback states on media change
   useEffect(() => {
@@ -100,7 +108,12 @@ export default function MockMediaPlayer({
   };
 
   const togglePlay = () => {
-    const el = mediaType === "video" ? videoRef.current : mediaType === "audio" ? audioRef.current : null;
+    const el =
+      mediaType === "video"
+        ? videoRef.current
+        : mediaType === "audio"
+          ? audioRef.current
+          : null;
     if (el) {
       if (isPlaying) {
         el.pause();
@@ -114,7 +127,12 @@ export default function MockMediaPlayer({
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextProgress = parseFloat(e.target.value);
-    const el = mediaType === "video" ? videoRef.current : mediaType === "audio" ? audioRef.current : null;
+    const el =
+      mediaType === "video"
+        ? videoRef.current
+        : mediaType === "audio"
+          ? audioRef.current
+          : null;
     if (el && el.duration) {
       const nextTime = (nextProgress / 100) * el.duration;
       el.currentTime = nextTime;
@@ -124,7 +142,12 @@ export default function MockMediaPlayer({
   };
 
   const resetPlayback = () => {
-    const el = mediaType === "video" ? videoRef.current : mediaType === "audio" ? audioRef.current : null;
+    const el =
+      mediaType === "video"
+        ? videoRef.current
+        : mediaType === "audio"
+          ? audioRef.current
+          : null;
     if (el) {
       el.currentTime = 0;
       el.pause();
@@ -135,7 +158,12 @@ export default function MockMediaPlayer({
   };
 
   const toggleMute = () => {
-    const el = mediaType === "video" ? videoRef.current : mediaType === "audio" ? audioRef.current : null;
+    const el =
+      mediaType === "video"
+        ? videoRef.current
+        : mediaType === "audio"
+          ? audioRef.current
+          : null;
     if (el) {
       el.muted = !isMuted;
       setIsMuted(!isMuted);
@@ -195,10 +223,6 @@ export default function MockMediaPlayer({
           <h3 className={styles.headerTitle}>{displayTitle}</h3>
           <p className={styles.headerSubtitle}>{displayTagline}</p>
         </div>
-        <div className={styles.headerRight}>
-          <span className={styles.headerRightTitle}>{displayRightTitle}</span>
-          <span className={styles.headerRightSubtitle}>{displayRightSubtitle}</span>
-        </div>
       </div>
 
       {/* 2. Player Screen Frame */}
@@ -241,16 +265,39 @@ export default function MockMediaPlayer({
         {/* Visualizer Background for Audio or Default */}
         {(mediaType === "audio" || !mediaUrl) && (
           <div className={styles.videoBackground}>
-            <div className={styles.dataNode} style={{ top: "30%", left: "20%", animationDelay: "0s" }}></div>
-            <div className={styles.dataNode} style={{ top: "60%", left: "45%", animationDelay: "1s" }}></div>
-            <div className={styles.dataNode} style={{ top: "25%", left: "70%", animationDelay: "2s" }}></div>
-            <div className={styles.dataNode} style={{ top: "70%", left: "80%", animationDelay: "1.5s" }}></div>
-            <svg className={styles.waveSvg} viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0,100 C150,150 250,50 500,120 L500,200 L0,200 Z" fill="url(#wave-grad)" opacity="0.3" />
+            <div
+              className={styles.dataNode}
+              style={{ top: "30%", left: "20%", animationDelay: "0s" }}
+            ></div>
+            <div
+              className={styles.dataNode}
+              style={{ top: "60%", left: "45%", animationDelay: "1s" }}
+            ></div>
+            <div
+              className={styles.dataNode}
+              style={{ top: "25%", left: "70%", animationDelay: "2s" }}
+            ></div>
+            <div
+              className={styles.dataNode}
+              style={{ top: "70%", left: "80%", animationDelay: "1.5s" }}
+            ></div>
+            <svg
+              className={styles.waveSvg}
+              viewBox="0 0 500 200"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M0,100 C150,150 250,50 500,120 L500,200 L0,200 Z"
+                fill="url(#wave-grad)"
+                opacity="0.3"
+              />
               <defs>
                 <linearGradient id="wave-grad" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="var(--color-blue-2)" />
-                  <stop offset="100%" stopColor="var(--color-accent-green-mint)" />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--color-accent-green-mint)"
+                  />
                 </linearGradient>
               </defs>
             </svg>
@@ -260,7 +307,11 @@ export default function MockMediaPlayer({
         {/* Image Render */}
         {mediaType === "image" && mediaUrl && (
           <div className={styles.imageViewer}>
-            <img src={mediaUrl} className={styles.realImage} alt={displayTitle} />
+            <img
+              src={mediaUrl}
+              className={styles.realImage}
+              alt={displayTitle}
+            />
           </div>
         )}
 
@@ -268,7 +319,13 @@ export default function MockMediaPlayer({
         {mediaType === "pdf" && mediaUrl && (
           <div className={styles.pdfViewer}>
             <div className={styles.pdfCard}>
-              <svg className={styles.pdfIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg
+                className={styles.pdfIcon}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
                 <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
                 <line x1="16" y1="13" x2="8" y2="13" />
@@ -276,7 +333,12 @@ export default function MockMediaPlayer({
               </svg>
               <h5 className={styles.pdfName}>{displayTitle}</h5>
               <span className={styles.pdfTag}>Document Mockup</span>
-              <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className={styles.pdfLink}>
+              <a
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.pdfLink}
+              >
                 View PDF Document
               </a>
             </div>
@@ -294,7 +356,12 @@ export default function MockMediaPlayer({
             {isPlaying ? (
               <Pause size={32} fill="white" stroke="white" />
             ) : (
-              <Play size={32} fill="white" stroke="white" className={styles.playIconOffset} />
+              <Play
+                size={32}
+                fill="white"
+                stroke="white"
+                className={styles.playIconOffset}
+              />
             )}
           </button>
         )}
@@ -336,7 +403,10 @@ export default function MockMediaPlayer({
               className={styles.seekBar}
               id="mock-media-seek-bar"
             />
-            <div className={styles.seekFill} style={{ width: `${progress}%` }}></div>
+            <div
+              className={styles.seekFill}
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
 
           <div className={styles.controlsRow}>
@@ -347,14 +417,26 @@ export default function MockMediaPlayer({
             </div>
 
             <div className={styles.utilityBtns}>
-              <button className={styles.utilBtn} onClick={resetPlayback} title="Reset">
+              <button
+                className={styles.utilBtn}
+                onClick={resetPlayback}
+                title="Reset"
+              >
                 <RotateCcw size={16} />
               </button>
-              <button className={styles.utilBtn} onClick={toggleMute} title={isMuted ? "Unmute" : "Mute"}>
+              <button
+                className={styles.utilBtn}
+                onClick={toggleMute}
+                title={isMuted ? "Unmute" : "Mute"}
+              >
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </button>
               {mediaType === "video" && (
-                <button className={styles.utilBtn} onClick={toggleFullscreen} title="Full Screen">
+                <button
+                  className={styles.utilBtn}
+                  onClick={toggleFullscreen}
+                  title="Full Screen"
+                >
                   <Maximize size={16} />
                 </button>
               )}
@@ -369,8 +451,12 @@ export default function MockMediaPlayer({
           <div className={styles.pdfDownloadInfo}>
             <FileText className={styles.pdfDownloadIcon} size={24} />
             <div>
-              <span className={styles.pdfDownloadTag}>Detailed Documentation</span>
-              <h5 className={styles.pdfDownloadTitle}>{pdfLabel || "A Deeper Preview"}</h5>
+              <span className={styles.pdfDownloadTag}>
+                Detailed Documentation
+              </span>
+              <h5 className={styles.pdfDownloadTitle}>
+                {pdfLabel || "A Deeper Preview"}
+              </h5>
             </div>
           </div>
           <div className={styles.pdfDownloadActionGroup}>
@@ -400,7 +486,9 @@ export default function MockMediaPlayer({
       {description && (
         <div key={displayTitle} className={styles.revealContainer}>
           <p className={styles.descriptionParagraph}>
-            <span className={styles.descriptionHighlight}>{displayTitle}: </span>
+            <span className={styles.descriptionHighlight}>
+              {displayTitle}:{" "}
+            </span>
             {description}
           </p>
         </div>
@@ -420,7 +508,11 @@ export default function MockMediaPlayer({
             aria-label="More Detail"
           >
             {moreDetailIconUrl ? (
-              <img src={moreDetailIconUrl} alt="" className={styles.btnIconImage} />
+              <img
+                src={moreDetailIconUrl}
+                alt=""
+                className={styles.btnIconImage}
+              />
             ) : (
               <FileText size={17} className={styles.btnIconPlaceholder} />
             )}
@@ -450,7 +542,11 @@ export default function MockMediaPlayer({
             aria-label="Contact Us"
           >
             {contactIconUrl ? (
-              <img src={contactIconUrl} alt="" className={styles.btnIconImage} />
+              <img
+                src={contactIconUrl}
+                alt=""
+                className={styles.btnIconImage}
+              />
             ) : (
               <Mail size={17} className={styles.btnIconPlaceholder} />
             )}
@@ -461,5 +557,3 @@ export default function MockMediaPlayer({
     </div>
   );
 }
-
-
