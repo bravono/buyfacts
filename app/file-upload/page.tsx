@@ -411,7 +411,7 @@ export default function FileUploadDemoPage() {
             3. Interactive Component Grid
           </div>
 
-          {["Services", "Thought Leadership"].map((category) => (
+          {["Products & Services", "Research Imperatives"].map((category) => (
             <div key={category} className={styles.categoryGroup}>
               <h4 className={styles.categoryTitle}>
                 {category} Buttons
