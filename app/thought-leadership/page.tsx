@@ -185,7 +185,7 @@ export default function PortfolioPage() {
             <DashboardAnimation
               className={styles.dashboardAnimation}
               buttons={thoughtLeadershipButtons}
-              title="Research Imperatives"
+              title="RESEARCH IMPERATIVES"
               selectedButtonIndex={selectedButtonIndex}
               onSelectButton={setSelectedButtonIndex}
             />

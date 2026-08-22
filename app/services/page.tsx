@@ -178,7 +178,7 @@ export default function ServicesPage() {
             <DashboardAnimation
               className={styles.dashboardAnimation}
               buttons={customButtons}
-              title="Products and Services"
+              title="PRODUCTS & SERVICES"
               selectedButtonIndex={selectedButtonIndex}
               onSelectButton={setSelectedButtonIndex}
             />
