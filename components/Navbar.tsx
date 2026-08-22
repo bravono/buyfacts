@@ -48,13 +48,13 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             HOME
           </a>
 
-          <a href="/services" className={styles.navLink} id="nav-link-services">
+          <a href="/products-services" className={styles.navLink} id="nav-link-products-services">
             PRODUCTS & SERVICES
           </a>
           <a
-            href="/thought-leadership"
+            href="/research-imperatives"
             className={styles.navLink}
-            id="nav-link-thought-leadership"
+            id="nav-link-research-imperatives"
           >
             RESEARCH IMPERATIVES
           </a>
@@ -102,12 +102,20 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             HOME
           </a>
           <a
-            href="/services"
+            href="/products-services"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
-            id="mob-link-services"
+            id="mob-link-products-services"
           >
-            SERVICES
+            PRODUCTS & SERVICES
+          </a>
+          <a
+            href="/research-imperatives"
+            onClick={closeMobileMenu}
+            className={styles.mobileNavLink}
+            id="mob-link-research-imperatives"
+          >
+            RESEARCH IMPERATIVES
           </a>
           <a
             href="/cubicon"
@@ -115,7 +123,7 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             className={styles.mobileNavLink}
             id="mob-link-cubicon"
           >
-            SPECIAL OFFER
+            BAD BOTS
           </a>
           <a
             href="/#about"
