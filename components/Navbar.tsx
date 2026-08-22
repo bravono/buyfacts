@@ -49,18 +49,18 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
           </a>
 
           <a href="/services" className={styles.navLink} id="nav-link-services">
-            PRODUCTS / SERVICES
+            PRODUCTS & SERVICES
           </a>
           <a
             href="/thought-leadership"
             className={styles.navLink}
             id="nav-link-thought-leadership"
           >
-            THOUGHT LEADERSHIP / BEST PRACTICES
+            RESEARCH IMPERATIVES
           </a>
 
           <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
-            SPECIAL OFFER
+            BAD BOTS
           </a>
           <a href="/#about" className={styles.navLink} id="nav-link-about">
             ABOUT
