@@ -20,7 +20,7 @@ import {
   Sparkles,
   Grid,
   Lock,
-  User,
+  KeyRound,
   Mail,
   Loader2,
   LogOut
@@ -55,19 +55,27 @@ export default function FileUploadDemoPage() {
   // Auth State
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [authEmail, setAuthEmail] = useState("");
-  const [authName, setAuthName] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  // Check existing session
+  // Check existing session via /api/auth/me
   useEffect(() => {
-    const checkSession = () => {
-      const storedSession = localStorage.getItem("uploadAuth");
-      if (storedSession === "true") {
-        setIsAuthorized(true);
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.success && data.authenticated) {
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch {
+        setIsAuthorized(false);
+      } finally {
+        setIsCheckingSession(false);
       }
-      setIsCheckingSession(false);
     };
     checkSession();
   }, []);
@@ -86,18 +94,21 @@ export default function FileUploadDemoPage() {
     setIsVerifying(true);
 
     try {
-      const res = await fetch("/api/auth/verify-uploader", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: authEmail, name: authName }),
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword,
+        }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
         setIsAuthorized(true);
-        localStorage.setItem("uploadAuth", "true");
+        setAuthPassword("");
       } else {
-        setAuthError(data.error || "Authorization failed.");
+        setAuthError(data.error || "Authorization failed. Please check your credentials.");
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -107,11 +118,15 @@ export default function FileUploadDemoPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("uploadAuth");
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     setIsAuthorized(false);
     setAuthEmail("");
-    setAuthName("");
+    setAuthPassword("");
   };
 
   const fetchButtons = async () => {
@@ -272,23 +287,6 @@ export default function FileUploadDemoPage() {
               
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>
-                  Full Name
-                </label>
-                <div className={styles.inputWrapper}>
-                  <User className={styles.inputIcon} />
-                  <input
-                    type="text"
-                    value={authName}
-                    onChange={(e) => setAuthName(e.target.value)}
-                    required
-                    className={styles.inputField}
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>
                   Email Address
                 </label>
                 <div className={styles.inputWrapper}>
@@ -299,7 +297,24 @@ export default function FileUploadDemoPage() {
                     onChange={(e) => setAuthEmail(e.target.value)}
                     required
                     className={styles.inputField}
-                    placeholder="john@example.com"
+                    placeholder="admin@buyfacts.com"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>
+                  Password
+                </label>
+                <div className={styles.inputWrapper}>
+                  <KeyRound className={styles.inputIcon} />
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    required
+                    className={styles.inputField}
+                    placeholder="Enter password"
                   />
                 </div>
               </div>

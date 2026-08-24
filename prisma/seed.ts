@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-
 import path from 'path'
+import { hashPassword } from '../lib/auth/password'
 
 const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
 const rawPath = dbUrl.replace(/^file:/, "");
@@ -19,19 +19,26 @@ async function main() {
 
   // 1. Users
   console.log("1. Seeding Users...");
+  const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "AdminPass123!";
+  const defaultHash = await hashPassword(defaultPassword);
+
   const users = [
-    { email: "rmj@robertjohnso.com", name: "Robert Johnson" },
-    { email: "ahbideeny@gmail.com", name: "Ahbideen Yusuf" },
+    { email: "rmj@robertjohnso.com", name: "Robert Johnson", passwordHash: defaultHash, role: "admin" },
+    { email: "ahbideeny@gmail.com", name: "Ahbideen Yusuf", passwordHash: defaultHash, role: "admin" },
   ];
 
   for (const user of users) {
     await prisma.user.upsert({
       where: { email: user.email },
-      update: { name: user.name },
+      update: {
+        name: user.name,
+        passwordHash: user.passwordHash,
+        role: user.role,
+      },
       create: user,
     });
   }
-  console.log(`   ✓ Seeded ${users.length} Users`);
+  console.log(`   Seeded ${users.length} Users`);
 
   // 2. Dashboard Buttons
   console.log("2. Seeding Dashboard Buttons...");

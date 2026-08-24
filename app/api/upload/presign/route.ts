@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensureBucketExists } from '@/lib/minio';
+import { validateApiAuth } from '@/lib/auth/middleware';
 
 // Maximum allowed file size (100MB in bytes)
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await validateApiAuth(req);
+    if (!auth.isAuthenticated) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized: Admin access required to generate upload URLs.' },
+        { status: 401 }
+      );
+    }
     const body = await req.json();
     const { filename, fileType, fileSize, prefix } = body;
 

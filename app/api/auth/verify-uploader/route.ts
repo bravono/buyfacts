@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { createAuthSession } from "@/lib/auth/session";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!email || !name) {
       return NextResponse.json(
-        { error: 'Both email and name are required' },
+        { error: "Both email and name are required." },
         { status: 400 }
       );
     }
@@ -19,12 +20,12 @@ export async function POST(request: Request) {
 
     // Find user by email first
     const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email: normalizedEmail },
     });
 
     if (!user || !user.name) {
       return NextResponse.json(
-        { error: 'Unauthorized: User not found or details incorrect' },
+        { error: "Unauthorized: User not found or details incorrect." },
         { status: 401 }
       );
     }
@@ -32,16 +33,27 @@ export async function POST(request: Request) {
     // Verify name matches (case-insensitive)
     if (user.name.trim().toLowerCase() !== normalizedName) {
       return NextResponse.json(
-        { error: 'Unauthorized: User not found or details incorrect' },
+        { error: "Unauthorized: User not found or details incorrect." },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({ success: true, user: { name: user.name, email: user.email } });
+    // Create session cookie for backwards compatibility
+    await createAuthSession({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role || "admin",
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: { name: user.name, email: user.email, role: user.role || "admin" },
+    });
   } catch (error) {
-    console.error('Error verifying uploader:', error);
+    console.error("Error verifying uploader:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

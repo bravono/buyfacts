@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensureBucketExists } from '@/lib/minio';
+import { validateApiAuth } from '@/lib/auth/middleware';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
@@ -8,6 +9,13 @@ export const maxDuration = 60; // 60 seconds timeout for large uploads
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await validateApiAuth(req);
+    if (!auth.isAuthenticated) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized: Admin access required to upload assets.' },
+        { status: 401 }
+      );
+    }
     let formData: FormData;
     try {
       formData = await req.formData();

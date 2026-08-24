@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { validateApiAuth } from "@/lib/auth/middleware";
 
 // Default seed buttons for initial load
 const DEFAULT_BUTTONS = [
@@ -64,6 +65,14 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
+    const auth = await validateApiAuth(req);
+    if (!auth.isAuthenticated) {
+      return NextResponse.json(
+        { error: auth.error || "Unauthorized: Admin access required." },
+        { status: 401 }
+      );
+    }
+
     const { id, mediaUrl, mediaType, subtitle } = await req.json();
 
     if (!id) {

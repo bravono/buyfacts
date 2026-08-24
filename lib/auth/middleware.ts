@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { verifyJWT, JWTPayload } from "./jwt";
+import { AUTH_COOKIE_NAME } from "./session";
 
 export interface AuthValidationResult {
   isAuthenticated: boolean;
@@ -8,32 +9,37 @@ export interface AuthValidationResult {
 }
 
 /**
- * Extract and validate Bearer JWT token from Next.js request headers or authorization header
+ * Extract and validate JWT token from authorization header (Bearer) or httpOnly cookie.
  */
 export async function validateApiAuth(
   request: NextRequest | Request
 ): Promise<AuthValidationResult> {
+  let token: string | undefined;
+
+  // 1. Check Authorization header
   const authHeader = request.headers.get("authorization");
-
-  if (!authHeader) {
-    return {
-      isAuthenticated: false,
-      error: "Missing Authorization header",
-    };
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7).trim();
   }
 
-  if (!authHeader.startsWith("Bearer ")) {
-    return {
-      isAuthenticated: false,
-      error: "Invalid Authorization scheme. Expected 'Bearer <token>'",
-    };
+  // 2. Fall back to cookie header if request has cookies
+  if (!token) {
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const match = cookieHeader
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(`${AUTH_COOKIE_NAME}=`));
+      if (match) {
+        token = match.substring(AUTH_COOKIE_NAME.length + 1);
+      }
+    }
   }
 
-  const token = authHeader.substring(7).trim();
   if (!token) {
     return {
       isAuthenticated: false,
-      error: "Empty token payload",
+      error: "Authentication required. Missing auth token or session cookie.",
     };
   }
 
@@ -41,7 +47,7 @@ export async function validateApiAuth(
   if (!payload) {
     return {
       isAuthenticated: false,
-      error: "Invalid or expired JWT token",
+      error: "Invalid or expired JWT token.",
     };
   }
 

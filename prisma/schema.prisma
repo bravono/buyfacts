@@ -11,10 +11,13 @@ datasource db {
 
 // 1. Core User Identity
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  passwordHash String?
+  role         String   @default("admin") // e.g. "admin", "user"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
 // 2. Contact Form (Main Page & Contact Us)

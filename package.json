@@ -7,6 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/**/*.test.ts",
     "embed-cubicon": "node scripts/bundle-cubicon.js",
     "embed-research-lib": "node scripts/bundle-narrative.js",
     "embed-tools": "npm run embed-cubicon && npm run embed-research-lib"
