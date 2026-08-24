@@ -41,9 +41,26 @@ export default function Footer() {
         </div>
 
         <div className={styles.bottomSection}>
-          <p className={styles.copyright}>
-            &copy; {new Date().getFullYear()} BuyFacts®. All rights reserved.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <p className={styles.copyright}>
+              &copy; {new Date().getFullYear()} BuyFacts®. All rights reserved.
+            </p>
+            <span style={{ opacity: 0.3, color: 'var(--text-muted)' }}>•</span>
+            <a
+              href="/file-upload"
+              style={{
+                fontSize: '0.8rem',
+                color: 'var(--text-muted)',
+                opacity: 0.6,
+                textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+            >
+              Admin Access
+            </a>
+          </div>
           <p className={styles.disclaimer}>
             BuyFacts®, Cubicon™, TRIAD™, and Rule of Three® are registered trademarks or trademarks in the B2B research methodology domain.
           </p>
