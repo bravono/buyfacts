@@ -50,7 +50,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
       mediaType: "video",
       subtitle: "Inclusive Research Definition",
-      category: "Services",
+      category: "Products & Services",
       color: "#9b5d00",
     },
     {
@@ -59,7 +59,7 @@ async function main() {
       mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
       mediaType: "pdf",
       subtitle: "Increase the Return on Research",
-      category: "Services",
+      category: "Products & Services",
       color: "#006398",
     },
     {
@@ -68,7 +68,7 @@ async function main() {
       mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
       mediaType: "audio",
       subtitle: "Make Each Question Actionable",
-      category: "Services",
+      category: "Products & Services",
       color: "#ea425f",
     },
     {
@@ -77,7 +77,7 @@ async function main() {
       mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
       mediaType: "image",
       subtitle: "Quality-Centric Survey Execution",
-      category: "Services",
+      category: "Products & Services",
       color: "#b0e843",
     },
     {
@@ -86,7 +86,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
       mediaType: "video",
       subtitle: "Active Pattern Analytics",
-      category: "Services",
+      category: "Products & Services",
       color: "#ed40ed",
     },
     {
@@ -95,7 +95,7 @@ async function main() {
       mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
       mediaType: "pdf",
       subtitle: "Opportunity Validation",
-      category: "Services",
+      category: "Products & Services",
       color: "#532254",
     },
     {
@@ -104,7 +104,7 @@ async function main() {
       mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       mediaType: "audio",
       subtitle: "Play Cubicon Puzzle Games",
-      category: "Services",
+      category: "Products & Services",
       color: "#ffc164",
     },
     {
@@ -113,7 +113,7 @@ async function main() {
       mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
       mediaType: "image",
       subtitle: "Execute a Dual-Based Survey Model",
-      category: "Services",
+      category: "Products & Services",
       color: "#ff9900",
     },
     {
@@ -122,7 +122,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
       mediaType: "video",
       subtitle: "Maximize the Return on Content",
-      category: "Services",
+      category: "Products & Services",
       color: "#42ea86",
     },
     // Thought Leadership
@@ -132,7 +132,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
       mediaType: "video",
       subtitle: "Return on Primary Research",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#ff9900",
     },
     {
@@ -141,7 +141,7 @@ async function main() {
       mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
       mediaType: "audio",
       subtitle: "Best Practices by Marketing Area",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#b0e843",
     },
     {
@@ -150,7 +150,7 @@ async function main() {
       mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
       mediaType: "pdf",
       subtitle: "Smaller Groups that Know the Topic",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#ffc164",
     },
     {
@@ -159,7 +159,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
       mediaType: "video",
       subtitle: "Digital Reach and a Human Touch",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#532254",
     },
     {
@@ -168,7 +168,7 @@ async function main() {
       mediaUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80",
       mediaType: "image",
       subtitle: "Earlier Recognition for Your Time Advantage",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#ea425f",
     },
     {
@@ -177,7 +177,7 @@ async function main() {
       mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       mediaType: "audio",
       subtitle: "Optimize Question Value",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#42ea86",
     },
     {
@@ -186,7 +186,7 @@ async function main() {
       mediaUrl: "https://www.orimi.com/pdf-test.pdf",
       mediaType: "pdf",
       subtitle: "Assets that Engage with Thought Leadership",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#ffc164",
     },
     {
@@ -195,7 +195,7 @@ async function main() {
       mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
       mediaType: "video",
       subtitle: "Exceed Stakeholder Wants and Needs",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#006398",
     },
     {
@@ -204,7 +204,7 @@ async function main() {
       mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
       mediaType: "pdf",
       subtitle: "Research Becomes Intellectual Currency",
-      category: "Thought Leadership",
+      category: "Research Imperatives",
       color: "#9b5d00",
     },
   ];

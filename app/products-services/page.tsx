@@ -136,7 +136,7 @@ export default function ServicesPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiServices = data.buttons
-            .filter((btn: any) => btn.category === "Services")
+            .filter((btn: any) => btn.category === "Products & Services")
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];

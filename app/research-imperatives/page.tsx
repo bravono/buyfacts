@@ -136,7 +136,7 @@ export default function PortfolioPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiTL = data.buttons
-            .filter((btn: any) => btn.category === "Thought Leadership")
+            .filter((btn: any) => btn.category === "Research Imperatives")
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_TL_BUTTONS[idx] || DEFAULT_TL_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
