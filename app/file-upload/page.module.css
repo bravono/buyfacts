@@ -628,3 +628,237 @@
   position: relative;
   z-index: 50;
 }
+
+/* Storage Browser Section */
+.storageToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.25rem;
+  background-color: var(--bg-alt, #F8F8F8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-color);
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.searchInput:focus {
+  border-color: var(--interactive-orange);
+  background-color: #FFFFFF;
+}
+
+.folderFilterBar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.folderTab {
+  background: var(--bg-alt, #F8F8F8);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.folderTab:hover {
+  color: var(--text-color);
+  border-color: var(--text-muted);
+}
+
+.folderTabActive {
+  background: var(--interactive-blue);
+  color: #FFFFFF;
+  border-color: var(--interactive-blue);
+}
+
+.storageGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.storageItem {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: var(--transition-smooth);
+}
+
+.storageItem:hover {
+  border-color: var(--interactive-orange);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.storageItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+  flex: 1;
+}
+
+.storageItemIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background: rgba(0, 80, 123, 0.08);
+  color: var(--interactive-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.storageItemMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+.storageItemName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storageItemDetails {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.folderBadge {
+  background: rgba(255, 153, 0, 0.1);
+  color: var(--interactive-orange);
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+}
+
+.storageItemActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: var(--transition-smooth);
+}
+
+.actionBtn:hover {
+  background: var(--bg-alt, #F8F8F8);
+  border-color: var(--text-muted);
+}
+
+.actionBtnPrimary {
+  background: rgba(255, 153, 0, 0.1);
+  color: var(--interactive-orange);
+  border-color: rgba(255, 153, 0, 0.2);
+}
+
+.actionBtnPrimary:hover {
+  background: var(--interactive-orange);
+  color: #FFFFFF;
+  border-color: var(--interactive-orange);
+}
+
+.actionBtnDanger {
+  color: #EF4444;
+}
+
+.actionBtnDanger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #EF4444;
+}
+
+/* Move Modal */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modalFileSummary {
+  background: var(--bg-alt, #F8F8F8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.modalFileName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.modalFileCurrent {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+

@@ -43,29 +43,56 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { publicUrl, fileName, fileType, fileSize } = await req.json();
+    const body = await req.json();
 
-    if (!publicUrl || !fileName) {
+    const isBatch = Array.isArray(body.assets);
+    const assetsToInsert = isBatch
+      ? body.assets
+      : [
+          {
+            publicUrl: body.publicUrl,
+            fileName: body.fileName || body.filename,
+            fileType: body.fileType || body.mimeType || "application/octet-stream",
+            fileSize: Number(body.fileSize || body.size) || 0,
+          },
+        ];
+
+    if (assetsToInsert.length === 0) {
       return NextResponse.json(
-        { error: "Missing required parameters (publicUrl, fileName)" },
+        { error: "Missing required asset parameters" },
         { status: 400 }
       );
     }
 
-    const newAsset = await prisma.mediaAsset.create({
-      data: {
-        publicUrl,
-        fileName,
-        fileType: fileType || "application/octet-stream",
-        fileSize: Number(fileSize) || 0,
-      },
-    });
+    const createdAssets = [];
+    for (const item of assetsToInsert) {
+      if (!item.publicUrl || !item.fileName) {
+        continue;
+      }
+      const asset = await prisma.mediaAsset.create({
+        data: {
+          publicUrl: item.publicUrl,
+          fileName: item.fileName,
+          fileType: item.fileType || "application/octet-stream",
+          fileSize: Number(item.fileSize) || 0,
+        },
+      });
+      createdAssets.push(asset);
+    }
 
-    return NextResponse.json({ success: true, asset: newAsset });
+    if (!isBatch && createdAssets.length > 0) {
+      return NextResponse.json({ success: true, asset: createdAssets[0], assets: createdAssets });
+    }
+
+    return NextResponse.json({
+      success: true,
+      count: createdAssets.length,
+      assets: createdAssets,
+    });
   } catch (error: any) {
-    console.error("Failed to save media asset:", error);
+    console.error("Failed to save media asset(s):", error);
     return NextResponse.json(
-      { error: error.message || "Failed to save asset" },
+      { error: error.message || "Failed to save asset(s)" },
       { status: 500 }
     );
   }
