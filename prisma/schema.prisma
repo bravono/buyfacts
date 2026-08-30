@@ -128,9 +128,10 @@ model CubiconTask {
   description      String
   screen           String?  @default("")
   image            String
-  rotation         String?  @default("left")
-  rotationInterval Int?     @default(15)
-  question_type    String?  @default("Selection")
+  rotation          String?  @default("left")
+  rotation_interval Int?     @default(15)
+  rotationInterval  Int?     @default(15)
+  question_type     String?  @default("Selection")
   isFinal          Boolean  @default(false)
   createdAt        DateTime @default(now())
 
@@ -176,4 +177,32 @@ model CubiconRegistration {
 
   @@map("cubicon_registrations")
 }
+
+model CubiconShare {
+  id            Int       @id @default(autoincrement())
+  senderName    String?   @default("")
+  senderEmail   String?   @default("")
+  receiverName  String?   @default("")
+  receiverEmail String?   @default("")
+  sharePlatform String?   @default("email")
+  shareUrl      String?   @default("")
+  sessionId     String?   @default("")
+  status        String?   @default("invited")
+  createdAt     DateTime? @default(now())
+
+  @@map("cubicon_shares")
+}
+
+model FeedbackSubmission {
+  id           Int       @id @default(autoincrement())
+  userId       String?   @default("")
+  userEmail    String?   @default("")
+  sessionId    String?   @default("")
+  feedbackText String
+  rating       Int?      @default(0)
+  createdAt    DateTime? @default(now())
+
+  @@map("cubicon_feedback")
+}
+
 

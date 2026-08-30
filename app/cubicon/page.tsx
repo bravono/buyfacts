@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -32,6 +33,7 @@ import {
   ChevronRight,
   Play,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -606,6 +608,14 @@ export default function CubiconPage() {
                     >
                       <ExternalLink size={14} /> Launch Standalone
                     </a>
+                    <Link
+                      href="/cubicon/analytics"
+                      className={styles.controlBtn}
+                      style={{ background: "rgba(14, 165, 233, 0.25)", borderColor: "rgba(14, 165, 233, 0.5)", color: "#38bdf8" }}
+                      title="View Executive Analytics Dashboard"
+                    >
+                      <BarChart3 size={14} /> Analytics
+                    </Link>
                     <button className={styles.exitBtn} onClick={handleExitLiveApp} title="Exit Live Demo and view benefits">
                       <LogOut size={14} /> Exit
                     </button>

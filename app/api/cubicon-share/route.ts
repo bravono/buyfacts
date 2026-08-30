@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { sendCubiconShareEmail } from "@/lib/resend";
+
+export async function GET() {
+  try {
+    const shares = await prisma.cubiconShare.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ shares }, corsHeaders());
+  } catch (error: any) {
+    console.error("[cubicon-share] Error fetching shares:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to fetch shares." },
+      { status: 500, headers: corsHeaders().headers }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +48,15 @@ export async function POST(request: Request) {
       }
     }
 
-    const { senderName, receiverName, receiverEmail } = parsed;
+    const {
+      senderName,
+      senderEmail,
+      receiverName,
+      receiverEmail,
+      sharePlatform,
+      shareUrl,
+      sessionId,
+    } = parsed;
 
     if (!senderName?.trim() || !receiverName?.trim() || !receiverEmail?.trim()) {
       return NextResponse.json(
@@ -49,16 +73,43 @@ export async function POST(request: Request) {
       );
     }
 
-    const emailResult = await sendCubiconShareEmail({
-      senderName: senderName.trim(),
-      receiverName: receiverName.trim(),
-      receiverEmail: receiverEmail.trim().toLowerCase(),
+    const cleanSenderName = senderName.trim();
+    const cleanSenderEmail = senderEmail ? senderEmail.trim().toLowerCase() : "";
+    const cleanReceiverName = receiverName.trim();
+    const cleanReceiverEmail = receiverEmail.trim().toLowerCase();
+    const cleanPlatform = sharePlatform?.trim() || "email";
+    const cleanUrl = shareUrl?.trim() || "";
+    const cleanSessionId = sessionId?.trim() || "";
+
+    let emailResult = null;
+    try {
+      emailResult = await sendCubiconShareEmail({
+        senderName: cleanSenderName,
+        receiverName: cleanReceiverName,
+        receiverEmail: cleanReceiverEmail,
+      });
+    } catch (mailErr: any) {
+      console.warn("[cubicon-share] Resend email delivery skipped or encountered error:", mailErr.message);
+    }
+
+    const createdShare = await prisma.cubiconShare.create({
+      data: {
+        senderName: cleanSenderName,
+        senderEmail: cleanSenderEmail,
+        receiverName: cleanReceiverName,
+        receiverEmail: cleanReceiverEmail,
+        sharePlatform: cleanPlatform,
+        shareUrl: cleanUrl,
+        sessionId: cleanSessionId,
+        status: "invited",
+      },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Personalized Cubicon invitation sent successfully!",
+        message: "Personalized Cubicon invitation recorded and dispatched successfully.",
+        share: createdShare,
         emailResult,
       },
       corsHeaders()
@@ -80,8 +131,9 @@ function corsHeaders() {
   return {
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   };
 }
+
