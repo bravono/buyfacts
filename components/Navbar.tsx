@@ -4,7 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
-export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolean }) {
+export default function Navbar({
+  hideOnScroll = false,
+}: {
+  hideOnScroll?: boolean;
+}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -29,7 +33,9 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
   };
 
   return (
-    <header className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}>
+    <header
+      className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}
+    >
       <div className={styles.container}>
         <a href="#hero" className={styles.logo} id="nav-logo-link">
           <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "50px" }} />
@@ -38,7 +44,9 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
               Buy<span className={styles.logoHighlight}>Facts</span>
               <span className={styles.trademark}>®</span>
             </span>
-            <span className={styles.logoSubtitle}>Insights that Inspire</span>
+            <span className={styles.logoSubtitle}>
+              THE EARLY RECOGNITION COMPANY
+            </span>
           </div>
         </a>
 
@@ -48,7 +56,11 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             HOME
           </a>
 
-          <a href="/products-services" className={styles.navLink} id="nav-link-products-services">
+          <a
+            href="/products-services"
+            className={styles.navLink}
+            id="nav-link-products-services"
+          >
             PRODUCTS & SERVICES
           </a>
           <a
@@ -56,7 +68,7 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
             className={styles.navLink}
             id="nav-link-research-imperatives"
           >
-            RESEARCH IMPERATIVES
+            MARKET RESEARCH
           </a>
 
           <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">

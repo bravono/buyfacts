@@ -36,7 +36,7 @@ const DEFAULT_TASKS = [
     taskIndex: 2,
     task_number: 3,
     heading: "Puzzle 3 of 3",
-    description: "Who gets concerned by howling? (Draw a circle)",
+    description: "Where does his next go? (click to choose)",
     screen: "Active_back",
     image: "/cubicon-app/arts/Puzzle3.png",
     rotation: "left",
