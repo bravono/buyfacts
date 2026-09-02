@@ -151,8 +151,7 @@ interface SlideItem {
 const SLIDES: SlideItem[] = [
   {
     heading: `Introduction to Cubicon`,
-    image:
-      "http://154.38.177.178:9000/buyfacts-public-assets/cubicon/1788076754323-kxxz2p-WhatsApp_Image_2026-08-29_at_23.57.17.jpeg",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788334424963-kbbl1i-Bad_Bot.jpeg",
     description:
       "In the next 30 seconds we will show you three Cubicon puzzles that validate a human user.",
     details:
