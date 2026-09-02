@@ -121,19 +121,24 @@ model ResearchLibAppState {
 
 // 7. Cubicon 3D Interactive Survey & Verification Platform
 model CubiconTask {
-  id               Int      @id @default(autoincrement())
-  taskIndex        Int      @default(0)
-  task_number      Int?
-  heading          String
-  description      String
-  screen           String?  @default("")
-  image            String
-  rotation          String?  @default("left")
-  rotation_interval Int?     @default(15)
-  rotationInterval  Int?     @default(15)
-  question_type     String?  @default("Selection")
-  isFinal          Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  id                  Int      @id @default(autoincrement())
+  taskIndex           Int      @default(0)
+  task_number         Int?
+  heading             String
+  description         String
+  screen              String?  @default("")
+  image               String
+  rotation            String?  @default("left")
+  rotation_interval   Int?     @default(15)
+  rotationInterval    Int?     @default(15)
+  question_type       String?  @default("Selection")
+  correct_coordinates String?  @default("")
+  start_point         String?  @default("")
+  mid_point           String?  @default("")
+  end_point           String?  @default("")
+  tolerance           Float?   @default(0.5)
+  isFinal             Boolean  @default(false)
+  createdAt           DateTime @default(now())
 
   @@map("cubicon_tasks")
 }
