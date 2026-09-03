@@ -160,21 +160,21 @@ const SLIDES: SlideItem[] = [
   },
   {
     heading: "Puzzle 1 of 3",
-    image: "/cubicon-app/arts/Puzzle1_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447281861-hybiad-Puzzle1_explainer.png",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
     heading: "Puzzle 2 of 3",
-    image: "/cubicon-app/arts/Puzzle2_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447294368-ay8p3h-Puzzle2_explainer.png",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
     heading: "Puzzle 3 of 3",
-    image: "/cubicon-app/arts/Puzzle3_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447299761-rmsr4t-Puzzle3_explainer.png",
     description: "Where does his next go?",
     details:
       "Complete the final validation test. Locate the target where she put the drink in her hands to confirm spatial verification.",
