@@ -613,12 +613,12 @@
   overflow: hidden;
   position: relative;
   transition: all 0.3s ease;
-  min-height: 600px;
+  min-height: 400px;
 }
 
 .slideshowContent {
   display: flex;
-  min-height: 600px;
+  min-height: 300px;
   position: relative;
 }
 
@@ -649,7 +649,7 @@
 .slideDetailsContainer {
   flex: 1;
   background: linear-gradient(135deg, #171d27 0%, #0f141c 100%);
-  padding: 3rem 2.5rem;
+  padding: 3rem 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -677,7 +677,7 @@
 }
 
 .slideSubtitle {
-  font-size: 1rem;
+  font-size: .8rem;
   font-weight: 800;
   color: #ff9900;
   margin-bottom: 1.5rem;
@@ -777,7 +777,7 @@
   background: rgba(255, 153, 0, 0.05);
   border: 1px dashed rgba(255, 153, 0, 0.3);
   border-radius: 16px;
-  padding: 1.75rem;
+  padding: .5rem 1rem;
   margin-top: 1.5rem;
   text-align: center;
   display: flex;

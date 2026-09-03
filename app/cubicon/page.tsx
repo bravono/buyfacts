@@ -150,12 +150,13 @@ interface SlideItem {
 
 const SLIDES: SlideItem[] = [
   {
-    heading: `Introduction to Cubicon`,
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788334424963-kbbl1i-Bad_Bot.jpeg",
+    heading: ``,
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788334424963-kbbl1i-Bad_Bot.jpeg",
     description:
       "In the next 30 seconds we will show you three Cubicon puzzles that validate a human user.",
     details:
-      "Cubicon recognizes bots and bad actors early, so you spend less time finding, rejecting, and cleaning up after poor participants, and more time building affinity with the people you want to hear from.",
+      "Cubitron is from the planet of Cubicon where bots are the enemy of honest research. He is always on the hunt to verify good humans who live there.",
   },
   {
     heading: "Puzzle 1 of 3",
@@ -574,18 +575,22 @@ export default function CubiconPage() {
                         Interactive 3D application will launch in full screen
                       </span>
                     </div>
-                  ) : currentSlide === 0?  <button
-                      className={styles.seeLiveBtn}
-                      onClick={handleSeeLiveClick}
-                      title="Launch Cubicon in 3D Live Screen"
-                    >
-                      <Play size={18} fill="#ffffff" /> START
-                    </button> : (
-                    <div className={styles.slideLogo}>
-                      <img src="cubicon-app/cubicon_logo.png" alt="" />
-                    </div>
+                  ) : (
+                    currentSlide === 0 && (
+                      <div className={styles.seeLiveCallout}>
+                        <button
+                          className={styles.seeLiveBtn}
+                          onClick={handleSeeLiveClick}
+                          title="Launch Cubicon in 3D Live Screen"
+                        >
+                          <Play size={18} fill="#ffffff" /> START
+                        </button>
+                        <span className={styles.seeLiveSubtitle}>
+                          See a One Minute Preview
+                        </span>
+                      </div>
+                    )
                   )}
-                 
 
                   <div className={styles.slideNavControls}>
                     <button
