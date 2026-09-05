@@ -152,7 +152,7 @@ const SLIDES: SlideItem[] = [
   {
     heading: ``,
     image:
-      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788334424963-kbbl1i-Bad_Bot.jpeg",
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
     description:
       "In the next 30 seconds we will show you three Cubicon puzzles that validate a human user.",
     details:
@@ -160,21 +160,21 @@ const SLIDES: SlideItem[] = [
   },
   {
     heading: "Puzzle 1 of 3",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447281861-hybiad-Puzzle1_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
     heading: "Puzzle 2 of 3",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447294368-ay8p3h-Puzzle2_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
     heading: "Puzzle 3 of 3",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788447299761-rmsr4t-Puzzle3_explainer.png",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
       "Complete the final validation test. Locate the target where she put the drink in her hands to confirm spatial verification.",
