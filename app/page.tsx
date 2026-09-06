@@ -226,7 +226,7 @@ export default function Home() {
           <div className={`${styles.heroContent} animate-fade-in-up`}>
             <div className={styles.heroEyebrow}>
               <span className={styles.heroEyebrowDot}></span>
-              BuyFacts® Research Group
+              BuyFacts, Inc
               <span className={styles.heroEyebrowDot}></span>
             </div>
             <h1 className={styles.heroTitle}>
@@ -662,7 +662,7 @@ export default function Home() {
                     Corporate Head Office
                   </h4>
                   <p className={styles.infoTextVal}>
-                    BuyFacts Inc.
+                    BuyFacts, Inc.
                     <br />
                     <span style={{ fontSize: "0.7rem" }}>
                       A Delaware Corporation

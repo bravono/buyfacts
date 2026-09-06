@@ -90,13 +90,12 @@ export default function ComingSoon() {
             <sup style={{ fontSize: "0.55em", verticalAlign: "super" }}>®</sup>
           </span>
           <span className={styles.logoDivider} />
-          <span className={styles.logoSubtext}>Research Group</span>
         </div>
 
         {/* Eyebrow */}
         <div className={styles.eyebrow}>
           <span className={styles.eyebrowDot} />
-          BuyFacts® Research Group
+          BuyFacts, Inc.
           <span className={styles.eyebrowDot} />
         </div>
 
