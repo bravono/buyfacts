@@ -112,4 +112,37 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
     // Empty clicks
     assert.equal(evaluateTaskAttempt(dragTask, {}), "f");
   });
+
+  await t.test("6. CubiconTask Prisma Model Persistence", async () => {
+    const { prisma } = await import("../lib/prisma");
+    const testTask = await prisma.cubiconTask.create({
+      data: {
+        taskIndex: 99,
+        task_number: 99,
+        heading: "Test Seed Task",
+        description: "Test description for validation",
+        screen: "Active_front",
+        image: "https://example.com/test.webp",
+        rotation: "left",
+        rotationInterval: 15,
+        question_type: "Selection",
+        correct_coordinates: JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]),
+        start_point: JSON.stringify({ x: 0.1, y: 0.2, z: 1.0 }),
+        mid_point: "",
+        end_point: "",
+        tolerance: 0.5,
+        isFinal: false,
+      },
+    });
+
+    assert.ok(testTask.id);
+    assert.equal(testTask.taskIndex, 99);
+    assert.equal(testTask.correct_coordinates, JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]));
+
+    // Cleanup
+    await prisma.cubiconTask.delete({
+      where: { id: testTask.id },
+    });
+  });
 });
+
