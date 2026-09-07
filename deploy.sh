@@ -14,6 +14,6 @@ npx prisma generate
 
 npm run build
 
-pm2 restart next-app
+pm2 restart buyfacts
 
 echo "Deployment from staging branch finished successfully!"
