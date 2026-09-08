@@ -201,11 +201,42 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
 }
 
 async function ensureSeedTasks() {
+  // 1. Ensure default sequence exists
+  let defaultSeq = await prisma.cubiconSequence.findFirst({
+    where: { slug: "default" },
+  });
+
+  if (!defaultSeq) {
+    defaultSeq = await prisma.cubiconSequence.create({
+      data: {
+        slug: "default",
+        title: "Default Verification Challenge",
+        description: "Standard anti-bot human verification puzzle sequence",
+        pass_threshold: 0.66,
+        rotation_direction: "left",
+        default_rotation_interval: 15,
+        is_active: true,
+        created_by: "system",
+      },
+    });
+  }
+
   const count = await prisma.cubiconTask.count();
   if (count === 0) {
     for (const item of DEFAULT_TASKS) {
-      await prisma.cubiconTask.create({ data: item });
+      await prisma.cubiconTask.create({
+        data: {
+          ...item,
+          sequence_id: defaultSeq.id,
+        },
+      });
     }
+  } else {
+    // Ensure existing tasks are attached to default sequence
+    await prisma.cubiconTask.updateMany({
+      where: { sequence_id: null },
+      data: { sequence_id: defaultSeq.id },
+    });
   }
 }
 
@@ -232,13 +263,38 @@ function formatImageUrl(imagePath: string): string {
   return `${BASE_URL}${cleanPath}`;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await ensureSeedTasks();
-    const tasks = await prisma.cubiconTask.findMany({
-      orderBy: { taskIndex: "asc" },
-    });
-    return NextResponse.json({ tasks }, corsHeaders());
+    const url = new URL(request.url);
+    const seqSlug = url.searchParams.get("sequence") || url.searchParams.get("seq");
+    const seqIdParam = url.searchParams.get("sequenceId");
+
+    let sequence = null;
+    if (seqIdParam) {
+      sequence = await prisma.cubiconSequence.findUnique({
+        where: { id: Number(seqIdParam) },
+        include: { tasks: { orderBy: { taskIndex: "asc" } } },
+      });
+    } else if (seqSlug) {
+      sequence = await prisma.cubiconSequence.findUnique({
+        where: { slug: seqSlug },
+        include: { tasks: { orderBy: { taskIndex: "asc" } } },
+      });
+    }
+
+    if (!sequence) {
+      sequence = await prisma.cubiconSequence.findFirst({
+        where: { is_active: true },
+        include: { tasks: { orderBy: { taskIndex: "asc" } } },
+      });
+    }
+
+    const tasks = sequence?.tasks?.length
+      ? sequence.tasks
+      : await prisma.cubiconTask.findMany({ orderBy: { taskIndex: "asc" } });
+
+    return NextResponse.json({ sequence, tasks }, corsHeaders());
   } catch (err: any) {
     console.error("[cubicon-data] GET Error:", err);
     return NextResponse.json({ error: "Failed to fetch tasks", details: err.message }, { status: 500, ...corsHeaders() });
@@ -277,19 +333,74 @@ export async function POST(request: Request) {
       }
     }
 
+    const requestedSequenceSlug = parsed.sequence || parsed.sequenceSlug || null;
+    const requestedSequenceId = parsed.sequenceId ? Number(parsed.sequenceId) : null;
+
+    // 1. Resolve requested or active default sequence
+    let currentSequence = null;
+    if (requestedSequenceId) {
+      currentSequence = await prisma.cubiconSequence.findUnique({
+        where: { id: requestedSequenceId },
+      });
+    } else if (requestedSequenceSlug) {
+      currentSequence = await prisma.cubiconSequence.findUnique({
+        where: { slug: requestedSequenceSlug },
+      });
+    }
+
+    if (!currentSequence) {
+      currentSequence = await prisma.cubiconSequence.findFirst({
+        where: { is_active: true },
+      });
+    }
+
+    if (!currentSequence) {
+      currentSequence = await prisma.cubiconSequence.findFirst();
+    }
+
+    const seqId = currentSequence?.id || null;
+    const seqRotationDir = currentSequence?.rotation_direction || "left";
+    const seqDefaultInterval = currentSequence?.default_rotation_interval || 15;
+    const seqThreshold = currentSequence?.pass_threshold !== null && currentSequence?.pass_threshold !== undefined
+      ? currentSequence.pass_threshold
+      : 0.66;
+
+    // Fetch tasks for this sequence (or fallback)
+    let sequenceTasks = seqId
+      ? await prisma.cubiconTask.findMany({
+          where: { sequence_id: seqId },
+          orderBy: { taskIndex: "asc" },
+        })
+      : [];
+
+    if (sequenceTasks.length === 0) {
+      sequenceTasks = await prisma.cubiconTask.findMany({
+        orderBy: { taskIndex: "asc" },
+      });
+    }
+
+    const fallbackTasks = sequenceTasks.length > 0 ? sequenceTasks : DEFAULT_TASKS;
+    const totalTasks = fallbackTasks.length;
+
+    // Helper for evaluating whether sequence passed threshold
+    const evaluateSequencePass = (passedCount: number, total: number): boolean => {
+      if (total <= 0) return true;
+      if (seqThreshold > 1) {
+        return passedCount >= seqThreshold;
+      }
+      const ratio = passedCount / total;
+      return ratio >= (seqThreshold - 0.0001);
+    };
+
     const isInit = parsed.task === "init" || !parsed.sessionId;
     const providedUserEmail = parsed.userEmail ? String(parsed.userEmail).trim() : "";
-    const allTasks = await prisma.cubiconTask.findMany({
-      orderBy: { taskIndex: "asc" },
-    });
-
-    const fallbackTasks = allTasks.length > 0 ? allTasks : DEFAULT_TASKS;
 
     if (isInit) {
       const sessionId = generateSessionId();
       await prisma.cubiconSession.create({
         data: {
           session_id: sessionId,
+          sequence_id: seqId,
           taskIndex: -1,
           user_email: providedUserEmail,
           passedPuzzles: 0,
@@ -300,14 +411,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           sessionId,
-          ofTasks: fallbackTasks.length,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Welcome to Cubicon",
+          ofTasks: totalTasks,
           heading: "Welcome to Cubicon",
           description: "Press Start to begin your puzzle.",
           screen: "Active_front",
           image: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
           rotation: [0, 0, 0],
           rotationInterval: 0,
-          rotationDirection: "left",
+          rotationDirection: mapRotationDirection(seqRotationDir),
           redirectUrl: "",
           result: null,
         },
@@ -325,6 +438,7 @@ export async function POST(request: Request) {
       session = await prisma.cubiconSession.create({
         data: {
           session_id: newSessionId,
+          sequence_id: seqId,
           taskIndex: 0,
           user_email: providedUserEmail,
           passedPuzzles: 0,
@@ -335,16 +449,18 @@ export async function POST(request: Request) {
       const puzzle = fallbackTasks[0];
       return NextResponse.json({
         sessionId: newSessionId,
-        ofTasks: fallbackTasks.length,
+        sequenceId: seqId,
+        sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+        ofTasks: totalTasks,
         task: puzzle.taskIndex + 1,
         heading: puzzle.heading,
         description: puzzle.description,
         screen: puzzle.screen || "Active_front",
         image: formatImageUrl(puzzle.image),
         rotation: [0, 0, 0],
-        rotationInterval: puzzle.rotationInterval || 15,
-        rotationDirection: mapRotationDirection(puzzle.rotation || "left"),
-        isFinal: puzzle.isFinal,
+        rotationInterval: puzzle.rotationInterval || seqDefaultInterval,
+        rotationDirection: mapRotationDirection(puzzle.rotation || seqRotationDir),
+        isFinal: totalTasks === 1,
         redirectUrl: "",
         result: null,
       }, corsHeaders());
@@ -361,6 +477,7 @@ export async function POST(request: Request) {
       await prisma.cubiconAttempt.create({
         data: {
           session_id: sessionId,
+          sequence_id: seqId || session.sequence_id || undefined,
           taskIndex: currentTaskIndex,
           user_email: session.user_email || providedUserEmail,
           clicks_data: JSON.stringify(rawClicks),
@@ -374,34 +491,41 @@ export async function POST(request: Request) {
 
     const nextIndex = session.taskIndex + 1;
     const isPassed = attemptResult === "p";
+    const newPassedCount = session.passedPuzzles + (isPassed ? 1 : 0);
+
     await prisma.cubiconSession.update({
       where: { id: session.id },
       data: {
         taskIndex: nextIndex,
         totalPuzzlesAttempted: session.totalPuzzlesAttempted + 1,
-        passedPuzzles: session.passedPuzzles + (isPassed ? 1 : 0),
+        passedPuzzles: newPassedCount,
         previous_result: attemptResult,
       },
     });
 
-    if (nextIndex >= fallbackTasks.length) {
-      const lastPuzzle = fallbackTasks[fallbackTasks.length - 1];
-      const overallPassed = isPassed;
+    if (nextIndex >= totalTasks) {
+      const lastPuzzle = fallbackTasks[totalTasks - 1];
+      const overallPassed = evaluateSequencePass(newPassedCount, totalTasks);
 
       return NextResponse.json({
         sessionId,
-        ofTasks: fallbackTasks.length,
-        task: fallbackTasks.length,
-        heading: isPassed ? "Congratulations You're Human!" : "Verification Incomplete",
-        description: isPassed ? "Verification completed successfully." : "Some points were missed. Please try again.",
+        sequenceId: seqId,
+        sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+        ofTasks: totalTasks,
+        task: totalTasks,
+        heading: overallPassed ? "Congratulations You're Human!" : "Verification Incomplete",
+        description: overallPassed
+          ? "You have completed all tasks successfully."
+          : "Verification completed with review required.",
         screen: lastPuzzle.screen || "Active_back",
         image: formatImageUrl(lastPuzzle.image),
         rotation: [0, 0, 0],
         rotationInterval: 0.1,
-        rotationDirection: mapRotationDirection(lastPuzzle.rotation || "left"),
+        rotationDirection: mapRotationDirection(lastPuzzle.rotation || seqRotationDir),
         isFinal: true,
         completed: true,
-        score: isPassed ? 1.0 : 0.0,
+        score: newPassedCount,
+        threshold: seqThreshold,
         passed: overallPassed,
         redirectUrl: "",
         result: attemptResult,
@@ -411,16 +535,18 @@ export async function POST(request: Request) {
     const puzzle = fallbackTasks[nextIndex];
     return NextResponse.json({
       sessionId,
-      ofTasks: fallbackTasks.length,
+      sequenceId: seqId,
+      sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+      ofTasks: totalTasks,
       task: puzzle.taskIndex + 1,
       heading: puzzle.heading,
       description: puzzle.description,
       screen: puzzle.screen || "Active_front",
       image: formatImageUrl(puzzle.image),
       rotation: [0, 0, 0],
-      rotationInterval: puzzle.isFinal ? 0 : (puzzle.rotationInterval || 15),
-      rotationDirection: mapRotationDirection(puzzle.rotation || "left"),
-      isFinal: puzzle.isFinal,
+      rotationInterval: puzzle.isFinal ? 0 : (puzzle.rotationInterval || seqDefaultInterval),
+      rotationDirection: mapRotationDirection(puzzle.rotation || seqRotationDir),
+      isFinal: nextIndex === totalTasks - 1,
       redirectUrl: "",
       result: attemptResult,
     }, corsHeaders());

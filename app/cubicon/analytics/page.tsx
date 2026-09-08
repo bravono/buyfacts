@@ -94,6 +94,32 @@ interface FeedbackItem {
   createdAt: string;
 }
 
+interface SequenceItem {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  pass_threshold: number;
+  rotation_direction: string;
+  default_rotation_interval: number;
+  is_active: boolean;
+  created_by: string;
+  tasks?: Array<{
+    id: number;
+    taskIndex: number;
+    heading: string;
+    description: string;
+    screen: string;
+    image: string;
+    rotation: string;
+    rotationInterval: number;
+  }>;
+  _count?: {
+    attempts: number;
+    sessions: number;
+  };
+}
+
 export default function CubiconAnalyticsPage() {
   const [data, setData] = useState<{
     overview: OverviewKPIs;
@@ -114,12 +140,136 @@ export default function CubiconAnalyticsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [dateRange, setDateRange] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"testers" | "referrals" | "funnel" | "feedback">("testers");
+  const [activeTab, setActiveTab] = useState<"testers" | "referrals" | "funnel" | "feedback" | "sequences">("testers");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+
+  // Sequences Management State
+  const [sequences, setSequences] = useState<SequenceItem[]>([]);
+  const [isSeqLoading, setIsSeqLoading] = useState<boolean>(false);
+  const [seqMessage, setSeqMessage] = useState<string>("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [newSeq, setNewSeq] = useState({
+    title: "",
+    slug: "",
+    description: "",
+    pass_threshold: 0.66,
+    rotation_direction: "left",
+    default_rotation_interval: 15,
+    is_active: false,
+    tasksCount: 3,
+  });
+
+  const fetchSequences = async () => {
+    try {
+      setIsSeqLoading(true);
+      const res = await fetch("/api/admin/sequences");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.sequences) {
+          setSequences(json.sequences);
+        }
+      }
+    } catch (err: any) {
+      console.warn("[analytics] Failed to fetch sequences:", err);
+    } finally {
+      setIsSeqLoading(false);
+    }
+  };
+
+  const handleActivateSequence = async (id: number) => {
+    try {
+      const res = await fetch(`/api/admin/sequences/${id}/activate`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        setSeqMessage("Puzzle sequence activated successfully.");
+        await fetchSequences();
+        setTimeout(() => setSeqMessage(""), 4000);
+      } else {
+        const errJson = await res.json();
+        setSeqMessage(`Activation failed: ${errJson.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setSeqMessage(`Error: ${err.message}`);
+    }
+  };
+
+  const handleDeleteSequence = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this sequence?")) return;
+    try {
+      const res = await fetch(`/api/admin/sequences/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSeqMessage("Sequence deleted.");
+        await fetchSequences();
+        setTimeout(() => setSeqMessage(""), 4000);
+      } else {
+        const errJson = await res.json();
+        setSeqMessage(`Delete failed: ${errJson.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setSeqMessage(`Error: ${err.message}`);
+    }
+  };
+
+  const handleCreateSequence = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const tasks = [];
+      const screens = ["Active_front", "Active_side_r", "Active_back", "Active_side_l"];
+      for (let i = 0; i < newSeq.tasksCount; i++) {
+        tasks.push({
+          taskIndex: i,
+          heading: `Puzzle Task ${i + 1}`,
+          description: "Click or drag across the highlighted points to solve the challenge.",
+          screen: screens[i % screens.length],
+          image: `/cubicon-app/arts/task${(i % 3) + 1}.png`,
+          rotation: newSeq.rotation_direction,
+          rotationInterval: newSeq.default_rotation_interval,
+          question_type: "Selection",
+          tolerance: 0.5,
+        });
+      }
+
+      const payload = {
+        ...newSeq,
+        tasks,
+      };
+
+      const res = await fetch("/api/admin/sequences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setSeqMessage("New puzzle sequence created successfully.");
+        setIsCreateModalOpen(false);
+        setNewSeq({
+          title: "",
+          slug: "",
+          description: "",
+          pass_threshold: 0.66,
+          rotation_direction: "left",
+          default_rotation_interval: 15,
+          is_active: false,
+          tasksCount: 3,
+        });
+        await fetchSequences();
+        setTimeout(() => setSeqMessage(""), 4000);
+      } else {
+        const errJson = await res.json();
+        setSeqMessage(`Create failed: ${errJson.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setSeqMessage(`Error: ${err.message}`);
+    }
+  };
 
   const fetchData = async (range = dateRange) => {
     try {
@@ -404,6 +554,17 @@ export default function CubiconAnalyticsPage() {
           >
             Feedback & Reviews
             <span className={styles.tabBadge}>{data?.feedback?.length || 0}</span>
+          </button>
+
+          <button
+            className={`${styles.tabBtn} ${activeTab === "sequences" ? styles.tabBtnActive : ""}`}
+            onClick={() => {
+              setActiveTab("sequences");
+              fetchSequences();
+            }}
+          >
+            Puzzle Groups & Sequences
+            <span className={styles.tabBadge}>{sequences.length}</span>
           </button>
         </nav>
 
@@ -766,6 +927,317 @@ export default function CubiconAnalyticsPage() {
             </div>
           </div>
         )}
+        {/* Tab 5: Puzzle Groups & Sequences */}
+        {activeTab === "sequences" && (
+          <div className={styles.contentCard}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h2 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "0 0 6px 0", color: "#ffffff" }}>
+                  Puzzle Groups & Sequence Engine
+                </h2>
+                <p style={{ color: "#94a3b8", fontSize: "0.88rem", margin: 0 }}>
+                  Manage dynamic challenge sequences, rotation parameters, thresholds, and custom assets.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={fetchSequences}
+                  disabled={isSeqLoading}
+                >
+                  {isSeqLoading ? "Refreshing..." : "Refresh Sequences"}
+                </button>
+                <button
+                  className={styles.btnPrimary}
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Create New Sequence
+                </button>
+              </div>
+            </div>
+
+            {seqMessage && (
+              <div
+                style={{
+                  background: seqMessage.toLowerCase().includes("fail") || seqMessage.toLowerCase().includes("error")
+                    ? "rgba(239, 68, 68, 0.15)"
+                    : "rgba(16, 185, 129, 0.15)",
+                  border: seqMessage.toLowerCase().includes("fail") || seqMessage.toLowerCase().includes("error")
+                    ? "1px solid rgba(239, 68, 68, 0.3)"
+                    : "1px solid rgba(16, 185, 129, 0.3)",
+                  color: seqMessage.toLowerCase().includes("fail") || seqMessage.toLowerCase().includes("error")
+                    ? "#fca5a5"
+                    : "#34d399",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  fontSize: "0.88rem",
+                }}
+              >
+                {seqMessage}
+              </div>
+            )}
+
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Title & Slug</th>
+                    <th>Pass Threshold</th>
+                    <th>Rotation Config</th>
+                    <th>Tasks</th>
+                    <th>Telemetry</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sequences.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: "center", color: "#94a3b8", padding: "24px" }}>
+                        {isSeqLoading ? "Loading sequences..." : "No puzzle groups found."}
+                      </td>
+                    </tr>
+                  ) : (
+                    sequences.map((seq) => (
+                      <tr key={seq.id}>
+                        <td>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 10px",
+                              borderRadius: "9999px",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              background: seq.is_active ? "rgba(16, 185, 129, 0.15)" : "rgba(148, 163, 184, 0.1)",
+                              color: seq.is_active ? "#34d399" : "#94a3b8",
+                              border: seq.is_active ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(148, 163, 184, 0.2)",
+                            }}
+                          >
+                            {seq.is_active ? "ACTIVE DEFAULT" : "INACTIVE"}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: "#ffffff" }}>{seq.title}</div>
+                          <div style={{ fontSize: "0.8rem", color: "#38bdf8" }}>{seq.slug}</div>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 600, color: "#cbd5e1" }}>
+                            {seq.pass_threshold > 1
+                              ? `${seq.pass_threshold} Tasks`
+                              : `${Math.round(seq.pass_threshold * 100)}%`}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ textTransform: "capitalize", color: "#ffffff" }}>
+                            Direction: <strong>{seq.rotation_direction || "left"}</strong>
+                          </div>
+                          <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                            Interval: {seq.default_rotation_interval || 15}s
+                          </div>
+                        </td>
+                        <td>
+                          <strong style={{ color: "#38bdf8" }}>{seq.tasks?.length || 0} Steps</strong>
+                        </td>
+                        <td style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
+                          Sessions: {seq._count?.sessions || 0}
+                          <br />
+                          Attempts: {seq._count?.attempts || 0}
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            {!seq.is_active && (
+                              <button
+                                className={styles.btnPrimary}
+                                style={{ padding: "5px 10px", fontSize: "0.75rem" }}
+                                onClick={() => handleActivateSequence(seq.id)}
+                              >
+                                Activate
+                              </button>
+                            )}
+                            <a
+                              href={`/cubicon?sequence=${seq.slug}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={styles.btnSecondary}
+                              style={{ padding: "5px 10px", fontSize: "0.75rem", textDecoration: "none" }}
+                            >
+                              Test Run
+                            </a>
+                            {seq.slug !== "default" && (
+                              <button
+                                className={styles.btnSecondary}
+                                style={{ padding: "5px 10px", fontSize: "0.75rem", borderColor: "rgba(239, 68, 68, 0.4)", color: "#f87171" }}
+                                onClick={() => handleDeleteSequence(seq.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Create Sequence Modal */}
+        {isCreateModalOpen && (
+          <div className={styles.modalOverlay} onClick={() => setIsCreateModalOpen(false)}>
+            <div className={styles.modalContent} style={{ maxWidth: "560px" }} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#38bdf8" }}>Create New Puzzle Sequence</h3>
+                <button className={styles.modalClose} onClick={() => setIsCreateModalOpen(false)}>
+                  &times;
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateSequence} style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                    Sequence Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g., Strict Anti-Bot Challenge"
+                    value={newSeq.title}
+                    onChange={(e) => setNewSeq({ ...newSeq, title: e.target.value })}
+                    className={styles.searchInput}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                    Slug (Unique identifier, optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., strict-anti-bot"
+                    value={newSeq.slug}
+                    onChange={(e) => setNewSeq({ ...newSeq, slug: e.target.value })}
+                    className={styles.searchInput}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Short overview of the puzzle group"
+                    value={newSeq.description}
+                    onChange={(e) => setNewSeq({ ...newSeq, description: e.target.value })}
+                    className={styles.searchInput}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                      Pass Threshold
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.1"
+                      max="10"
+                      value={newSeq.pass_threshold}
+                      onChange={(e) => setNewSeq({ ...newSeq, pass_threshold: parseFloat(e.target.value) || 0.66 })}
+                      className={styles.searchInput}
+                      style={{ width: "100%" }}
+                    />
+                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
+                      e.g., 0.66 for 66%, or 3 for 3 tasks
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                      Rotation Direction
+                    </label>
+                    <select
+                      value={newSeq.rotation_direction}
+                      onChange={(e) => setNewSeq({ ...newSeq, rotation_direction: e.target.value })}
+                      className={styles.select}
+                      style={{ width: "100%" }}
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                      Rotation Interval (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      min="5"
+                      max="60"
+                      value={newSeq.default_rotation_interval}
+                      onChange={(e) => setNewSeq({ ...newSeq, default_rotation_interval: parseInt(e.target.value, 10) || 15 })}
+                      className={styles.searchInput}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "6px" }}>
+                      Number of Puzzle Tasks
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={newSeq.tasksCount}
+                      onChange={(e) => setNewSeq({ ...newSeq, tasksCount: parseInt(e.target.value, 10) || 3 })}
+                      className={styles.searchInput}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                  <input
+                    type="checkbox"
+                    id="seqActive"
+                    checked={newSeq.is_active}
+                    onChange={(e) => setNewSeq({ ...newSeq, is_active: e.target.checked })}
+                  />
+                  <label htmlFor="seqActive" style={{ fontSize: "0.88rem", color: "#ffffff", cursor: "pointer" }}>
+                    Activate immediately as primary challenge
+                  </label>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "16px" }}>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    onClick={() => setIsCreateModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className={styles.btnPrimary}>
+                    Create Sequence
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
 
         {/* Participant Session Details Modal */}
         {selectedParticipant && (

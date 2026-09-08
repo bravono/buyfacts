@@ -118,14 +118,21 @@ Returns all feedback submissions sorted by newest first.
 
 ## 5. Database Schema
 
-The Prisma SQLite database is defined in `prisma/schema.prisma`. Key Cubicon models include:
-
-- **`CubiconTask`** (`cubicon_tasks`): Puzzles and 3D faces configuration.
-- **`CubiconSession`** (`cubicon_sessions`): Active user verification sessions.
-- **`CubiconAttempt`** (`cubicon_attempts`): Granular click telemetry and submit logs.
+- **`CubiconSequence`** (`cubicon_sequences`): Puzzle group configuration (`slug`, `title`, `description`, `pass_threshold`, `rotation_direction`, `default_rotation_interval`, `is_active`, `created_by`).
+- **`CubiconTask`** (`cubicon_tasks`): Puzzles and 3D faces configuration linked to `sequence_id`.
+- **`CubiconSession`** (`cubicon_sessions`): Active user verification sessions linked to `sequence_id`.
+- **`CubiconAttempt`** (`cubicon_attempts`): Granular click telemetry and submit logs linked to `sequence_id`.
 - **`CubiconRegistration`** (`cubicon_registrations`): Founding client registration submissions.
 - **`CubiconShare`** (`cubicon_shares`): Invitation records (`senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `status`, `createdAt`).
 - **`FeedbackSubmission`** (`cubicon_feedback`): User star ratings and feedback commentary.
+
+### Sequence & Admin Endpoints
+- `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
+- `POST /api/admin/sequences`: Authenticated endpoint creating a new puzzle group with title, slug, threshold, rotation direction (`left` or `right`), rotation interval, and tasks.
+- `GET /api/admin/sequences/:id`: Authenticated endpoint fetching a specific sequence with tasks.
+- `PUT /api/admin/sequences/:id`: Authenticated endpoint updating sequence parameters and tasks.
+- `DELETE /api/admin/sequences/:id`: Authenticated endpoint deleting a non-default sequence.
+- `POST /api/admin/sequences/:id/activate`: Authenticated endpoint activating a sequence as the primary default challenge.
 
 ---
 
