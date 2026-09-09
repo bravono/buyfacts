@@ -21,6 +21,10 @@ class CubiconViewportStateMachine {
     this.showLiveApp = false;
   }
 
+  handleSkipVideo() {
+    this.isVideoCompleted = true;
+  }
+
   handleVideoEnd() {
     this.isVideoCompleted = true;
   }
@@ -67,6 +71,16 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     assert.equal(sm.showLiveApp, false);
     assert.equal(sm.isVideoCompleted, false);
     assert.equal(sm.isNavbarVisible, false);
+  });
+
+  await t.test("Clicking Skip Video immediately completes video step and reveals instructions", () => {
+    const sm = new CubiconViewportStateMachine();
+    sm.handleStartVideoClick();
+    assert.equal(sm.isVideoCompleted, false);
+
+    sm.handleSkipVideo();
+    assert.equal(sm.isVideoCompleted, true);
+    assert.equal(sm.showVideo, true);
   });
 
   await t.test("Video completion enables 'Try It Yourself' CTA", () => {

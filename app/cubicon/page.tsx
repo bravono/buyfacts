@@ -35,6 +35,7 @@ import {
   LogOut,
   BarChart3,
   Video,
+  FastForward,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -664,6 +665,15 @@ export default function CubiconPage() {
                   </span>
                 </div>
                 <div className={styles.appControls}>
+                  {!isVideoCompleted && (
+                    <button
+                      className={styles.skipBtn}
+                      onClick={() => setIsVideoCompleted(true)}
+                      title="Skip video and view instructions"
+                    >
+                      <FastForward size={14} /> Skip Video
+                    </button>
+                  )}
                   <button
                     className={styles.controlBtn}
                     onClick={() => {
@@ -689,6 +699,16 @@ export default function CubiconPage() {
               </div>
 
               <div className={styles.videoBodyContainer}>
+                {!isVideoCompleted && (
+                  <button
+                    className={styles.floatingSkipBtn}
+                    onClick={() => setIsVideoCompleted(true)}
+                    title="Skip video preview"
+                  >
+                    <FastForward size={14} /> Skip Video
+                  </button>
+                )}
+
                 <video
                   key={videoSrc}
                   className={styles.videoElement}
