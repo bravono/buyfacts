@@ -182,7 +182,7 @@ const SLIDES: SlideItem[] = [
   },
 ];
 
-const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/cubicon_preview.mp4";
+const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/media/1785326488529-0vds4z-Cubicon.mp4";
 const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 export default function CubiconPage() {
@@ -654,7 +654,7 @@ export default function CubiconPage() {
                     <Video size={14} />{" "}
                     {isVideoCompleted
                       ? "PREVIEW COMPLETE"
-                      : "CDN VIDEO DEMO"}
+                      : "VIDEO DEMO"}
                   </span>
                   <span className={styles.videoTitle}>
                     Cubicon Self-Running Demonstration
@@ -703,12 +703,15 @@ export default function CubiconPage() {
 
                 {isVideoCompleted && (
                   <div className={styles.videoCompletionOverlay}>
+                    <span className={styles.videoBadge} style={{ marginBottom: "0.2rem" }}>
+                      <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
+                    </span>
                     <div className={styles.videoCompletionTitle}>
                       Automated Video Demonstration Complete
                     </div>
                     <div className={styles.videoCompletionText}>
-                      You have watched the self-running preview of Cubicon.
-                      Now experience the interactive 3D spatial solver yourself!
+                      You have finished watching the self-running preview of Cubicon.
+                      Click the button below to launch the full interactive 3D spatial solver and validate your response yourself.
                     </div>
                     <button
                       className={styles.tryItYourselfBtn}
