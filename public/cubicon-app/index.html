@@ -37,15 +37,8 @@
         return originalAddEventListener.call(this, type, listener, options);
       };
     </script>
-    <!-- Overlay Styles: Touch Action & Navbar Suppression & Critical Dark Mode -->
+    <!-- Overlay Styles: Touch Action & Navbar Suppression -->
     <style>
-      html, body {
-        background-color: #0f141c !important;
-        color: #f1f5f9;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-      }
       canvas {
         touch-action: pan-y !important;
       }
@@ -55,48 +48,11 @@
       .my-navbar, .custom-navbar, .NavbarItems, nav {
         display: none !important;
       }
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #0f141c;
-        z-index: 99999;
-        font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-      }
-      .loader-cube {
-        width: 44px;
-        height: 44px;
-        border: 3px solid rgba(56, 189, 248, 0.2);
-        border-top-color: #38bdf8;
-        border-radius: 8px;
-        animation: spin-cube 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-        box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
-      }
-      .loader-text {
-        margin-top: 18px;
-        font-size: 0.85rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 500;
-      }
-      @keyframes spin-cube {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
     </style>
     <script type="module" crossorigin src="./assets/index-CFdoTqjN.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-Bel1MHiP.css">
   </head>
-  <body style="background-color: #0f141c; margin: 0; padding: 0;">
-    <div id="root">
-      <div id="initial-loader">
-        <div class="loader-cube"></div>
-        <div class="loader-text">Initializing 3D Cubicon Engine...</div>
-      </div>
-    </div>
+  <body>
+    <div id="root"></div>
   </body>
 </html>
