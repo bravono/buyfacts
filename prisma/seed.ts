@@ -23,7 +23,7 @@ async function main() {
   const defaultHash = await hashPassword(defaultPassword);
 
   const users = [
-    { email: "rmj@robertjohnso.com", name: "Robert Johnson", passwordHash: defaultHash, role: "admin" },
+    { email: "rmj@robertjohnson.com", name: "Robert Johnson", passwordHash: defaultHash, role: "admin" },
     { email: "ahbideeny@gmail.com", name: "Ahbideen Yusuf", passwordHash: defaultHash, role: "admin" },
   ];
 

@@ -34,6 +34,7 @@ import {
   Play,
   LogOut,
   BarChart3,
+  Video,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 
@@ -181,12 +182,18 @@ const SLIDES: SlideItem[] = [
   },
 ];
 
+const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/cubicon_preview.mp4";
+const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
 export default function CubiconPage() {
   const router = useRouter();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
 
   const [showLiveApp, setShowLiveApp] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isVideoCompleted, setIsVideoCompleted] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideAnimationKey, setSlideAnimationKey] = useState(0);
 
@@ -200,7 +207,14 @@ export default function CubiconPage() {
     setSlideAnimationKey((prev) => prev + 1);
   };
 
+  const handleStartVideoClick = () => {
+    setShowVideo(true);
+    setIsVideoCompleted(false);
+    setShowLiveApp(false);
+  };
+
   const handleSeeLiveClick = () => {
+    setShowVideo(false);
     setShowLiveApp(true);
 
     // Set a tiny timeout to allow React to mount the iframe container before triggering fullscreen.
@@ -533,7 +547,7 @@ export default function CubiconPage() {
         style={{ paddingTop: "6rem", paddingBottom: "4rem" }}
       >
         <div className={styles.container}>
-          {!showLiveApp ? (
+          {!showLiveApp && !showVideo ? (
             <div className={styles.slideshowWrapper}>
               <div
                 key={slideAnimationKey}
@@ -562,17 +576,17 @@ export default function CubiconPage() {
                   {currentSlide === SLIDES.length - 1 ? (
                     <div className={styles.seeLiveCallout}>
                       <span className={styles.seeLiveTitle}>
-                        Experience it yourself
+                        Watch Video Demo First
                       </span>
                       <button
                         className={styles.seeLiveBtn}
-                        onClick={handleSeeLiveClick}
-                        title="Launch Cubicon in 3D Live Screen"
+                        onClick={handleStartVideoClick}
+                        title="Watch Cubicon Self-Running CDN Video Demo"
                       >
                         <Play size={18} fill="#ffffff" /> SEE CUBICON LIVE!
                       </button>
                       <span className={styles.seeLiveSubtitle}>
-                        Interactive 3D application will launch in full screen
+                        Watch the self-running CDN video preview
                       </span>
                     </div>
                   ) : (
@@ -580,13 +594,13 @@ export default function CubiconPage() {
                       <div className={styles.seeLiveCallout}>
                         <button
                           className={styles.seeLiveBtn}
-                          onClick={handleSeeLiveClick}
-                          title="Launch Cubicon in 3D Live Screen"
+                          onClick={handleStartVideoClick}
+                          title="Watch Cubicon Self-Running CDN Video Demo"
                         >
                           <Play size={18} fill="#ffffff" /> START
                         </button>
                         <span className={styles.seeLiveSubtitle}>
-                          See a One Minute Preview
+                          See a One Minute Video Preview
                         </span>
                       </div>
                     )
@@ -626,6 +640,85 @@ export default function CubiconPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          ) : showVideo && !showLiveApp ? (
+            <div className={styles.videoWrapper}>
+              <div className={styles.videoHeader}>
+                <div className={styles.videoTitleGroup}>
+                  <span
+                    className={`${styles.videoBadge} ${
+                      isVideoCompleted ? styles.videoCompletedBadge : ""
+                    }`}
+                  >
+                    <Video size={14} />{" "}
+                    {isVideoCompleted
+                      ? "PREVIEW COMPLETE"
+                      : "CDN VIDEO DEMO"}
+                  </span>
+                  <span className={styles.videoTitle}>
+                    Cubicon Self-Running Demonstration
+                  </span>
+                </div>
+                <div className={styles.appControls}>
+                  <button
+                    className={styles.controlBtn}
+                    onClick={() => {
+                      setVideoSrc((prev) =>
+                        prev === CUBICON_VIDEO_CDN_URL
+                          ? CUBICON_VIDEO_CDN_FALLBACK
+                          : CUBICON_VIDEO_CDN_URL
+                      );
+                      setIsVideoCompleted(false);
+                    }}
+                    title="Reload Video Stream"
+                  >
+                    <RotateCcw size={14} /> Reload Video
+                  </button>
+                  <button
+                    className={styles.exitBtn}
+                    onClick={() => setShowVideo(false)}
+                    title="Return to Slideshow"
+                  >
+                    <LogOut size={14} /> Back to Slideshow
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.videoBodyContainer}>
+                <video
+                  key={videoSrc}
+                  className={styles.videoElement}
+                  controls
+                  autoPlay
+                  playsInline
+                  src={videoSrc}
+                  onEnded={() => setIsVideoCompleted(true)}
+                  onError={() => {
+                    if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
+                      setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
+                    }
+                  }}
+                />
+
+                {isVideoCompleted && (
+                  <div className={styles.videoCompletionOverlay}>
+                    <div className={styles.videoCompletionTitle}>
+                      Automated Video Demonstration Complete
+                    </div>
+                    <div className={styles.videoCompletionText}>
+                      You have watched the self-running preview of Cubicon.
+                      Now experience the interactive 3D spatial solver yourself!
+                    </div>
+                    <button
+                      className={styles.tryItYourselfBtn}
+                      onClick={handleSeeLiveClick}
+                      title="Launch Interactive 3D Solver"
+                    >
+                      <Sparkles size={20} /> TRY IT YOURSELF NOW
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
