@@ -162,4 +162,14 @@ Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/ana
 ```bash
 npm test
 ```
-Runs the automated test suite verifying database models, conversion matching logic, viral coefficient calculations, and funnel step aggregations.
+Runs the automated test suite verifying database models, conversion matching logic, viral coefficient calculations, video preview flow, and funnel step aggregations.
+
+---
+
+## 7. Cubicon Embedded 3D Solver Architecture
+
+The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from `public/cubicon-app/`:
+- **Document Background Synchronization**: Both the host wrapper and embedded iframe document enforce `#0f141c` to eliminate white document flash during mounting and stylesheet parsing.
+- **Initial HTML Preloader**: Displays an immediate lightweight animated indicator inside `#root` during JavaScript bundle transfer.
+- **3D Asset Streaming Preloader**: Uses React Suspense and `@react-three/drei`'s `useProgress()` to stream `.glb` geometries, `.exr` studio lighting, and texture maps with a live percentage indicator and smooth fade-out.
+

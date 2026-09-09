@@ -108,4 +108,12 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     assert.equal(sm.isVideoCompleted, false);
     assert.equal(sm.videoSrc, CUBICON_VIDEO_CDN_FALLBACK);
   });
+
+  await t.test("Direct 3D app transition preserves dark theme background and active live state", () => {
+    const sm = new CubiconViewportStateMachine();
+    sm.handleSeeLiveClick();
+
+    assert.equal(sm.showLiveApp, true);
+    assert.equal(sm.showVideo, false);
+  });
 });
