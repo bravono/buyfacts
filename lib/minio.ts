@@ -3,6 +3,7 @@ import {
   HeadBucketCommand,
   CreateBucketCommand,
   PutBucketPolicyCommand,
+  PutBucketCorsCommand,
   ListObjectsV2Command,
   CopyObjectCommand,
   DeleteObjectCommand,
@@ -69,11 +70,40 @@ export function getMinioBucket(): string {
 }
 
 /**
- * Verifies if the target bucket exists, and creates it with public read policy if not.
+ * Applies a permissive CORS policy to the MinIO bucket to allow direct browser PUT uploads.
+ */
+export async function applyBucketCorsPolicy(s3Client: S3Client, bucketName: string) {
+  try {
+    await s3Client.send(
+      new PutBucketCorsCommand({
+        Bucket: bucketName,
+        CORSConfiguration: {
+          CORSRules: [
+            {
+              AllowedHeaders: ['*'],
+              AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'],
+              AllowedOrigins: ['*'],
+              ExposeHeaders: ['ETag', 'Content-Type', 'Content-Length'],
+              MaxAgeSeconds: 3600,
+            },
+          ],
+        },
+      })
+    );
+    console.log(`Bucket "${bucketName}" CORS policy applied successfully.`);
+  } catch (corsErr: any) {
+    console.warn(`Warning applying CORS policy to bucket "${bucketName}":`, corsErr?.message || corsErr);
+  }
+}
+
+/**
+ * Verifies if the target bucket exists, and creates it with public read policy and CORS if not.
  */
 export async function ensureBucketExists(s3Client: S3Client, bucketName: string) {
   try {
     await s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
+    // Ensure CORS policy is up to date for existing buckets
+    await applyBucketCorsPolicy(s3Client, bucketName);
   } catch (error: any) {
     // If bucket doesn't exist, create it
     if (error.name === 'NoSuchBucket' || error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
@@ -102,6 +132,9 @@ export async function ensureBucketExists(s3Client: S3Client, bucketName: string)
           })
         );
         console.log(`Bucket "${bucketName}" created and public read policy applied successfully.`);
+
+        // Apply CORS policy to the new bucket
+        await applyBucketCorsPolicy(s3Client, bucketName);
       } catch (createErr: any) {
         console.error(`Error auto-creating bucket:`, createErr);
         throw new Error(`Bucket "${bucketName}" does not exist, and automatic creation failed: ${createErr.message}`);
