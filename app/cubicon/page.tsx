@@ -182,7 +182,7 @@ const SLIDES: SlideItem[] = [
   },
 ];
 
-const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/media/1785326488529-0vds4z-Cubicon.mp4";
+const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
 const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 export default function CubiconPage() {
@@ -539,12 +539,15 @@ export default function CubiconPage() {
 
   return (
     <div className={styles.main}>
-      <Navbar hideOnScroll={true} />
+      {!showVideo && !showLiveApp && <Navbar hideOnScroll={true} />}
 
       {/* Interactive App Viewport Section */}
       <section
         className={styles.appViewportSection}
-        style={{ paddingTop: "6rem", paddingBottom: "4rem" }}
+        style={{
+          paddingTop: showVideo || showLiveApp ? "1.5rem" : "6rem",
+          paddingBottom: showVideo || showLiveApp ? "2rem" : "4rem",
+        }}
       >
         <div className={styles.container}>
           {!showLiveApp && !showVideo ? (

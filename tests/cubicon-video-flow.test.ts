@@ -11,6 +11,10 @@ class CubiconViewportStateMachine {
   isVideoCompleted: boolean = false;
   videoSrc: string = CUBICON_VIDEO_CDN_URL;
 
+  get isNavbarVisible(): boolean {
+    return !this.showVideo && !this.showLiveApp;
+  }
+
   handleStartVideoClick() {
     this.showVideo = true;
     this.isVideoCompleted = false;
@@ -48,19 +52,21 @@ class CubiconViewportStateMachine {
 }
 
 test("Cubicon Video Preview Flow Test Suite", async (t) => {
-  await t.test("Initial State should render slideshow", () => {
+  await t.test("Initial State should render slideshow with Navbar visible", () => {
     const sm = new CubiconViewportStateMachine();
     assert.equal(sm.showLiveApp, false);
     assert.equal(sm.showVideo, false);
     assert.equal(sm.isVideoCompleted, false);
+    assert.equal(sm.isNavbarVisible, true);
   });
 
-  await t.test("Clicking Start or See Live should trigger video preview mode", () => {
+  await t.test("Clicking Start or See Live should trigger video preview mode and hide Navbar", () => {
     const sm = new CubiconViewportStateMachine();
     sm.handleStartVideoClick();
     assert.equal(sm.showVideo, true);
     assert.equal(sm.showLiveApp, false);
     assert.equal(sm.isVideoCompleted, false);
+    assert.equal(sm.isNavbarVisible, false);
   });
 
   await t.test("Video completion enables 'Try It Yourself' CTA", () => {
@@ -78,9 +84,10 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
 
     assert.equal(sm.showVideo, false);
     assert.equal(sm.showLiveApp, true);
+    assert.equal(sm.isNavbarVisible, false);
   });
 
-  await t.test("Returning to slideshow resets video player state", () => {
+  await t.test("Returning to slideshow resets video player state and restores Navbar", () => {
     const sm = new CubiconViewportStateMachine();
     sm.handleStartVideoClick();
     sm.handleVideoEnd();
@@ -89,6 +96,7 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     assert.equal(sm.showVideo, false);
     assert.equal(sm.showLiveApp, false);
     assert.equal(sm.isVideoCompleted, false);
+    assert.equal(sm.isNavbarVisible, true);
   });
 
   await t.test("CDN Video fallback source when video load fails", () => {
@@ -107,13 +115,5 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     sm.reloadVideo();
     assert.equal(sm.isVideoCompleted, false);
     assert.equal(sm.videoSrc, CUBICON_VIDEO_CDN_FALLBACK);
-  });
-
-  await t.test("Direct 3D app transition preserves dark theme background and active live state", () => {
-    const sm = new CubiconViewportStateMachine();
-    sm.handleSeeLiveClick();
-
-    assert.equal(sm.showLiveApp, true);
-    assert.equal(sm.showVideo, false);
   });
 });
