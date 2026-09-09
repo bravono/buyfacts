@@ -7,7 +7,14 @@ import {
   ListObjectsV2Command,
   CopyObjectCommand,
   DeleteObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+  ListPartsCommand,
+  CompletedPart,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * MinIO Configuration from Environment Variables
@@ -325,3 +332,172 @@ export async function deleteMinioObject(objectKey: string): Promise<void> {
     })
   );
 }
+
+/**
+ * Initiates an S3 Multipart Upload session
+ */
+export async function initiateMultipartUpload(
+  filename: string,
+  prefix = 'uploads',
+  contentType = 'application/octet-stream'
+): Promise<{ uploadId: string; objectKey: string; publicUrl: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+  await ensureBucketExists(s3Client, bucket);
+
+  const objectKey = generateObjectKey(filename, prefix);
+
+  const command = new CreateMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    ContentType: contentType,
+    ContentDisposition: 'inline',
+  });
+
+  const response = await s3Client.send(command);
+  if (!response.UploadId) {
+    throw new Error('Failed to initiate multipart upload: Missing UploadId in S3 response');
+  }
+
+  return {
+    uploadId: response.UploadId,
+    objectKey,
+    publicUrl: getPublicUrl(objectKey),
+  };
+}
+
+/**
+ * Generates a presigned PUT URL for a specific part in a multipart upload
+ */
+export async function getPresignedPartUrl(
+  objectKey: string,
+  uploadId: string,
+  partNumber: number,
+  expiresIn = 900
+): Promise<string> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+
+  return getSignedUrl(s3Client, command, { expiresIn });
+}
+
+/**
+ * Directly uploads a single part buffer on the server
+ */
+export async function uploadPartDirect(
+  objectKey: string,
+  uploadId: string,
+  partNumber: number,
+  body: Buffer | Uint8Array
+): Promise<{ partNumber: number; etag: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+    Body: body,
+  });
+
+  const response = await s3Client.send(command);
+  const rawEtag = response.ETag || '';
+  const cleanEtag = rawEtag.replace(/^"+|"+$/g, '');
+
+  return {
+    partNumber,
+    etag: cleanEtag,
+  };
+}
+
+/**
+ * Completes a multipart upload by assembling all parts
+ */
+export async function completeMultipartUpload(
+  objectKey: string,
+  uploadId: string,
+  parts: CompletedPart[]
+): Promise<{ objectKey: string; publicUrl: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  // Parts must be sorted ascending by PartNumber per S3 spec
+  const sortedParts = [...parts].sort((a, b) => (a.PartNumber || 0) - (b.PartNumber || 0));
+
+  const command = new CompleteMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    MultipartUpload: {
+      Parts: sortedParts.map((p) => ({
+        PartNumber: p.PartNumber,
+        ETag: p.ETag ? (p.ETag.startsWith('"') ? p.ETag : `"${p.ETag}"`) : undefined,
+      })),
+    },
+  });
+
+  await s3Client.send(command);
+
+  return {
+    objectKey,
+    publicUrl: getPublicUrl(objectKey),
+  };
+}
+
+/**
+ * Aborts an in-progress multipart upload and discards uploaded parts
+ */
+export async function abortMultipartUpload(objectKey: string, uploadId: string): Promise<void> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new AbortMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+  });
+
+  await s3Client.send(command);
+}
+
+/**
+ * Lists already uploaded parts for an in-progress multipart upload (useful for resumption)
+ */
+export async function listUploadedParts(
+  objectKey: string,
+  uploadId: string
+): Promise<{ partNumber: number; etag: string; size: number }[]> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new ListPartsCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+  });
+
+  try {
+    const response = await s3Client.send(command);
+    if (!response.Parts) return [];
+
+    return response.Parts.map((p) => ({
+      partNumber: p.PartNumber || 0,
+      etag: (p.ETag || '').replace(/^"+|"+$/g, ''),
+      size: p.Size || 0,
+    }));
+  } catch (err: any) {
+    if (err.name === 'NoSuchUpload' || err.$metadata?.httpStatusCode === 404) {
+      return [];
+    }
+    throw err;
+  }
+}
+

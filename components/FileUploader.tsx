@@ -97,8 +97,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     ? sanitizeFolderPrefix(customFolder)
     : folderPreset;
 
-  // Upload method
-  const [uploadMethod, setUploadMethod] = useState<'presigned' | 'server'>('presigned');
+  // Upload method (default: 'multipart' for robust resumable chunked transfers)
+  const [uploadMethod, setUploadMethod] = useState<'multipart' | 'server' | 'presigned'>('multipart');
 
   // Drag and drop & Queue state
   const [dragActive, setDragActive] = useState(false);
@@ -244,9 +244,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       const xhr = new XMLHttpRequest();
       abortControllersRef.current[item.id] = xhr;
 
+      let lastProgressPercent = 0;
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const percent = Math.round((event.loaded / event.total) * 100);
+          lastProgressPercent = percent;
           updateItem(item.id, { progress: percent });
         }
       };
@@ -277,7 +279,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
       xhr.onerror = () => {
         delete abortControllersRef.current[item.id];
-        reject(new Error('Network error or CORS violation occurred during direct upload.'));
+        const statusDetail = xhr.status ? ` (HTTP ${xhr.status})` : '';
+        reject(
+          new Error(
+            `Connection was terminated by server at ${lastProgressPercent}%${statusDetail}. This occurs when an intermediate reverse proxy (e.g. Nginx client_max_body_size or Cloudflare 100MB/timeout limits) severs the stream.`
+          )
+        );
       };
 
       xhr.onabort = () => {
@@ -287,6 +294,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
       xhr.open('PUT', uploadUrl, true);
       xhr.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
+      xhr.setRequestHeader('Content-Disposition', 'inline');
       xhr.send(item.file);
     });
   };
@@ -346,6 +354,276 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     });
   };
 
+  /**
+   * Uploads a single chunk directly to MinIO using a presigned PUT URL
+   */
+  const uploadChunkDirect = (
+    objectKey: string,
+    uploadId: string,
+    partNumber: number,
+    chunk: Blob,
+    itemId: string,
+    baseUploadedBytes: number,
+    totalBytes: number
+  ): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const presignRes = await fetch(
+          `/api/upload/multipart/part?objectKey=${encodeURIComponent(objectKey)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`
+        );
+        if (!presignRes.ok) {
+          const err = await presignRes.json().catch(() => ({}));
+          return reject(new Error(err.error || `Failed to get presigned URL for part ${partNumber}`));
+        }
+        const { presignedUrl } = await presignRes.json();
+
+        const xhr = new XMLHttpRequest();
+        abortControllersRef.current[itemId] = xhr;
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const currentTotal = baseUploadedBytes + event.loaded;
+            const percent = Math.min(99, Math.round((currentTotal / totalBytes) * 100));
+            updateItem(itemId, { progress: percent });
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const rawEtag = xhr.getResponseHeader('ETag') || '';
+            const etag = rawEtag.replace(/^"+|"+$/g, '');
+            if (!etag) {
+              return reject(new Error('Missing ETag response header from MinIO for part upload.'));
+            }
+            resolve(etag);
+          } else {
+            reject(new Error(`Direct part upload failed with status ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error(`Network error uploading part ${partNumber} directly`));
+        };
+
+        xhr.open('PUT', presignedUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.send(chunk);
+      } catch (err: any) {
+        reject(err);
+      }
+    });
+  };
+
+  /**
+   * Fallback: Uploads a single 5MB chunk via Next.js Server Route
+   */
+  const uploadChunkViaServer = (
+    objectKey: string,
+    uploadId: string,
+    partNumber: number,
+    chunk: Blob,
+    itemId: string,
+    baseUploadedBytes: number,
+    totalBytes: number
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('objectKey', objectKey);
+      formData.append('uploadId', uploadId);
+      formData.append('partNumber', partNumber.toString());
+      formData.append('chunk', chunk, `part-${partNumber}.bin`);
+
+      const xhr = new XMLHttpRequest();
+      abortControllersRef.current[itemId] = xhr;
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const currentTotal = baseUploadedBytes + event.loaded;
+          const percent = Math.min(99, Math.round((currentTotal / totalBytes) * 100));
+          updateItem(itemId, { progress: percent });
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.success && data.etag) {
+              resolve(data.etag);
+            } else {
+              reject(new Error(data.error || 'Server route returned invalid part upload result'));
+            }
+          } catch {
+            reject(new Error('Failed to parse server part upload response.'));
+          }
+        } else {
+          reject(new Error(`Server part upload failed with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error(`Network error uploading part ${partNumber} via server route`));
+      };
+
+      xhr.open('POST', '/api/upload/multipart/part', true);
+      xhr.send(formData);
+    });
+  };
+
+  /**
+   * Uploads single file via S3 Resumable Multipart Upload (5MB Chunks)
+   */
+  const uploadSingleMultipart = async (item: QueueItem, folder: string): Promise<UploadSuccessResult> => {
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB minimum S3 part size
+    const file = item.file;
+    const totalParts = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+    const storageKey = `s3_multipart_${file.name}_${file.size}_${file.lastModified}_${folder}`;
+
+    // Step 1: Check localStorage for existing resumable session
+    let uploadId: string | null = null;
+    let objectKey: string | null = null;
+    let completedParts: { PartNumber: number; ETag: string }[] = [];
+
+    const savedSessionRaw = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    if (savedSessionRaw) {
+      try {
+        const saved = JSON.parse(savedSessionRaw);
+        if (saved.uploadId && saved.objectKey) {
+          // Verify with MinIO that this upload session is still valid
+          const checkRes = await fetch(
+            `/api/upload/multipart/list-parts?objectKey=${encodeURIComponent(saved.objectKey)}&uploadId=${encodeURIComponent(saved.uploadId)}`
+          );
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            if (checkData.success && Array.isArray(checkData.parts)) {
+              uploadId = saved.uploadId;
+              objectKey = saved.objectKey;
+              completedParts = checkData.parts.map((p: any) => ({
+                PartNumber: p.partNumber,
+                ETag: p.etag,
+              }));
+            }
+          }
+        }
+      } catch (_) {
+        // Corrupted session, ignore
+      }
+    }
+
+    // If no existing session, initiate new S3 multipart upload
+    if (!uploadId || !objectKey) {
+      const initRes = await fetch('/api/upload/multipart/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          prefix: folder,
+          contentType: file.type || 'application/octet-stream',
+          fileSize: file.size,
+        }),
+      });
+
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to initiate multipart upload session.');
+      }
+
+      const initData = await initRes.json();
+      uploadId = initData.uploadId;
+      objectKey = initData.objectKey;
+      completedParts = [];
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({ uploadId, objectKey, createdAt: Date.now() })
+        );
+      }
+    }
+
+    // Step 2: Upload parts with retries on drops
+    const completedPartNumbers = new Set(completedParts.map((p) => p.PartNumber));
+    let uploadedBytes = completedParts.length * CHUNK_SIZE;
+
+    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+      if (completedPartNumbers.has(partNumber)) {
+        continue;
+      }
+
+      const start = (partNumber - 1) * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunkBlob = file.slice(start, end);
+      const chunkSize = end - start;
+
+      let partEtag: string | null = null;
+      let lastError: Error | null = null;
+      const MAX_RETRIES = 5;
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Attempt 1: Direct part PUT with presigned URL
+          partEtag = await uploadChunkDirect(objectKey!, uploadId!, partNumber, chunkBlob, item.id, uploadedBytes, file.size);
+          break;
+        } catch (directErr: any) {
+          console.warn(`Direct part ${partNumber} upload attempt ${attempt} failed, trying server part fallback:`, directErr);
+          try {
+            // Attempt fallback: Server route for chunk
+            partEtag = await uploadChunkViaServer(objectKey!, uploadId!, partNumber, chunkBlob, item.id, uploadedBytes, file.size);
+            break;
+          } catch (serverErr: any) {
+            lastError = serverErr;
+            if (attempt < MAX_RETRIES) {
+              // Exponential backoff wait for satellite/network drop recovery (1.5s, 3s, 4.5s...)
+              await new Promise((r) => setTimeout(r, attempt * 1500));
+            }
+          }
+        }
+      }
+
+      if (!partEtag) {
+        throw new Error(
+          `Failed to upload part ${partNumber} of ${totalParts} after ${MAX_RETRIES} attempts. Connection dropped: ${lastError?.message || 'Network error'}`
+        );
+      }
+
+      completedParts.push({ PartNumber: partNumber, ETag: partEtag });
+      completedPartNumbers.add(partNumber);
+      uploadedBytes += chunkSize;
+
+      const percent = Math.min(99, Math.round((uploadedBytes / file.size) * 100));
+      updateItem(item.id, { progress: percent });
+    }
+
+    // Step 3: Complete multipart upload
+    const completeRes = await fetch('/api/upload/multipart/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        objectKey,
+        uploadId,
+        parts: completedParts,
+      }),
+    });
+
+    if (!completeRes.ok) {
+      const err = await completeRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to complete multipart upload assembly in MinIO.');
+    }
+
+    const completeData = await completeRes.json();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(storageKey);
+    }
+
+    return {
+      publicUrl: completeData.publicUrl,
+      objectKey: completeData.objectKey,
+      fileName: file.name,
+      fileType: item.mediaType,
+      fileSize: file.size,
+    };
+  };
+
   // Upload Batch
   const handleUploadAll = async () => {
     if (fileQueue.length === 0 || isUploading) return;
@@ -371,7 +649,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
         try {
           let result: UploadSuccessResult;
-          if (uploadMethod === 'presigned') {
+          if (uploadMethod === 'multipart') {
+            result = await uploadSingleMultipart(currentItem, destination);
+          } else if (uploadMethod === 'presigned') {
             result = await uploadSinglePresigned(currentItem, destination);
           } else {
             result = await uploadSingleServer(currentItem, destination);
@@ -451,12 +731,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           <div className={styles.modeToggle}>
             <button
               type="button"
-              onClick={() => setUploadMethod('presigned')}
-              className={`${styles.toggleBtn} ${uploadMethod === 'presigned' ? styles.toggleBtnActive : ''}`}
-              title="Uploads directly from browser to MinIO using S3 presigned PUT URL"
+              onClick={() => setUploadMethod('multipart')}
+              className={`${styles.toggleBtn} ${uploadMethod === 'multipart' ? styles.toggleBtnActive : ''}`}
+              title="Resumable S3 Multipart: Slices file into 5MB chunks with auto-retry and resume support for unstable/satellite connections (Recommended)"
             >
-              <Zap className="w-3.5 h-3.5" />
-              Direct PUT
+              <Layers className="w-3.5 h-3.5" />
+              Resumable (S3 Chunks)
             </button>
             <button
               type="button"
@@ -466,6 +746,15 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             >
               <Server className="w-3.5 h-3.5" />
               Server Route
+            </button>
+            <button
+              type="button"
+              onClick={() => setUploadMethod('presigned')}
+              className={`${styles.toggleBtn} ${uploadMethod === 'presigned' ? styles.toggleBtnActive : ''}`}
+              title="Uploads directly from browser to MinIO using single S3 presigned PUT URL"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Direct PUT
             </button>
           </div>
         </div>
