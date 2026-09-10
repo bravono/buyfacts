@@ -98,6 +98,22 @@ Processes and records an invitation sent by a user.
 #### `GET /api/cubicon-share`
 Returns all recorded share invitations.
 
+#### `GET /api/cubicon-data`
+Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
+- **Query Parameters**:
+  - `sequenceId` or `sequence` (slug): Target sequence identifier. Defaults to active sequence.
+
+#### `POST /api/cubicon-data`
+Handles session initialization, spatial click attempt evaluations, and sequence completion.
+- **Sequence Completion Response**:
+  When all tasks in the sequence have been evaluated, returns `completed: true` along with evaluated status and custom messaging:
+  - **Pass (Success)**:
+    - `heading`: `"Congratulations! You are human."`
+    - `description`: `"Next we offer you a number of choices below. Please make a selection and we thank you for considering Cubicon and BuyFacts."`
+  - **Fail (Rejection)**:
+    - `heading`: `"Thank you for participating"`
+    - `description`: `"Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below."`
+
 #### `POST /api/cubicon-feedback`
 Records user satisfaction rating and commentary.
 - **Request Body**:

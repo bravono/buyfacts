@@ -7,6 +7,32 @@ import { prisma } from "@/lib/prisma";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
+export const COMPLETION_MESSAGES = {
+  success: {
+    heading: "Congratulations! You are human.",
+    description:
+      "Next we offer you a number of choices below. Please make a selection and we thank you for considering Cubicon and BuyFacts.",
+  },
+  rejection: {
+    heading: "Thank you for participating",
+    description:
+      "Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below.",
+  },
+};
+
+export function evaluateSequencePass(
+  passedCount: number,
+  total: number,
+  threshold: number = 0.66
+): boolean {
+  if (total <= 0) return true;
+  if (threshold > 1) {
+    return passedCount >= threshold;
+  }
+  const ratio = passedCount / total;
+  return ratio >= threshold - 0.0001;
+}
+
 const DEFAULT_TASKS = [
   {
     taskIndex: 0,
@@ -382,16 +408,6 @@ export async function POST(request: Request) {
     const fallbackTasks = sequenceTasks.length > 0 ? sequenceTasks : DEFAULT_TASKS;
     const totalTasks = fallbackTasks.length;
 
-    // Helper for evaluating whether sequence passed threshold
-    const evaluateSequencePass = (passedCount: number, total: number): boolean => {
-      if (total <= 0) return true;
-      if (seqThreshold > 1) {
-        return passedCount >= seqThreshold;
-      }
-      const ratio = passedCount / total;
-      return ratio >= (seqThreshold - 0.0001);
-    };
-
     const isInit = parsed.task === "init" || !parsed.sessionId;
     const providedUserEmail = parsed.userEmail ? String(parsed.userEmail).trim() : "";
 
@@ -505,7 +521,7 @@ export async function POST(request: Request) {
 
     if (nextIndex >= totalTasks) {
       const lastPuzzle = fallbackTasks[totalTasks - 1];
-      const overallPassed = evaluateSequencePass(newPassedCount, totalTasks);
+      const overallPassed = evaluateSequencePass(newPassedCount, totalTasks, seqThreshold);
 
       return NextResponse.json({
         sessionId,
@@ -513,10 +529,12 @@ export async function POST(request: Request) {
         sequenceTitle: currentSequence?.title || "Cubicon Challenge",
         ofTasks: totalTasks,
         task: totalTasks,
-        heading: overallPassed ? "Congratulations You're Human!" : "Verification Incomplete",
+        heading: overallPassed
+          ? COMPLETION_MESSAGES.success.heading
+          : COMPLETION_MESSAGES.rejection.heading,
         description: overallPassed
-          ? "You have completed all tasks successfully."
-          : "Verification completed with review required.",
+          ? COMPLETION_MESSAGES.success.description
+          : COMPLETION_MESSAGES.rejection.description,
         screen: lastPuzzle.screen || "Active_back",
         image: formatImageUrl(lastPuzzle.image),
         rotation: [0, 0, 0],
