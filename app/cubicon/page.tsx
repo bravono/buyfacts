@@ -220,20 +220,13 @@ export default function CubiconPage() {
     setIsIframeLoaded(false);
     setShowLiveApp(true);
 
-    // Set a tiny timeout to allow React to mount the iframe container before triggering fullscreen.
-    // Modern browsers allow fullscreen requests within click handlers even inside short timers.
+    // Smoothly scroll the interactive 3D app into view without automatically forcing fullscreen
     setTimeout(() => {
       if (appFrameWrapperRef.current) {
-        const elem = appFrameWrapperRef.current;
-        const requestMethod =
-          elem.requestFullscreen ||
-          (elem as any).webkitRequestFullscreen ||
-          (elem as any).msRequestFullscreen;
-        if (requestMethod) {
-          requestMethod.call(elem).catch((err: any) => {
-            console.warn("Fullscreen request blocked or failed:", err);
-          });
-        }
+        appFrameWrapperRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     }, 50);
   };
@@ -469,6 +462,39 @@ export default function CubiconPage() {
   };
 
   const appFrameWrapperRef = React.useRef<HTMLDivElement>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check whether current user is logged in as an admin
+  React.useEffect(() => {
+    const checkAdminAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (
+          data.success &&
+          data.authenticated &&
+          (data.user?.role?.toLowerCase() === "admin" || !data.user?.role)
+        ) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminAuth();
+  }, []);
+
+  const notifyIframeFullscreen = (fullscreenState: boolean) => {
+    try {
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "CUBICON_SET_FULLSCREEN", isFullscreen: fullscreenState },
+        "*"
+      );
+    } catch {}
+  };
 
   const reloadApp = () => {
     setIsIframeLoaded(false);
@@ -481,19 +507,35 @@ export default function CubiconPage() {
         appFrameWrapperRef.current &&
         appFrameWrapperRef.current.requestFullscreen
       ) {
-        appFrameWrapperRef.current.requestFullscreen().catch(() => {
-          setIsFullscreen(true);
-        });
+        appFrameWrapperRef.current
+          .requestFullscreen()
+          .then(() => {
+            setIsFullscreen(true);
+            notifyIframeFullscreen(true);
+          })
+          .catch(() => {
+            setIsFullscreen(true);
+            notifyIframeFullscreen(true);
+          });
       } else {
         setIsFullscreen(true);
+        notifyIframeFullscreen(true);
       }
     } else {
       if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {
-          setIsFullscreen(false);
-        });
+        document
+          .exitFullscreen()
+          .then(() => {
+            setIsFullscreen(false);
+            notifyIframeFullscreen(false);
+          })
+          .catch(() => {
+            setIsFullscreen(false);
+            notifyIframeFullscreen(false);
+          });
       } else {
         setIsFullscreen(false);
+        notifyIframeFullscreen(false);
       }
     }
   };
@@ -503,6 +545,7 @@ export default function CubiconPage() {
       document.exitFullscreen().catch(() => {});
     }
     setIsFullscreen(false);
+    notifyIframeFullscreen(false);
     setShowLiveApp(false);
 
     setTimeout(() => {
@@ -517,11 +560,9 @@ export default function CubiconPage() {
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      if (document.fullscreenElement) {
-        setIsFullscreen(true);
-      } else {
-        setIsFullscreen(false);
-      }
+      const isNowFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isNowFullscreen);
+      notifyIframeFullscreen(isNowFullscreen);
     };
 
     const handleCubiconMessage = (event: MessageEvent) => {
@@ -810,14 +851,18 @@ export default function CubiconPage() {
                     <RotateCcw size={14} /> Restart Scene
                   </button>
                   <button
-                    className={styles.controlBtn}
+                    className={styles.fullscreenProminentBtn}
                     onClick={toggleFullscreen}
-                    title="Toggle Fullscreen"
+                    title={
+                      isFullscreen
+                        ? "Exit Fullscreen Mode"
+                        : "Expand to Fullscreen"
+                    }
                   >
                     {isFullscreen ? (
-                      <Minimize2 size={14} />
+                      <Minimize2 size={15} />
                     ) : (
-                      <Maximize2 size={14} />
+                      <Maximize2 size={15} />
                     )}
                     {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </button>
@@ -830,18 +875,20 @@ export default function CubiconPage() {
                   >
                     <ExternalLink size={14} /> Launch Standalone
                   </a>
-                  <Link
-                    href="/cubicon/analytics"
-                    className={styles.controlBtn}
-                    style={{
-                      background: "rgba(14, 165, 233, 0.25)",
-                      borderColor: "rgba(14, 165, 233, 0.5)",
-                      color: "#38bdf8",
-                    }}
-                    title="View Executive Analytics Dashboard"
-                  >
-                    <BarChart3 size={14} /> Analytics
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/cubicon/analytics"
+                      className={styles.controlBtn}
+                      style={{
+                        background: "rgba(14, 165, 233, 0.25)",
+                        borderColor: "rgba(14, 165, 233, 0.5)",
+                        color: "#38bdf8",
+                      }}
+                      title="View Executive Analytics Dashboard (Admin Only)"
+                    >
+                      <BarChart3 size={14} /> Analytics
+                    </Link>
+                  )}
                   <button
                     className={styles.exitBtn}
                     onClick={handleExitLiveApp}
@@ -864,6 +911,7 @@ export default function CubiconPage() {
 
               {/* Embedded Deployed Cubicon App */}
               <iframe
+                ref={iframeRef}
                 key={iframeKey}
                 src="/cubicon-app/index.html"
                 title="Cubicon 3D Interactive App"
@@ -874,7 +922,10 @@ export default function CubiconPage() {
                   opacity: isIframeLoaded ? 1 : 0,
                   transition: "opacity 0.25s ease-in-out",
                 }}
-                onLoad={() => setIsIframeLoaded(true)}
+                onLoad={() => {
+                  setIsIframeLoaded(true);
+                  notifyIframeFullscreen(isFullscreen);
+                }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               />
             </div>

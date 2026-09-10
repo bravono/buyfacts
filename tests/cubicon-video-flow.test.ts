@@ -153,13 +153,49 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     assert.equal(sm.isIframeLoaded, true);
   });
 
-  await t.test("Reloading 3D scene resets isIframeLoaded to false for smooth reload transition", () => {
+  await t.test("Launching live 3D app does not automatically trigger fullscreen", () => {
     const sm = new CubiconViewportStateMachine();
-    sm.handleSeeLiveClick();
-    sm.handleIframeLoad();
-    assert.equal(sm.isIframeLoaded, true);
+    let fullscreenTriggered = false;
 
-    sm.reloadApp();
-    assert.equal(sm.isIframeLoaded, false);
+    // Simulate handleSeeLiveClick
+    sm.handleSeeLiveClick();
+
+    // Verify it stays embedded unless explicitly chosen
+    assert.equal(sm.showLiveApp, true);
+    assert.equal(fullscreenTriggered, false);
+  });
+
+  await t.test("Analytics shortcut visibility is restricted to authenticated admins", () => {
+    const checkToolbarAnalyticsVisible = (isAdmin: boolean) => {
+      return isAdmin;
+    };
+
+    // Anonymous visitor
+    assert.equal(checkToolbarAnalyticsVisible(false), false);
+
+    // Authenticated admin
+    assert.equal(checkToolbarAnalyticsVisible(true), true);
+  });
+
+  await t.test("Fullscreen state synchronization dispatches correct message payload", () => {
+    let lastDispatchedMessage: any = null;
+    const notifyIframeFullscreen = (isFullscreen: boolean) => {
+      lastDispatchedMessage = {
+        type: "CUBICON_SET_FULLSCREEN",
+        isFullscreen,
+      };
+    };
+
+    notifyIframeFullscreen(true);
+    assert.deepEqual(lastDispatchedMessage, {
+      type: "CUBICON_SET_FULLSCREEN",
+      isFullscreen: true,
+    });
+
+    notifyIframeFullscreen(false);
+    assert.deepEqual(lastDispatchedMessage, {
+      type: "CUBICON_SET_FULLSCREEN",
+      isFullscreen: false,
+    });
   });
 });

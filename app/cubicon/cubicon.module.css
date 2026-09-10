@@ -121,17 +121,22 @@
   overflow: hidden;
   position: relative;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: clamp(480px, calc(100vh - 4.5rem), 740px);
+  height: clamp(480px, calc(100dvh - 4.5rem), 740px);
 }
 
 .appFrameHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1.5rem;
+  padding: 0.8rem 1.4rem;
   background: #171d27;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.8rem;
+  flex-shrink: 0;
 }
 
 .appTitleGroup {
@@ -220,9 +225,35 @@
   transform: translateY(-1px);
 }
 
+.fullscreenProminentBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1.05rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.fullscreenProminentBtn:hover {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.55);
+  transform: translateY(-1px);
+}
+
 .appIframe {
   width: 100%;
-  height: 780px;
+  flex: 1 1 auto;
+  min-height: 0;
   border: none;
   display: block;
   background: #0f141c;
@@ -235,6 +266,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 9999;
   border-radius: 0;
 }
