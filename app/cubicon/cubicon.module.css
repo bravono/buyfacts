@@ -226,6 +226,7 @@
   border: none;
   display: block;
   background: #0f141c;
+  color-scheme: dark;
 }
 
 .appIframeFullscreen {
@@ -236,6 +237,53 @@
   height: 100vh;
   z-index: 9999;
   border-radius: 0;
+}
+
+.iframeHostLoader {
+  position: absolute;
+  top: 57px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0f141c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loaderCube {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(56, 189, 248, 0.2);
+  border-top-color: #38bdf8;
+  border-radius: 8px;
+  animation: spinCube 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}
+
+.loaderText {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+@keyframes spinCube {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.appFrameWrapper:fullscreen,
+.appFrameWrapper:-webkit-full-screen {
+  background-color: #0f141c !important;
+}
+
+.appFrameWrapper::backdrop {
+  background-color: #0f141c !important;
 }
 
 .exitFullscreenFloatingBtn {

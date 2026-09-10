@@ -9,6 +9,7 @@ class CubiconViewportStateMachine {
   showLiveApp: boolean = false;
   showVideo: boolean = false;
   isVideoCompleted: boolean = false;
+  isIframeLoaded: boolean = false;
   videoSrc: string = CUBICON_VIDEO_CDN_URL;
 
   get isNavbarVisible(): boolean {
@@ -32,12 +33,22 @@ class CubiconViewportStateMachine {
   handleSeeLiveClick() {
     this.showVideo = false;
     this.showLiveApp = true;
+    this.isIframeLoaded = false;
+  }
+
+  handleIframeLoad() {
+    this.isIframeLoaded = true;
+  }
+
+  reloadApp() {
+    this.isIframeLoaded = false;
   }
 
   handleBackToSlideshow() {
     this.showVideo = false;
     this.showLiveApp = false;
     this.isVideoCompleted = false;
+    this.isIframeLoaded = false;
   }
 
   handleVideoError() {
@@ -129,5 +140,26 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     sm.reloadVideo();
     assert.equal(sm.isVideoCompleted, false);
     assert.equal(sm.videoSrc, CUBICON_VIDEO_CDN_FALLBACK);
+  });
+
+  await t.test("Launching live 3D app initializes isIframeLoaded to false to mask unpainted iframe", () => {
+    const sm = new CubiconViewportStateMachine();
+    sm.handleSeeLiveClick();
+
+    assert.equal(sm.showLiveApp, true);
+    assert.equal(sm.isIframeLoaded, false);
+
+    sm.handleIframeLoad();
+    assert.equal(sm.isIframeLoaded, true);
+  });
+
+  await t.test("Reloading 3D scene resets isIframeLoaded to false for smooth reload transition", () => {
+    const sm = new CubiconViewportStateMachine();
+    sm.handleSeeLiveClick();
+    sm.handleIframeLoad();
+    assert.equal(sm.isIframeLoaded, true);
+
+    sm.reloadApp();
+    assert.equal(sm.isIframeLoaded, false);
   });
 });

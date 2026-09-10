@@ -190,6 +190,7 @@ export default function CubiconPage() {
   const router = useRouter();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
 
   const [showLiveApp, setShowLiveApp] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -216,6 +217,7 @@ export default function CubiconPage() {
 
   const handleSeeLiveClick = () => {
     setShowVideo(false);
+    setIsIframeLoaded(false);
     setShowLiveApp(true);
 
     // Set a tiny timeout to allow React to mount the iframe container before triggering fullscreen.
@@ -469,6 +471,7 @@ export default function CubiconPage() {
   const appFrameWrapperRef = React.useRef<HTMLDivElement>(null);
 
   const reloadApp = () => {
+    setIsIframeLoaded(false);
     setIframeKey((prev) => prev + 1);
   };
 
@@ -849,12 +852,29 @@ export default function CubiconPage() {
                 </div>
               </div>
 
+              {/* Host-Side Smooth Preloader Overlay while iframe initializes */}
+              {!isIframeLoaded && (
+                <div className={styles.iframeHostLoader}>
+                  <div className={styles.loaderCube}></div>
+                  <div className={styles.loaderText}>
+                    Initializing 3D Cubicon Engine...
+                  </div>
+                </div>
+              )}
+
               {/* Embedded Deployed Cubicon App */}
               <iframe
                 key={iframeKey}
                 src="/cubicon-app/index.html"
                 title="Cubicon 3D Interactive App"
                 className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
+                style={{
+                  backgroundColor: "#0f141c",
+                  colorScheme: "dark",
+                  opacity: isIframeLoaded ? 1 : 0,
+                  transition: "opacity 0.25s ease-in-out",
+                }}
+                onLoad={() => setIsIframeLoaded(true)}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               />
             </div>
