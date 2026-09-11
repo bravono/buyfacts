@@ -195,4 +195,68 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 - **Dedicated Routes**:
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
 
+---
 
+## 8. Admin Database Dashboard & CRUD Management
+
+The BuyFacts Admin Dashboard at `/admin` provides full visibility and complete CRUD (Create, Read, Update, Delete) capabilities across every model stored in the database.
+
+### 8.1 Scope & Supported Models (17 Models)
+The dashboard organizes all 17 Prisma database models into five primary domains:
+1. **Identity & Access**:
+   - `User`: System user accounts, administrator credentials, and roles. Password hashes are strictly masked in client responses (`[Password Configured]`), and password updates are securely hashed with scrypt before persistence.
+2. **Communications & Leads**:
+   - `ContactInquiry`: Inbound inquiries from landing pages and contact forms.
+   - `NotificationSubscription`: Newsletter and product launch subscribers.
+   - `FeedbackSubmission`: Customer feedback, reviews, and star ratings.
+3. **Content & Media**:
+   - `DashboardButton`: Interactive media trigger buttons, categories, and URLs.
+   - `MediaAsset`: Storage upload logs for images, videos, audio, and documents.
+4. **Cubicon 3D Platform**:
+   - `CubiconSequence`: Multi-step 3D validation puzzle sequences.
+   - `CubiconTask`: Individual puzzle screens, target coordinates, and orientations.
+   - `CubiconSession`: Active and historical participant puzzle sessions.
+   - `CubiconAttempt`: Individual task attempt telemetry, click data, and results.
+   - `CubiconRegistration`: Onboarding participant profiles.
+   - `CubiconShare`: Viral peer invitations and share links.
+5. **Research Lib Platform**:
+   - `ResearchLibSurvey`: Dynamic surveys with blanks, combos, widgets, and timing rules.
+   - `ResearchLibResponse`: Participant survey responses and answers.
+   - `ResearchLibTimer`: Active session and pause timer states.
+   - `ResearchLibElement`: Interactive canvas element states.
+   - `ResearchLibAppState`: Runtime application state snapshots.
+
+### 8.2 Dashboard Features
+- **Overview & Domain Metrics**: High-level statistical cards showing total records across the entire database, model counts, and domain breakdowns.
+- **Model Table Explorer**: Paginated, sortable, and searchable tables for any selected model.
+- **Live Search**: Full-text searching across model-specific string fields.
+- **Record Inspector**: Modal providing detailed field-by-field breakdown with syntax-highlighted JSON rendering for structured fields (such as coordinates, clicks, or survey states) and one-click JSON copying.
+- **Create Record Modal**: Dynamic forms with typed inputs (strings, numbers, booleans, dropdown selects, and JSON payload editors).
+- **Edit Record Modal**: Prefilled editing interface with live field validation.
+- **Delete Confirmation**: Guarded modal confirmation before permanent removal of records.
+- **Data Export**: One-click CSV and JSON export for the currently selected model.
+- **Authentication Gate**: Inline login card protecting the dashboard; unauthenticated visitors cannot view or query data.
+
+### 8.3 CRUD API Reference (`/api/admin/database`)
+
+All operations require an authenticated admin session (JWT Bearer header or HTTP-only session cookie).
+
+#### `GET /api/admin/database?action=summary`
+Returns counts for all 17 models, aggregate totals, category summaries, and recent activity records.
+
+#### `GET /api/admin/database?action=table&table=<model>&page=1&limit=25&search=<query>&sortBy=<field>&sortOrder=<asc|desc>`
+Returns paginated, searchable, and sorted records for the specified model along with field metadata and total row count. Sensitive fields such as `passwordHash` are sanitized.
+
+#### `POST /api/admin/database`
+Creates a new record in the specified table.
+- **Payload**: `{ "table": "contactInquiry", "data": { ... } }`
+- **Password Handling**: If creating a `User`, the `password` field is automatically hashed before writing to the database.
+
+#### `PUT /api/admin/database`
+Updates an existing record by ID in the specified table.
+- **Payload**: `{ "table": "dashboardButton", "id": "btn-srv-001", "data": { ... } }`
+- **Password Handling**: If updating a `User`, supplying a new `password` value securely rehashes the password; leaving it blank preserves the existing hash.
+
+#### `DELETE /api/admin/database`
+Permanently deletes a record by ID.
+- **Payload** (or query params): `{ "table": "mediaAsset", "id": "asset-uuid-001" }`

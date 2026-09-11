@@ -47,7 +47,7 @@ export default function Footer() {
             </p>
             <span style={{ opacity: 0.3, color: 'var(--text-muted)' }}>•</span>
             <a
-              href="/file-upload"
+              href="/admin"
               style={{
                 fontSize: '0.8rem',
                 color: 'var(--text-muted)',
