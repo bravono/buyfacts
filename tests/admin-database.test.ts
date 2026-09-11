@@ -4,6 +4,7 @@ import { GET, POST, PUT, DELETE } from "../app/api/admin/database/route";
 import { signJWT } from "../lib/auth/jwt";
 import { ADMIN_MODEL_REGISTRY } from "../lib/admin/schemaRegistry";
 import { prisma } from "../lib/prisma";
+import { shouldHideBorderFrame } from "../lib/admin/navigation";
 
 async function createAdminAuthHeader(): Promise<Record<string, string>> {
   const token = await signJWT({
@@ -269,4 +270,25 @@ describe("Admin Database Dashboard API Suite", () => {
     const deleteRes = await DELETE(deleteReq);
     assert.equal(deleteRes.status, 200);
   });
+
+  test("BorderFrame Navigation: should hide borders on admin routes and preserve on public pages", () => {
+    // Admin routes must hide borders
+    assert.equal(shouldHideBorderFrame("/admin"), true);
+    assert.equal(shouldHideBorderFrame("/admin/"), true);
+    assert.equal(shouldHideBorderFrame("/admin/cubicon-analytics"), true);
+    assert.equal(shouldHideBorderFrame("/admin/database"), true);
+
+    // Public pages must keep borders visible
+    assert.equal(shouldHideBorderFrame("/"), false);
+    assert.equal(shouldHideBorderFrame("/products-services"), false);
+    assert.equal(shouldHideBorderFrame("/research-imperatives"), false);
+    assert.equal(shouldHideBorderFrame("/cubicon"), false);
+    assert.equal(shouldHideBorderFrame("/research-lib"), false);
+    assert.equal(shouldHideBorderFrame("/contact"), false);
+
+    // Null and empty boundary cases
+    assert.equal(shouldHideBorderFrame(null), false);
+    assert.equal(shouldHideBorderFrame(""), false);
+  });
 });
+
