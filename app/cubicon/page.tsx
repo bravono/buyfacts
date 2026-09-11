@@ -571,6 +571,16 @@ export default function CubiconPage() {
         event.data === "CUBICON_EXIT"
       ) {
         handleExitLiveApp();
+      } else if (
+        event.data?.type === "CUBICON_CONTACT" ||
+        event.data === "CUBICON_CONTACT"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        router.push("/#contact");
       }
     };
 

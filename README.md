@@ -188,4 +188,11 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 - **Document Background Synchronization**: Both the host wrapper and embedded iframe document enforce `#0f141c` to eliminate white document flash during mounting and stylesheet parsing.
 - **Initial HTML Preloader**: Displays an immediate lightweight animated indicator inside `#root` during JavaScript bundle transfer.
 - **3D Asset Streaming Preloader**: Uses React Suspense and `@react-three/drei`'s `useProgress()` to stream `.glb` geometries, `.exr` studio lighting, and texture maps with a live percentage indicator and smooth fade-out.
+- **Embedded Iframe Event Bus (`window.onmessage`)**:
+  - `CUBICON_EXIT`: Dispatched when the user clicks Exit either on the host frame header or on the completion action bar. Closes live app view, exits fullscreen, and scrolls to `#founding-client-benefits`.
+  - `CUBICON_CONTACT`: Dispatched when the user clicks Contact Us on the completion action bar. Exits fullscreen, notifies iframe, and navigates host app to `/#contact`.
+  - `CUBICON_SET_FULLSCREEN`: Dispatched from host to iframe to sync canvas FOV and object scaling dynamically.
+- **Dedicated Routes**:
+  - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
+
 
