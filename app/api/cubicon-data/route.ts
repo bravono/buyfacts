@@ -43,7 +43,7 @@ const DEFAULT_TASKS = [
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "Selection",
+    question_type: "drag",
     correct_coordinates: JSON.stringify([{ x: 0.15, y: 0.45, z: 1.0 }]),
     start_point: JSON.stringify({ x: 0.15, y: 0.45, z: 1.0 }),
     mid_point: "",
@@ -60,7 +60,7 @@ const DEFAULT_TASKS = [
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "Selection",
+    question_type: "click",
     correct_coordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
     start_point: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
     mid_point: "",
@@ -77,12 +77,12 @@ const DEFAULT_TASKS = [
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "Anticipation",
-    correct_coordinates: JSON.stringify({
-      start: { x: -0.60, y: 0.10, z: 1.0 },
-      mid: { x: 0.0, y: 0.35, z: 1.0 },
-      end: { x: 0.60, y: 0.10, z: 1.0 },
-    }),
+    question_type: "drag",
+    correct_coordinates: JSON.stringify([
+      { x: -0.60, y: 0.10, z: 1.0 },
+      { x: 0.0, y: 0.35, z: 1.0 },
+      { x: 0.60, y: 0.10, z: 1.0 },
+    ]),
     start_point: JSON.stringify({ x: -0.60, y: 0.10, z: 1.0 }),
     mid_point: JSON.stringify({ x: 0.0, y: 0.35, z: 1.0 }),
     end_point: JSON.stringify({ x: 0.60, y: 0.10, z: 1.0 }),
@@ -155,75 +155,98 @@ export function parseClicksList(clicks: any): Array<{ x: number; y: number; z: n
   return [];
 }
 
+export function normalizePuzzleType(type: any): "click" | "drag" | "double_click" {
+  if (!type) return "click";
+  const normalized = String(type).trim().toLowerCase();
+  if (["drag", "anticipation", "drawing", "sequence"].includes(normalized)) {
+    return "drag";
+  }
+  if (["double_click", "doubleclick", "double-click"].includes(normalized)) {
+    return "double_click";
+  }
+  return "click";
+}
+
 export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
   if (!task) return "p";
 
   const tolerance = typeof task.tolerance === "number" ? task.tolerance : 0.5;
   const clicksList = parseClicksList(clicks);
 
-  let startPt = parseCoordinate(task.start_point);
-  let midPt = parseCoordinate(task.mid_point);
-  let endPt = parseCoordinate(task.end_point);
-
-  let correctCoords: Array<{ x: number; y: number; z: number }> = [];
+  // Parse correct_coordinates as the primary array of target points
+  let targetPoints: Array<{ x: number; y: number; z: number }> = [];
   if (task.correct_coordinates) {
     try {
       const parsed = typeof task.correct_coordinates === "string"
         ? JSON.parse(task.correct_coordinates)
         : task.correct_coordinates;
       if (Array.isArray(parsed)) {
-        correctCoords = parsed.map(parseCoordinate).filter(Boolean) as any;
+        targetPoints = parsed.map(parseCoordinate).filter(Boolean) as any;
       } else if (typeof parsed === "object" && parsed !== null) {
-        if (parsed.start && !startPt) startPt = parseCoordinate(parsed.start);
-        if (parsed.mid && !midPt) midPt = parseCoordinate(parsed.mid);
-        if (parsed.end && !endPt) endPt = parseCoordinate(parsed.end);
+        // Fallback for legacy nested object { start, mid, end }
+        ["start", "mid", "end"].forEach((key) => {
+          if (parsed[key]) {
+            const pt = parseCoordinate(parsed[key]);
+            if (pt) targetPoints.push(pt);
+          }
+        });
       }
     } catch {}
   }
 
-  const isDragOrSequence = Boolean(
-    (startPt && (midPt || endPt)) ||
-    (task.question_type && ["anticipation", "drag"].includes(task.question_type.toLowerCase()))
-  );
+  // Fallback to legacy start_point, mid_point, end_point columns if correct_coordinates had no points
+  if (targetPoints.length === 0) {
+    const startPt = parseCoordinate(task.start_point);
+    const midPt = parseCoordinate(task.mid_point);
+    const endPt = parseCoordinate(task.end_point);
+    if (startPt) targetPoints.push(startPt);
+    if (midPt) targetPoints.push(midPt);
+    if (endPt) targetPoints.push(endPt);
+  }
 
-  if (isDragOrSequence && (startPt || midPt || endPt)) {
-    if (clicksList.length === 0) return "f";
-
-    const requiredWaypoints: Array<{ x: number; y: number; z: number }> = [];
-    if (startPt) requiredWaypoints.push(startPt);
-    if (midPt) requiredWaypoints.push(midPt);
-    if (endPt) requiredWaypoints.push(endPt);
-
-    let currentIndex = 0;
-    for (const waypoint of requiredWaypoints) {
-      let matchedIndex = -1;
-      for (let i = currentIndex; i < clicksList.length; i++) {
-        if (distance3D(clicksList[i], waypoint) <= tolerance) {
-          matchedIndex = i;
-          break;
-        }
-      }
-      if (matchedIndex === -1) {
-        return "f";
-      }
-      currentIndex = matchedIndex + 1;
-    }
+  // If no target coordinates are defined on task, default to pass
+  if (targetPoints.length === 0) {
     return "p";
   }
 
-  const targetPoints: Array<{ x: number; y: number; z: number }> = [];
-  if (startPt) targetPoints.push(startPt);
-  if (correctCoords.length > 0) targetPoints.push(...correctCoords);
+  // Empty clicks always fail
+  if (clicksList.length === 0) {
+    return "f";
+  }
 
-  if (targetPoints.length > 0) {
-    if (clicksList.length === 0) return "f";
-    const hasMatch = clicksList.some((click) =>
-      targetPoints.some((target) => distance3D(click, target) <= tolerance)
-    );
+  const puzzleType = normalizePuzzleType(task.question_type);
+
+  // Single-click puzzles: user is expected to click once. Multiple clicks fail immediately.
+  if (puzzleType === "click") {
+    if (clicksList.length !== 1) {
+      return "f";
+    }
+    const hasMatch = targetPoints.some((target) => distance3D(clicksList[0], target) <= tolerance);
     return hasMatch ? "p" : "f";
   }
 
-  return "p";
+  // Double-click puzzles (future extension): expects exactly 2 clicks
+  if (puzzleType === "double_click") {
+    if (clicksList.length !== 2) {
+      return "f";
+    }
+    const allClicksMatched = clicksList.every((click) =>
+      targetPoints.some((target) => distance3D(click, target) <= tolerance)
+    );
+    return allClicksMatched ? "p" : "f";
+  }
+
+  // Drag / Drawing puzzles (up to 3 points in correct_coordinates):
+  // All target points in the array must be matched within tolerance.
+  // Traversal order does not matter since users may start drawing from any point.
+  if (puzzleType === "drag") {
+    const allMatched = targetPoints.every((target) =>
+      clicksList.some((click) => distance3D(click, target) <= tolerance)
+    );
+    return allMatched ? "p" : "f";
+  }
+
+  return "f";
 }
 
 async function ensureSeedTasks() {
