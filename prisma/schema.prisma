@@ -32,6 +32,21 @@ model ContactInquiry {
   createdAt  DateTime @default(now())
 }
 
+// 2b. Email Verification Hold Queue (Section 9.1)
+model EmailVerification {
+  id             String    @id @default(uuid())
+  token          String    @unique
+  email          String
+  type           String    @default("contact") // e.g. "contact", "founding_client", "share"
+  payload        String    // JSON string containing submission details held pending verification
+  expiresAt      DateTime  // 24 hours from creation
+  verifiedAt     DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("email_verifications")
+}
+
 // 3. Coming Soon Notification Form
 model NotificationSubscription {
   id        String   @id @default(uuid())
@@ -203,6 +218,7 @@ model CubiconRegistration {
   role      String?
   interest  String?  @default("Founding Client")
   notes     String?
+  isUsBased Boolean  @default(true)
   createdAt DateTime @default(now())
 
   @@map("cubicon_registrations")

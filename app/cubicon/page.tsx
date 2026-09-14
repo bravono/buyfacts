@@ -38,6 +38,7 @@ import {
   FastForward,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
+import { isBusinessEmail } from "@/lib/validation/forms";
 
 // Interface definitions for the contact areas from the Excel spreadsheet
 interface OptionItem {
@@ -240,6 +241,7 @@ export default function CubiconPage() {
     urgency: "Medium",
     requestConfirmation: true,
     isEighteen: false,
+    isUsBased: false,
   });
 
   const [selectedOptions, setSelectedOptions] = useState<
@@ -286,6 +288,14 @@ export default function CubiconPage() {
         });
         return;
       }
+      if (!isBusinessEmail(formState.email.trim())) {
+        setFormStatus({
+          type: "error",
+          message:
+            "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+        });
+        return;
+      }
       if (
         formState.email.trim().toLowerCase() !==
         formState.emailConfirm.trim().toLowerCase()
@@ -298,6 +308,13 @@ export default function CubiconPage() {
         setFormStatus({
           type: "error",
           message: "You must certify that you are 18 or older.",
+        });
+        return;
+      }
+      if (!formState.isUsBased) {
+        setFormStatus({
+          type: "error",
+          message: "You must confirm that your organization is US based.",
         });
         return;
       }
@@ -407,11 +424,29 @@ export default function CubiconPage() {
       return;
     }
 
+    if (!isBusinessEmail(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message:
+          "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+      });
+      return;
+    }
+
     if (!formState.isEighteen) {
       setFormStatus({
         type: "error",
         message:
           "You must certify that you are 18 years of age or older to submit this form.",
+      });
+      return;
+    }
+
+    if (!formState.isUsBased) {
+      setFormStatus({
+        type: "error",
+        message:
+          "You must confirm that your organization is US based to submit this form.",
       });
       return;
     }
@@ -1381,6 +1416,23 @@ export default function CubiconPage() {
                           />
                           <span>
                             I certify that I am eighteen (18) years old or older{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </span>
+                        </label>
+
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            name="isUsBased"
+                            checked={formState.isUsBased}
+                            onChange={handleInputChange}
+                            className={styles.checkbox}
+                            required
+                          />
+                          <span>
+                            I confirm that my organization is US based{" "}
                             <span style={{ color: "var(--primary-color)" }}>
                               *
                             </span>

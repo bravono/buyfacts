@@ -56,6 +56,8 @@ export default function Home() {
     message: string;
   }>({ type: null, message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   // The 8 Portfolio Cards matching Section 2 of the mockup image
   const portfolioCards: ServiceCardData[] = [
@@ -166,11 +168,19 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        const firstName = formState.name.trim().split(" ")[0] || "there";
-        setFormStatus({
-          type: "success",
-          message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
-        });
+        if (data.verificationRequired) {
+          setPendingVerificationEmail(formState.email.trim());
+          setFormStatus({
+            type: "success",
+            message: data.message || `Please check your email at ${formState.email} to verify your inquiry. Inquiries are valid for 24 hours.`,
+          });
+        } else {
+          const firstName = formState.name.trim().split(" ")[0] || "there";
+          setFormStatus({
+            type: "success",
+            message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
+          });
+        }
         setFormState({
           name: "",
           email: "",
@@ -192,6 +202,26 @@ export default function Home() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingVerificationEmail) return;
+    setResendStatus("Sending new verification link...");
+    try {
+      const res = await fetch("/api/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingVerificationEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendStatus("New verification link dispatched! Check your inbox.");
+      } else {
+        setResendStatus(data.error || "Failed to resend verification email.");
+      }
+    } catch {
+      setResendStatus("Network error. Please try again.");
     }
   };
 
@@ -874,6 +904,15 @@ export default function Home() {
                   </label>
                 </div>
 
+                <input
+                  type="text"
+                  name="hp_website"
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -889,6 +928,44 @@ export default function Home() {
                     className={`${styles.formStatus} ${formStatus.type === "success" ? styles.formStatusSuccess : styles.formStatusError}`}
                   >
                     {formStatus.message}
+                  </div>
+                )}
+
+                {pendingVerificationEmail && (
+                  <div
+                    style={{
+                      marginTop: "1.2rem",
+                      padding: "14px 18px",
+                      background: "rgba(59, 130, 246, 0.08)",
+                      border: "1px solid rgba(59, 130, 246, 0.25)",
+                      borderRadius: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    <p style={{ margin: "0 0 10px 0", color: "#93c5fd", lineHeight: 1.5 }}>
+                      Did not receive the verification email? Check your spam folder or request a new link:
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "5px",
+                        padding: "7px 16px",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Resend Verification Email
+                    </button>
+                    {resendStatus && (
+                      <p style={{ margin: "10px 0 0 0", fontSize: "0.85rem", color: "#e2e8f0" }}>
+                        {resendStatus}
+                      </p>
+                    )}
                   </div>
                 )}
               </form>

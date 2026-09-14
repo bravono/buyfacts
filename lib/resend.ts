@@ -325,7 +325,7 @@ export async function sendCubiconShareEmail(data: CubiconShareData) {
     const emailRes = await resend.emails.send({
       from: DEFAULT_FROM_EMAIL,
       to: [receiverEmail],
-      subject: `${senderName} invited you to try Cubicon 3D Spatial Validation - BuyFacts®`,
+      subject: `Cubicon Preview Suggested by ${senderName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -393,6 +393,211 @@ export async function sendCubiconShareEmail(data: CubiconShareData) {
 
 
 /**
+ * Send Email Verification Link (Section 9.1)
+ * Holds message until user verifies their email address within 24 hours.
+ */
+export async function sendVerificationEmail(data: {
+  email: string;
+  name: string;
+  token: string;
+  type?: string;
+}) {
+  try {
+    const resend = getResendClient();
+    const { email, name, token, type } = data;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.buyfacts.com";
+    const verificationUrl = `${baseUrl}/api/verify-email?token=${encodeURIComponent(token)}`;
+
+    const subject = "Action Required: Verify your email to complete your BuyFacts inquiry";
+    const emailRes = await resend.emails.send({
+      from: DEFAULT_FROM_EMAIL,
+      to: [email],
+      subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Email</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0d1117; color: #e6edf3; margin: 0; padding: 24px;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden;">
+              <tr>
+                <td style="padding: 32px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #3b82f6;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">BuyFacts</h1>
+                  <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 14px;">The Early Recognition Company</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 32px;">
+                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Hello ${escapeHtml(name)},</h2>
+                  <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    Your inquiry is currently on hold. To protect our research communications and confirm your identity, please click the button below to verify your email address.
+                  </p>
+                  <p style="margin: 0 0 24px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    Once verified, your message will be immediately delivered to the BuyFacts team, and you will hear back within 48 hours.
+                  </p>
+
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${verificationUrl}" target="_blank" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block;">
+                      Verify My Email Address
+                    </a>
+                  </div>
+
+                  <div style="background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin: 24px 0;">
+                    <p style="margin: 0; color: #94a3b8; font-size: 13px; line-height: 1.5;">
+                      <strong>Note:</strong> This verification link will remain valid for <strong>24 hours</strong>. If the link expires, you may request a new link at any time. If verification is not completed, your pending submission will not be sent to BuyFacts.
+                    </p>
+                  </div>
+
+                  <p style="margin: 24px 0 0 0; color: #94a3b8; font-size: 12px; line-height: 1.5; word-break: break-all;">
+                    Direct link: <a href="${verificationUrl}" style="color: #38bdf8;">${verificationUrl}</a>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 20px 32px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center; color: #64748b; font-size: 12px;">
+                  © ${new Date().getFullYear()} BuyFacts, Inc. All rights reserved.
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    console.log("[Resend] Verification email dispatched to", email);
+    return emailRes;
+  } catch (error) {
+    console.error("[Resend] Error sending verification email:", error);
+    return null;
+  }
+}
+
+/**
+ * Send Verification Reminder Email (Automated halfway through 24-hour window)
+ */
+export async function sendVerificationReminderEmail(data: {
+  email: string;
+  name: string;
+  token: string;
+  hoursRemaining?: number;
+}) {
+  try {
+    const resend = getResendClient();
+    const { email, name, token, hoursRemaining = 12 } = data;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.buyfacts.com";
+    const verificationUrl = `${baseUrl}/api/verify-email?token=${encodeURIComponent(token)}`;
+
+    const subject = `Reminder: ${hoursRemaining} hours remaining to verify your BuyFacts inquiry`;
+    const emailRes = await resend.emails.send({
+      from: DEFAULT_FROM_EMAIL,
+      to: [email],
+      subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Reminder</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0d1117; color: #e6edf3; margin: 0; padding: 24px;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden;">
+              <tr>
+                <td style="padding: 32px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #eab308;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">BuyFacts</h1>
+                  <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 14px;">Inquiry Verification Reminder</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 32px;">
+                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Hello ${escapeHtml(name)},</h2>
+                  <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    We noticed you have not yet confirmed your email. Your inquiry is still waiting for verification.
+                  </p>
+                  <p style="margin: 0 0 24px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    Please click the button below within the next <strong>${hoursRemaining} hours</strong> to release your inquiry to our team.
+                  </p>
+
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${verificationUrl}" target="_blank" style="background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #000000; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block;">
+                      Complete Email Verification
+                    </a>
+                  </div>
+
+                  <p style="margin: 24px 0 0 0; color: #94a3b8; font-size: 12px; line-height: 1.5; word-break: break-all;">
+                    Direct link: <a href="${verificationUrl}" style="color: #38bdf8;">${verificationUrl}</a>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 20px 32px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center; color: #64748b; font-size: 12px;">
+                  © ${new Date().getFullYear()} BuyFacts, Inc. All rights reserved.
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    return emailRes;
+  } catch (error) {
+    console.error("[Resend] Error sending reminder email:", error);
+    return null;
+  }
+}
+
+/**
+ * Deliver verified inquiry to internal mailbox (Section 9.1 -> inquiry@buyfacts.com)
+ */
+export async function deliverVerifiedInquiry(data: {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  interest?: string;
+  message: string;
+  verifiedAt: Date;
+}) {
+  try {
+    const resend = getResendClient();
+    const staffEmail = process.env.INQUIRY_RECIPIENT_EMAIL || DEFAULT_NOTIFICATION_EMAIL;
+
+    const emailRes = await resend.emails.send({
+      from: DEFAULT_FROM_EMAIL,
+      to: [staffEmail],
+      replyTo: data.email,
+      subject: `[Verified Inquiry] ${data.interest || "General Inquiry"} from ${data.name}`,
+      html: `
+        <div style="font-family: sans-serif; padding: 24px; background: #161b22; color: #e6edf3; border-radius: 8px;">
+          <h2 style="color: #38bdf8; margin-top: 0;">Verified Contact Inquiry Received</h2>
+          <p><strong>Submission ID:</strong> ${escapeHtml(data.id)}</p>
+          <p><strong>Sender Name:</strong> ${escapeHtml(data.name)}</p>
+          <p><strong>Sender Email:</strong> <a href="mailto:${escapeHtml(data.email)}" style="color: #38bdf8;">${escapeHtml(data.email)}</a></p>
+          <p><strong>Company:</strong> ${escapeHtml(data.company || "Not provided")}</p>
+          <p><strong>Area of Interest:</strong> ${escapeHtml(data.interest || "General Inquiry")}</p>
+          <p><strong>Verified At:</strong> ${data.verifiedAt.toISOString()}</p>
+          <hr style="border: none; border-top: 1px solid #30363d; margin: 20px 0;" />
+          <h3 style="color: #94a3b8; font-size: 14px; text-transform: uppercase;">Message:</h3>
+          <div style="background: #0d1117; padding: 16px; border-radius: 6px; border: 1px solid #30363d; white-space: pre-wrap;">
+            ${escapeHtml(data.message)}
+          </div>
+        </div>
+      `,
+    });
+
+    console.log("[Resend] Verified inquiry delivered to internal staff mailbox:", staffEmail);
+    return emailRes;
+  } catch (error) {
+    console.error("[Resend] Error delivering verified inquiry:", error);
+    return null;
+  }
+}
+
+/**
  * Diagnostic/Test Email Sender
  */
 export async function sendTestEmail(toEmail: string) {
@@ -400,10 +605,10 @@ export async function sendTestEmail(toEmail: string) {
   return await resend.emails.send({
     from: DEFAULT_FROM_EMAIL,
     to: [toEmail],
-    subject: "Resend Integration Test - BuyFacts®",
+    subject: "Resend Integration Test - BuyFacts",
     html: `
       <div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f8fafc; border-radius: 8px;">
-        <h2 style="color: #38bdf8;">Resend Integration Test Successful 🎉</h2>
+        <h2 style="color: #38bdf8;">Resend Integration Test Successful</h2>
         <p>If you are reading this email, Resend API key configuration is active and operational for your BuyFacts application.</p>
         <p style="font-size: 12px; color: #94a3b8;">Sent at: ${new Date().toISOString()}</p>
       </div>

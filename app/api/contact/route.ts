@@ -1,116 +1,92 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { sendContactEmails } from "@/lib/resend";
-
+import { ContactInquirySchema } from "@/lib/validation/forms";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { sendVerificationEmail } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, email, company, interest, message, isEighteen } = body;
-
-    // Server-side validation
-    if (!name || !email || !message) {
+    // 1. IP Rate Limiting (Section 13)
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(ip, "contact");
+    if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Validation error: Name, Email, and Message are required fields." },
+        {
+          error: `Too many submissions. Please wait ${rateLimit.resetSeconds} seconds before trying again.`,
+          retryAfter: rateLimit.resetSeconds,
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.resetSeconds) },
+        }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+
+    // 2. Schema Validation & Honeypot (Section 9.1 & 13)
+    const parseResult = ContactInquirySchema.safeParse(body);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0]?.message || "Validation failed.";
+      return NextResponse.json(
+        { error: firstError, issues: parseResult.error.issues },
         { status: 400 }
       );
     }
 
-    if (!isEighteen) {
-      return NextResponse.json(
-        { error: "Validation error: You must certify that you are 18 years of age or older." },
-        { status: 400 }
-      );
-    }
-
-    // Simple email pattern check
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Validation error: Please provide a valid email address." },
-        { status: 400 }
-      );
-    }
-
+    const { name, email, company, interest, message, isEighteen } = parseResult.data;
+    const cleanEmail = email.toLowerCase().trim();
     const submissionId = crypto.randomUUID();
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Save to SQLite database using Prisma
-    const dbPromise = prisma.contactInquiry.create({
-      data: {
-        id: submissionId,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        company: (company || "").trim(),
-        interest: interest || "General Inquiry",
-        message: message.trim(),
-        isEighteen: !!isEighteen,
-      },
-    }).catch(dbErr => {
-      console.warn("Database save warning (proceeding with JSON fallback):", dbErr);
-      return null;
+    const payload = JSON.stringify({
+      id: submissionId,
+      name: name.trim(),
+      email: cleanEmail,
+      company: (company || "").trim(),
+      interest: interest || "General Inquiry",
+      message: message.trim(),
+      isEighteen: !!isEighteen,
     });
 
-    // Save submission to a local JSON file in the project workspace
-    const jsonPromise = (async () => {
-      const dirPath = path.join(process.cwd(), "data");
-      const filePath = path.join(dirPath, "contact_inquiries.json");
+    // 3. Persist Hold State in EmailVerification (Section 9.1)
+    await prisma.emailVerification.create({
+      data: {
+        token,
+        email: cleanEmail,
+        type: "contact",
+        payload,
+        expiresAt,
+      },
+    });
 
-      // Ensure the data directory exists
-      await fs.mkdir(dirPath, { recursive: true });
+    console.log(`[Contact Submission Held] Token ${token} created for ${cleanEmail}. Awaiting email verification.`);
 
-      let currentData = [];
-      try {
-        const fileContents = await fs.readFile(filePath, "utf-8");
-        currentData = JSON.parse(fileContents);
-      } catch (err) {
-        // File doesn't exist yet, proceed with empty array
-      }
-
-      const newSubmission = {
-        id: submissionId,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        company: (company || "").trim(),
-        interest: interest || "General Inquiry",
-        message: message.trim(),
-        isEighteen: !!isEighteen,
-        timestamp: new Date().toISOString()
-      };
-
-      currentData.push(newSubmission);
-      await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
-      return newSubmission;
-    })();
-
-    const [dbRecord, newSubmission] = await Promise.all([dbPromise, jsonPromise]);
-
-    // Log the contact submission to server stdout
-    console.log(`[Contact Submission] Saved submission ${newSubmission.id} from ${newSubmission.email}`);
-
-    // Send transactional confirmation email via Resend
-    sendContactEmails({
-      id: newSubmission.id,
-      name: newSubmission.name,
-      email: newSubmission.email,
-      company: newSubmission.company,
-      interest: newSubmission.interest,
-      message: newSubmission.message,
-    }).catch(err => {
-      console.error("[Contact Submission] Failed to send email via Resend:", err);
+    // 4. Send Verification Link via Resend
+    sendVerificationEmail({
+      email: cleanEmail,
+      name: name.trim(),
+      token,
+      type: "contact",
+    }).catch((err) => {
+      console.error("[Contact Submission] Error dispatching verification email:", err);
     });
 
     return NextResponse.json(
-      { success: true, message: "Inquiry saved successfully.", id: newSubmission.id },
+      {
+        success: true,
+        verificationRequired: true,
+        message: `Your inquiry has been received and placed on hold. Please check your inbox at ${cleanEmail} to verify your email. Inquiries are valid for 24 hours.`,
+        id: submissionId,
+      },
       { status: 200 }
     );
-
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in contact API route:", error);
     return NextResponse.json(
-      { error: "Internal server error. Failed to process and save submission." },
+      { error: "Internal server error. Failed to process submission." },
       { status: 500 }
     );
   }

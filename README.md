@@ -126,37 +126,61 @@ Handles session initialization, spatial click attempt evaluations, state integri
     - `description`: `"Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below."`
     - `fireworks`: `false`
 
+#### `POST /api/contact`
+Receives general contact inquiries and places them into an email verification hold queue.
+- **Validation**: Enforces Name, Email, Message, and Age Certification (18+) via `ContactInquirySchema`.
+- **Anti-Abuse**: Protected by sliding-window IP rate limiting (5 req / 10 min) and hidden honeypot check (`hp_website`).
+- **Hold Pipeline**: Generates a 24-hour verification token in `email_verifications` table and dispatches verification link. Submission is held until verified.
+
+#### `GET /api/verify-email`
+Validates inquiry verification tokens and releases held submissions.
+- **Parameters**: `token` (query string).
+- **Execution Flow**:
+  - Verifies token validity and checks that token has not expired (> 24 hours).
+  - Marks `verifiedAt` timestamp.
+  - Releases held inquiry into SQLite `ContactInquiry` or `CubiconRegistration`.
+  - Dispatches verified inquiry to internal staff mailbox (`inquiry@buyfacts.com`).
+  - Renders confirmation page stating: *"Your message has been sent. You will hear back within 48 hours."*
+- **Administrative Checks**: `?action=check-reminders` sends automated 12-hour reminder emails for pending inquiries halfway through their 24-hour expiration window.
+
+#### `POST /api/verify-email`
+Resends an active 24-hour email verification link.
+- **Body**: `{ "email": "user@example.com" }` or `{ "token": "previous-token" }`.
+- **Rate Limit**: 3 resends per 15 minutes per IP address.
+
+#### `POST /api/cubicon-registration`
+Handles Cubicon Founding Client Program applications (Section 8).
+- **Business Email Blacklist**: Free public webmail domains (e.g. `gmail.com`, `yahoo.com`, `hotmail.com`, `proton.me`) are strictly blocked. Requires legitimate business domain.
+- **US-Based Confirmation**: Requires explicit confirmation that the organization is US based (`isUsBased: true`).
+- **Confirmation Options**: Sends confirmation receipt email when `requestConfirmation` is enabled.
+
 #### `POST /api/cubicon-feedback`
-Records user satisfaction rating and commentary.
-- **Request Body**:
-  ```json
-  {
-    "userId": "user_123",
-    "userEmail": "user@example.com",
-    "sessionId": "sess_456",
-    "feedbackText": "Very responsive 3D puzzle validation.",
-    "rating": 5
-  }
-  ```
+Records non-anonymous user feedback and star rating (Section 9.4).
+- **Validation**: Requires Name, valid Email, and Comment via `FeedbackSchema`.
+- **Anti-Abuse**: Rate limited (10 submissions / 10 min) with honeypot validation.
 
 #### `GET /api/cubicon-feedback`
-Returns all feedback submissions sorted by newest first.
+Returns feedback submissions. Supports `?export=csv` for executive CSV download.
+
+#### `DELETE /api/cubicon-feedback`
+Executes data retention policy. Call with `?purge=30d` to remove feedback records older than 30 days.
 
 ---
 
 ## 5. Database Schema
 
+- **`EmailVerification`** (`email_verifications`): Hold queue for pending inquiries awaiting email verification (`token`, `email`, `type`, `payload`, `expiresAt`, `verifiedAt`, `reminderSentAt`).
 - **`CubiconSequence`** (`cubicon_sequences`): Puzzle group configuration (`slug`, `title`, `description`, `pass_threshold`, `rotation_direction`, `default_rotation_interval`, `is_active`, `created_by`).
 - **`CubiconTask`** (`cubicon_tasks`): Puzzles and 3D faces configuration linked to `sequence_id`.
 - **`CubiconSession`** (`cubicon_sessions`): Active user verification sessions linked to `sequence_id`.
 - **`CubiconAttempt`** (`cubicon_attempts`): Granular click telemetry and submit logs linked to `sequence_id`.
-- **`CubiconRegistration`** (`cubicon_registrations`): Founding client registration submissions.
+- **`CubiconRegistration`** (`cubicon_registrations`): Founding client registration submissions (`name`, `email`, `company`, `role`, `interest`, `notes`, `isUsBased`).
 - **`CubiconShare`** (`cubicon_shares`): Invitation records (`senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `status`, `createdAt`).
 - **`FeedbackSubmission`** (`cubicon_feedback`): User star ratings and feedback commentary.
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
-- `POST /api/admin/sequences`: Authenticated endpoint creating a new puzzle group with title, slug, threshold, rotation direction (`left` or `right`), rotation interval, and tasks.
+- `POST /admin/sequences`: Authenticated endpoint creating a new puzzle group with title, slug, threshold, rotation direction (`left` or `right`), rotation interval, and tasks.
 - `GET /api/admin/sequences/:id`: Authenticated endpoint fetching a specific sequence with tasks.
 - `PUT /api/admin/sequences/:id`: Authenticated endpoint updating sequence parameters and tasks.
 - `DELETE /api/admin/sequences/:id`: Authenticated endpoint deleting a non-default sequence.
