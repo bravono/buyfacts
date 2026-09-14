@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  evaluateScoringDecision,
+  sanitizePublicPayload,
+  TaskAttemptRecord,
+} from "@/lib/cubicon/scoring-engine";
 
 // ---------------------------------------------------------------------------
 // Cubicon 3D Task Definitions & Database Integration
@@ -86,6 +91,23 @@ const DEFAULT_TASKS = [
     start_point: JSON.stringify({ x: -0.60, y: 0.10, z: 1.0 }),
     mid_point: JSON.stringify({ x: 0.0, y: 0.35, z: 1.0 }),
     end_point: JSON.stringify({ x: 0.60, y: 0.10, z: 1.0 }),
+    tolerance: 0.5,
+    isFinal: false,
+  },
+  {
+    taskIndex: 3,
+    task_number: 4,
+    heading: "Verification Challenge",
+    description: "Final verification task to complete validation (click to choose)",
+    screen: "Active_side_r",
+    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+    rotation: "left",
+    rotationInterval: 15,
+    question_type: "click",
+    correct_coordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
+    start_point: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
+    mid_point: "",
+    end_point: "",
     tolerance: 0.5,
     isFinal: true,
   },
@@ -448,11 +470,12 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(
-        {
+        sanitizePublicPayload({
           sessionId,
           sequenceId: seqId,
           sequenceTitle: currentSequence?.title || "Welcome to Cubicon",
-          ofTasks: totalTasks,
+          ofTasks: Math.min(3, totalTasks),
+          task: 0,
           heading: "Welcome to Cubicon",
           description: "Press Start to begin your puzzle.",
           screen: "Active_front",
@@ -460,9 +483,12 @@ export async function POST(request: Request) {
           rotation: [0, 0, 0],
           rotationInterval: 0,
           rotationDirection: mapRotationDirection(seqRotationDir),
+          isFinal: false,
+          completed: false,
+          passed: false,
           redirectUrl: "",
           result: null,
-        },
+        }),
         corsHeaders()
       );
     }
@@ -471,6 +497,44 @@ export async function POST(request: Request) {
     let session = await prisma.cubiconSession.findUnique({
       where: { session_id: sessionId },
     });
+
+    // 1. Unlimited Retries Handler (Section 7.4)
+    if (parsed.action === "retry" || parsed.task === "retry") {
+      if (session) {
+        await prisma.cubiconSession.update({
+          where: { id: session.id },
+          data: {
+            taskIndex: 0,
+            passedPuzzles: 0,
+            totalPuzzlesAttempted: 0,
+            previous_result: "retry",
+          },
+        });
+      }
+      const firstPuzzle = fallbackTasks[0];
+      return NextResponse.json(
+        sanitizePublicPayload({
+          sessionId,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+          ofTasks: Math.min(3, totalTasks),
+          task: 1,
+          heading: firstPuzzle.heading,
+          description: firstPuzzle.description,
+          screen: firstPuzzle.screen || "Active_front",
+          image: formatImageUrl(firstPuzzle.image),
+          rotation: [0, 0, 0],
+          rotationInterval: firstPuzzle.rotationInterval || seqDefaultInterval,
+          rotationDirection: mapRotationDirection(firstPuzzle.rotation || seqRotationDir),
+          isFinal: false,
+          completed: false,
+          passed: false,
+          result: null,
+          redirectUrl: "",
+        }),
+        corsHeaders()
+      );
+    }
 
     if (!session) {
       const newSessionId = generateSessionId();
@@ -486,32 +550,109 @@ export async function POST(request: Request) {
       });
 
       const puzzle = fallbackTasks[0];
-      return NextResponse.json({
-        sessionId: newSessionId,
-        sequenceId: seqId,
-        sequenceTitle: currentSequence?.title || "Cubicon Challenge",
-        ofTasks: totalTasks,
-        task: puzzle.taskIndex + 1,
-        heading: puzzle.heading,
-        description: puzzle.description,
-        screen: puzzle.screen || "Active_front",
-        image: formatImageUrl(puzzle.image),
-        rotation: [0, 0, 0],
-        rotationInterval: puzzle.rotationInterval || seqDefaultInterval,
-        rotationDirection: mapRotationDirection(puzzle.rotation || seqRotationDir),
-        isFinal: totalTasks === 1,
-        redirectUrl: "",
-        result: null,
-      }, corsHeaders());
+      return NextResponse.json(
+        sanitizePublicPayload({
+          sessionId: newSessionId,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+          ofTasks: Math.min(3, totalTasks),
+          task: puzzle.taskIndex + 1,
+          heading: puzzle.heading,
+          description: puzzle.description,
+          screen: puzzle.screen || "Active_front",
+          image: formatImageUrl(puzzle.image),
+          rotation: [0, 0, 0],
+          rotationInterval: puzzle.rotationInterval || seqDefaultInterval,
+          rotationDirection: mapRotationDirection(puzzle.rotation || seqRotationDir),
+          isFinal: totalTasks === 1,
+          completed: false,
+          passed: false,
+          redirectUrl: "",
+          result: null,
+        }),
+        corsHeaders()
+      );
     }
 
-    // Evaluate current task attempt against correct coordinates
+    // 2. Terminal State Lockdown: Prevent browser Back or page refresh from altering results
+    const isAlreadyCompleted =
+      session.previous_result?.startsWith("passed_") ||
+      session.previous_result?.startsWith("failed_") ||
+      session.previous_result?.startsWith("early_") ||
+      session.previous_result?.startsWith("two_incorrect_");
+
+    if (isAlreadyCompleted) {
+      const alreadyPassed = session.previous_result?.startsWith("passed_") || false;
+      const lastPuzzle = fallbackTasks[Math.min(session.taskIndex, totalTasks - 1)] || fallbackTasks[0];
+      return NextResponse.json(
+        sanitizePublicPayload({
+          sessionId,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+          ofTasks: session.totalPuzzlesAttempted || totalTasks,
+          task: session.totalPuzzlesAttempted || totalTasks,
+          heading: alreadyPassed
+            ? COMPLETION_MESSAGES.success.heading
+            : COMPLETION_MESSAGES.rejection.heading,
+          description: alreadyPassed
+            ? COMPLETION_MESSAGES.success.description
+            : COMPLETION_MESSAGES.rejection.description,
+          screen: lastPuzzle.screen || "Active_back",
+          image: formatImageUrl(lastPuzzle.image),
+          rotation: [0, 0, 0],
+          rotationInterval: 0.1,
+          rotationDirection: mapRotationDirection(lastPuzzle.rotation || seqRotationDir),
+          isFinal: true,
+          completed: true,
+          passed: alreadyPassed,
+          fireworks: alreadyPassed,
+          score: session.passedPuzzles,
+          result: alreadyPassed ? "p" : "f",
+          redirectUrl: "",
+        }),
+        corsHeaders()
+      );
+    }
+
+    // 3. Duplicate click protection (idempotency guard)
+    if (
+      parsed.taskIndex !== undefined &&
+      parsed.taskIndex < session.taskIndex &&
+      session.taskIndex >= 0
+    ) {
+      const activePuzzle = fallbackTasks[session.taskIndex] || fallbackTasks[0];
+      return NextResponse.json(
+        sanitizePublicPayload({
+          sessionId,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+          ofTasks: Math.min(3, totalTasks),
+          task: session.taskIndex + 1,
+          heading: activePuzzle.heading,
+          description: activePuzzle.description,
+          screen: activePuzzle.screen || "Active_front",
+          image: formatImageUrl(activePuzzle.image),
+          rotation: [0, 0, 0],
+          rotationInterval: activePuzzle.rotationInterval || seqDefaultInterval,
+          rotationDirection: mapRotationDirection(activePuzzle.rotation || seqRotationDir),
+          isFinal: session.taskIndex >= 2,
+          completed: false,
+          passed: false,
+          score: session.passedPuzzles,
+          result: session.previous_result === "p" || session.previous_result === "f" ? session.previous_result : null,
+          redirectUrl: "",
+        }),
+        corsHeaders()
+      );
+    }
+
+    // 4. Evaluate current task attempt against correct coordinates
     const currentTaskIndex = session.taskIndex >= 0 ? session.taskIndex : 0;
     const currentTask = fallbackTasks[currentTaskIndex] || fallbackTasks[0];
     const rawClicks = parsed.clicks || parsed.clickData || {};
     const attemptResult: "p" | "f" = evaluateTaskAttempt(currentTask, rawClicks);
 
-    // Record attempt log in cubicon_attempts table
+    // Record attempt log in cubicon_attempts table for internal diagnostics
     try {
       await prisma.cubiconAttempt.create({
         data: {
@@ -528,69 +669,102 @@ export async function POST(request: Request) {
       console.warn("[cubicon-data] Failed to log attempt:", attemptErr);
     }
 
-    const nextIndex = session.taskIndex + 1;
+    // 5. Gather session attempt history and evaluate 4-path scoring state machine
+    const sessionAttempts = await prisma.cubiconAttempt.findMany({
+      where: { session_id: sessionId },
+      orderBy: { submitted_at: "asc" },
+      select: { taskIndex: true, result: true },
+    });
+
+    const attemptRecords: TaskAttemptRecord[] = sessionAttempts.map((a) => ({
+      taskIndex: a.taskIndex,
+      result: (a.result === "p" ? "p" : "f") as "p" | "f",
+    }));
+
+    if (
+      attemptRecords.length === 0 ||
+      attemptRecords[attemptRecords.length - 1].taskIndex !== currentTaskIndex
+    ) {
+      attemptRecords.push({ taskIndex: currentTaskIndex, result: attemptResult });
+    }
+
+    const hasFourth = fallbackTasks.length >= 4 || totalTasks >= 4;
+    const baseTaskCount = Math.min(3, totalTasks);
+    const scoringDecision = evaluateScoringDecision(attemptRecords, baseTaskCount, hasFourth);
+
     const isPassed = attemptResult === "p";
     const newPassedCount = session.passedPuzzles + (isPassed ? 1 : 0);
+    const newAttemptedCount = session.totalPuzzlesAttempted + 1;
 
+    // Update session state with internal diagnostic stage
     await prisma.cubiconSession.update({
       where: { id: session.id },
       data: {
-        taskIndex: nextIndex,
-        totalPuzzlesAttempted: session.totalPuzzlesAttempted + 1,
+        taskIndex: scoringDecision.isCompleted ? session.taskIndex : scoringDecision.nextTaskIndex,
+        totalPuzzlesAttempted: newAttemptedCount,
         passedPuzzles: newPassedCount,
-        previous_result: attemptResult,
+        previous_result: scoringDecision.internalStage,
       },
     });
 
-    if (nextIndex >= totalTasks) {
-      const lastPuzzle = fallbackTasks[totalTasks - 1];
-      const overallPassed = evaluateSequencePass(newPassedCount, totalTasks, seqThreshold);
+    // 6. Return sanitized public response
+    if (scoringDecision.isCompleted) {
+      const lastPuzzle = fallbackTasks[Math.min(session.taskIndex, fallbackTasks.length - 1)] || fallbackTasks[0];
+      return NextResponse.json(
+        sanitizePublicPayload({
+          sessionId,
+          sequenceId: seqId,
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
+          ofTasks: scoringDecision.expectedTotalTasks,
+          task: scoringDecision.expectedTotalTasks,
+          heading: scoringDecision.passed
+            ? COMPLETION_MESSAGES.success.heading
+            : COMPLETION_MESSAGES.rejection.heading,
+          description: scoringDecision.passed
+            ? COMPLETION_MESSAGES.success.description
+            : COMPLETION_MESSAGES.rejection.description,
+          screen: lastPuzzle.screen || "Active_back",
+          image: formatImageUrl(lastPuzzle.image),
+          rotation: [0, 0, 0],
+          rotationInterval: 0.1,
+          rotationDirection: mapRotationDirection(lastPuzzle.rotation || seqRotationDir),
+          isFinal: true,
+          completed: true,
+          score: newPassedCount,
+          passed: scoringDecision.passed,
+          fireworks: scoringDecision.fireworks,
+          redirectUrl: "",
+          result: attemptResult,
+        }),
+        corsHeaders()
+      );
+    }
 
-      return NextResponse.json({
+    const nextPuzzleIndex = scoringDecision.nextTaskIndex;
+    const nextPuzzle = fallbackTasks[nextPuzzleIndex] || DEFAULT_TASKS[3];
+    return NextResponse.json(
+      sanitizePublicPayload({
         sessionId,
         sequenceId: seqId,
         sequenceTitle: currentSequence?.title || "Cubicon Challenge",
-        ofTasks: totalTasks,
-        task: totalTasks,
-        heading: overallPassed
-          ? COMPLETION_MESSAGES.success.heading
-          : COMPLETION_MESSAGES.rejection.heading,
-        description: overallPassed
-          ? COMPLETION_MESSAGES.success.description
-          : COMPLETION_MESSAGES.rejection.description,
-        screen: lastPuzzle.screen || "Active_back",
-        image: formatImageUrl(lastPuzzle.image),
+        ofTasks: scoringDecision.expectedTotalTasks,
+        task: nextPuzzleIndex + 1,
+        heading: nextPuzzle.heading,
+        description: nextPuzzle.description,
+        screen: nextPuzzle.screen || "Active_front",
+        image: formatImageUrl(nextPuzzle.image),
         rotation: [0, 0, 0],
-        rotationInterval: 0.1,
-        rotationDirection: mapRotationDirection(lastPuzzle.rotation || seqRotationDir),
-        isFinal: true,
-        completed: true,
+        rotationInterval: scoringDecision.isFinalTask ? 0 : (nextPuzzle.rotationInterval || seqDefaultInterval),
+        rotationDirection: mapRotationDirection(nextPuzzle.rotation || seqRotationDir),
+        isFinal: scoringDecision.isFinalTask,
+        completed: false,
+        passed: false,
         score: newPassedCount,
-        threshold: seqThreshold,
-        passed: overallPassed,
         redirectUrl: "",
         result: attemptResult,
-      }, corsHeaders());
-    }
-
-    const puzzle = fallbackTasks[nextIndex];
-    return NextResponse.json({
-      sessionId,
-      sequenceId: seqId,
-      sequenceTitle: currentSequence?.title || "Cubicon Challenge",
-      ofTasks: totalTasks,
-      task: puzzle.taskIndex + 1,
-      heading: puzzle.heading,
-      description: puzzle.description,
-      screen: puzzle.screen || "Active_front",
-      image: formatImageUrl(puzzle.image),
-      rotation: [0, 0, 0],
-      rotationInterval: puzzle.isFinal ? 0 : (puzzle.rotationInterval || seqDefaultInterval),
-      rotationDirection: mapRotationDirection(puzzle.rotation || seqRotationDir),
-      isFinal: nextIndex === totalTasks - 1,
-      redirectUrl: "",
-      result: attemptResult,
-    }, corsHeaders());
+      }),
+      corsHeaders()
+    );
   } catch (err) {
     console.error("[cubicon-data] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500, ...corsHeaders() });

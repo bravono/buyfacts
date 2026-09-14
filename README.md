@@ -104,15 +104,27 @@ Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
   - `sequenceId` or `sequence` (slug): Target sequence identifier. Defaults to active sequence.
 
 #### `POST /api/cubicon-data`
-Handles session initialization, spatial click attempt evaluations, and sequence completion.
-- **Sequence Completion Response**:
-  When all tasks in the sequence have been evaluated, returns `completed: true` along with evaluated status and custom messaging:
+Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
+- **Section 7.4 Deterministic Scoring Paths**:
+  - **Path 1**: Three correct out of three -> Immediate Pass (`fireworks: true`).
+  - **Path 2**: Two correct after three -> Presents a 4th fallback question.
+    - If 4th answer is correct -> Pass (`fireworks: true`).
+    - If 4th answer is incorrect -> Fail.
+  - **Path 3**: Two incorrect among the first three -> Immediate Fail (stops without presenting 4th question).
+  - **Path 4 (Retry)**: Unlimited retries via `{ action: "retry" }`, resetting session state cleanly back to task 1.
+- **Integrity & Security Controls**:
+  - **Terminal State Lockdown**: Prevents browser back, page refresh, or re-submissions from mutating completed pass or fail outcomes.
+  - **Idempotency Guard**: Duplicate clicks on already evaluated tasks return active state without double-counting or skipping tasks.
+  - **Privacy Masking**: Internal diagnostic failure stages (e.g. `early_two_incorrect_at_task_2`) are recorded in the database for auditing and strictly omitted from public client JSON payloads.
+- **Sequence Completion Messaging**:
   - **Pass (Success)**:
     - `heading`: `"Congratulations! You are human."`
     - `description`: `"Next we offer you a number of choices below. Please make a selection and we thank you for considering Cubicon and BuyFacts."`
-  - **Fail (Rejection)**:
+    - `fireworks`: `true`
+  - **Fail (Rejection / Survey-Capacity)**:
     - `heading`: `"Thank you for participating"`
     - `description`: `"Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below."`
+    - `fireworks`: `false`
 
 #### `POST /api/cubicon-feedback`
 Records user satisfaction rating and commentary.
