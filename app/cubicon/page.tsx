@@ -672,9 +672,22 @@ export default function CubiconPage() {
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      const isNowFullscreen = !!document.fullscreenElement;
+      const isNowFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement
+      );
       setIsFullscreen(isNowFullscreen);
       notifyIframeFullscreen(isNowFullscreen);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isFullscreen) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+      }
     };
 
     const handleCubiconMessage = (event: MessageEvent) => {
@@ -697,12 +710,16 @@ export default function CubiconPage() {
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("message", handleCubiconMessage);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("message", handleCubiconMessage);
     };
-  }, []);
+  }, [isFullscreen]);
 
   return (
     <div className={styles.main}>
@@ -1046,7 +1063,12 @@ export default function CubiconPage() {
               </div>
             </div>
           ) : (
-            <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
+            <div
+              className={`${styles.appFrameWrapper} ${
+                isFullscreen ? styles.appFrameWrapperPseudoFullscreen : ""
+              }`}
+              ref={appFrameWrapperRef}
+            >
               {isFullscreen && (
                 <div
                   style={{
