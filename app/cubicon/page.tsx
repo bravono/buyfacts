@@ -32,6 +32,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  Pause,
+  X,
   LogOut,
   BarChart3,
   Video,
@@ -153,30 +155,30 @@ interface SlideItem {
 
 const SLIDES: SlideItem[] = [
   {
-    heading: ``,
+    heading: "1-Minute Preview",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
     description:
-      "In the next 30 seconds we will show you three Cubicon puzzles that validate a human user.",
+      "Experience the three core visual validation states in an automated 1-minute walkthrough.",
     details:
-      "Cubitron is from the planet of Cubicon where bots are the enemy of honest research. He is always on the hunt to verify good humans who live there.",
+      "Cubitron verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute demonstration (3 validation states, 7 seconds each) or launch the interactive 3D solver directly.",
   },
   {
-    heading: "Puzzle 1 of 3",
+    heading: "Puzzle 1 of 3: Spatial Orientation",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
-    heading: "Puzzle 2 of 3",
+    heading: "Puzzle 2 of 3: Multi-Angle Alignment",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
-    heading: "Puzzle 3 of 3",
+    heading: "Puzzle 3 of 3: 3D Object Verification",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
@@ -195,28 +197,103 @@ export default function CubiconPage() {
 
   const [showLiveApp, setShowLiveApp] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [isVideoStarted, setIsVideoStarted] = useState(false);
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
   const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideAnimationKey, setSlideAnimationKey] = useState(0);
 
+  // Timed 1-minute preview states (3 states, 7 seconds each)
+  const [isPreviewRunning, setIsPreviewRunning] = useState(false);
+  const [isPreviewPaused, setIsPreviewPaused] = useState(false);
+  const [secondsRemaining, setSecondsRemaining] = useState(7);
+
+  // Automated 1-minute preview timer: 7 seconds per state across the 3 puzzle states
+  React.useEffect(() => {
+    if (!isPreviewRunning || isPreviewPaused || showLiveApp || showVideo) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          setCurrentSlide((slide) => {
+            if (slide < 3) {
+              setSlideAnimationKey((k) => k + 1);
+              return slide + 1;
+            } else {
+              setIsPreviewRunning(false);
+              return 3;
+            }
+          });
+          return 7;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPreviewRunning, isPreviewPaused, showLiveApp, showVideo]);
+
+  const handleStartPreview = () => {
+    setCurrentSlide(1);
+    setSlideAnimationKey((prev) => prev + 1);
+    setSecondsRemaining(7);
+    setIsPreviewRunning(true);
+    setIsPreviewPaused(false);
+  };
+
+  const handleTogglePause = () => {
+    setIsPreviewPaused((prev) => !prev);
+  };
+
+  const handleReplayPreview = () => {
+    setCurrentSlide(1);
+    setSlideAnimationKey((prev) => prev + 1);
+    setSecondsRemaining(7);
+    setIsPreviewRunning(true);
+    setIsPreviewPaused(false);
+  };
+
+  const handleCancelPreview = () => {
+    setIsPreviewRunning(false);
+    setIsPreviewPaused(false);
+    setCurrentSlide(0);
+    setSlideAnimationKey((prev) => prev + 1);
+    setSecondsRemaining(7);
+  };
+
   const handleNextSlide = () => {
     setCurrentSlide((prev) => (prev === SLIDES.length - 1 ? 0 : prev + 1));
     setSlideAnimationKey((prev) => prev + 1);
+    setSecondsRemaining(7);
   };
 
   const handlePrevSlide = () => {
     setCurrentSlide((prev) => (prev === 0 ? SLIDES.length - 1 : prev - 1));
     setSlideAnimationKey((prev) => prev + 1);
+    setSecondsRemaining(7);
   };
 
   const handleStartVideoClick = () => {
     setShowVideo(true);
+    setIsVideoStarted(false);
     setIsVideoCompleted(false);
     setShowLiveApp(false);
+    setIsPreviewRunning(false);
+  };
+
+  const handleStartPlayback = () => {
+    setIsVideoStarted(true);
+  };
+
+  const handleCancelVideo = () => {
+    setShowVideo(false);
+    setIsVideoStarted(false);
   };
 
   const handleSeeLiveClick = () => {
+    setIsPreviewRunning(false);
     setShowVideo(false);
     setIsIframeLoaded(false);
     setShowLiveApp(true);
@@ -649,12 +726,17 @@ export default function CubiconPage() {
                 <div className={styles.slideImageContainer}>
                   <img
                     src={SLIDES[currentSlide].image}
-                    alt={SLIDES[currentSlide].heading}
+                    alt={SLIDES[currentSlide].heading || "Cubicon Preview"}
                     className={styles.slideImage}
                   />
                 </div>
                 <div className={styles.slideDetailsContainer}>
                   <div>
+                    {currentSlide === 0 && (
+                      <div className={styles.slideMeta}>
+                        <Clock size={16} /> 1-MINUTE TIMED PREVIEW
+                      </div>
+                    )}
                     <h3 className={styles.slideTitle}>
                       {SLIDES[currentSlide].heading}
                     </h3>
@@ -666,37 +748,132 @@ export default function CubiconPage() {
                     </p>
                   </div>
 
-                  {currentSlide === SLIDES.length - 1 ? (
+                  {currentSlide === 0 ? (
                     <div className={styles.seeLiveCallout}>
-                      <span className={styles.seeLiveTitle}>
-                        Watch Video Demo First
-                      </span>
                       <button
                         className={styles.seeLiveBtn}
-                        onClick={handleStartVideoClick}
-                        title="Watch Cubicon Self-Running CDN Video Demo"
+                        onClick={handleStartPreview}
+                        title="Start 1-Minute Automated Preview"
                       >
-                        <Play size={18} fill="#ffffff" /> SEE CUBICON LIVE!
+                        <Play size={18} fill="#ffffff" /> START 1-MINUTE PREVIEW
                       </button>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                          justifyContent: "center",
+                          width: "100%",
+                        }}
+                      >
+                        <button
+                          className={styles.controlBtn}
+                          onClick={handleSeeLiveClick}
+                          title="Open Interactive 3D Solver Directly"
+                        >
+                          <Sparkles size={16} /> See It Live!
+                        </button>
+                        <button
+                          className={styles.controlBtn}
+                          onClick={handleStartVideoClick}
+                          title="Watch Full Video Demo"
+                        >
+                          <Video size={16} /> Watch Video Demo
+                        </button>
+                      </div>
                       <span className={styles.seeLiveSubtitle}>
-                        Watch the self-running CDN video preview
+                        Automated 3-state demonstration (7 seconds per state) with pause, replay, and cancel controls
                       </span>
                     </div>
                   ) : (
-                    currentSlide === 0 && (
-                      <div className={styles.seeLiveCallout}>
-                        <button
-                          className={styles.seeLiveBtn}
-                          onClick={handleStartVideoClick}
-                          title="Watch Cubicon Self-Running CDN Video Demo"
-                        >
-                          <Play size={18} fill="#ffffff" /> START
-                        </button>
-                        <span className={styles.seeLiveSubtitle}>
-                          See a One Minute Video Preview
-                        </span>
+                    <>
+                      <div className={styles.previewControlBar}>
+                        <div className={styles.previewControlTop}>
+                          <span className={styles.previewTimerBadge}>
+                            <Clock size={14} /> State {currentSlide} of 3 {isPreviewRunning ? `(${secondsRemaining}s)` : ""}
+                          </span>
+                          <div className={styles.previewActionButtons}>
+                            {isPreviewRunning && (
+                              <button
+                                className={styles.previewActionBtn}
+                                onClick={handleTogglePause}
+                                title={isPreviewPaused ? "Resume automated preview" : "Pause automated preview"}
+                              >
+                                {isPreviewPaused ? (
+                                  <>
+                                    <Play size={14} /> Resume
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pause size={14} /> Pause
+                                  </>
+                                )}
+                              </button>
+                            )}
+                            <button
+                              className={styles.previewActionBtn}
+                              onClick={handleReplayPreview}
+                              title="Replay from state 1"
+                            >
+                              <RotateCcw size={14} /> Replay
+                            </button>
+                            <button
+                              className={styles.previewCancelBtn}
+                              onClick={handleCancelPreview}
+                              title="Cancel preview and return to introduction"
+                            >
+                              <X size={14} /> Cancel
+                            </button>
+                            <button
+                              className={styles.previewLiveBtn}
+                              onClick={handleSeeLiveClick}
+                              title="Launch interactive 3D solver"
+                            >
+                              <Sparkles size={14} /> See It Live!
+                            </button>
+                          </div>
+                        </div>
+                        {isPreviewRunning && (
+                          <div className={styles.previewProgressBarContainer}>
+                            <div
+                              className={styles.previewProgressBarFill}
+                              style={{ width: `${(secondsRemaining / 7) * 100}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
-                    )
+
+                      {currentSlide === SLIDES.length - 1 && !isPreviewRunning && (
+                        <div className={styles.seeLiveCallout} style={{ marginTop: "1rem" }}>
+                          <span className={styles.seeLiveTitle}>
+                            Preview Complete
+                          </span>
+                          <button
+                            className={styles.seeLiveBtn}
+                            onClick={handleSeeLiveClick}
+                            title="Launch Interactive 3D Solver"
+                          >
+                            <Sparkles size={18} fill="#ffffff" /> TRY CUBICON LIVE!
+                          </button>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                              className={styles.controlBtn}
+                              onClick={handleReplayPreview}
+                              title="Replay Preview"
+                            >
+                              <RotateCcw size={14} /> Replay
+                            </button>
+                            <button
+                              className={styles.controlBtn}
+                              onClick={handleCancelPreview}
+                              title="Return to Intro"
+                            >
+                              <LogOut size={14} /> Back to Intro
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div className={styles.slideNavControls}>
@@ -718,6 +895,7 @@ export default function CubiconPage() {
                           onClick={() => {
                             setCurrentSlide(index);
                             setSlideAnimationKey((prev) => prev + 1);
+                            setSecondsRemaining(7);
                           }}
                           title={`Go to slide ${index + 1}`}
                         />
@@ -754,7 +932,7 @@ export default function CubiconPage() {
                   </span>
                 </div>
                 <div className={styles.appControls}>
-                  {!isVideoCompleted && (
+                  {!isVideoCompleted && isVideoStarted && (
                     <button
                       className={styles.skipBtn}
                       onClick={() => setIsVideoCompleted(true)}
@@ -772,6 +950,7 @@ export default function CubiconPage() {
                           : CUBICON_VIDEO_CDN_URL
                       );
                       setIsVideoCompleted(false);
+                      setIsVideoStarted(true);
                     }}
                     title="Reload Video Stream"
                   >
@@ -779,60 +958,90 @@ export default function CubiconPage() {
                   </button>
                   <button
                     className={styles.exitBtn}
-                    onClick={() => setShowVideo(false)}
-                    title="Return to Slideshow"
+                    onClick={handleCancelVideo}
+                    title="Return to Preview"
                   >
-                    <LogOut size={14} /> Back to Slideshow
+                    <LogOut size={14} /> Back to Preview
                   </button>
                 </div>
               </div>
 
               <div className={styles.videoBodyContainer}>
-                {!isVideoCompleted && (
-                  <button
-                    className={styles.floatingSkipBtn}
-                    onClick={() => setIsVideoCompleted(true)}
-                    title="Skip video preview"
-                  >
-                    <FastForward size={14} /> Skip Video
-                  </button>
-                )}
-
-                <video
-                  key={videoSrc}
-                  className={styles.videoElement}
-                  controls
-                  autoPlay
-                  playsInline
-                  src={videoSrc}
-                  onEnded={() => setIsVideoCompleted(true)}
-                  onError={() => {
-                    if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
-                      setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
-                    }
-                  }}
-                />
-
-                {isVideoCompleted && (
-                  <div className={styles.videoCompletionOverlay}>
-                    <span className={styles.videoBadge} style={{ marginBottom: "0.2rem" }}>
-                      <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
-                    </span>
-                    <div className={styles.videoCompletionTitle}>
-                      Automated Video Demonstration Complete
+                {!isVideoStarted ? (
+                  <div className={styles.videoOpeningCard}>
+                    <div className={styles.videoBadge}>
+                      <Video size={14} /> VIDEO PRESENTATION
                     </div>
-                    <div className={styles.videoCompletionText}>
-                      You have finished watching the self-running preview of Cubicon.
-                      Click the button below to launch the full interactive 3D spatial solver and validate your response yourself.
+                    <h3 className={styles.videoOpeningTitle}>
+                      Cubicon Self-Running Demonstration
+                    </h3>
+                    <p className={styles.videoOpeningDesc}>
+                      Watch an automated demonstration showing how Cubicon tests spatial perception and validates human participants against automated scripts.
+                    </p>
+                    <div className={styles.videoOpeningActions}>
+                      <button
+                        className={styles.startVideoBtn}
+                        onClick={handleStartPlayback}
+                      >
+                        <Play size={18} fill="#ffffff" /> Start Video
+                      </button>
+                      <button
+                        className={styles.cancelVideoBtn}
+                        onClick={handleCancelVideo}
+                      >
+                        <X size={18} /> Cancel
+                      </button>
                     </div>
-                    <button
-                      className={styles.tryItYourselfBtn}
-                      onClick={handleSeeLiveClick}
-                      title="Launch Interactive 3D Solver"
-                    >
-                      <Sparkles size={20} /> TRY IT YOURSELF NOW
-                    </button>
                   </div>
+                ) : (
+                  <>
+                    {!isVideoCompleted && (
+                      <button
+                        className={styles.floatingSkipBtn}
+                        onClick={() => setIsVideoCompleted(true)}
+                        title="Skip video preview"
+                      >
+                        <FastForward size={14} /> Skip Video
+                      </button>
+                    )}
+
+                    <video
+                      key={videoSrc}
+                      className={styles.videoElement}
+                      controls
+                      autoPlay
+                      playsInline
+                      src={videoSrc}
+                      onEnded={() => setIsVideoCompleted(true)}
+                      onError={() => {
+                        if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
+                          setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
+                        }
+                      }}
+                    />
+
+                    {isVideoCompleted && (
+                      <div className={styles.videoCompletionOverlay}>
+                        <span className={styles.videoBadge} style={{ marginBottom: "0.2rem" }}>
+                          <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
+                        </span>
+                        <div className={styles.videoCompletionTitle}>
+                          Automated Video Demonstration Complete
+                        </div>
+                        <div className={styles.videoCompletionText}>
+                          You have finished watching the self-running preview of Cubicon.
+                          Click the button below to launch the full interactive 3D spatial solver and validate your response yourself.
+                        </div>
+                        <button
+                          className={styles.tryItYourselfBtn}
+                          onClick={handleSeeLiveClick}
+                          title="Launch Interactive 3D Solver"
+                        >
+                          <Sparkles size={20} /> TRY IT YOURSELF NOW
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -1023,9 +1232,9 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Visual Validation Methods</h3>
               <p className={styles.cardText}>
-                Cubicon improves human survey participation through visual
-                validation methods that automated bots are incapable of
-                evaluating.
+                Cubicon strengthens human survey participation through visual
+                validation methods designed to resist automated script
+                evaluation.
               </p>
             </div>
 
@@ -1041,9 +1250,9 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Real Data from Real People</h3>
               <p className={styles.cardText}>
-                Ensure 100% confidence in your strategic decisions by basing
-                them on validated, high-fidelity responses from genuine human
-                participants.
+                Achieve high statistical confidence in your strategic decisions
+                by basing them on validated, high-fidelity responses from genuine
+                human participants.
               </p>
             </div>
           </div>

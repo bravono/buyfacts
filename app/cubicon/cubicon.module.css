@@ -1111,5 +1111,195 @@
   transform: translateY(-2px) scale(1.04);
 }
 
+/* 1-Minute Timed Preview Controls */
+.previewControlBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(23, 29, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
+  margin-top: 1.25rem;
+}
 
+.previewControlTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
 
+.previewTimerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 153, 0, 0.15);
+  color: var(--interactive-orange);
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.previewActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.previewActionBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.previewActionBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.previewCancelBtn {
+  background: rgba(234, 66, 95, 0.15);
+  color: #ff859b;
+  border: 1px solid rgba(234, 66, 95, 0.35);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.previewCancelBtn:hover {
+  background: rgba(234, 66, 95, 0.9);
+  color: #ffffff;
+  border-color: rgba(234, 66, 95, 1);
+}
+
+.previewLiveBtn {
+  background: linear-gradient(135deg, #14a38b 0%, #0d7a68 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(20, 163, 139, 0.3);
+}
+
+.previewLiveBtn:hover {
+  background: linear-gradient(135deg, #20d5b5 0%, #14a38b 100%);
+  transform: translateY(-1px);
+}
+
+.previewProgressBarContainer {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.previewProgressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9900, #20d5b5);
+  transition: width 1s linear;
+}
+
+/* Video Opening State */
+.videoOpeningCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1.5rem;
+  background: #0b0f14;
+  min-height: 420px;
+}
+
+.videoOpeningTitle {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.4rem;
+}
+
+.videoOpeningDesc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 540px;
+  line-height: 1.6;
+}
+
+.videoOpeningActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.startVideoBtn {
+  background: linear-gradient(135deg, #ff9900 0%, #ff5500 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.9rem 2rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 16px rgba(255, 153, 0, 0.4);
+  transition: all 0.25s ease;
+}
+
+.startVideoBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 85, 0, 0.5);
+}
+
+.cancelVideoBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.9rem 1.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s ease;
+}
+
+.cancelVideoBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+}

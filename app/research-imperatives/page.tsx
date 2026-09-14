@@ -74,7 +74,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
   {
     label: "Survey Engagement",
     tagline: "Optimize Question Value",
-    description: "Structuring engaging, high-yield survey instruments that maximize respondent completion rates while extracting deep, high-value data.",
+    description: "Structuring engaging, high-yield survey instruments that maximize participant completion rates while extracting deep, high-value data.",
     color: "var(--color-accent-green-mint)",
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
@@ -11,6 +13,7 @@ export default function Navbar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname() || "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,12 +35,17 @@ export default function Navbar({
     setIsMobileMenuOpen(false);
   };
 
+  const isHomeActive = pathname === "/";
+  const isInnovationsActive = pathname === "/products-services";
+  const isResearchActive = pathname === "/research-imperatives";
+  const isCubiconActive = pathname.startsWith("/cubicon");
+
   return (
     <header
       className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}
     >
       <div className={styles.container}>
-        <a href="#hero" className={styles.logo} id="nav-logo-link">
+        <Link href="/" className={styles.logo} id="nav-logo-link">
           <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "50px" }} />
           <div className={styles.logoTextWrapper}>
             <span className={styles.logoText}>
@@ -48,45 +56,65 @@ export default function Navbar({
               THE EARLY RECOGNITION COMPANY
             </span>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className={styles.navDesktop}>
-          <a href="/" className={styles.navLink} id="nav-link-time-savings">
-            HOME
-          </a>
-
-          <a
-            href="/products-services"
-            className={styles.navLink}
-            id="nav-link-products-services"
+          <Link
+            href="/"
+            className={`${styles.navLink} ${isHomeActive ? styles.navLinkActive : ""}`}
+            id="nav-link-home"
           >
-            PRODUCTS & SERVICES
-          </a>
-          <a
+            HOME
+          </Link>
+
+          <Link
+            href="/products-services"
+            className={`${styles.navLink} ${isInnovationsActive ? styles.navLinkActive : ""}`}
+            id="nav-link-innovations"
+          >
+            INNOVATIONS THAT SAVE TIME
+          </Link>
+
+          <Link
             href="/research-imperatives"
-            className={styles.navLink}
+            className={`${styles.navLink} ${isResearchActive ? styles.navLinkActive : ""}`}
             id="nav-link-research-imperatives"
           >
-            MARKET RESEARCH
-          </a>
+            RESEARCH IMPERATIVES
+          </Link>
 
-          <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
-            BAD BOTS
-          </a>
-          <a href="/#about" className={styles.navLink} id="nav-link-about">
+          <Link
+            href="/cubicon"
+            className={`${styles.navLink} ${isCubiconActive ? styles.navLinkActive : ""}`}
+            id="nav-link-cubicon"
+          >
+            CUBICON
+          </Link>
+
+          <Link
+            href="/#thought-leadership"
+            className={styles.navLink}
+            id="nav-link-thought-leadership"
+          >
+            THOUGHT LEADERSHIP
+          </Link>
+
+          <Link
+            href="/#about"
+            className={styles.navLink}
+            id="nav-link-about"
+          >
             ABOUT
-          </a>
+          </Link>
 
-          {/* Dropdown Portfolio Link */}
-
-          <a
+          <Link
             href="/#contact"
             className={`${styles.btnNav} btn btn-primary`}
             id="nav-link-contact"
           >
             CONTACT <ArrowUpRight size={14} />
-          </a>
+          </Link>
         </nav>
 
         {/* Mobile Hamburger Toggle */}
@@ -105,54 +133,62 @@ export default function Navbar({
         className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.open : ""}`}
       >
         <nav className={styles.navMobile}>
-          <a
+          <Link
             href="/"
             onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
+            className={`${styles.mobileNavLink} ${isHomeActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-home"
           >
             HOME
-          </a>
-          <a
+          </Link>
+          <Link
             href="/products-services"
             onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
-            id="mob-link-products-services"
+            className={`${styles.mobileNavLink} ${isInnovationsActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-innovations"
           >
-            PRODUCTS & SERVICES
-          </a>
-          <a
+            INNOVATIONS THAT SAVE TIME
+          </Link>
+          <Link
             href="/research-imperatives"
             onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
+            className={`${styles.mobileNavLink} ${isResearchActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-research-imperatives"
           >
             RESEARCH IMPERATIVES
-          </a>
-          <a
+          </Link>
+          <Link
             href="/cubicon"
             onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
+            className={`${styles.mobileNavLink} ${isCubiconActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-cubicon"
           >
-            BAD BOTS
-          </a>
-          <a
+            CUBICON
+          </Link>
+          <Link
+            href="/#thought-leadership"
+            onClick={closeMobileMenu}
+            className={styles.mobileNavLink}
+            id="mob-link-thought-leadership"
+          >
+            THOUGHT LEADERSHIP
+          </Link>
+          <Link
             href="/#about"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
             id="mob-link-about"
           >
             ABOUT
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#contact"
             onClick={closeMobileMenu}
             className={`${styles.mobileBtnNav} btn btn-primary`}
             id="mob-link-contact"
           >
             CONTACT <ArrowUpRight size={18} />
-          </a>
+          </Link>
         </nav>
       </div>
     </header>

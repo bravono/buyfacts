@@ -112,7 +112,7 @@ export default function Home() {
     {
       id: "human-validation",
       title: "Human Validation",
-      subTitle: "Confirm That Survey Respondents Are Real People",
+      subTitle: "Confirm That Survey Participants Are Real People",
       icon: <ShieldCheck size={32} />,
       iconColor: "#14a38b", // Teal
       bgColor: "rgba(20, 163, 139, 0.08)",

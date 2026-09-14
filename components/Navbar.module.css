@@ -107,6 +107,15 @@
   width: 100%;
 }
 
+.navLinkActive {
+  color: var(--interactive-blue);
+  font-weight: 700;
+}
+
+.navLinkActive::after {
+  width: 100%;
+}
+
 .btnNav {
   padding: 0.55rem clamp(0.9rem, 1.2vw, 1.3rem);
   font-size: clamp(0.8rem, 0.88vw, 0.9rem);

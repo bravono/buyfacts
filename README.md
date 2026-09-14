@@ -218,6 +218,58 @@ Runs the automated test suite verifying database models, conversion matching log
 
 ---
 
+## 8. Site Navigation & Dashboard Architecture (Sections 4, 6, 15)
+
+### Standardized Navigation Menu
+The navigation header provides exact parity across desktop and mobile devices with 7 primary destinations:
+1. `HOME` (`/`)
+2. `INNOVATIONS THAT SAVE TIME` (`/products-services`, replaces legacy "Products and Services")
+3. `RESEARCH IMPERATIVES` (`/research-imperatives`, replaces legacy "Market Research")
+4. `CUBICON` (`/cubicon`, replaces legacy "Bad Bots")
+5. `THOUGHT LEADERSHIP` (`/#thought-leadership`)
+6. `ABOUT` (`/#about`)
+7. `CONTACT` (`/#contact`)
+
+All navigation links support dynamic active state indication via `usePathname()`. Deprecated routes and broken `/services?tab=...` links have been purged.
+
+### Dashboard & Media Player Model
+The dashboard and media player provide three standardized action choices at the base of the player window:
+1. **Video**: User-initiated video presentation with an animated opening state, explicit "Start Video" and "Cancel" buttons, "Skip Video", "Reload Video", and next-step instructions upon completion.
+2. **In Depth**: Presents an executive document preview modal with title, estimated reading time, file format, and key takeaways before download confirmation. Preserves selected item highlight on the dashboard upon completion.
+3. **Talk to Us**: Direct navigation to `/#contact`.
+
+---
+
+## 9. Cubicon 1-Minute Timed Preview & Copy Alignment (Sections 7.1, 7.2, 7.3)
+
+### 1-Minute Timed Preview Controller
+Runs directly on the `/cubicon` viewport without navigating away:
+- Explicit "1-Minute Preview" disclosure and introduction prior to initiation.
+- 3 automated puzzle states (Spatial Orientation, Multi-Angle Alignment, 3D Object Verification) allocated 7 seconds per state with an animated countdown progress bar.
+- Interactive playback controls:
+  - **Pause / Resume**: Toggles preview progression and countdown.
+  - **Replay**: Re-initializes state progression from Puzzle 1.
+  - **Cancel**: Instantly halts preview and returns user to the introduction slide without scrolling or losing page position.
+  - **See It Live**: Smoothly launches the embedded 3D spatial solver.
+
+### Methodology Terminology & Claims
+- Replaced legacy "respondent" / "respondents" terminology with "participant" / "participants" throughout all customer-facing interfaces.
+- Qualified absolute statements (such as "bots are incapable of evaluating" and "Ensure 100% confidence") with rigorous methodological language focused on multi-dimensional visual validation and high statistical confidence.
+
+---
+
+## 10. Form Pipeline, Email Verification & Anti-Abuse (Sections 8, 9, 13)
+
+- **Business Email Enforcement**: Founding-client and corporate inquiries require non-free business email domains (`lib/validation/forms.ts`).
+- **Hold Pipeline for Unverified Inquiries**: Inquiries submitted through `/api/contact` are held in the `EmailVerification` database table with a unique verification token until the user clicks the confirmation link in their email. Upon verification, the inquiry is forwarded to `inquiry@buyfacts.com`.
+- **Automated Verification Reminders**: Unverified inquiries receive a friendly reminder after 12 hours (`/api/verify-email?action=check-reminders`).
+- **Non-Anonymous Feedback**: All feedback submissions mandate full name and valid email address.
+- **Anti-Abuse Protections**:
+  - Hidden honeypot fields (`website`, `company_url`) across all public forms.
+  - Sliding-window in-memory IP rate limiter (`lib/security/rate-limiter.ts`) protecting form endpoints from bot flood attacks.
+
+---
+
 ## 7. Cubicon Embedded 3D Solver Architecture
 
 The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from `public/cubicon-app/`:
@@ -230,5 +282,3 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
   - `CUBICON_SET_FULLSCREEN`: Dispatched from host to iframe to sync canvas FOV and object scaling dynamically.
 - **Dedicated Routes**:
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
-
-
