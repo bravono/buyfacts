@@ -186,6 +186,13 @@ const SLIDES: SlideItem[] = [
   },
 ];
 
+const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
+  0: "/cubicon-app/arts/ballon.webp",
+  1: "/cubicon-app/arts/Puzzle1_explainer.webp",
+  2: "/cubicon-app/arts/Puzzle2_explainer.webp",
+  3: "/cubicon-app/arts/Puzzle3_explainer.webp",
+};
+
 const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
 const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
@@ -745,6 +752,14 @@ export default function CubiconPage() {
                     src={SLIDES[currentSlide].image}
                     alt={SLIDES[currentSlide].heading || "Cubicon Preview"}
                     className={styles.slideImage}
+                    onError={(e) => {
+                      const fallback =
+                        SLIDE_FALLBACK_IMAGES[currentSlide] ||
+                        "/cubicon-app/arts/ballon.webp";
+                      if (e.currentTarget.src !== fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
                   />
                 </div>
                 <div className={styles.slideDetailsContainer}>
