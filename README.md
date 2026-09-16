@@ -488,3 +488,44 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
   - `CUBICON_SET_FULLSCREEN`: Dispatched from host to iframe to sync canvas FOV and object scaling dynamically.
 - **Dedicated Routes**:
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
+
+---
+
+## 11. Reusable Triplet Button Component & Vibrant Color System
+
+### Component Overview
+The `TripletButtonGroup` and `TripletButton` components (`components/TripletButton.tsx`, `components/TripletButton.module.css`) provide high-vitality, tactile interactive pathways for key site destinations.
+
+### Key Features
+1. **Clear Button Affordance**:
+   - Distinct rounded pill button container with subtle 3D top-shimmer, active click press response (`translateY(2px) scale(0.985)`), and directional action arrows.
+   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-rotation.
+2. **Brief Text Below**:
+   - Descriptive captions sit directly below each button, answering stakeholder usability requirements so visitors immediately understand both the destination purpose and interactive affordance.
+3. **CDN Icon Support & Fallbacks**:
+   - Accepts direct CDN icon URLs (`iconUrl`) with automated image error fallback (`onError`) to high-resolution Lucide React vector icons.
+4. **Vibrant Color Tokens**:
+   - Expanded global CSS color system in `app/globals.css`:
+     - `--vibrant-orange-gradient` and `--vibrant-orange-glow` (warm sunset amber for Early Recognition)
+     - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
+     - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
+     - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
+5. **Component API**:
+   ```typescript
+   export interface TripletButtonItem {
+     id: string;
+     title: string;
+     tagline: string; // Brief text below the button
+     href: string;
+     iconUrl?: string; // Optional CDN icon URL
+     fallbackIcon?: React.ReactNode;
+     iconAlt?: string;
+     theme?: "orange" | "blue" | "purple" | "teal";
+     badge?: string;
+     external?: boolean;
+     actionHint?: string;
+   }
+   ```
+6. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` validating specs, CDN fallbacks, link security, and layout defaults.
+

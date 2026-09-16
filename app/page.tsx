@@ -23,6 +23,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import styles from "./page.module.css";
+import TripletButtonGroup, { TripletButtonItem } from "@/components/TripletButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
@@ -58,6 +59,40 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+  // Hero Triplet Button Pathways
+  const heroTripletButtons: TripletButtonItem[] = [
+    {
+      id: "early-recognition",
+      title: "Early Recognition",
+      tagline: "What is beginning to matter?",
+      href: "/products-services",
+      theme: "orange",
+      fallbackIcon: <TrendingUp size={20} />,
+      iconUrl: "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1789469826637-6ip5wl-Early_Recognition_Locon_APPROVED.png", // Ready for CDN icon URL
+      actionHint: "Explore Recognition",
+    },
+    {
+      id: "story-based-research",
+      title: "Story-Based Research",
+      tagline: "What can we learn from people who actually know and experience it?",
+      href: "/research-imperatives",
+      theme: "blue",
+      fallbackIcon: <FileText size={20} />,
+      iconUrl: "", // Ready for CDN icon URL
+      actionHint: "Explore Research",
+    },
+    {
+      id: "triad",
+      title: "TRIAD",
+      tagline: "How can we capture differences in perspective so patterns can emerge?",
+      href: "/products-services#triad",
+      theme: "purple",
+      fallbackIcon: <Compass size={20} />,
+      iconUrl: "", // Ready for CDN icon URL
+      actionHint: "Explore TRIAD",
+    },
+  ];
 
   // The 8 Portfolio Cards matching Section 2 of the mockup image
   const portfolioCards: ServiceCardData[] = [
@@ -254,11 +289,6 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
-            <div className={styles.heroEyebrow}>
-              <span className={styles.heroEyebrowDot}></span>
-              BuyFacts, Inc
-              <span className={styles.heroEyebrowDot}></span>
-            </div>
             <h1 className={styles.heroTitle}>
               The Early <span className={styles.heroHighlight}>Recognition</span> Company
             </h1>
@@ -266,121 +296,8 @@ export default function Home() {
               Saving You Time So You{" "}
               <span className={styles.heroSubtitleHighlight}>Have the Time</span>
             </p>
-            
-
-            <div className={styles.shoutoutWrapper}>
-              <a href="/cubicon" className={styles.shoutoutBtn}>
-                Click Here to Beat the Survey Bots
-              </a>
-            </div>
-
-            <div className={styles.choiceGrid}>
-              <a href="/services" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <TrendingUp className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>Early Recognition</h3>
-                <p className={styles.choiceDesc}>What is beginning to matter?</p>
-              </a>
-              
-              <a href="/thought-leadership" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <FileText className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>Story-Based Research</h3>
-                <p className={styles.choiceDesc}>What can we learn from people who actually know and experience it?</p>
-              </a>
-
-              <a href="/services" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <Compass className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>TRIAD</h3>
-                <p className={styles.choiceDesc}>How can we capture differences in perspective so patterns can emerge?</p>
-              </a>
-            </div>
-
-            <p className={styles.heroFootnote}>
-              Recognize meaningful patterns in human experience earlier.
-            </p>
+            {/* Reusable Vibrant Triplet Button Group with brief text below */}
+            <TripletButtonGroup items={heroTripletButtons} />
           </div>
         </div>
 

@@ -1,0 +1,258 @@
+/* Triplet Button & Group Styles */
+
+.tripletGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+  width: 100%;
+  margin: 1.5rem auto;
+}
+
+.tripletGrid[data-columns="1"] {
+  grid-template-columns: 1fr;
+  max-width: 440px;
+}
+
+.tripletGrid[data-columns="2"] {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 800px;
+}
+
+.tripletItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  width: 100%;
+}
+
+/* Tactile Vibrant Button Base */
+.tripletBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 64px;
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background 0.25s ease;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle top-light shimmer inside button for glossy 3D snap */
+.tripletBtn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.02));
+  border-top-left-radius: 999px;
+  border-top-right-radius: 999px;
+  pointer-events: none;
+}
+
+/* Tactile press response */
+.tripletBtn:hover {
+  transform: translateY(-4px);
+  color: #ffffff;
+}
+
+.tripletBtn:active {
+  transform: translateY(2px) scale(0.985);
+  transition-duration: 0.08s;
+}
+
+/* Theme: Vibrant Orange (Early Recognition) */
+.themeOrange {
+  background: var(--vibrant-orange-gradient);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px -4px var(--vibrant-orange-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.themeOrange:hover {
+  box-shadow: 0 14px 30px -4px rgba(255, 106, 0, 0.55), 0 0 0 2px rgba(255, 145, 0, 0.4);
+}
+
+/* Theme: Vibrant Blue (Story-Based Research) */
+.themeBlue {
+  background: var(--vibrant-blue-gradient);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px -4px var(--vibrant-blue-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.themeBlue:hover {
+  box-shadow: 0 14px 30px -4px rgba(0, 180, 216, 0.55), 0 0 0 2px rgba(0, 180, 216, 0.4);
+}
+
+/* Theme: Vibrant Purple (TRIAD) */
+.themePurple {
+  background: var(--vibrant-purple-gradient);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px -4px var(--vibrant-purple-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.themePurple:hover {
+  box-shadow: 0 14px 30px -4px rgba(168, 85, 247, 0.55), 0 0 0 2px rgba(168, 85, 247, 0.4);
+}
+
+/* Theme: Vibrant Teal */
+.themeTeal {
+  background: var(--vibrant-teal-gradient);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px -4px var(--vibrant-teal-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.themeTeal:hover {
+  box-shadow: 0 14px 30px -4px rgba(0, 196, 159, 0.55), 0 0 0 2px rgba(0, 196, 159, 0.4);
+}
+
+/* Icon Container inside the button */
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tripletBtn:hover .iconWrapper {
+  transform: scale(1.12) rotate(4deg);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.cdnIcon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.fallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+/* Label text inside button */
+.btnLabel {
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+  flex: 1;
+}
+
+/* Action indicator arrow */
+.arrowWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.6rem;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.tripletBtn:hover .arrowWrapper {
+  transform: translateX(4px);
+}
+
+/* Optional Top-Edge Pill Badge */
+.itemBadge {
+  position: absolute;
+  top: -10px;
+  right: 18px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Brief Caption Below the Button */
+.captionBox {
+  margin-top: 0.85rem;
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.captionText {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin: 0;
+  transition: color 0.2s ease;
+}
+
+.tripletItem:hover .captionText {
+  color: var(--text-color);
+}
+
+.captionHint {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 0.35rem;
+  transition: color 0.2s ease;
+}
+
+.tripletItem:hover .captionHint {
+  color: var(--interactive-blue);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 960px) {
+  .tripletGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .tripletGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .tripletBtn {
+    min-height: 58px;
+    padding: 0.75rem 1.2rem;
+    font-size: 0.98rem;
+  }
+}

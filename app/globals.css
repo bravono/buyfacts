@@ -64,6 +64,35 @@
   --color-accent-magenta: #ed40ed;
   --color-accent-crimson: #ea425f;
   --color-accent-plum: #532254;
+
+  /* Vibrant Color System */
+  --vibrant-orange: #ff6a00;
+  --vibrant-orange-bright: #ff9100;
+  --vibrant-orange-glow: rgba(255, 106, 0, 0.35);
+  --vibrant-orange-gradient: linear-gradient(135deg, #ff8500 0%, #ff5500 100%);
+  --vibrant-orange-surface: rgba(255, 106, 0, 0.06);
+  --vibrant-orange-border: rgba(255, 106, 0, 0.3);
+
+  --vibrant-blue: #0084d6;
+  --vibrant-blue-bright: #00b4d8;
+  --vibrant-blue-glow: rgba(0, 180, 216, 0.35);
+  --vibrant-blue-gradient: linear-gradient(135deg, #00507b 0%, #00a8cc 100%);
+  --vibrant-blue-surface: rgba(0, 137, 210, 0.06);
+  --vibrant-blue-border: rgba(0, 137, 210, 0.3);
+
+  --vibrant-purple: #8b5cf6;
+  --vibrant-purple-bright: #a855f7;
+  --vibrant-purple-glow: rgba(168, 85, 247, 0.35);
+  --vibrant-purple-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --vibrant-purple-surface: rgba(139, 92, 246, 0.06);
+  --vibrant-purple-border: rgba(139, 92, 246, 0.3);
+
+  --vibrant-teal: #00c49f;
+  --vibrant-teal-bright: #10b981;
+  --vibrant-teal-glow: rgba(0, 196, 159, 0.35);
+  --vibrant-teal-gradient: linear-gradient(135deg, #0d9488 0%, #10b981 100%);
+  --vibrant-teal-surface: rgba(0, 196, 159, 0.06);
+  --vibrant-teal-border: rgba(0, 196, 159, 0.3);
 }
 
 /* Product Specific Color Registries */
