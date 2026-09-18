@@ -238,6 +238,11 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
 
   const puzzleType = normalizePuzzleType(task.question_type);
 
+  // Drag puzzles require at least 2 clicks (start and end). Fewer than 2 clicks is an instant failure.
+  if (puzzleType === "drag" && clicksList.length < 2) {
+    return "f";
+  }
+
   // Single-click puzzles: user is expected to click once. Multiple clicks fail immediately.
   if (puzzleType === "click") {
     if (clicksList.length !== 1) {
