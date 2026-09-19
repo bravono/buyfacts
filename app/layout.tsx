@@ -32,7 +32,7 @@ export default function RootLayout({
           id="apollo-tracker"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script");o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,o.onload=function(){window.trackingFunctions.onLoad({appId:"6a6cb0a231116f00207872d3"})},document.head.appendChild(o)}initApollo();`,
+            __html: `function initApollo(){if(window.location.hostname==='localhost'||/^[0-9.]+$/.test(window.location.hostname))return;var n=Math.random().toString(36).substring(7),o=document.createElement("script");o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,o.onload=function(){if(window.trackingFunctions)window.trackingFunctions.onLoad({appId:"6a6cb0a231116f00207872d3"})},document.head.appendChild(o)}initApollo();`,
           }}
         />
       </head>
