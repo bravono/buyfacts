@@ -1,4 +1,5 @@
 "use client";
+import TenetsExplorer from "@/components/TenetsExplorer";
 
 import React, { useState } from "react";
 import ComingSoon from "./ComingSoon";
@@ -973,6 +974,7 @@ export default function Home() {
       </section>
 
       <Footer />
-    </div>
+      <TenetsExplorer />
+</div>
   );
 }

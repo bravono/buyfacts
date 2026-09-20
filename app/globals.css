@@ -1,6 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root {
+  /* ========================================================
+     SRA 10-Color Semantic Design System (Robert's Way)
+     Clean, crisp Adobe-style tokens with soft-tint counterparts
+     ======================================================== */
+  --sra-pink: #F8A5C2;
+  --sra-pink-bg: rgba(248, 165, 194, 0.12);
+  --sra-pink-border: rgba(248, 165, 194, 0.35);
+
+  --sra-red: #E84118;
+  --sra-red-bg: rgba(232, 65, 24, 0.10);
+  --sra-red-border: rgba(232, 65, 24, 0.30);
+
+  --sra-orange: #E67E22;
+  --sra-orange-bg: rgba(230, 126, 34, 0.10);
+  --sra-orange-border: rgba(230, 126, 34, 0.30);
+
+  --sra-yellow: #F1C40F;
+  --sra-yellow-bg: rgba(241, 196, 15, 0.14);
+  --sra-yellow-border: rgba(241, 196, 15, 0.35);
+
+  --sra-spring-green: #2ECC71;
+  --sra-spring-green-bg: rgba(46, 204, 113, 0.10);
+  --sra-spring-green-border: rgba(46, 204, 113, 0.30);
+
+  --sra-forest-green: #27AE60;
+  --sra-forest-green-bg: rgba(39, 174, 96, 0.10);
+  --sra-forest-green-border: rgba(39, 174, 96, 0.30);
+
+  --sra-sky-blue: #00A8FF;
+  --sra-sky-blue-bg: rgba(0, 168, 255, 0.10);
+  --sra-sky-blue-border: rgba(0, 168, 255, 0.30);
+
+  --sra-royal-blue: #273C75;
+  --sra-royal-blue-bg: rgba(39, 60, 117, 0.10);
+  --sra-royal-blue-border: rgba(39, 60, 117, 0.30);
+
+  --sra-fuscia: #E056FD;
+  --sra-fuscia-bg: rgba(224, 86, 253, 0.10);
+  --sra-fuscia-border: rgba(224, 86, 253, 0.30);
+
+  --sra-purple: #8C7AE6;
+  --sra-purple-bg: rgba(140, 122, 230, 0.12);
+  --sra-purple-border: rgba(140, 122, 230, 0.30);
+
   --font-sans: 'Josefin Sans', sans-serif;
   --font-display: 'Josefin Sans', sans-serif;
 
