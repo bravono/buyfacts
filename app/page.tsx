@@ -313,6 +313,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SRA Color Spectrum & Robert's Way Ten Tenets */}
+      <section id="roberts-way" style={{ backgroundColor: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0", padding: "80px 0 60px 0", scrollMarginTop: "100px", position: "relative", zIndex: 1 }}>
+        <TenetsExplorer />
+      </section>
+
       {/* SECTION 2: A Thought Leadership Portfolio (8 Cards Grid) */}
       <section
         className="section-light"
@@ -974,7 +979,6 @@ export default function Home() {
       </section>
 
       <Footer />
-      <TenetsExplorer />
 </div>
   );
 }
