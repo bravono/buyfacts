@@ -1,6 +1,9 @@
 .main {
-  width: 100%;
-  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
 }
 
 .container {
@@ -13,7 +16,10 @@
 /* Hero Section */
 .hero {
   position: relative;
-  min-height: 95vh;
+  min-height: auto;
+  max-height: 100vh;
+  padding-top: 80px;
+  padding-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,13 +54,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--interactive-orange);
-  margin-bottom: 1.4rem;
-  padding: 0.45rem 1.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 1rem;
   border: 1px solid rgba(255, 153, 0, 0.3);
   border-radius: 999px;
   background: rgba(255, 153, 0, 0.07);
@@ -72,10 +78,10 @@
 
 .heroTitle {
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 3.5vw, 2rem);
+  font-size: clamp(1.5rem, 2.8vw, 2.2rem);
   font-weight: 600;
   line-height: 1;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.4rem;
   letter-spacing: -0.02em;
   color: var(--text-color);
 }
@@ -86,12 +92,12 @@
 
 .heroSubtitle {
   font-family: var(--font-sans);
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
   font-weight: 500;
   line-height: 1;
   color: var(--text-muted);
   letter-spacing: -0.01em;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .heroSubtitleHighlight {
@@ -165,8 +171,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
   width: 100%;
 }
 
@@ -186,7 +192,7 @@
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  min-height: 220px;
+  min-height: auto;
   border-radius: var(--radius-md); /* Rounded corners */
 }
 
@@ -355,11 +361,12 @@
 
 /* Scroll indicator mockup */
 .scrollIndicator {
-  position: absolute;
-  bottom: .5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  margin-top: 3.5rem !important;
+  margin-bottom: 0.5rem !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .scrollCircle {
@@ -464,365 +471,739 @@
   gap: 4rem 2rem;
 }
 
+
+
+
+
+
+
+
+
+/* ----------------------------------------------------
+ * ULTIMATE REFINED DECK STYLES
+ * ---------------------------------------------------- */
+
+/* 1. PORTFOLIO */
+.portfolio {
+  height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.portfolioInner {
+  width: 100% !important;
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+}
+
+.servicesGrid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: clamp(8px, 1.4vh, 14px) 14px !important;
+  width: 100% !important;
+}
+
 .serviceCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 1rem;
-  transition: var(--transition-bounce);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding: clamp(10px, 1.5vh, 14px) 10px !important;
+  background: #FFFFFF !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(0, 80, 123, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .serviceCard:hover {
-  transform: translateY(-6px);
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 22px rgba(0, 80, 123, 0.12) !important;
 }
 
-.iconCircle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  margin-bottom: 1.8rem;
-  border: 1.5px solid currentColor;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  transition: var(--transition-bounce);
+.serviceCard:nth-child(1) { border: 1.5px solid #FFEDD5 !important; }
+.serviceCard:nth-child(1) .serviceIconWrapper { background: #FFF7ED !important; border-color: #F97316 !important; color: #EA580C !important; }
+.serviceCard:nth-child(1) .serviceTitle { color: #EA580C !important; }
+
+.serviceCard:nth-child(2) { border: 1.5px solid #DBEAFE !important; }
+.serviceCard:nth-child(2) .serviceIconWrapper { background: #EFF6FF !important; border-color: #3B82F6 !important; color: #2563EB !important; }
+.serviceCard:nth-child(2) .serviceTitle { color: #2563EB !important; }
+
+.serviceCard:nth-child(3) { border: 1.5px solid #CCFBF1 !important; }
+.serviceCard:nth-child(3) .serviceIconWrapper { background: #F0FDFA !important; border-color: #14B8A6 !important; color: #0D9488 !important; }
+.serviceCard:nth-child(3) .serviceTitle { color: #0D9488 !important; }
+
+.serviceCard:nth-child(4) { border: 1.5px solid #F3E8FF !important; }
+.serviceCard:nth-child(4) .serviceIconWrapper { background: #FAF5FF !important; border-color: #A855F7 !important; color: #9333EA !important; }
+.serviceCard:nth-child(4) .serviceTitle { color: #9333EA !important; }
+
+.serviceCard:nth-child(5) { border: 1.5px solid #FEF3C7 !important; }
+.serviceCard:nth-child(5) .serviceIconWrapper { background: #FFFBEB !important; border-color: #F59E0B !important; color: #D97706 !important; }
+.serviceCard:nth-child(5) .serviceTitle { color: #D97706 !important; }
+
+.serviceCard:nth-child(6) { border: 1.5px solid #E0F2FE !important; }
+.serviceCard:nth-child(6) .serviceIconWrapper { background: #F0F9FF !important; border-color: #0EA5E9 !important; color: #0284C7 !important; }
+.serviceCard:nth-child(6) .serviceTitle { color: #0284C7 !important; }
+
+.serviceCard:nth-child(7) { border: 1.5px solid #D1FAE5 !important; }
+.serviceCard:nth-child(7) .serviceIconWrapper { background: #ECFDF5 !important; border-color: #10B981 !important; color: #059669 !important; }
+.serviceCard:nth-child(7) .serviceTitle { color: #059669 !important; }
+
+.serviceCard:nth-child(8) { border: 1.5px solid #E0E7FF !important; }
+.serviceCard:nth-child(8) .serviceIconWrapper { background: #EEF2FF !important; border-color: #6366F1 !important; color: #4F46E5 !important; }
+.serviceCard:nth-child(8) .serviceTitle { color: #4F46E5 !important; }
+
+.serviceIconWrapper {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  border-radius: 50% !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 6px auto !important;
 }
 
-.serviceCard:hover .iconCircle {
-  transform: scale(1.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.serviceIconWrapper svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
 }
 
-.cardTitle {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--interactive-blue); /* Brand Blue */
-  margin-bottom: 0.6rem;
+.serviceTitle {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 2px !important;
 }
 
-.cardSubtitle {
-  font-size: 0.95rem;
-  color: var(--color-grey-4);
-  line-height: 1.5;
-  max-width: 240px;
+/* 2. OUR TEAM - PREMIUM CIRCULAR AVATARS (NO CROPPED FACES) */
+.teamSection {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #FFFFFF !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
 }
 
-.cardMoreDetailsLink {
-  margin-top: 1.2rem;
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--interactive-orange);
-  letter-spacing: 0.08em;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: var(--transition-bounce);
-  text-transform: uppercase;
+.teamInner {
+  width: 100% !important;
+  max-width: 940px !important;
+  margin: 0 auto !important;
 }
 
-.cardMoreDetailsLink:hover {
-  color: var(--interactive-blue);
-  transform: translateX(3px);
-}
-
-/* Section 3: About Us (Teal background section matching image) */
-.tealTitleWrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  margin-bottom: 1rem;
-}
-
-.titleLine {
-  display: inline-block;
-  width: 60px;
-  height: 2px;
-  background-color: var(--border-color);
-}
-
-.tealTitle {
-  font-family: var(--font-display);
-  font-size: 3rem;
-  font-weight: 800;
-  color: var(--interactive-blue);
-}
-
-.tealDesc {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
-  max-width: 780px;
-  margin: 0 auto;
-}
-
-/* Team Grid Layout */
 .teamGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+  width: 100% !important;
 }
 
-.memberCard {
-  background-color: #ffffff; /* Clean white card background */
-  border-radius: var(--radius-md);
-  padding: 0; /* Clear padding so image flushes to borders */
-  overflow: hidden; /* Clips image top corners */
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  position: relative;
-  transition: var(--transition-bounce);
+.teamCard {
+  padding: 14px 12px !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
 }
 
-.memberCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+/* Rounded Elegant Avatar That Never Crops Heads */
+.teamImageWrapper {
+  width: 90px !important;
+  height: 90px !important;
+  min-width: 90px !important;
+  min-height: 90px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin: 0 auto 10px auto !important;
+  border: 3px solid #00507B !important;
+  background: #F1F5F9 !important;
+  box-shadow: 0 3px 10px rgba(0, 80, 123, 0.15) !important;
 }
 
-.imageWrapper {
-  position: relative;
-  width: 100%;
-  height: 250px;
-  overflow: hidden;
+.teamImageWrapper img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 15% !important;
+  display: block !important;
 }
 
-.memberImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.teamName {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin-bottom: 2px !important;
 }
 
-.cardStampBadge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: white;
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
+.teamRole {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  color: #FF9900 !important;
+  margin-bottom: 6px !important;
 }
 
-.memberInfo {
-  padding: 2rem 1.8rem 2.5rem 1.8rem;
-  text-align: center;
+.teamBio {
+  font-size: 0.72rem !important;
+  line-height: 1.35 !important;
+  color: #64748B !important;
+  margin-bottom: 10px !important;
 }
 
-.memberName {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--text-color) !important;
-  margin-bottom: 0.3rem;
+.teamSocial {
+  display: flex !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  margin-top: auto !important;
 }
 
-.memberRole {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--interactive-blue) !important; /* Brand Blue */
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.2rem;
-  display: block;
+/* 3. CONTACT SECTION - BALANCED & EXECUTIVE */
+.contactSection {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #0A192F !important;
+  color: #FFFFFF !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
 }
 
-.memberBio {
-  font-size: 0.9rem;
-  color: var(--text-muted) !important;
-  line-height: 1.6;
+.contactContainer {
+  width: 100% !important;
+  max-width: 960px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1.1fr !important;
+  gap: 36px !important;
+  align-items: center !important;
+  margin: 0 auto !important;
 }
 
-/* Contact Us Section */
-.contactTagline {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-  display: block;
+.contactLeft {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
 }
 
-.contactGrid {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 4rem;
-  align-items: start;
+.contactTitle {
+  color: #FFFFFF !important;
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 6px !important;
 }
 
-.contactInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+.contactDesc {
+  color: #CBD5E1 !important;
+  font-size: 0.8rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 12px !important;
 }
 
-.contactHeaderTitle {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-}
-
-.contactHeaderDesc {
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.6;
-}
-
-.infoItem {
-  display: flex;
-  gap: 1.2rem;
-  align-items: flex-start;
-}
-
-.infoIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: var(--bg-alt);
-  border: 1px solid var(--border-color);
-  color: var(--interactive-orange);
-  flex-shrink: 0;
-}
-
-.infoTextTitle {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 0.3rem;
-  color: var(--text-color);
-}
-
-.infoTextVal {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.contactForm {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.contactFormCard {
+  background: #FFFFFF !important;
+  padding: 14px 18px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 2px !important;
 }
 
-.label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.formLabel {
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  margin-bottom: 2px !important;
+  display: block !important;
+  letter-spacing: 0.03em !important;
 }
 
-.input, .textarea {
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1.2rem;
-  color: var(--text-color);
-  font-size: 0.95rem;
-  transition: var(--transition-smooth);
+.formInput,
+.formSelect {
+  width: 100% !important;
+  height: 30px !important;
+  padding: 0 8px !important;
+  font-size: 0.78rem !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 6px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  box-sizing: border-box !important;
 }
 
-.input:focus, .textarea:focus {
-  outline: none;
-  background: var(--bg-color);
-  border-color: var(--interactive-orange);
-  box-shadow: 0 0 12px var(--primary-glow);
+.formTextarea {
+  width: 100% !important;
+  height: 44px !important;
+  padding: 4px 8px !important;
+  font-size: 0.78rem !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 6px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  resize: none !important;
+  box-sizing: border-box !important;
 }
 
-.textarea {
-  resize: vertical;
-  min-height: 150px;
+.checkboxLabel {
+  font-size: 0.65rem !important;
+  color: #475569 !important;
+  margin: 2px 0 4px 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 .submitBtn {
-  margin-top: 1rem;
-  width: 100%;
+  width: 100% !important;
+  height: 34px !important;
+  background: #FF9900 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  border-radius: 999px !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-top: 2px !important;
 }
 
-.formStatus {
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  text-align: center;
-  font-weight: 500;
+
+/* === STRICT TEAM AND CONTACT FINAL FIX === */
+
+/* OUR TEAM - CLEAN 3-COLUMN RESPONSIVE GRID */
+.teamSection {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #FFFFFF !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
 }
 
-.formStatusSuccess {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #34d399;
+.teamInner {
+  width: 100% !important;
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
-.formStatusError {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #f87171;
+.teamTitle {
+  font-size: clamp(1.3rem, 2.6vh, 1.6rem) !important;
+  font-weight: 800 !important;
+  color: #00507B !important;
+  margin: 0 0 2px 0 !important;
 }
 
-/* Responsive Overrides */
-@media (max-width: 1024px) {
-  .heroTitle {
-    white-space: nowrap;
-  }
-  
-  .servicesGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .teamGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .choiceGrid {
-    gap: 1.2rem;
-  }
+.teamSubtitle {
+  font-size: clamp(0.72rem, 1.3vh, 0.85rem) !important;
+  color: #64748B !important;
+  margin: 0 !important;
 }
 
-@media (max-width: 768px) {
-  .servicesGrid {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
+.teamGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: clamp(12px, 2vw, 20px) !important;
+  width: 100% !important;
+}
 
-  .teamGrid {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
-  
-  .contactGrid {
-    grid-template-columns: 1fr;
-    gap: 4rem;
-  }
-  
-  .heroTitle {
-    font-size: 1.8rem;
-    white-space: normal; /* wraps to two lines on mobile */
-  }
+.teamCard {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  padding: clamp(10px, 1.6vh, 14px) !important;
+  box-shadow: 0 4px 15px rgba(0, 80, 123, 0.06) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
 
-  .choiceGrid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .section {
-    padding: 5rem 0;
-  }
+.teamImageWrapper {
+  width: clamp(120px, 16vh, 150px) !important;
+  height: clamp(120px, 16vh, 150px) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  margin-bottom: clamp(6px, 1vh, 10px) !important;
+  background: #F8FAFC !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+.teamImageWrapper img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center top !important;
+  display: block !important;
+}
+
+.teamName {
+  font-size: clamp(0.88rem, 1.6vh, 1.05rem) !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin: 0 0 2px 0 !important;
+}
+
+.teamRole {
+  font-size: clamp(0.62rem, 1.1vh, 0.72rem) !important;
+  font-weight: 600 !important;
+  color: #00507B !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  margin-bottom: 6px !important;
+}
+
+.teamBio {
+  font-size: clamp(0.65rem, 1.1vh, 0.74rem) !important;
+  line-height: 1.35 !important;
+  color: #475569 !important;
+  margin: 0 !important;
+}
+
+/* CONTACT - EXECUTIVE 2-COLUMN VIEWPORT FIT */
+.contactSection {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #0A192F !important;
+  color: #FFFFFF !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.contactContainer {
+  width: 100% !important;
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1.15fr !important;
+  gap: clamp(24px, 3.5vw, 44px) !important;
+  align-items: center !important;
+}
+
+.contactLeft {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.contactTitle {
+  font-size: clamp(1.3rem, 2.5vh, 1.65rem) !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.contactDesc {
+  font-size: clamp(0.74rem, 1.3vh, 0.84rem) !important;
+  line-height: 1.45 !important;
+  color: #CBD5E1 !important;
+  margin: 0 0 12px 0 !important;
+}
+
+.contactFormCard {
+  background: #FFFFFF !important;
+  padding: clamp(12px, 1.8vh, 18px) clamp(16px, 1.8vw, 22px) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
+  box-sizing: border-box !important;
+}
+
+.formGroup {
+  margin-bottom: clamp(3px, 0.6vh, 6px) !important;
+}
+
+.formLabel {
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  margin-bottom: 2px !important;
+  display: block !important;
+  letter-spacing: 0.04em !important;
+}
+
+.formInput,
+.formSelect {
+  width: 100% !important;
+  height: clamp(28px, 3.8vh, 34px) !important;
+  padding: 0 10px !important;
+  font-size: 0.8rem !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 6px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  box-sizing: border-box !important;
+}
+
+.formTextarea {
+  width: 100% !important;
+  height: clamp(40px, 6vh, 52px) !important;
+  padding: 6px 10px !important;
+  font-size: 0.8rem !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 6px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  resize: none !important;
+  box-sizing: border-box !important;
+}
+
+.checkboxLabel {
+  font-size: 0.65rem !important;
+  color: #475569 !important;
+  margin: 3px 0 5px 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.submitBtn {
+  width: 100% !important;
+  height: clamp(32px, 4.2vh, 38px) !important;
+  background: #FF9900 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
+  border-radius: 999px !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin-top: 4px !important;
+  transition: background 0.2s ease !important;
+}
+
+.submitBtn:hover {
+  background: #E68A00 !important;
+}
+
+
+/* === PORTFOLIO COLORFUL & STANDOUT BUTTONS === */
+
+.portfolio {
+  height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.portfolioInner {
+  width: 100% !important;
+  max-width: 1020px !important;
+  margin: 0 auto !important;
+}
+
+.servicesGrid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: clamp(8px, 1.2vh, 12px) 14px !important;
+  width: 100% !important;
+}
+
+.serviceCard {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding: clamp(8px, 1.3vh, 13px) 10px !important; /* Slightly smaller size */
+  background: #FFFFFF !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(0, 80, 123, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.serviceCard:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 22px rgba(0, 80, 123, 0.12) !important;
+}
+
+/* 8 DISTINCT VIBRANT CARD THEMES (Icons, Titles, Borders & Buttons) */
+
+/* 1. Innovation (Orange) */
+.serviceCard:nth-child(1) { border: 1.5px solid #FED7AA !important; }
+.serviceCard:nth-child(1) .serviceIconWrapper { background: #FFF7ED !important; border-color: #EA580C !important; color: #EA580C !important; }
+.serviceCard:nth-child(1) .serviceTitle { color: #EA580C !important; }
+.serviceCard:nth-child(1) .serviceLink { color: #EA580C !important; background: #FFF7ED !important; border: 1px solid #FFEDD5 !important; }
+.serviceCard:nth-child(1) .serviceLink:hover { background: #EA580C !important; color: #FFFFFF !important; }
+
+/* 2. Leadership (Deep Blue) */
+.serviceCard:nth-child(2) { border: 1.5px solid #BFDBFE !important; }
+.serviceCard:nth-child(2) .serviceIconWrapper { background: #EFF6FF !important; border-color: #2563EB !important; color: #2563EB !important; }
+.serviceCard:nth-child(2) .serviceTitle { color: #1D4ED8 !important; }
+.serviceCard:nth-child(2) .serviceLink { color: #1D4ED8 !important; background: #EFF6FF !important; border: 1px solid #DBEAFE !important; }
+.serviceCard:nth-child(2) .serviceLink:hover { background: #1D4ED8 !important; color: #FFFFFF !important; }
+
+/* 3. Research Tools (Teal) */
+.serviceCard:nth-child(3) { border: 1.5px solid #99F6E4 !important; }
+.serviceCard:nth-child(3) .serviceIconWrapper { background: #F0FDFA !important; border-color: #0D9488 !important; color: #0D9488 !important; }
+.serviceCard:nth-child(3) .serviceTitle { color: #0F766E !important; }
+.serviceCard:nth-child(3) .serviceLink { color: #0F766E !important; background: #F0FDFA !important; border: 1px solid #CCFBF1 !important; }
+.serviceCard:nth-child(3) .serviceLink:hover { background: #0F766E !important; color: #FFFFFF !important; }
+
+/* 4. Best Practices (Purple) */
+.serviceCard:nth-child(4) { border: 1.5px solid #E9D5FF !important; }
+.serviceCard:nth-child(4) .serviceIconWrapper { background: #FAF5FF !important; border-color: #9333EA !important; color: #9333EA !important; }
+.serviceCard:nth-child(4) .serviceTitle { color: #7E22CE !important; }
+.serviceCard:nth-child(4) .serviceLink { color: #7E22CE !important; background: #FAF5FF !important; border: 1px solid #F3E8FF !important; }
+.serviceCard:nth-child(4) .serviceLink:hover { background: #7E22CE !important; color: #FFFFFF !important; }
+
+/* 5. Design (Amber) */
+.serviceCard:nth-child(5) { border: 1.5px solid #FDE68A !important; }
+.serviceCard:nth-child(5) .serviceIconWrapper { background: #FFFBEB !important; border-color: #D97706 !important; color: #D97706 !important; }
+.serviceCard:nth-child(5) .serviceTitle { color: #B45309 !important; }
+.serviceCard:nth-child(5) .serviceLink { color: #B45309 !important; background: #FFFBEB !important; border: 1px solid #FEF3C7 !important; }
+.serviceCard:nth-child(5) .serviceLink:hover { background: #B45309 !important; color: #FFFFFF !important; }
+
+/* 6. Survey Hosting (Cyan / Sky) */
+.serviceCard:nth-child(6) { border: 1.5px solid #BAE6FD !important; }
+.serviceCard:nth-child(6) .serviceIconWrapper { background: #F0F9FF !important; border-color: #0284C7 !important; color: #0284C7 !important; }
+.serviceCard:nth-child(6) .serviceTitle { color: #0369A1 !important; }
+.serviceCard:nth-child(6) .serviceLink { color: #0369A1 !important; background: #F0F9FF !important; border: 1px solid #E0F2FE !important; }
+.serviceCard:nth-child(6) .serviceLink:hover { background: #0369A1 !important; color: #FFFFFF !important; }
+
+/* 7. Human Validation (Emerald Green) */
+.serviceCard:nth-child(7) { border: 1.5px solid #A7F3D0 !important; }
+.serviceCard:nth-child(7) .serviceIconWrapper { background: #ECFDF5 !important; border-color: #059669 !important; color: #059669 !important; }
+.serviceCard:nth-child(7) .serviceTitle { color: #047857 !important; }
+.serviceCard:nth-child(7) .serviceLink { color: #047857 !important; background: #ECFDF5 !important; border: 1px solid #D1FAE5 !important; }
+.serviceCard:nth-child(7) .serviceLink:hover { background: #047857 !important; color: #FFFFFF !important; }
+
+/* 8. Value (Indigo) */
+.serviceCard:nth-child(8) { border: 1.5px solid #C7D2FE !important; }
+.serviceCard:nth-child(8) .serviceIconWrapper { background: #EEF2FF !important; border-color: #4F46E5 !important; color: #4F46E5 !important; }
+.serviceCard:nth-child(8) .serviceTitle { color: #4338CA !important; }
+.serviceCard:nth-child(8) .serviceLink { color: #4338CA !important; background: #EEF2FF !important; border: 1px solid #E0E7FF !important; }
+.serviceCard:nth-child(8) .serviceLink:hover { background: #4338CA !important; color: #FFFFFF !important; }
+
+/* ICON WRAPPER */
+.serviceIconWrapper {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 50% !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto clamp(4px, 0.7vh, 7px) auto !important;
+  flex: 0 0 40px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.serviceIconWrapper svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+}
+
+/* TITLE */
+.serviceTitle {
+  font-size: clamp(0.82rem, 1.4vh, 0.92rem) !important;
+  font-weight: 700 !important;
+  margin-bottom: 3px !important;
+}
+
+/* DESCRIPTION */
+.serviceDesc {
+  font-size: clamp(0.62rem, 1.1vh, 0.7rem) !important;
+  line-height: 1.3 !important;
+  color: #64748B !important;
+  margin-bottom: clamp(6px, 1vh, 10px) !important;
+}
+
+/* STANDOUT CTA BUTTON */
+.serviceLink {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: clamp(0.62rem, 1.1vh, 0.7rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-decoration: none !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+}
+
+
+/* === UNIFIED TYPOGRAPHIC TIERS === */
+
+/* TIER 1: HERO H1 (Tagline & Primary Identity) */
+.heroTitle {
+  font-size: clamp(2rem, 4.2vh, 2.85rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 0 clamp(6px, 1.2vh, 12px) 0 !important;
+}
+
+/* TIER 2: STANDARD SECTION H2 (Slide Headings 2 through 7) */
+.sectionTitle,
+.teamTitle,
+.tenetsTitle,
+.contactTitle {
+  font-size: clamp(1.4rem, 2.7vh, 1.8rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  color: #00507B !important;
+  letter-spacing: -0.015em !important;
+  margin: 0 0 clamp(4px, 0.8vh, 8px) 0 !important;
+  text-align: center !important;
+}
+
+/* On dark slides (Contact) */
+.contactTitle {
+  color: #FFFFFF !important;
+  text-align: left !important;
+}
+
+/* Standardized Subtitles across all sections */
+.sectionSubtitle,
+.teamSubtitle,
+.contactDesc {
+  font-size: clamp(0.74rem, 1.3vh, 0.86rem) !important;
+  line-height: 1.4 !important;
+  color: #64748B !important;
+  margin: 0 0 clamp(10px, 1.8vh, 18px) 0 !important;
+}
+
+.contactDesc {
+  color: #CBD5E1 !important;
+  text-align: left !important;
 }

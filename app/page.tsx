@@ -4,6 +4,7 @@ import TenetsExplorer from "@/components/TenetsExplorer";
 import React, { useState } from "react";
 import ComingSoon from "./ComingSoon";
 import Navbar from "@/components/Navbar";
+import InteractiveSceneDeck from "@/components/InteractiveSceneDeck";
 import Footer from "@/components/Footer";
 import {
   Send,
@@ -284,7 +285,9 @@ export default function Home() {
       <Navbar />
 
       {/* SECTION 1: Hero Section */}
-      <section className={styles.hero} id="hero">
+      <InteractiveSceneDeck>
+<section id="home" data-title="Home" data-bg="#ffffff" className={styles.hero}>
+        <div className={styles.heroContent}>
         <div className="grid-bg"></div>
         <div className={styles.heroCrowdOverlay}></div>
 
@@ -302,90 +305,152 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={styles.scrollIndicator}>
-          <a
-            href="#portfolio"
-            className={styles.scrollCircle}
-            aria-label="Scroll down"
-          >
-            <ChevronDown size={20} className={styles.scrollArrow} />
-          </a>
-        </div>
+        <div style={{ marginTop: "clamp(16px, 3vh, 36px)", display: "flex", justifyContent: "center", width: "100%" }}>
+        <button 
+          onClick={() => {
+            const el = document.getElementById("roberts-way");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+            window.location.hash = "#roberts-way";
+          }}
+          aria-label="Scroll down to Robert's Way"
+          style={{ 
+            width: "clamp(34px, 4.5vh, 42px)", 
+            height: "clamp(34px, 4.5vh, 42px)", 
+            borderRadius: "50%", 
+            backgroundColor: "#FFFFFF", 
+            border: "1px solid #CBD5E1", 
+            boxShadow: "0 4px 12px rgba(0,80,123,0.12)", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            cursor: "pointer"
+          }}
+        >
+          <ChevronDown size={18} color="#00507B" />
+        </button>
+      </div>
+      </div>
+      
       </section>
 
       {/* SRA Color Spectrum & Robert's Way Ten Tenets */}
-      <section id="roberts-way" style={{ backgroundColor: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0", padding: "80px 0 60px 0", scrollMarginTop: "100px", position: "relative", zIndex: 1 }}>
+      <section id="roberts-way" data-title="Robert's Way" data-bg="#F8FAFC" style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <TenetsExplorer />
       </section>
 
       {/* SECTION 2: A Thought Leadership Portfolio (8 Cards Grid) */}
-      <section
-        className="section-light"
-        id="portfolio"
-        style={{ padding: "7rem 0" }}
-      >
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitleLight}>
-              A Thought Leadership{" "}
-              <span style={{ color: "var(--interactive-blue)" }}>
-                Portfolio
-              </span>
-            </h2>
-            <p className={styles.sectionDescLight}>
-              Proven methods and tools for today&apos;s evolving insights and
-              marketing industry.
-            </p>
+      <section id="portfolio" data-title="Portfolio" data-bg="#ffffff" className={styles.portfolio}>
+          <div className={styles.portfolioInner}>
+            <div style={{ textAlign: "center", marginBottom: "clamp(6px, 1.2vh, 12px)" }}>
+              <h2 className={styles.sectionTitle}>A Thought Leadership Portfolio</h2>
+              <p className={styles.sectionSubtitle}>Proven methods and tools for today's evolving insights and marketing industry.</p>
+              
+              <div className={styles.tripletWrapper}>
+                <span className={styles.tripletBtn} style={{ background: "#00507B", color: "#FFFFFF" }}>REAL DATA.</span>
+                <span className={styles.tripletBtn} style={{ background: "#FF9900", color: "#FFFFFF" }}>REAL PEOPLE.</span>
+                <span className={styles.tripletBtn} style={{ background: "#64748B", color: "#FFFFFF" }}>REAL INSIGHT.</span>
+              </div>
+            </div>
 
-            {/* Accent Badges matching Mockup image */}
-            <div className={styles.badgeRow}>
-              <span className={`${styles.badge} ${styles.badgeNavy}`}>
-                REAL DATA.
-              </span>
-              <span className={`${styles.badge} ${styles.badgeBlue}`}>
-                REAL PEOPLE.
-              </span>
-              <span className={`${styles.badge} ${styles.badgeTeal}`}>
-                REAL INSIGHT.
-              </span>
+            <div className={styles.servicesGrid}>
+              {/* Card 1: Innovation */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #FED7AA" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#FFF7ED", borderColor: "#EA580C", color: "#EA580C" }}>
+                  <Compass size={22} color="#EA580C" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#EA580C" }}>Innovation</h3>
+                <p className={styles.serviceDesc}>Creative approaches that lead to new possibilities.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#FFF7ED", color: "#EA580C", border: "1px solid #FED7AA" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 2: Leadership */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #BFDBFE" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#EFF6FF", borderColor: "#2563EB", color: "#2563EB" }}>
+                  <Award size={22} color="#2563EB" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#2563EB" }}>Leadership</h3>
+                <p className={styles.serviceDesc}>Strategic guidance that aligns insight with action.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 3: Research Tools */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #99F6E4" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#F0FDFA", borderColor: "#0D9488", color: "#0D9488" }}>
+                  <Search size={22} color="#0D9488" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#0D9488" }}>Research Tools</h3>
+                <p className={styles.serviceDesc}>Powerful tools that make research faster and smarter.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#F0FDFA", color: "#0D9488", border: "1px solid #99F6E4" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 4: Best Practices */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #E9D5FF" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#FAF5FF", borderColor: "#9333EA", color: "#9333EA" }}>
+                  <Target size={22} color="#9333EA" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#9333EA" }}>Best Practices</h3>
+                <p className={styles.serviceDesc}>Proven methods that deliver better insights.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#FAF5FF", color: "#9333EA", border: "1px solid #E9D5FF" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 5: Design */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #FDE68A" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#FFFBEB", borderColor: "#D97706", color: "#D97706" }}>
+                  <Edit3 size={22} color="#D97706" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#D97706" }}>Design</h3>
+                <p className={styles.serviceDesc}>Insightful study designs that drive clarity.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#FFFBEB", color: "#D97706", border: "1px solid #FDE68A" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 6: Survey Hosting */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #BAE6FD" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#F0F9FF", borderColor: "#0284C7", color: "#0284C7" }}>
+                  <Users size={22} color="#0284C7" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#0284C7" }}>Survey Hosting</h3>
+                <p className={styles.serviceDesc}>Secure, reliable hosting for every research need.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#F0F9FF", color: "#0284C7", border: "1px solid #BAE6FD" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 7: Human Validation */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #A7F3D0" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#ECFDF5", borderColor: "#059669", color: "#059669" }}>
+                  <ShieldCheck size={22} color="#059669" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#059669" }}>Human Validation</h3>
+                <p className={styles.serviceDesc}>Confirm That Survey Participants Are Real People</p>
+                <a href="/cubicon" className={styles.serviceLink} style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #A7F3D0" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
+
+              {/* Card 8: Value */}
+              <div className={styles.serviceCard} style={{ border: "1.5px solid #C7D2FE" }}>
+                <div className={styles.serviceIconWrapper} style={{ background: "#EEF2FF", borderColor: "#4F46E5", color: "#4F46E5" }}>
+                  <TrendingUp size={22} color="#4F46E5" />
+                </div>
+                <h3 className={styles.serviceTitle} style={{ color: "#4F46E5" }}>Value</h3>
+                <p className={styles.serviceDesc}>Delivering measurable results and improved return on effort.</p>
+                <a href="/research-imperatives" className={styles.serviceLink} style={{ background: "#EEF2FF", color: "#4F46E5", border: "1px solid #C7D2FE" }}>
+                  MORE DETAILS →
+                </a>
+              </div>
             </div>
           </div>
-
-          {/* 8 Circular Icon Cards Grid */}
-          <div className={styles.servicesGrid}>
-            {portfolioCards.map((card) => (
-              <div
-                key={card.id}
-                className={styles.serviceCard}
-                id={`portfolio-card-${card.id}`}
-              >
-                {/* Circle Icon Container */}
-                <div
-                  className={styles.iconCircle}
-                  style={{
-                    color: card.iconColor,
-                    backgroundColor: card.bgColor,
-                    borderColor: card.iconColor,
-                  }}
-                >
-                  {card.icon}
-                </div>
-
-                <h3 className={styles.cardTitle}>{card.title}</h3>
-                <p className={styles.cardSubtitle}>{card.subTitle}</p>
-                {card.showMoreDetails !== false && (
-                  <a
-                    href={card.moreDetailsUrl || `/services#${card.id}`}
-                    className={styles.cardMoreDetailsLink}
-                  >
-                    MORE DETAILS <ArrowRight size={14} />
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
 
       {/* SECTION 2.5: Cubicon Founding Client Invitation Banner */}
       <section
@@ -395,8 +460,7 @@ export default function Home() {
           padding: "4rem 0",
           background:
             "linear-gradient(135deg, rgba(0, 80, 123, 0.03) 0%, rgba(255, 153, 0, 0.05) 100%)",
-          borderTop: "1px solid var(--border-color)",
-          borderBottom: "1px solid var(--border-color)",
+          border: "none",
         }}
       >
         <div className={styles.container}>
@@ -435,19 +499,7 @@ export default function Home() {
 
             <div style={{ flex: "1 1 500px" }}>
               <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  backgroundColor: "rgba(255, 153, 0, 0.2)",
-                  border: "1px solid var(--interactive-orange)",
-                  padding: "0.4rem 1rem",
-                  borderRadius: "30px",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  color: "#ffc164",
-                  marginBottom: "1rem",
-                }}
+                style={{ width: "100%", border: "none" }}
               >
                 <span>EXCLUSIVE INVITATION</span>
               </div>
@@ -548,11 +600,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 3: About Us (Teal Theme matching Mockup image) */}
-      <section
-        className="section-teal-bg"
-        id="about"
-        style={{ padding: "7rem 0" }}
-      >
+      <section id="about" data-title="About Us" data-bg="#F8FAFC" style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
@@ -580,405 +628,140 @@ export default function Home() {
       </section>
 
       {/* SECTION 4: Contact Us Form Section */}
-      <section className={styles.section} id="contact">
-        <div className={styles.container}>
-          <div className={styles.contactGrid}>
-            <div className={styles.contactInfo}>
-              <div>
-                <span className={styles.sectionTagline}>Get In Touch</span>
-                <h2 className={styles.contactHeaderTitle}>
-                  Connect with Our Team
-                </h2>
-                <p className={styles.contactHeaderDesc}>
-                  Have questions about the BuyFacts® framework, Cubicon™, or
-                  TRIAD™ tools? Let us help you map your B2B research challenges
-                  to high-impact analytical systems.
+              {/* SLIDE 6: OUR TEAM */}
+        <section id="team" data-title="Our Team" data-bg="#ffffff" className={styles.teamSection}>
+          <div className={styles.teamInner}>
+            <div style={{ textAlign: "center", marginBottom: "clamp(8px, 1.5vh, 16px)" }}>
+              <h2 className={styles.teamTitle}>Our Team</h2>
+              <p className={styles.teamSubtitle}>Meet the methodologists, researchers, and engineers who build BuyFacts.</p>
+            </div>
+            <div className={styles.teamGrid}>
+              {/* Member 1: Guduspa */}
+              <div className={styles.teamCard}>
+                <div className={styles.teamImageWrapper}>
+                  <img src="/guduspa.jpg" alt="Guduspa Kumar" />
+                </div>
+                <h3 className={styles.teamName}>Guduspa Kumar</h3>
+                <div className={styles.teamRole}>Analysis and Analytics</div>
+                <p className={styles.teamBio}>
+                  Guduspa translates raw data patterns into predictive models. He designs quantitative scoring mechanisms to visualize B2B buyer intent.
                 </p>
               </div>
 
-              <div className={styles.infoItem}>
-                <div className={styles.infoIcon}>
-                  <Mail size={20} />
+              {/* Member 2: Robert */}
+              <div className={styles.teamCard}>
+                <div className={styles.teamImageWrapper}>
+                  <img src="/robert.jpg" alt="Robert M Johnson" />
                 </div>
-                <div>
-                  <h4 className={styles.infoTextTitle}>Email Address</h4>
-                  <p className={styles.infoTextVal}>inquiries@buyfacts.com</p>
-                </div>
+                <h3 className={styles.teamName}>Robert M Johnson</h3>
+                <div className={styles.teamRole}>Survey Methods and Tools</div>
+                <p className={styles.teamBio}>
+                  Robert designs robust, bias-free questionnaires. He develops frameworks that ensure quantitative datasets align with commercial research guidelines.
+                </p>
               </div>
 
-              <div className={styles.infoItem}>
-                <div className={styles.infoIcon}>
-                  <Building2 size={20} />
+              {/* Member 3: Bernie */}
+              <div className={styles.teamCard}>
+                <div className={styles.teamImageWrapper}>
+                  <img src="/bernie.jpg" alt="Bernie Rudolph" />
                 </div>
-                <div>
-                  <h4 className={styles.infoTextTitle}>
-                    Corporate Head Office
-                  </h4>
-                  <p className={styles.infoTextVal}>
-                    BuyFacts, Inc.
-                    <br />
-                    <span style={{ fontSize: "0.7rem" }}>
-                      A Delaware Corporation
-                    </span>
-                    <br />
-                  </p>
+                <h3 className={styles.teamName}>Bernie Rudolph</h3>
+                <div className={styles.teamRole}>Survey Hosting and Research Quality</div>
+                <p className={styles.teamBio}>
+                  Bernie supervises secure cloud servers and routing mechanisms. He conducts strict quality control protocols for every participant panel.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      {/* SECTION 5: Our Team (Relocated to the bottom) */}
+              {/* SLIDE 7: CONTACT */}
+        <section id="contact" data-title="Contact" data-bg="#0A192F" className={styles.contactSection}>
+          <div className={styles.contactContainer}>
+            <div className={styles.contactLeft}>
+              <span style={{ color: "#FF9900", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>Get In Touch</span>
+              <h2 className={styles.contactTitle}>Connect with Our Team</h2>
+              <p className={styles.contactDesc}>
+                Have questions about the BuyFacts® framework, Cubicon™, or TRIAD™ tools? Let us help you map your B2B research challenges to high-impact analytical systems.
+              </p>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FF9900" }}>
+                    <Mail size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>Email Address</div>
+                    <div style={{ fontSize: "0.82rem", color: "#FFFFFF", fontWeight: 600 }}>inquiries@buyfacts.com</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FF9900" }}>
+                    <Building2 size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.72rem", color: "#94A3B8" }}>Corporate Head Office</div>
+                    <div style={{ fontSize: "0.82rem", color: "#FFFFFF", fontWeight: 600 }}>BuyFacts, Inc. <span style={{ color: "#64748B", fontWeight: 400 }}>(Delaware Corp)</span></div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div className="glass-card" style={{ padding: "3rem" }}>
-              <form
-                noValidate
-                onSubmit={handleSubmit}
-                className={styles.contactForm}
-                id="contact-form"
-              >
+            <div className={styles.contactFormCard}>
+              <form onSubmit={(e) => { e.preventDefault(); alert("Thank you for reaching out! We will contact you shortly."); }} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="name" className={styles.label}>
-                    Full Name{" "}
-                    <span style={{ color: "var(--primary-color)" }}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formState.name}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Sarah Connor"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                      required
-                    />
-                    <User
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
-                  </div>
+                  <label className={styles.formLabel}>FULL NAME *</label>
+                  <input type="text" name="name" required placeholder="e.g. Sarah Connor" className={styles.formInput} />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="email" className={styles.label}>
-                    Business Email{" "}
-                    <span style={{ color: "var(--primary-color)" }}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formState.email}
-                      onChange={handleInputChange}
-                      placeholder="e.g. sarah@cyberdyne.com"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                      required
-                    />
-                    <Mail
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
-                  </div>
+                  <label className={styles.formLabel}>BUSINESS EMAIL *</label>
+                  <input type="email" name="email" required placeholder="e.g. sarah@cyberdyne.com" className={styles.formInput} />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="company" className={styles.label}>
-                    Company / Organization
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      id="company"
-                      name="company"
-                      value={formState.company}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Cyberdyne Systems"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                    />
-                    <Building2
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
-                  </div>
+                  <label className={styles.formLabel}>COMPANY / ORGANIZATION</label>
+                  <input type="text" name="company" placeholder="e.g. Cyberdyne Systems" className={styles.formInput} />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="interest" className={styles.label}>
-                    Area of Interest
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <select
-                      id="interest"
-                      name="interest"
-                      value={formState.interest}
-                      onChange={handleInputChange}
-                      className={styles.input}
-                      style={{
-                        width: "100%",
-                        paddingLeft: "2.8rem",
-                        appearance: "none",
-                      }}
-                    >
-                      <option value="General Inquiry">General Inquiry</option>
-                      <option value="Cubicon Methodology">
-                        Cubicon™ Framework
-                      </option>
-                      <option value="TRIAD Survey Design">
-                        TRIAD™ Survey Tools
-                      </option>
-                      <option value="Rule of Three Validation">
-                        Rule of Three® Consultation
-                      </option>
-                      <option value="Survey Hosting Services">
-                        Survey Hosting & Auditing
-                      </option>
-                      <option value="Founding Client Offer">
-                        Founding Client Offer
-                      </option>
-                    </select>
-                    <FileText
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
-                  </div>
+                  <label className={styles.formLabel}>AREA OF INTEREST</label>
+                  <select name="interest" className={styles.formSelect}>
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Cubicon Validation">Cubicon Validation</option>
+                    <option value="Story-Based Research">Story-Based Research</option>
+                    <option value="TRIAD Framework">TRIAD Framework</option>
+                  </select>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="message" className={styles.label}>
-                    Your Message{" "}
-                    <span style={{ color: "var(--primary-color)" }}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <textarea
-                      id="message"
-                      name="message"
-                      value={formState.message}
-                      onChange={handleInputChange}
-                      placeholder="Tell us about your research requirements..."
-                      className={styles.textarea}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                      required
-                    ></textarea>
-                    <MessageSquare
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "1.1rem",
-                        color: "var(--text-dim)",
-                      }}
-                    />
-                  </div>
+                  <label className={styles.formLabel}>YOUR MESSAGE *</label>
+                  <textarea name="message" required rows={2} placeholder="Tell us about your research requirements..." className={styles.formTextarea}></textarea>
                 </div>
 
-                <div style={{ margin: "1.2rem 0" }}>
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.6rem",
-                      cursor: "pointer",
-                      fontSize: "0.95rem",
-                      color: "var(--text-main)",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      name="isEighteen"
-                      checked={formState.isEighteen}
-                      onChange={handleInputChange}
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        accentColor: "var(--interactive-blue)",
-                        cursor: "pointer",
-                      }}
-                    />
-                    <span>
-                      I certify that I am eighteen (18) years old or older{" "}
-                      <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </span>
-                  </label>
-                </div>
+                <label className={styles.checkboxLabel}>
+                  <input type="checkbox" required />
+                  <span>I certify that I am eighteen (18) years old or older *</span>
+                </label>
 
-                <input
-                  type="text"
-                  name="hp_website"
-                  style={{ display: "none" }}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                />
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn btn-primary submitBtn"
-                  id="contact-submit-btn"
-                >
-                  {isSubmitting ? "Sending Inquiry..." : "Submit Inquiry"}{" "}
-                  <Send size={16} />
+                <button type="submit"  className={styles.submitBtn}>
+                  Submit Inquiry →
                 </button>
-
-                {formStatus.type && (
-                  <div
-                    className={`${styles.formStatus} ${formStatus.type === "success" ? styles.formStatusSuccess : styles.formStatusError}`}
-                  >
-                    {formStatus.message}
-                  </div>
-                )}
-
-                {pendingVerificationEmail && (
-                  <div
-                    style={{
-                      marginTop: "1.2rem",
-                      padding: "14px 18px",
-                      background: "rgba(59, 130, 246, 0.08)",
-                      border: "1px solid rgba(59, 130, 246, 0.25)",
-                      borderRadius: "8px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    <p style={{ margin: "0 0 10px 0", color: "#93c5fd", lineHeight: 1.5 }}>
-                      Did not receive the verification email? Check your spam folder or request a new link:
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleResend}
-                      style={{
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "5px",
-                        padding: "7px 16px",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Resend Verification Email
-                    </button>
-                    {resendStatus && (
-                      <p style={{ margin: "10px 0 0 0", fontSize: "0.85rem", color: "#e2e8f0" }}>
-                        {resendStatus}
-                      </p>
-                    )}
-                  </div>
-                )}
               </form>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* SECTION 5: Our Team (Relocated to the bottom) */}
-      <section
-        className={styles.teamSection}
-        id="team"
-        style={{ padding: "6rem 0" }}
-      >
-        <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: "4rem" }}>
-            <h2 className={styles.sectionTitleLight}>Our Team</h2>
-            <p className={styles.sectionDescLight}>
-              Meet the methodologists, researchers, and engineers who build BuyFacts.
-            </p>
-          </div>
-          
-          <div className={styles.teamGrid}>
-            <div className={styles.memberCard} id="team-member-guduspa">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/guduspa.jpg"
-                  alt="Guduspa Kumar"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Guduspa Kumar</h3>
-                <span className={styles.memberRole}>
-                  Analysis and Analytics
-                </span>
-                <p className={styles.memberBio}>
-                  Guduspa translates raw data patterns into predictive models.
-                  He designs quantitative scoring mechanisms to visualize B2B
-                  buyer intent.
-                </p>
-              </div>
-            </div>
+              {/* Scene 6: Contact & Footer */}
+                {/* SLIDE 7: CONTACT */}
+        {/* SLIDE 8: FOOTER */}
+        <section id="footer" data-title="Footer" data-bg="#0A192F" style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Footer />
+        </section>
+      </InteractiveSceneDeck>
 
-            <div className={styles.memberCard} id="team-member-robert">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/robert.jpg"
-                  alt="Robert M Johnson"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Robert M Johnson</h3>
-                <span className={styles.memberRole}>
-                  Survey Methods and Tools
-                </span>
-                <p className={styles.memberBio}>
-                  Robert designs robust, bias-free questionnaires. He develops
-                  frameworks that ensure quantitative datasets align with
-                  commercial research guidelines.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.memberCard} id="team-member-bernie">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/bernie.jpg"
-                  alt="Bernie Rudolph"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Bernie Rudolph</h3>
-                <span className={styles.memberRole}>
-                  Survey Hosting and Research Quality
-                </span>
-                <p className={styles.memberBio}>
-                  Bernie supervises secure cloud servers and routing mechanisms.
-                  He conducts strict quality control protocols for every
-                  participant panel.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
 </div>
   );
 }

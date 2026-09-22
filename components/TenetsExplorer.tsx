@@ -7,27 +7,27 @@ export default function TenetsExplorer() {
   const [selectedTenet, setSelectedTenet] = useState<RobertTenet>(ROBERTS_TEN_TENETS[0]);
 
   return (
-    <section style={{ padding: "60px 20px", maxWidth: "1200px", margin: "0 auto", fontFamily: "var(--font-sans, inherit)" }}>
+    <section style={{ padding: "clamp(2px, 0.5vh, 5px) clamp(8px, 1vw, 12px)", maxWidth: "980px", margin: "0 auto", fontFamily: "var(--font-sans, inherit)" }}>
       {/* Header Section */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <div style={{ 
           display: "inline-block", 
-          padding: "6px 14px", 
+          padding: "2px 6px", 
           borderRadius: "20px", 
-          fontSize: "12px", 
+          fontSize: "11px", 
           fontWeight: 700, 
           letterSpacing: "1.5px", 
           textTransform: "uppercase", 
           backgroundColor: "#F1F5F9", 
           color: "#475569", 
-          marginBottom: "12px" 
+          marginBottom: "3px" 
         }}>
           SRA Color Spectrum • Robert&apos;s Way™
         </div>
         <h2 style={{ fontSize: "32px", fontWeight: 800, color: "var(--text-color, #1A1A1A)", margin: "0 0 10px 0" }}>
           Ten Tenets for Personal Stewardship
         </h2>
-        <p style={{ color: "var(--text-muted, #6E6E73)", fontSize: "16px", maxWidth: "680px", margin: "0 auto" }}>
+        <p style={{ color: "var(--text-muted, #6E6E73)", fontSize: "13px", maxWidth: "980px", margin: "0 auto" }}>
           Explore the tenets non-sequentially. Each SRA color anchor preserves visual identity while helping you turn Earlier Recognition into disciplined action.
         </p>
       </div>
@@ -36,7 +36,7 @@ export default function TenetsExplorer() {
       <div style={{ 
         display: "flex", 
         flexWrap: "wrap", 
-        gap: "8px", 
+        gap: "3px", 
         justifyContent: "center", 
         marginBottom: "35px" 
       }}>
@@ -49,8 +49,8 @@ export default function TenetsExplorer() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
+                gap: "3px",
+                padding: "clamp(2px, 0.5vh, 4px) clamp(6px, 0.8vw, 10px)",
                 borderRadius: "24px",
                 border: isSelected ? `2px solid ${tenet.color.hex}` : "1px solid #E2E8F0",
                 backgroundColor: isSelected ? tenet.color.bgVar : "#FFFFFF",
@@ -85,18 +85,18 @@ export default function TenetsExplorer() {
         border: "1px solid #E2E8F0",
         borderLeft: `8px solid ${selectedTenet.color.hex}`,
         boxShadow: "0 10px 30px -10px rgba(0,0,0,0.05)",
-        padding: "36px 40px",
-        maxWidth: "900px",
+        padding: "clamp(2px, 0.5vh, 5px) clamp(8px, 1vw, 12px)",
+        maxWidth: "980px",
         margin: "0 auto",
         transition: "all 0.3s ease"
       }}>
         {/* Badge & Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "2px", marginBottom: "3px" }}>
           <span style={{
-            fontSize: "12px",
+            fontSize: "11px",
             fontWeight: 800,
             letterSpacing: "1px",
-            padding: "4px 10px",
+            padding: "2px 8px",
             borderRadius: "6px",
             backgroundColor: selectedTenet.color.bgVar,
             color: selectedTenet.color.hex,
@@ -115,7 +115,7 @@ export default function TenetsExplorer() {
           lineHeight: "1.6", 
           color: "#334155", 
           backgroundColor: "#F8FAFC", 
-          padding: "16px 20px", 
+          padding: "clamp(2px, 0.5vh, 5px) clamp(8px, 1vw, 12px)", 
           borderRadius: "10px",
           borderLeft: "3px solid #CBD5E1",
           margin: "0 0 28px 0" 
@@ -131,11 +131,11 @@ export default function TenetsExplorer() {
             letterSpacing: "1.2px", 
             textTransform: "uppercase", 
             color: "#64748B", 
-            marginBottom: "16px" 
+            marginBottom: "3px" 
           }}>
             Three Action Prompts
           </h4>
-          <div style={{ display: "grid", gap: "12px" }}>
+          <div style={{ display: "grid", gap: "2px" }}>
             {selectedTenet.prompts.map((prompt, idx) => (
               <div 
                 key={idx}
@@ -143,7 +143,7 @@ export default function TenetsExplorer() {
                   display: "flex",
                   alignItems: "flex-start",
                   gap: "14px",
-                  padding: "14px 18px",
+                  padding: "clamp(2px, 0.5vh, 5px) clamp(8px, 1vw, 12px)",
                   borderRadius: "8px",
                   backgroundColor: "#FFFFFF",
                   border: "1px solid #EDF2F7"
@@ -158,12 +158,12 @@ export default function TenetsExplorer() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "12px",
+                  fontSize: "11px",
                   fontWeight: 800
                 }}>
                   {idx + 1}
                 </div>
-                <div style={{ fontSize: "15px", fontWeight: 500, color: "#1E293B", paddingTop: "2px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 500, color: "#1E293B", paddingTop: "2px" }}>
                   {prompt}
                 </div>
               </div>

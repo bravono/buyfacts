@@ -57,7 +57,7 @@ export const SRA_COLOR_SPECTRUM: Record<number, SRALevelColor> = {
     cssVar: "var(--sra-spring-green)",
     bgVar: "var(--sra-spring-green-bg)",
     borderVar: "var(--sra-spring-green-border)",
-    hex: "#2ECC71",
+    hex: "#10B981",
   },
   6: {
     id: 6,
@@ -66,7 +66,7 @@ export const SRA_COLOR_SPECTRUM: Record<number, SRALevelColor> = {
     cssVar: "var(--sra-forest-green)",
     bgVar: "var(--sra-forest-green-bg)",
     borderVar: "var(--sra-forest-green-border)",
-    hex: "#27AE60",
+    hex: "#14532D",
   },
   7: {
     id: 7,
@@ -93,7 +93,7 @@ export const SRA_COLOR_SPECTRUM: Record<number, SRALevelColor> = {
     cssVar: "var(--sra-fuscia)",
     bgVar: "var(--sra-fuscia-bg)",
     borderVar: "var(--sra-fuscia-border)",
-    hex: "#E056FD",
+    hex: "#D946EF",
   },
   10: {
     id: 10,
@@ -102,7 +102,7 @@ export const SRA_COLOR_SPECTRUM: Record<number, SRALevelColor> = {
     cssVar: "var(--sra-purple)",
     bgVar: "var(--sra-purple-bg)",
     borderVar: "var(--sra-purple-border)",
-    hex: "#8C7AE6",
+    hex: "#581C87",
   },
 };
 

@@ -1,0 +1,97 @@
+/*
+ * SlideDeck — Calibrated Full-Page Storytelling Engine
+ */
+
+.viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-color, #ffffff);
+  z-index: 1;
+  overscroll-behavior: none;
+}
+
+.track {
+  height: 100%;
+  will-change: transform;
+}
+
+.animated {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.slide {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: 80px; /* Clean Navbar Clearance */
+  padding-bottom: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.slideInner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Safe vertical centering without clipping */
+  align-items: center;
+}
+
+.slideBody {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Floating Navigation Dots (Pill Container) */
+.dots {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 12px 8px;
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(0, 80, 123, 0.12);
+  border: 1px solid rgba(0, 80, 123, 0.15);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #00507B;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dot:hover {
+  transform: scale(1.4);
+  background: rgba(0, 80, 123, 0.3);
+}
+
+.dotActive {
+  background: #FF9900 !important;
+  border-color: #FF9900 !important;
+  transform: scale(1.45);
+  box-shadow: 0 0 10px rgba(255, 153, 0, 0.6);
+}
+
+@media (max-width: 1024px) {
+  .dots {
+    display: none;
+  }
+}
