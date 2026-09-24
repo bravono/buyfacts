@@ -6,24 +6,28 @@ import path from "node:path";
 const BUYFACTS_ROOT = path.resolve(__dirname, "..");
 const CUBICON_ROOT = path.resolve(BUYFACTS_ROOT, "..", "cubicon");
 
-test("Cubicon 1-Minute Timed Preview and Interactive Player Suite (Item 5)", async (t) => {
-  await t.test("1. 1-Minute Duration Disclosure (Section 7.1)", () => {
+test("Cubicon 1-Minute Video Preview and Interactive Player Suite", async (t) => {
+  await t.test("1. 1-Minute Preview Duration Disclosure & Direct START Action (Section 7.1 & 7.2)", () => {
     const pagePath = path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx");
     assert.ok(fs.existsSync(pagePath), "app/cubicon/page.tsx must exist");
     const content = fs.readFileSync(pagePath, "utf-8");
 
     // Must clearly state the duration before beginning
     assert.ok(
-      content.includes("1-Minute Preview") || content.includes("1-MINUTE TIMED PREVIEW"),
-      "Cubicon page must display 1-minute duration notice before preview starts"
+      content.includes("1-MINUTE PREVIEW") || content.includes("1-Minute Preview"),
+      "Cubicon page must display 1-minute duration badge before preview starts"
     );
     assert.ok(
-      content.includes("7 seconds each") || content.includes("7 seconds per state"),
-      "Must state that preview runs across demonstration states at 7 seconds each"
+      content.includes("handleStartVideoClick"),
+      "START button must initiate video playback directly"
+    );
+    assert.ok(
+      content.includes("handleSeeLiveClick") && content.includes("See It Live!"),
+      "Must provide secondary See It Live button to jump directly to 3D solver"
     );
   });
 
-  await t.test("2. Three Approved Demonstration States (Section 7.2)", () => {
+  await t.test("2. Three Approved Demonstration Puzzle Slides (Section 7.2)", () => {
     const pagePath = path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx");
     const content = fs.readFileSync(pagePath, "utf-8");
 
@@ -46,25 +50,38 @@ test("Cubicon 1-Minute Timed Preview and Interactive Player Suite (Item 5)", asy
     );
   });
 
-  await t.test("3. Interactive Controls: Pause, Replay, Cancel, See It Live (Section 7.2)", () => {
+  await t.test("3. Video Player Controls: Skip, Reload, Cancel, Completion (Section 7.2)", () => {
     const pagePath = path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx");
     const content = fs.readFileSync(pagePath, "utf-8");
 
+    // HTML5 Video element with direct autoPlay and controls
     assert.ok(
-      content.includes("handleTogglePause") && content.includes("Pause"),
-      "Must provide working Pause control"
+      content.includes("<video") && content.includes("autoPlay") && content.includes("controls"),
+      "Must render native video element with autoplay and controls"
     );
+
+    // Skip video button
     assert.ok(
-      content.includes("handleReplayPreview") && content.includes("Replay"),
-      "Must provide working Replay control"
+      content.includes("Skip Video") && content.includes("setIsVideoCompleted(true)"),
+      "Must provide Skip Video control advancing to completion overlay"
     );
+
+    // Reload video button
     assert.ok(
-      content.includes("handleCancelPreview") && content.includes("Cancel"),
-      "Must provide working Cancel control"
+      content.includes("Reload Video"),
+      "Must provide Reload Video control"
     );
+
+    // Cancel / Return to Preview button (Section 7.2.06)
     assert.ok(
-      content.includes("handleSeeLiveClick") && content.includes("See It Live"),
-      "Must provide working See It Live control"
+      content.includes("handleCancelVideo") && content.includes("Back to Preview"),
+      "Must provide Cancel control returning to preview introduction without losing state"
+    );
+
+    // Completion overlay with Try It Yourself / See It Live button
+    assert.ok(
+      content.includes("TRY IT YOURSELF NOW") && content.includes("handleSeeLiveClick"),
+      "Must provide TRY IT YOURSELF NOW button on video completion launching the 3D solver"
     );
   });
 
@@ -102,67 +119,38 @@ test("Cubicon 1-Minute Timed Preview and Interactive Player Suite (Item 5)", asy
     );
   });
 
-  await t.test("6. Standalone TimedPreview Component in c:/Users/USER/cubicon", () => {
-    const componentPath = path.join(CUBICON_ROOT, "src", "components", "TimedPreview.jsx");
-    assert.ok(fs.existsSync(componentPath), "TimedPreview.jsx must exist in standalone cubicon");
-    const content = fs.readFileSync(componentPath, "utf-8");
-
-    assert.ok(
-      content.includes("1-Minute Interactive Preview"),
-      "Standalone TimedPreview must state 1-minute duration"
-    );
-    assert.ok(
-      content.includes("handleTogglePause") && content.includes("Pause"),
-      "Standalone TimedPreview must provide Pause control"
-    );
-    assert.ok(
-      content.includes("handleReplay") && content.includes("Replay"),
-      "Standalone TimedPreview must provide Replay control"
-    );
-    assert.ok(
-      content.includes("handleCancel") && content.includes("Cancel"),
-      "Standalone TimedPreview must provide Cancel control"
-    );
-    assert.ok(
-      content.includes("handleSeeLive") && content.includes("See It Live"),
-      "Standalone TimedPreview must provide See It Live control"
-    );
-  });
-
-  await t.test("7. Welcome Card Integration in Standalone Cubicon.jsx", () => {
+  await t.test("6. Standalone Cubicon Scope Parity (No Slideshow in Standalone)", () => {
     const cubiconPath = path.join(CUBICON_ROOT, "src", "Cubicon.jsx");
     const content = fs.readFileSync(cubiconPath, "utf-8");
 
+    // Standalone welcome card must have a direct Start button without slideshow
     assert.ok(
-      content.includes("1-Minute Preview"),
-      "Cubicon.jsx must offer 1-Minute Preview button on welcome screen"
+      content.includes("Start"),
+      "Cubicon.jsx must provide Start button on welcome screen"
     );
     assert.ok(
-      content.includes("<TimedPreview"),
-      "Cubicon.jsx must render TimedPreview modal"
-    );
-    assert.ok(
-      content.includes("CUBICON_OPEN_PREVIEW"),
-      "Cubicon.jsx must support CUBICON_OPEN_PREVIEW postMessage event"
+      !content.includes("<TimedPreview"),
+      "Standalone Cubicon.jsx must not render TimedPreview slideshow"
     );
   });
 
-  await t.test("8. Uncropped Graphics Containment & Zero-Emoji Compliance", () => {
-    const cssPath = path.join(CUBICON_ROOT, "src", "styles", "timedPreview.css");
-    const content = fs.readFileSync(cssPath, "utf-8");
+  await t.test("7. Zero-Emoji Compliance across Modified Source Files", () => {
+    const filesToCheck = [
+      path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "cubicon", "cubicon.module.css"),
+      path.join(CUBICON_ROOT, "src", "Cubicon.jsx"),
+    ];
 
-    assert.ok(
-      content.includes("object-fit: contain"),
-      "Must specify object-fit: contain for uncropped graphics"
-    );
-
-    const componentPath = path.join(CUBICON_ROOT, "src", "components", "TimedPreview.jsx");
-    const compContent = fs.readFileSync(componentPath, "utf-8");
     const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
-    assert.equal(
-      compContent.match(emojiRegex),
-      null,
-      "TimedPreview.jsx must not contain emojis"
-    );
+    for (const filePath of filesToCheck) {
+      if (fs.existsSync(filePath)) {
+        const text = fs.readFileSync(filePath, "utf-8");
+        assert.equal(
+          text.match(emojiRegex),
+          null,
+          `File ${filePath} must not contain emojis`
+        );
+      }
+    }
   });
 });

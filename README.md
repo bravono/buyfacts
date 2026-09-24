@@ -465,8 +465,21 @@ Runs directly on the `/cubicon` viewport without navigating away:
 
 ---
 
-### 7. Cubicon Embedded 3D Solver Architecture
+### 7. Cubicon 1-Minute Video Preview & Embedded 3D Solver Architecture
 
+#### 1-Minute Video Preview Mechanism (Section 7.1 & 7.2)
+- **Duration Disclosure**: The opening card on `/cubicon` states the duration before playback begins (*"See a One Minute Video Preview"*).
+- **Direct Video Launch**: Clicking the primary **START** button directly initiates playback of the recorded self-running demo (`Cubicon_self_running.mp4`) without intermediary modal gating cards or artificial slideshow interval timers.
+- **Media-Controlled Timing (Section 7.2.03)**: The final media itself controls playback timing.
+- **Player Controls (Section 7.2.05 & 7.2.06)**:
+  - Native HTML5 controls (`autoPlay`, `controls`, `playsInline`).
+  - Dedicated **Skip Video** button to fast-forward to completion instructions.
+  - Dedicated **Reload Video** stream button.
+  - Dedicated **Back to Preview** (Cancel) button returning the visitor cleanly to the introduction slide without losing their place.
+  - Interactive completion overlay featuring **"TRY IT YOURSELF NOW"** which smoothly transitions into the 3D solver.
+- **Standalone App Parity**: The standalone Cubicon application (`c:/Users/USER/cubicon`) serves strictly as the interactive 3D solver without an extraneous slideshow modal, launching directly on "Start".
+
+#### Embedded 3D Solver Architecture
 The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from `public/cubicon-app/`:
 - **Document Background Synchronization**: Both the host wrapper and embedded iframe document enforce `#0f141c` to eliminate white document flash during mounting and stylesheet parsing.
 - **Initial HTML Preloader**: Displays an immediate lightweight animated indicator inside `#root` during JavaScript bundle transfer.
