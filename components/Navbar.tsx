@@ -93,14 +93,6 @@ export default function Navbar({
           </Link>
 
           <Link
-            href="/#thought-leadership"
-            className={styles.navLink}
-            id="nav-link-thought-leadership"
-          >
-            THOUGHT LEADERSHIP
-          </Link>
-
-          <Link
             href="/#about"
             className={styles.navLink}
             id="nav-link-about"
