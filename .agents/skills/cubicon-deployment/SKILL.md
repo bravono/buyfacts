@@ -57,6 +57,7 @@ This skill documents how to successfully build and deploy the embedded version o
   - Model GLB: `"assets/Cubicon10.glb"`
   - Environment EXR: `"assets/studio.exr"`
   - Textures: `"cubicon_logo.png"`
+  - Default Arts Fallback: `"arts/Puzzle1.webp"` (use relative paths without leading slash so fallback assets resolve to `/cubicon-app/arts/` inside embedded iframes; Next.js config also provides a safety rewrite for `/arts/:path*` to `/cubicon-app/arts/:path*`)
 
 ### C. 3D Model Materials (`TaskModel.jsx`)
 - **White Model Hazard**: Do NOT forcefully override `metalness` (e.g. `metalness = 0.65`) or `roughness` (`0.15`) across all meshes during `scene.traverse()`. High metalness combined with studio lighting causes GLB materials to act like mirrors, reflecting white ambient light and rendering the model solid white.
