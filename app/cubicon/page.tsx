@@ -163,21 +163,21 @@ const SLIDES: SlideItem[] = [
       "Cubitron verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute video demonstration or launch the interactive 3D solver directly.",
   },
   {
-    heading: "Puzzle 1 of 3",
+    heading: "Puzzle 1 of 3: Spatial Orientation",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
-    heading: "Puzzle 2 of 3",
+    heading: "Puzzle 2 of 3: Multi-Angle Alignment",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
-    heading: "Puzzle 3 of 3",
+    heading: "Puzzle 3 of 3: 3D Object Verification",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
