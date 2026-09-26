@@ -128,7 +128,7 @@ Handles session initialization, spatial click attempt evaluations, state integri
 
 #### `POST /api/contact`
 Receives general contact inquiries and places them into an email verification hold queue.
-- **Validation**: Enforces Name, Email, Message, and Age Certification (18+) via `ContactInquirySchema`.
+- **Validation**: Enforces Name, Email, Message, and Age Certification (18+) via `ContactInquirySchema`. Submissions are placed into a 24-hour verification hold queue.
 - **Anti-Abuse**: Protected by sliding-window IP rate limiting (5 req / 10 min) and hidden honeypot check (`hp_website`).
 - **Hold Pipeline**: Generates a 24-hour verification token in `email_verifications` table and dispatches verification link. Submission is held until verified.
 
@@ -323,7 +323,7 @@ Handles session initialization, spatial click attempt evaluations, state integri
 
 #### `POST /api/contact`
 Receives general contact inquiries and places them into an email verification hold queue.
-- **Validation**: Enforces Name, Email, Message, and Age Certification (18+) via `ContactInquirySchema`.
+- **Validation**: Enforces Name, Email, Message, and Age Certification (18+) via `ContactInquirySchema`. Submissions are placed into a 24-hour verification hold queue.
 - **Anti-Abuse**: Protected by sliding-window IP rate limiting (5 req / 10 min) and hidden honeypot check (`hp_website`).
 - **Hold Pipeline**: Generates a 24-hour verification token in `email_verifications` table and dispatches verification link. Submission is held until verified.
 
@@ -499,8 +499,9 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
   - `CUBICON_EXIT`: Dispatched when the user clicks Exit either on the host frame header or on the completion action bar. Closes live app view, exits fullscreen, and scrolls to `#founding-client-benefits`.
   - `CUBICON_CONTACT`: Dispatched when the user clicks Contact Us on the completion action bar. Exits fullscreen, notifies iframe, and navigates host app to `/#contact`.
   - `CUBICON_SET_FULLSCREEN`: Dispatched from host to iframe to sync canvas FOV and object scaling dynamically.
-- **Dedicated Routes**:
+- **Dedicated Routes & Anchors**:
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
+  - `/cubicon#founding-client`: Direct anchor targeting the Founding Client Registration section. Form fields are immediately visible by default with client-side hash detection and smooth scrolling. Backward-compatible aliases `#register-form` and `#founding-client-form` are fully supported.
 
 ---
 

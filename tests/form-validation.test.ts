@@ -152,6 +152,65 @@ describe("Contact Us Form Schema & Honeypot (Section 9.1 & 13)", () => {
     });
     assert.strictEqual(shortMsgResult.success, false);
   });
+
+  test("should accept contact submission with valid email addresses including webmail and business domains", () => {
+    const validEmails = [
+      "ahbideenyusuf@gmail.com",
+      "user@gmail.com",
+      "partner@yahoo.com",
+      "lead@hotmail.com",
+      "developer@proton.me",
+      "contact@outlook.com",
+      "sarah@cyberdyne.com",
+      "inquiry@enterprise.org",
+      "analyst@research.edu",
+      "contact@buyfacts.co.uk",
+    ];
+
+    for (const email of validEmails) {
+      const result = ContactInquirySchema.safeParse({
+        name: "Test Inquirer",
+        email,
+        company: "Test Organization",
+        interest: "General Inquiry",
+        message: "We are inquiring about enterprise intelligence.",
+        isEighteen: true,
+      });
+
+      assert.strictEqual(
+        result.success,
+        true,
+        `Expected ContactInquirySchema to accept valid email: ${email}`
+      );
+    }
+  });
+
+  test("should reject contact submission with malformed email addresses", () => {
+    const invalidEmails = [
+      "notanemail",
+      "missingatsign.com",
+      "@nodomain.com",
+      "user@",
+      "",
+    ];
+
+    for (const email of invalidEmails) {
+      const result = ContactInquirySchema.safeParse({
+        name: "Test Inquirer",
+        email,
+        company: "Test Organization",
+        interest: "General Inquiry",
+        message: "We are inquiring about enterprise intelligence.",
+        isEighteen: true,
+      });
+
+      assert.strictEqual(
+        result.success,
+        false,
+        `Expected ContactInquirySchema to reject malformed email: ${email}`
+      );
+    }
+  });
 });
 
 describe("Founding Client Schema (Section 8)", () => {

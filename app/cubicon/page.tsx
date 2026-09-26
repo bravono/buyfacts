@@ -281,7 +281,7 @@ export default function CubiconPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStep, setFormStep] = useState(1);
   const totalSteps = 3;
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   const nextStep = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -661,6 +661,35 @@ export default function CubiconPage() {
       window.removeEventListener("message", handleCubiconMessage);
     };
   }, [isFullscreen]);
+
+  React.useEffect(() => {
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (
+        hash === "#founding-client" ||
+        hash === "#founding-client-form" ||
+        hash === "#register-form" ||
+        hash === "#cubicon-registration-form"
+      ) {
+        setShowForm(true);
+        setTimeout(() => {
+          const target =
+            document.getElementById("cubicon-registration-form") ||
+            document.getElementById("founding-client") ||
+            document.getElementById("register-form");
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      }
+    };
+
+    handleHashNavigation();
+    window.addEventListener("hashchange", handleHashNavigation);
+    return () => {
+      window.removeEventListener("hashchange", handleHashNavigation);
+    };
+  }, []);
 
   return (
     <div className={styles.main}>
@@ -1250,9 +1279,11 @@ export default function CubiconPage() {
       {/* REGISTRATION FORM SECTION */}
       <section
         className="section-brand-bg"
-        id="register-form"
+        id="founding-client"
         style={{ padding: "6rem 0" }}
       >
+        <div id="register-form" />
+        <div id="founding-client-form" />
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>APPLY NOW</span>
