@@ -90,10 +90,16 @@ export async function GET(request: Request) {
       // Founding Client Inquiry
       try {
         const submissionId = payload.id || crypto.randomUUID();
+        const clientFirst = (payload.firstName || "").trim();
+        const clientLast = (payload.lastName || "").trim();
+        const fullName = payload.name || (clientFirst && clientLast
+          ? (clientFirst.toLowerCase().includes(clientLast.toLowerCase()) ? clientFirst : `${clientFirst} ${clientLast}`)
+          : (clientFirst || clientLast || "Founding Client Partner"));
+
         await prisma.cubiconRegistration.create({
           data: {
             id: submissionId,
-            name: `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
+            name: fullName,
             email: record.email.toLowerCase(),
             company: payload.company || "",
             role: payload.urgency || "Medium",
@@ -113,20 +119,30 @@ export async function GET(request: Request) {
         await appendToJsonBackup("cubicon_registrations.json", {
           id: submissionId,
           ...payload,
+          name: fullName,
           verifiedAt: verifiedAt.toISOString(),
         });
 
         // Dispatch founding client confirmation emails
         await sendCubiconRegistrationEmails({
           id: submissionId,
-          firstName: payload.firstName || "Client",
-          lastName: payload.lastName || "",
+          firstName: clientFirst || "Client",
+          lastName: clientLast,
           email: record.email,
           phone: payload.phone,
           urgency: payload.urgency,
           selectedAreas: payload.selectedAreas,
           priorityScore: payload.priorityScore,
         });
+
+        return renderResponse(
+          request,
+          true,
+          "Email Verified - Welcome to Cubicon!",
+          "Your business email address has been verified and your Cubicon Founding Client registration is confirmed. We have sent your confirmation to your inbox.",
+          200,
+          { isFoundingClient: true, submissionId, email: record.email, name: fullName }
+        );
       } catch (clientErr) {
         console.error("[verify-email] Error completing founding client registration:", clientErr);
       }
@@ -520,6 +536,13 @@ function renderResponse(
             }
           }
         </script>
+      `
+          : extra.isFoundingClient
+          ? `
+        <div>
+          <a href="/payment?registrationId=${encodeURIComponent(extra.submissionId || "")}&email=${encodeURIComponent(extra.email || "")}&name=${encodeURIComponent(extra.name || "")}" class="btn">Proceed to Payment Checkout</a>
+          <a href="/cubicon" class="btn btn-secondary">Return to Cubicon</a>
+        </div>
       `
           : `
         <div>

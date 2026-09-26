@@ -487,17 +487,26 @@ export default function CubiconPage() {
 
       if (response.ok && data.id) {
         const clientEmail = formState.email.trim();
-        const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
 
-        setFormStatus({
-          type: "success",
-          message:
-            "Registration successful! Redirecting to payment checkout...",
-        });
+        if (data.verificationRequired) {
+          setFormStatus({
+            type: "success",
+            message:
+              data.message ||
+              `Registration received! Please check your inbox at ${clientEmail} to verify your business email address and complete your Founding Client registration.`,
+          });
+        } else {
+          const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
+          setFormStatus({
+            type: "success",
+            message:
+              "Registration successful! Redirecting to payment checkout...",
+          });
 
-        // Instant automatic redirect to dedicated payment page
-        const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
-        router.push(checkoutUrl);
+          // Instant automatic redirect to dedicated payment page
+          const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
+          router.push(checkoutUrl);
+        }
       } else {
         setFormStatus({
           type: "error",
@@ -647,6 +656,18 @@ export default function CubiconPage() {
         setIsFullscreen(false);
         notifyIframeFullscreen(false);
         router.push("/#contact");
+      } else if (
+        event.data?.type === "CUBICON_FEEDBACK" ||
+        event.data === "CUBICON_FEEDBACK"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        const sessId = event.data?.sessionId || "";
+        const targetUrl = sessId ? `/feedback?sessionId=${encodeURIComponent(sessId)}` : "/feedback";
+        router.push(targetUrl);
       }
     };
 
@@ -1019,6 +1040,18 @@ export default function CubiconPage() {
                   >
                     <ExternalLink size={14} /> Launch Standalone
                   </a>
+                  <Link
+                    href="/feedback"
+                    className={styles.controlBtn}
+                    style={{
+                      background: "rgba(245, 158, 11, 0.15)",
+                      borderColor: "rgba(245, 158, 11, 0.4)",
+                      color: "#fbbf24",
+                    }}
+                    title="Provide Feedback & Review"
+                  >
+                    <Star size={14} /> Feedback
+                  </Link>
                   {isAdmin && (
                     <Link
                       href="/cubicon/analytics"

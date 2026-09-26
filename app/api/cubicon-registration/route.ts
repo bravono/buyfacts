@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { sendCubiconRegistrationEmails } from "@/lib/resend";
+import { sendVerificationEmail } from "@/lib/resend";
 import { FoundingClientSchema } from "@/lib/validation/forms";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
@@ -54,51 +52,20 @@ export async function POST(request: Request) {
 
     const submissionId = crypto.randomUUID();
     const cleanEmail = email.trim().toLowerCase();
-    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const cleanFirst = firstName.trim();
+    const cleanLast = lastName.trim();
+    const fullName = cleanFirst && cleanLast
+      ? (cleanFirst.toLowerCase().includes(cleanLast.toLowerCase()) ? cleanFirst : `${cleanFirst} ${cleanLast}`)
+      : (cleanFirst || cleanLast || "Founding Client Partner");
 
-    // 3. Persist into Prisma database (cubicon_registrations table)
-    try {
-      await prisma.cubiconRegistration.create({
-        data: {
-          id: submissionId,
-          name: fullName,
-          email: cleanEmail,
-          company: (company || "").trim(),
-          role: urgency || "Medium",
-          interest: "Founding Client",
-          isUsBased: !!isUsBased,
-          notes: JSON.stringify({
-            phone: (phone || "").trim(),
-            notes: (notes || "").trim(),
-            selectedAreas: selectedAreas || {},
-            priorityScore: priorityScore || 0,
-            requestConfirmation: !!requestConfirmation,
-            isEighteen: !!isEighteen,
-          }),
-        },
-      });
-    } catch (dbErr) {
-      console.warn("[Cubicon Registration] DB Save warning:", dbErr);
-    }
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // 4. Save to local JSON backup
-    const dirPath = path.join(process.cwd(), "data");
-    const filePath = path.join(dirPath, "cubicon_registrations.json");
-
-    await fs.mkdir(dirPath, { recursive: true });
-
-    let currentData = [];
-    try {
-      const fileContents = await fs.readFile(filePath, "utf-8");
-      currentData = JSON.parse(fileContents);
-    } catch {
-      // File doesn't exist yet
-    }
-
-    const newRegistration = {
+    const payload = JSON.stringify({
       id: submissionId,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      firstName: cleanFirst,
+      lastName: cleanLast,
+      name: fullName,
       company: (company || "").trim(),
       phone: (phone || "").trim(),
       email: cleanEmail,
@@ -106,37 +73,40 @@ export async function POST(request: Request) {
       requestConfirmation: !!requestConfirmation,
       isEighteen: true,
       isUsBased: true,
+      notes: (notes || "").trim(),
       selectedAreas: selectedAreas || {},
       priorityScore: priorityScore || 0,
-      timestamp: new Date().toISOString(),
-    };
+    });
 
-    currentData.push(newRegistration);
-    await fs.writeFile(filePath, JSON.stringify(currentData, null, 2), "utf-8");
+    // 3. Persist Hold State in EmailVerification (24-hour verification window)
+    await prisma.emailVerification.create({
+      data: {
+        token,
+        email: cleanEmail,
+        type: "founding_client",
+        payload,
+        expiresAt,
+      },
+    });
 
-    console.log(`[Cubicon Registration] Saved registration ${newRegistration.id} for ${newRegistration.email}`);
+    console.log(`[Cubicon Registration Held] Token ${token} created for ${cleanEmail}. Awaiting email verification.`);
 
-    // 5. Send confirmation emails via Resend
-    if (requestConfirmation) {
-      sendCubiconRegistrationEmails({
-        id: newRegistration.id,
-        firstName: newRegistration.firstName,
-        lastName: newRegistration.lastName,
-        email: newRegistration.email,
-        phone: newRegistration.phone,
-        urgency: newRegistration.urgency,
-        selectedAreas: newRegistration.selectedAreas,
-        priorityScore: newRegistration.priorityScore,
-      }).catch((err) => {
-        console.error("[Cubicon Registration] Failed to send email via Resend:", err);
-      });
-    }
+    // 4. Send Verification Email via Resend
+    sendVerificationEmail({
+      email: cleanEmail,
+      name: cleanFirst || fullName,
+      token,
+      type: "founding_client",
+    }).catch((err) => {
+      console.error("[Cubicon Registration] Failed to send verification email via Resend:", err);
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Your Cubicon Founding Client registration has been received successfully!",
-        id: newRegistration.id,
+        verificationRequired: true,
+        message: `Your registration has been received and placed on hold. Please check your inbox at ${cleanEmail} to verify your business email address and activate your founding client registration.`,
+        id: submissionId,
       },
       { status: 200 }
     );
