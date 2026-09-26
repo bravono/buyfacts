@@ -523,7 +523,7 @@ export default function Home() {
 
             <div style={{ flex: "0 0 auto" }}>
               <a
-                href="/cubicon"
+                href="/cubicon#founding-client"
                 className="btn btn-primary"
                 id="banner-cta-cubicon"
                 style={{
