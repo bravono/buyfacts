@@ -152,7 +152,12 @@ Resends an active 24-hour email verification link.
 Handles Cubicon Founding Client Program applications (Section 8).
 - **Business Email Blacklist**: Free public webmail domains (e.g. `gmail.com`, `yahoo.com`, `hotmail.com`, `proton.me`) are strictly blocked. Requires legitimate business domain.
 - **US-Based Confirmation**: Requires explicit confirmation that the organization is US based (`isUsBased: true`).
-- **Confirmation Options**: Sends confirmation receipt email when `requestConfirmation` is enabled.
+- **24-Hour Verification Hold Pipeline**:
+  - Submissions are initially placed in a pending verification state (`email_verifications` table with `type: "founding_client"`).
+  - No database registration record or client confirmation emails are sent prematurely.
+  - A tailored email verification request is dispatched to the user's business email with a 24-hour token.
+  - Upon clicking the verification link (`/api/verify-email?token=...`), the registration is committed to `cubicon_registrations` and a personalized confirmation email is dispatched.
+  - Confirmation emails greet the registrant by name and detail their founding privileges (wholesale lock, taste-test trial, refund guarantee, priority roadmap access) while omitting raw technical registration metrics.
 
 #### `POST /api/cubicon-feedback`
 Records non-anonymous user feedback and star rating (Section 9.4).
@@ -164,6 +169,33 @@ Returns feedback submissions. Supports `?export=csv` for executive CSV download.
 
 #### `DELETE /api/cubicon-feedback`
 Executes data retention policy. Call with `?purge=30d` to remove feedback records older than 30 days.
+
+---
+
+### User Feedback Feature & Post-Puzzle Completion Actions
+
+#### `/feedback` (Frontend Route)
+A dedicated, responsive feedback submission page with dark-mode glassmorphic styling:
+- **Star Rating Selector**: Interactive 1 to 5 star rating picker with hover effects and descriptive sentiment labels.
+- **Non-Anonymous Identification**: Collects Full Name (`name`) and verified email (`email`) per `FeedbackSchema` requirements.
+- **Commentary**: Text area for user suggestions, experiences, and methodology feedback (3 to 3,000 characters).
+- **URL Parameter Support**: Supports pre-filling from external links or solver sessions via query parameters:
+  - `?sessionId=...`: Pre-fills and links the feedback to a specific 3D Cubicon session.
+  - `?rating=...`: Pre-selects a star rating (1 to 5).
+  - `?name=...`: Pre-fills the user's name.
+  - `?email=...`: Pre-fills the user's email.
+- **Anti-Bot Honeypot**: Hidden `hp_website` input to block automated bot spam.
+- **Post-Submission Actions**: Success card offering immediate navigation back to Home or to launch Cubicon live.
+
+#### Cubicon Post-Puzzle Completion Integration
+Upon completing the 3D Cubicon puzzle sequence, users are presented with 5 dedicated action buttons:
+1. **Try Again**: Restarts the puzzle sequence for further practice.
+2. **Share**: Opens the invitation modal to refer colleagues and research partners.
+3. **Feedback**: Dispatches `CUBICON_FEEDBACK` message and smoothly navigates the participant to `/feedback?sessionId=${sessionId}` to leave their review and star rating.
+4. **Contact Us**: Dispatches `CUBICON_CONTACT` message and redirects to the contact inquiry section at `/#contact`.
+5. **Exit**: Exits the 3D demo and scrolls to the Founding Client privileges section.
+
+Additionally, a quick-access "Feedback" button is available in the 3D solver header controls toolbar at `/cubicon`.
 
 ---
 
