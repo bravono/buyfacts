@@ -11,7 +11,6 @@ const APPROVED_NAV_ITEMS = [
   { label: "INNOVATIONS THAT SAVE TIME", href: "/products-services" },
   { label: "RESEARCH IMPERATIVES", href: "/research-imperatives" },
   { label: "CUBICON", href: "/cubicon" },
-  { label: "THOUGHT LEADERSHIP", href: "/#thought-leadership" },
   { label: "ABOUT", href: "/#about" },
   { label: "CONTACT", href: "/#contact" },
 ];
@@ -125,8 +124,8 @@ class CubiconTimedPreviewStateMachine {
 }
 
 test("Dashboard and Navigation Alignment Test Suite", async (t) => {
-  await t.test("Navigation Menu Parity (Desktop & Mobile): Exactly 7 Approved Destinations", () => {
-    assert.equal(APPROVED_NAV_ITEMS.length, 7);
+  await t.test("Navigation Menu Parity (Desktop & Mobile): Exactly 6 Approved Destinations", () => {
+    assert.equal(APPROVED_NAV_ITEMS.length, 6);
 
     const labels = APPROVED_NAV_ITEMS.map((item) => item.label);
     assert.deepEqual(labels, [
@@ -134,7 +133,6 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       "INNOVATIONS THAT SAVE TIME",
       "RESEARCH IMPERATIVES",
       "CUBICON",
-      "THOUGHT LEADERSHIP",
       "ABOUT",
       "CONTACT",
     ]);
@@ -145,13 +143,12 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       "/products-services",
       "/research-imperatives",
       "/cubicon",
-      "/#thought-leadership",
       "/#about",
       "/#contact",
     ]);
   });
 
-  await t.test("Navbar source file reflects exact approved navigation items and links", () => {
+  await t.test("Navbar source file reflects exact approved navigation items and links without THOUGHT LEADERSHIP", () => {
     const navbarPath = path.join(BUYFACTS_ROOT, "components", "Navbar.tsx");
     assert.ok(fs.existsSync(navbarPath), "Navbar.tsx must exist");
     const content = fs.readFileSync(navbarPath, "utf-8");
@@ -167,8 +164,59 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       );
     }
 
+    // Must NOT contain THOUGHT LEADERSHIP
+    assert.ok(
+      !content.includes("THOUGHT LEADERSHIP"),
+      "Navbar.tsx must not contain THOUGHT LEADERSHIP"
+    );
+    assert.ok(
+      !content.includes("/#thought-leadership"),
+      "Navbar.tsx must not contain /#thought-leadership"
+    );
+
+    // Desktop and mobile navigation item count parity
+    const desktopMatches = content.match(/id="nav-link-[^"]+"/g) || [];
+    const mobileMatches = content.match(/id="mob-link-[^"]+"/g) || [];
+    assert.equal(
+      desktopMatches.length,
+      6,
+      `Desktop navbar must have exactly 6 items, found ${desktopMatches.length}`
+    );
+    assert.equal(
+      mobileMatches.length,
+      6,
+      `Mobile drawer navbar must have exactly 6 items, found ${mobileMatches.length}`
+    );
+    assert.equal(
+      desktopMatches.length,
+      mobileMatches.length,
+      "Desktop and mobile navigation items count must match exactly"
+    );
+
     // Must not contain broken /services?tab= links
     assert.ok(!content.includes("/services?tab="), "Navbar.tsx must not contain broken /services?tab= routes");
+  });
+
+  await t.test("Mobile drawer CSS styling enforces left alignment and compact sizing", () => {
+    const cssPath = path.join(BUYFACTS_ROOT, "components", "Navbar.module.css");
+    assert.ok(fs.existsSync(cssPath), "Navbar.module.css must exist");
+    const css = fs.readFileSync(cssPath, "utf-8");
+
+    // Drawer and navMobile alignment
+    assert.ok(
+      css.includes("align-items: flex-start"),
+      "Navbar.module.css must enforce left alignment"
+    );
+    assert.ok(
+      css.includes("text-align: left"),
+      "Navbar.module.css must enforce left text alignment"
+    );
+
+    // Compact font size
+    assert.ok(
+      !css.includes("font-size: 1.8rem"),
+      "Navbar.module.css must not use oversized 1.8rem font size for mobile links"
+    );
   });
 
   await t.test("Footer source file contains valid links without broken /services routes", () => {

@@ -149,8 +149,10 @@
   z-index: 99;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 100px clamp(1.25rem, 3vw, 2.5rem) 2.5rem;
+  overflow-y: auto;
   transition: var(--transition-smooth);
 }
 
@@ -161,27 +163,45 @@
 .navMobile {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  width: 80%;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 480px;
 }
 
 .mobileNavLink {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.35rem 0;
+  text-align: left;
+  letter-spacing: 0.02em;
+  transition: var(--transition-smooth);
 }
 
 .mobileNavLink:hover {
   color: var(--primary-color);
 }
 
+.mobileNavLinkActive {
+  color: var(--interactive-blue);
+  font-weight: 700;
+}
+
 .mobileBtnNav {
-  margin-top: 1rem;
-  width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: auto;
+  align-self: flex-start;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

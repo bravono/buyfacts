@@ -158,14 +158,6 @@ export default function Navbar({
             CUBICON
           </Link>
           <Link
-            href="/#thought-leadership"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
-            id="mob-link-thought-leadership"
-          >
-            THOUGHT LEADERSHIP
-          </Link>
-          <Link
             href="/#about"
             onClick={closeMobileMenu}
             className={styles.mobileNavLink}
@@ -179,7 +171,7 @@ export default function Navbar({
             className={`${styles.mobileBtnNav} btn btn-primary`}
             id="mob-link-contact"
           >
-            CONTACT <ArrowUpRight size={18} />
+            CONTACT <ArrowUpRight size={14} />
           </Link>
         </nav>
       </div>

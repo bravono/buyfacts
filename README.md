@@ -253,16 +253,15 @@ Runs the automated test suite verifying database models, conversion matching log
 ## 8. Site Navigation & Dashboard Architecture (Sections 4, 6, 15)
 
 ### Standardized Navigation Menu
-The navigation header provides exact parity across desktop and mobile devices with 7 primary destinations:
+The navigation header provides exact parity across desktop and mobile devices with 6 primary destinations:
 1. `HOME` (`/`)
 2. `INNOVATIONS THAT SAVE TIME` (`/products-services`, replaces legacy "Products and Services")
 3. `RESEARCH IMPERATIVES` (`/research-imperatives`, replaces legacy "Market Research")
 4. `CUBICON` (`/cubicon`, replaces legacy "Bad Bots")
-5. `THOUGHT LEADERSHIP` (`/#thought-leadership`)
-6. `ABOUT` (`/#about`)
-7. `CONTACT` (`/#contact`)
+5. `ABOUT` (`/#about`)
+6. `CONTACT` (`/#contact`)
 
-All navigation links support dynamic active state indication via `usePathname()`. Deprecated routes and broken `/services?tab=...` links have been purged.
+All navigation links support dynamic active state indication via `usePathname()`. Mobile navigation links are left-aligned, compact, and match the desktop destinations. Deprecated routes and broken `/services?tab=...` links have been purged.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
@@ -448,16 +447,15 @@ Runs the automated test suite verifying database models, conversion matching log
 ## 8. Site Navigation & Dashboard Architecture (Sections 4, 6, 15)
 
 ### Standardized Navigation Menu
-The navigation header provides exact parity across desktop and mobile devices with 7 primary destinations:
+The navigation header provides exact parity across desktop and mobile devices with 6 primary destinations:
 1. `HOME` (`/`)
 2. `INNOVATIONS THAT SAVE TIME` (`/products-services`, replaces legacy "Products and Services")
 3. `RESEARCH IMPERATIVES` (`/research-imperatives`, replaces legacy "Market Research")
 4. `CUBICON` (`/cubicon`, replaces legacy "Bad Bots")
-5. `THOUGHT LEADERSHIP` (`/#thought-leadership`)
-6. `ABOUT` (`/#about`)
-7. `CONTACT` (`/#contact`)
+5. `ABOUT` (`/#about`)
+6. `CONTACT` (`/#contact`)
 
-All navigation links support dynamic active state indication via `usePathname()`. Deprecated routes and broken `/services?tab=...` links have been purged.
+All navigation links support dynamic active state indication via `usePathname()`. Mobile navigation links are left-aligned, compact, and match the desktop destinations. Deprecated routes and broken `/services?tab=...` links have been purged.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
