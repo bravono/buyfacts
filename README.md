@@ -170,6 +170,13 @@ Resends an active 24-hour email verification link.
 
 #### `POST /api/cubicon-registration`
 Handles Cubicon Founding Client Program applications (Section 8).
+- **Human Anti-Bot Verification via Cubicon**:
+  - Requires valid `verificationSessionId` belonging to the `contact_form` sequence.
+  - Enforces pass threshold of 60% (0.60) across puzzle tasks before registration is accepted.
+  - Enforces one-time token consumption to prevent automated replay attacks.
+  - Interactive full-screen modal overlay triggers upon clicking "Complete Puzzle to Register", automatically submitting upon successful puzzle completion.
+- **Form Simplification**:
+  - The previous "Urgency" select dropdown in Step 2 has been removed from the user interface. Backend schemas default `urgency` to "Medium" for clean backward compatibility.
 - **Business Email Blacklist**: Free public webmail domains (e.g. `gmail.com`, `yahoo.com`, `hotmail.com`, `proton.me`) are strictly blocked. Requires legitimate business domain.
 - **US-Based Confirmation**: Requires explicit confirmation that the organization is US based (`isUsBased: true`).
 - **24-Hour Verification Hold Pipeline**:

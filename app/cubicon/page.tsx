@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -283,6 +283,76 @@ export default function CubiconPage() {
   const totalSteps = 3;
   const [showForm, setShowForm] = useState(true);
 
+  // Cubicon Anti-Bot Human Verification State
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<{
+    status: "idle" | "passed" | "failed";
+    message: string;
+  }>({ status: "idle", message: "" });
+  const [verificationKey, setVerificationKey] = useState(0);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+
+  // Ref to hold current registration submission executor to avoid stale closures
+  const submitRegistrationRef = useRef<(token: string) => Promise<void>>(async () => {});
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== "object") return;
+      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+        const { sessionId, passed, heading, description } = event.data;
+        if (passed) {
+          setIsVerified(true);
+          setVerificationSessionId(sessionId);
+          setVerificationStatus({
+            status: "passed",
+            message: heading || "Verification successful! You are verified as human.",
+          });
+          // Automatically submit form upon passing verification
+          submitRegistrationRef.current(sessionId);
+        } else {
+          setIsVerified(false);
+          setVerificationStatus({
+            status: "failed",
+            message: description || "Verification unsuccessful. Please try again.",
+          });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  // Lock body scroll and listen for Escape key when modal is open
+  useEffect(() => {
+    if (isVerificationModalOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isSubmitting) {
+          setIsVerificationModalOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isVerificationModalOpen, isSubmitting]);
+
+  const handleResetVerification = () => {
+    setIsVerified(false);
+    setVerificationSessionId(null);
+    setVerificationStatus({ status: "idle", message: "" });
+    setVerificationKey((prev) => prev + 1);
+  };
+
+
   const nextStep = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (formStep === 1) {
@@ -401,14 +471,7 @@ export default function CubiconPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formStep !== totalSteps) {
-      nextStep();
-      return;
-    }
-
+  const validateForm = () => {
     if (
       !formState.firstName.trim() ||
       !formState.lastName.trim() ||
@@ -419,7 +482,7 @@ export default function CubiconPage() {
         message:
           "Please fill out all required personal fields (First Name, Last Name, Email).",
       });
-      return;
+      return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -428,7 +491,7 @@ export default function CubiconPage() {
         type: "error",
         message: "Please enter a valid email address.",
       });
-      return;
+      return false;
     }
 
     if (
@@ -439,7 +502,7 @@ export default function CubiconPage() {
         type: "error",
         message: "The entered email addresses do not match.",
       });
-      return;
+      return false;
     }
 
     if (!isBusinessEmail(formState.email.trim())) {
@@ -448,7 +511,7 @@ export default function CubiconPage() {
         message:
           "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
       });
-      return;
+      return false;
     }
 
     if (!formState.isEighteen) {
@@ -457,7 +520,7 @@ export default function CubiconPage() {
         message:
           "You must certify that you are 18 years of age or older to submit this form.",
       });
-      return;
+      return false;
     }
 
     if (!formState.isUsBased) {
@@ -466,9 +529,13 @@ export default function CubiconPage() {
         message:
           "You must confirm that your organization is US based to submit this form.",
       });
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const executeRegistrationSubmission = async (token: string) => {
     setIsSubmitting(true);
     setFormStatus({ type: null, message: "" });
 
@@ -480,6 +547,7 @@ export default function CubiconPage() {
           ...formState,
           selectedAreas: selectedOptions,
           priorityScore,
+          verificationSessionId: token,
         }),
       });
 
@@ -507,20 +575,49 @@ export default function CubiconPage() {
           const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
           router.push(checkoutUrl);
         }
+        setIsVerificationModalOpen(false);
       } else {
         setFormStatus({
           type: "error",
           message: data.error || "Something went wrong. Please try again.",
         });
+        setIsVerificationModalOpen(false);
       }
     } catch (error) {
       setFormStatus({
         type: "error",
         message: "Network error. Please check your connection and try again.",
       });
+      setIsVerificationModalOpen(false);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  useEffect(() => {
+    submitRegistrationRef.current = executeRegistrationSubmission;
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formStep !== totalSteps) {
+      nextStep();
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!isVerified || !verificationSessionId) {
+      setFormStatus({ type: null, message: "" });
+      setVerificationStatus({ status: "idle", message: "" });
+      setIsVerificationModalOpen(true);
+      return;
+    }
+
+    await executeRegistrationSubmission(verificationSessionId);
   };
 
   const appFrameWrapperRef = React.useRef<HTMLDivElement>(null);
@@ -1501,23 +1598,6 @@ export default function CubiconPage() {
                             className={styles.input}
                           />
                         </div>
-
-                        <div className={styles.formGroup}>
-                          <label htmlFor="urgency" className={styles.label}>
-                            Urgency
-                          </label>
-                          <select
-                            id="urgency"
-                            name="urgency"
-                            value={formState.urgency}
-                            onChange={handleInputChange}
-                            className={styles.select}
-                          >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                          </select>
-                        </div>
                       </div>
 
                       <div
@@ -1670,7 +1750,7 @@ export default function CubiconPage() {
                         key="submit-btn"
                         type="submit"
                         disabled={isSubmitting}
-                        className="btn btn-primary"
+                        className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
                         style={{
                           padding: "1.1rem",
                           fontSize: "1.1rem",
@@ -1679,12 +1759,18 @@ export default function CubiconPage() {
                         id="submit-cubicon-form"
                       >
                         {isSubmitting
-                          ? "Submitting..."
-                          : "REGISTER AS FOUNDING CLIENT"}{" "}
-                        <Send size={18} />
+                          ? "Submitting Registration..."
+                          : isVerified
+                          ? "REGISTER AS FOUNDING CLIENT"
+                          : "COMPLETE PUZZLE TO REGISTER"}{" "}
+                        {isVerified ? <Send size={18} /> : <ShieldCheck size={18} />}
                       </button>
                     )}
                   </div>
+
+                  <p className={styles.verificationHint}>
+                    <ShieldCheck size={15} /> Clicking register will open a full-screen 3D verification puzzle to confirm you are human.
+                  </p>
 
                   {formStatus.type && (
                     <div
@@ -1703,6 +1789,94 @@ export default function CubiconPage() {
           )}
         </div>
       </section>
+
+      {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
+      {isVerificationModalOpen && (
+        <div
+          className={styles.fullscreenModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cubicon-reg-modal-title"
+        >
+          <div className={styles.modalHeader}>
+            <div className={styles.modalHeaderInfo}>
+              <ShieldCheck size={24} className={styles.modalHeaderIcon} />
+              <div>
+                <h3 id="cubicon-reg-modal-title" className={styles.modalTitle}>
+                  Human Verification
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Solve the 3D Cubicon spatial puzzle to verify you are human and complete your Founding Client registration.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isSubmitting) {
+                  setIsVerificationModalOpen(false);
+                  setVerificationStatus({ status: "idle", message: "" });
+                }
+              }}
+              className={styles.modalCloseBtn}
+              title="Cancel and return to form"
+              disabled={isSubmitting}
+            >
+              <X size={16} /> Cancel Verification
+            </button>
+          </div>
+
+          {verificationStatus.status === "failed" && (
+            <div className={styles.modalFailureBar}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <AlertCircle size={18} />
+                <span>{verificationStatus.message || "Verification unsuccessful. Please try again."}</span>
+              </div>
+              <div className={styles.modalFailureActions}>
+                <button
+                  type="button"
+                  onClick={handleResetVerification}
+                  className={styles.modalRetryBtn}
+                >
+                  <RotateCcw size={14} /> Retry Puzzle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerificationModalOpen(false);
+                    setVerificationStatus({ status: "idle", message: "" });
+                  }}
+                  className={styles.modalReturnBtn}
+                >
+                  Return to Form
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.modalIframeContainer}>
+            <iframe
+              key={verificationKey}
+              src="/cubicon-app/index.html?sequence=contact_form"
+              title="Cubicon Registration Verification Puzzle"
+              className={styles.modalIframe}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+
+            {isSubmitting && (
+              <div className={styles.modalSubmittingOverlay}>
+                <div className={styles.modalSpinner}></div>
+                <div style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                  Verification Passed! Submitting Registration...
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                  Please wait while we confirm your registration.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

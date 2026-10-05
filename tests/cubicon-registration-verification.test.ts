@@ -6,11 +6,14 @@ import { POST as registerPOST } from "../app/api/cubicon-registration/route";
 import { GET as verifyGET } from "../app/api/verify-email/route";
 import { prisma } from "../lib/prisma";
 
+import { resetRateLimits } from "../lib/security/rate-limiter";
+
 const BUYFACTS_ROOT = path.resolve(__dirname, "..");
 
 test("Cubicon Founding Client Registration Email Verification & Template Suite", async (t) => {
   const createdTokens: string[] = [];
   const createdRegistrationIds: string[] = [];
+  const createdSessionIds: string[] = [];
 
   t.after(async () => {
     if (createdTokens.length > 0) {
@@ -21,6 +24,11 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
     if (createdRegistrationIds.length > 0) {
       await prisma.cubiconRegistration.deleteMany({
         where: { id: { in: createdRegistrationIds } },
+      });
+    }
+    if (createdSessionIds.length > 0) {
+      await prisma.cubiconSession.deleteMany({
+        where: { session_id: { in: createdSessionIds } },
       });
     }
   });
@@ -204,7 +212,244 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
     );
   });
 
-  await t.test("5. Zero-Emoji Compliance across Modified Source Files", () => {
+  await t.test("5. POST /api/cubicon-registration rejects when verificationSessionId is missing", async () => {
+    resetRateLimits();
+    const req = new Request("http://localhost:3000/api/cubicon-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "Arthur",
+        lastName: "Dent",
+        email: "arthur@cyberdyne.com",
+        emailConfirm: "arthur@cyberdyne.com",
+        phone: "(555) 123-4567",
+        requestConfirmation: true,
+        isEighteen: true,
+        isUsBased: true,
+        hp_website: "",
+      }),
+    });
+
+    const res = await registerPOST(req);
+    const data = await res.json();
+
+    assert.equal(res.status, 400);
+    assert.match(data.error, /Human verification required/i);
+  });
+
+  await t.test("6. POST /api/cubicon-registration rejects on invalid session or sequence mismatch", async () => {
+    resetRateLimits();
+    // 6a. Non-existent session
+    const reqInvalid = new Request("http://localhost:3000/api/cubicon-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "Ford",
+        lastName: "Prefect",
+        email: "ford@cyberdyne.com",
+        emailConfirm: "ford@cyberdyne.com",
+        phone: "(555) 234-5678",
+        requestConfirmation: true,
+        isEighteen: true,
+        isUsBased: true,
+        hp_website: "",
+        verificationSessionId: "nonexistent_session_id_12345",
+      }),
+    });
+    const resInvalid = await registerPOST(reqInvalid);
+    const dataInvalid = await resInvalid.json();
+    assert.equal(resInvalid.status, 400);
+    assert.match(dataInvalid.error, /Invalid verification session/i);
+
+    // 6b. Sequence mismatch (default sequence instead of contact_form)
+    const defaultSeq = await prisma.cubiconSequence.findUnique({ where: { slug: "default" } });
+    if (defaultSeq) {
+      const wrongSeqSessionId = `test_wrong_seq_${Date.now()}`;
+      createdSessionIds.push(wrongSeqSessionId);
+      await prisma.cubiconSession.create({
+        data: {
+          session_id: wrongSeqSessionId,
+          sequence_id: defaultSeq.id,
+          passedPuzzles: 3,
+          totalPuzzlesAttempted: 3,
+        },
+      });
+
+      const reqWrongSeq = new Request("http://localhost:3000/api/cubicon-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: "Ford",
+          lastName: "Prefect",
+          email: "ford@cyberdyne.com",
+          emailConfirm: "ford@cyberdyne.com",
+          phone: "(555) 234-5678",
+          requestConfirmation: true,
+          isEighteen: true,
+          isUsBased: true,
+          hp_website: "",
+          verificationSessionId: wrongSeqSessionId,
+        }),
+      });
+      const resWrongSeq = await registerPOST(reqWrongSeq);
+      const dataWrongSeq = await resWrongSeq.json();
+      assert.equal(resWrongSeq.status, 400);
+      assert.match(dataWrongSeq.error, /Verification sequence mismatch/i);
+    }
+  });
+
+  await t.test("7. POST /api/cubicon-registration rejects when pass threshold 60% is not met", async () => {
+    resetRateLimits();
+    const contactSeq = await prisma.cubiconSequence.findUnique({ where: { slug: "contact_form" } });
+    assert.ok(contactSeq, "contact_form sequence must exist");
+
+    // 1 pass out of 3 tasks = 33.3% < 60%
+    const unpassedSessionId = `test_unpassed_reg_${Date.now()}`;
+    createdSessionIds.push(unpassedSessionId);
+    await prisma.cubiconSession.create({
+      data: {
+        session_id: unpassedSessionId,
+        sequence_id: contactSeq.id,
+        passedPuzzles: 1,
+        totalPuzzlesAttempted: 3,
+      },
+    });
+
+    const req = new Request("http://localhost:3000/api/cubicon-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "Tricia",
+        lastName: "McMillan",
+        email: "tricia@cyberdyne.com",
+        emailConfirm: "tricia@cyberdyne.com",
+        phone: "(555) 345-6789",
+        requestConfirmation: true,
+        isEighteen: true,
+        isUsBased: true,
+        hp_website: "",
+        verificationSessionId: unpassedSessionId,
+      }),
+    });
+    const res = await registerPOST(req);
+    const data = await res.json();
+
+    assert.equal(res.status, 400);
+    assert.match(data.error, /Human verification was not passed/i);
+  });
+
+  await t.test("8. POST /api/cubicon-registration succeeds with passed contact_form session and prevents replay", async () => {
+    resetRateLimits();
+    const contactSeq = await prisma.cubiconSequence.findUnique({ where: { slug: "contact_form" } });
+    assert.ok(contactSeq, "contact_form sequence must exist");
+
+    // 2 passes out of 3 tasks = 66.7% >= 60%
+    const passedSessionId = `test_passed_reg_${Date.now()}`;
+    createdSessionIds.push(passedSessionId);
+    await prisma.cubiconSession.create({
+      data: {
+        session_id: passedSessionId,
+        sequence_id: contactSeq.id,
+        passedPuzzles: 2,
+        totalPuzzlesAttempted: 3,
+      },
+    });
+
+    const testEmail = `verified_reg_${Date.now()}@cyberdyne.com`;
+
+    // First attempt should succeed
+    const req1 = new Request("http://localhost:3000/api/cubicon-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "John",
+        lastName: "Connor",
+        email: testEmail,
+        emailConfirm: testEmail,
+        phone: "(555) 456-7890",
+        requestConfirmation: true,
+        isEighteen: true,
+        isUsBased: true,
+        hp_website: "",
+        verificationSessionId: passedSessionId,
+      }),
+    });
+    const res1 = await registerPOST(req1);
+    const data1 = await res1.json();
+
+    assert.equal(res1.status, 200, "Registration with passed verification must return 200 OK");
+    assert.equal(data1.success, true);
+    assert.equal(data1.verificationRequired, true);
+
+    const record = await prisma.emailVerification.findFirst({
+      where: { email: testEmail },
+    });
+    assert.ok(record, "Verification hold record must be created");
+    createdTokens.push(record.token);
+
+    // Second attempt with same session should fail (replay prevention)
+    const req2 = new Request("http://localhost:3000/api/cubicon-registration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "John",
+        lastName: "Connor",
+        email: testEmail,
+        emailConfirm: testEmail,
+        phone: "(555) 456-7890",
+        requestConfirmation: true,
+        isEighteen: true,
+        isUsBased: true,
+        hp_website: "",
+        verificationSessionId: passedSessionId,
+      }),
+    });
+    const res2 = await registerPOST(req2);
+    const data2 = await res2.json();
+
+    assert.equal(res2.status, 400, "Replay attempt must be rejected with 400 Bad Request");
+    assert.match(data2.error, /already been used/i);
+  });
+
+  await t.test("9. Frontend Cubicon Registration Form: Urgency field removed and Captcha modal added", () => {
+    const cubiconPagePath = path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx");
+    assert.ok(fs.existsSync(cubiconPagePath), "app/cubicon/page.tsx must exist");
+    const content = fs.readFileSync(cubiconPagePath, "utf-8");
+
+    // Urgency select field must NOT exist in the form markup
+    assert.ok(
+      !content.includes('id="urgency"'),
+      "Urgency select input id='urgency' must be removed from form"
+    );
+    assert.ok(
+      !content.includes('name="urgency"'),
+      "Urgency input name='urgency' must be removed from form"
+    );
+
+    // Full-screen modal and verification puzzle elements must be present
+    assert.ok(
+      content.includes("/cubicon-app/index.html?sequence=contact_form"),
+      "Cubicon verification iframe must use contact_form sequence"
+    );
+    assert.ok(
+      content.includes("COMPLETE PUZZLE TO REGISTER"),
+      "Submit button must display COMPLETE PUZZLE TO REGISTER when unverified"
+    );
+    assert.ok(
+      content.includes("REGISTER AS FOUNDING CLIENT"),
+      "Submit button must display REGISTER AS FOUNDING CLIENT when verified"
+    );
+    assert.ok(
+      content.includes("fullscreenModalOverlay"),
+      "Must render full-screen modal overlay container"
+    );
+    assert.ok(
+      content.includes("CUBICON_VERIFICATION_COMPLETE"),
+      "Must listen for CUBICON_VERIFICATION_COMPLETE message event"
+    );
+  });
+
+  await t.test("10. Zero-Emoji Compliance across Modified Source Files", () => {
     const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 
     const files = [
@@ -212,6 +457,7 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
       path.join(BUYFACTS_ROOT, "app", "api", "cubicon-registration", "route.ts"),
       path.join(BUYFACTS_ROOT, "app", "api", "verify-email", "route.ts"),
       path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "cubicon", "cubicon.module.css"),
       path.join(BUYFACTS_ROOT, "tests", "cubicon-registration-verification.test.ts"),
     ];
 

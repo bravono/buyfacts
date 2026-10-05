@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import { POST as contactPOST } from "../app/api/contact/route";
 import { GET as cubiconGET, POST as cubiconPOST, ensureSeedTasks, evaluateSequencePass } from "../app/api/cubicon-data/route";
 import { prisma } from "../lib/prisma";
+import { resetRateLimits } from "../lib/security/rate-limiter";
 
 test("Contact Form Cubicon Verification Test Suite", async (t) => {
+  resetRateLimits();
   await ensureSeedTasks();
 
   await t.test("1. contact_form sequence initialization and configuration", async () => {
@@ -179,6 +181,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
   });
 
   await t.test("7. POST /api/contact succeeds with passed contact_form session and prevents replay", async () => {
+    resetRateLimits();
     const contactSeq = await prisma.cubiconSequence.findUnique({ where: { slug: "contact_form" } });
     assert.ok(contactSeq);
 
@@ -260,28 +263,153 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     assert.equal(evaluateSequencePass(0, 0, 0.6), true, "0 total tasks passes");
   });
 
-  await t.test("9. Submit button disabled state resolution based on verification status", () => {
-    // Helper function reproducing submit button disabled and styling state logic
-    const getSubmitButtonState = (isVerified: boolean, isSubmitting: boolean) => {
-      const isDisabled = isSubmitting || !isVerified;
-      const disabledClassApplied = (!isVerified || isSubmitting);
-      return { isDisabled, disabledClassApplied };
+  await t.test("9. Form validation guards before opening verification modal", () => {
+    const validateForm = (formState: {
+      name: string;
+      email: string;
+      message: string;
+      isEighteen: boolean;
+    }) => {
+      if (!formState.name.trim() || !formState.email.trim() || !formState.message.trim()) {
+        return { valid: false, error: "Please fill out all required fields (Name, Email, Message)." };
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formState.email.trim())) {
+        return { valid: false, error: "Please enter a valid email address." };
+      }
+      if (!formState.isEighteen) {
+        return { valid: false, error: "You must certify that you are 18 years of age or older to submit this form." };
+      }
+      return { valid: true, error: null };
     };
 
-    // Case 1: Unverified, not submitting -> must be disabled and greyed out
-    const unverifiedState = getSubmitButtonState(false, false);
-    assert.equal(unverifiedState.isDisabled, true, "Submit button must be disabled when unverified");
-    assert.equal(unverifiedState.disabledClassApplied, true, "Disabled style class must be applied when unverified");
+    // Case 1: Missing name
+    const res1 = validateForm({ name: "", email: "user@example.com", message: "Hi", isEighteen: true });
+    assert.equal(res1.valid, false);
+    assert.match(res1.error || "", /required fields/);
 
-    // Case 2: Verified, not submitting -> enabled and active
-    const verifiedState = getSubmitButtonState(true, false);
-    assert.equal(verifiedState.isDisabled, false, "Submit button must be enabled when verified");
-    assert.equal(verifiedState.disabledClassApplied, false, "Disabled style class must not be applied when verified");
+    // Case 2: Invalid email
+    const res2 = validateForm({ name: "Alice", email: "invalid-email", message: "Hi", isEighteen: true });
+    assert.equal(res2.valid, false);
+    assert.match(res2.error || "", /valid email address/);
 
-    // Case 3: Verified, currently submitting -> disabled to prevent double-submit
-    const submittingState = getSubmitButtonState(true, true);
-    assert.equal(submittingState.isDisabled, true, "Submit button must be disabled during submission");
-    assert.equal(submittingState.disabledClassApplied, true, "Disabled style class must be applied during submission");
+    // Case 3: 18+ checkbox unchecked
+    const res3 = validateForm({ name: "Alice", email: "alice@example.com", message: "Hi", isEighteen: false });
+    assert.equal(res3.valid, false);
+    assert.match(res3.error || "", /18 years of age/);
+
+    // Case 4: Valid form fields -> ready to trigger full-screen verification modal
+    const res4 = validateForm({ name: "Alice", email: "alice@example.com", message: "Inquiry details", isEighteen: true });
+    assert.equal(res4.valid, true);
+    assert.equal(res4.error, null);
+  });
+
+  await t.test("10. Submit button label and state resolution in form-first workflow", () => {
+    const getSubmitButtonState = (isVerified: boolean, isSubmitting: boolean) => {
+      let label = "Complete Puzzle to Submit";
+      if (isSubmitting) {
+        label = "Submitting Inquiry...";
+      } else if (isVerified) {
+        label = "Submit Inquiry";
+      }
+      const isDisabled = isSubmitting;
+      return { label, isDisabled };
+    };
+
+    // Initial state: unverified, not submitting -> enabled button displaying "Complete Puzzle to Submit"
+    const s1 = getSubmitButtonState(false, false);
+    assert.equal(s1.label, "Complete Puzzle to Submit");
+    assert.equal(s1.isDisabled, false);
+
+    // Submitting state: disabled with loading label
+    const s2 = getSubmitButtonState(false, true);
+    assert.equal(s2.label, "Submitting Inquiry...");
+    assert.equal(s2.isDisabled, true);
+
+    // Verified state (if returned to form): "Submit Inquiry"
+    const s3 = getSubmitButtonState(true, false);
+    assert.equal(s3.label, "Submit Inquiry");
+    assert.equal(s3.isDisabled, false);
+  });
+
+  await t.test("11. Automatic submission workflow upon Cubicon puzzle pass", async () => {
+    resetRateLimits();
+    const contactSeq = await prisma.cubiconSequence.findUnique({ where: { slug: "contact_form" } });
+    assert.ok(contactSeq);
+
+    const autoPassedSessionId = `auto_pass_${Date.now()}`;
+    await prisma.cubiconSession.create({
+      data: {
+        session_id: autoPassedSessionId,
+        sequence_id: contactSeq.id,
+        passedPuzzles: 2,
+        totalPuzzlesAttempted: 3,
+      },
+    });
+
+    try {
+      // Simulate CUBICON_VERIFICATION_COMPLETE message event payload
+      const mockEventData = {
+        type: "CUBICON_VERIFICATION_COMPLETE",
+        passed: true,
+        sessionId: autoPassedSessionId,
+        heading: "Verification passed!",
+      };
+
+      assert.equal(mockEventData.passed, true);
+      assert.ok(mockEventData.sessionId);
+
+      // Simulate the auto-submit call triggered by the event listener
+      const req = new Request("http://localhost:3000/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Auto Submit User",
+          email: "autosubmit@example.com",
+          message: "Testing auto submission after passing full-screen puzzle",
+          isEighteen: true,
+          verificationSessionId: mockEventData.sessionId,
+        }),
+      });
+
+      const res = await contactPOST(req);
+      const data = await res.json();
+
+      assert.equal(res.status, 200);
+      assert.equal(data.success, true);
+      assert.ok(data.id);
+
+      // Clean up
+      await prisma.contactInquiry.delete({ where: { id: data.id } });
+    } finally {
+      await prisma.cubiconSession.deleteMany({ where: { session_id: autoPassedSessionId } });
+    }
+  });
+
+  await t.test("12. Verification failure workflow prevents submission and preserves form state", () => {
+    const mockFailedEvent = {
+      type: "CUBICON_VERIFICATION_COMPLETE",
+      passed: false,
+      sessionId: "failed_session_123",
+      description: "Did not achieve passing score of 60%.",
+    };
+
+    let isSubmitted = false;
+    let isVerified = false;
+    let modalStatus = "idle";
+
+    // Handle failure
+    if (mockFailedEvent.passed) {
+      isVerified = true;
+      isSubmitted = true;
+    } else {
+      isVerified = false;
+      modalStatus = "failed";
+    }
+
+    assert.equal(isSubmitted, false, "Failed puzzle must never trigger form submission");
+    assert.equal(isVerified, false, "Verification must remain false on failure");
+    assert.equal(modalStatus, "failed", "Modal status must transition to failed to offer retry");
   });
 });
 

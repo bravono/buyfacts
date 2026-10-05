@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   RotateCcw,
   AlertCircle,
+  X,
 } from "lucide-react";
 import styles from "./page.module.css";
 import TripletButtonGroup, { TripletButtonItem } from "@/components/TripletButton";
@@ -105,6 +106,10 @@ export default function Home() {
     message: string;
   }>({ status: "idle", message: "" });
   const [verificationKey, setVerificationKey] = useState(0);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+
+  // Ref to hold current submission executor to prevent stale closures in event listener
+  const submitInquiryRef = React.useRef<(token: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -118,6 +123,8 @@ export default function Home() {
             status: "passed",
             message: heading || "Verification successful! You are verified as human.",
           });
+          // Automatically submit form upon passing verification
+          submitInquiryRef.current(sessionId);
         } else {
           setIsVerified(false);
           setVerificationStatus({
@@ -133,6 +140,25 @@ export default function Home() {
       window.removeEventListener("message", handleMessage);
     };
   }, []);
+
+  // Lock body scroll and listen for Escape key when modal is open
+  useEffect(() => {
+    if (isVerificationModalOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isSubmitting) {
+          setIsVerificationModalOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isVerificationModalOpen, isSubmitting]);
 
   const handleResetVerification = () => {
     setIsVerified(false);
@@ -209,15 +235,14 @@ export default function Home() {
     },
   ];
 
-  // Form submission handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Validate required contact form fields before launching verification puzzle
+  const validateForm = () => {
     if (!formState.name.trim() || !formState.email.trim() || !formState.message.trim()) {
       setFormStatus({
         type: "error",
         message: "Please fill out all required fields (Name, Email, Message).",
       });
-      return;
+      return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -226,7 +251,7 @@ export default function Home() {
         type: "error",
         message: "Please enter a valid email address.",
       });
-      return;
+      return false;
     }
 
     if (!formState.isEighteen) {
@@ -234,17 +259,14 @@ export default function Home() {
         type: "error",
         message: "You must certify that you are 18 years of age or older to submit this form.",
       });
-      return;
+      return false;
     }
 
-    if (!isVerified || !verificationSessionId) {
-      setFormStatus({
-        type: "error",
-        message: "Human verification required. Please complete the Cubicon puzzle before submitting.",
-      });
-      return;
-    }
+    return true;
+  };
 
+  // Form submission executor
+  const executeFormSubmission = async (token: string) => {
     setIsSubmitting(true);
     setFormStatus({ type: null, message: "" });
 
@@ -254,7 +276,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formState,
-          verificationSessionId,
+          verificationSessionId: token,
         }),
       });
 
@@ -286,20 +308,43 @@ export default function Home() {
         setVerificationSessionId(null);
         setVerificationStatus({ status: "idle", message: "" });
         setVerificationKey((prev) => prev + 1);
+        setIsVerificationModalOpen(false);
       } else {
         setFormStatus({
           type: "error",
           message: data.error || "Something went wrong. Please try again.",
         });
+        setIsVerificationModalOpen(false);
       }
-    } catch (error) {
+    } catch {
       setFormStatus({
         type: "error",
         message: "Network error. Please verify your connection and try again.",
       });
+      setIsVerificationModalOpen(false);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Keep submission ref updated with current formState closure
+  useEffect(() => {
+    submitInquiryRef.current = executeFormSubmission;
+  });
+
+  // Form submission trigger
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (!isVerified || !verificationSessionId) {
+      setFormStatus({ type: null, message: "" });
+      setVerificationStatus({ status: "idle", message: "" });
+      setIsVerificationModalOpen(true);
+      return;
+    }
+
+    await executeFormSubmission(verificationSessionId);
   };
 
   const handleResend = async () => {
@@ -690,68 +735,6 @@ export default function Home() {
                 className={styles.contactForm}
                 id="contact-form"
               >
-                {/* Cubicon Anti-Bot Human Verification */}
-                <div className={styles.verificationCard}>
-                  <div className={styles.verificationHeader}>
-                    <ShieldCheck size={22} className={styles.verificationIcon} />
-                    <div>
-                      <h3 className={styles.verificationTitle}>Human Verification</h3>
-                      <p className={styles.verificationSubtitle}>
-                        Before submitting, please complete the 3D Cubicon spatial verification puzzle below to verify you are human.
-                      </p>
-                    </div>
-                  </div>
-
-                  {!isVerified ? (
-                    <div>
-                      <div className={styles.verificationIframeWrapper}>
-                        <iframe
-                          key={verificationKey}
-                          src="/cubicon-app/index.html?sequence=contact_form"
-                          title="Cubicon Contact Verification Puzzle"
-                          className={styles.verificationIframe}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        />
-                      </div>
-                      {verificationStatus.status === "failed" && (
-                        <div className={styles.verificationErrorBanner}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <AlertCircle size={16} />
-                            <span>{verificationStatus.message}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleResetVerification}
-                            className={styles.retryBtn}
-                          >
-                            <RotateCcw size={13} /> Retry Puzzle
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className={styles.verificationSuccessCard}>
-                      <div className={styles.verifiedSuccessLeft}>
-                        <CheckCircle2 size={24} className={styles.verifiedSuccessIcon} />
-                        <div>
-                          <div className={styles.verifiedSuccessTitle}>Human Verification Passed</div>
-                          <div className={styles.verifiedSuccessText}>
-                            Session {verificationSessionId ? verificationSessionId.slice(0, 16) : ""}... verified. You may now complete and submit your inquiry.
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleResetVerification}
-                        className={styles.resetVerificationBtn}
-                        title="Re-verify with a new puzzle"
-                      >
-                        <RotateCcw size={13} /> Reset
-                      </button>
-                    </div>
-                  )}
-                </div>
-
                 <div className={styles.formGroup}>
                   <label htmlFor="name" className={styles.label}>
                     Full Name{" "}
@@ -956,19 +939,22 @@ export default function Home() {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !isVerified}
-                  className={`btn btn-primary ${!isVerified || isSubmitting ? styles.submitBtnDisabled : ""}`}
+                  disabled={isSubmitting}
+                  className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
                   id="contact-submit-btn"
+                  style={{ width: "100%", marginTop: "1rem" }}
                 >
-                  {isSubmitting ? "Sending Inquiry..." : "Submit Inquiry"}{" "}
-                  <Send size={16} />
+                  {isSubmitting
+                    ? "Submitting Inquiry..."
+                    : isVerified
+                    ? "Submit Inquiry"
+                    : "Complete Puzzle to Submit"}{" "}
+                  {isVerified ? <Send size={16} /> : <ShieldCheck size={16} />}
                 </button>
 
-                {!isVerified && (
-                  <p className={styles.verificationHint}>
-                    <ShieldCheck size={15} /> Solve the human verification puzzle above to enable submission.
-                  </p>
-                )}
+                <p className={styles.verificationHint}>
+                  <ShieldCheck size={15} /> Clicking submit will open a full-screen 3D verification puzzle to confirm you are human.
+                </p>
 
                 {formStatus.type && (
                   <div
@@ -1101,6 +1087,94 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
+      {isVerificationModalOpen && (
+        <div
+          className={styles.fullscreenModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cubicon-modal-title"
+        >
+          <div className={styles.modalHeader}>
+            <div className={styles.modalHeaderInfo}>
+              <ShieldCheck size={24} className={styles.modalHeaderIcon} />
+              <div>
+                <h3 id="cubicon-modal-title" className={styles.modalTitle}>
+                  Human Verification
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Solve the 3D Cubicon spatial puzzle to verify you are human and submit your inquiry.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isSubmitting) {
+                  setIsVerificationModalOpen(false);
+                  setVerificationStatus({ status: "idle", message: "" });
+                }
+              }}
+              className={styles.modalCloseBtn}
+              title="Cancel and return to form"
+              disabled={isSubmitting}
+            >
+              <X size={16} /> Cancel Verification
+            </button>
+          </div>
+
+          {verificationStatus.status === "failed" && (
+            <div className={styles.modalFailureBar}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <AlertCircle size={18} />
+                <span>{verificationStatus.message || "Verification unsuccessful. Please try again."}</span>
+              </div>
+              <div className={styles.modalFailureActions}>
+                <button
+                  type="button"
+                  onClick={handleResetVerification}
+                  className={styles.modalRetryBtn}
+                >
+                  <RotateCcw size={14} /> Retry Puzzle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerificationModalOpen(false);
+                    setVerificationStatus({ status: "idle", message: "" });
+                  }}
+                  className={styles.modalReturnBtn}
+                >
+                  Return to Form
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.modalIframeContainer}>
+            <iframe
+              key={verificationKey}
+              src="/cubicon-app/index.html?sequence=contact_form"
+              title="Cubicon Contact Verification Puzzle"
+              className={styles.modalIframe}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+
+            {isSubmitting && (
+              <div className={styles.modalSubmittingOverlay}>
+                <div className={styles.modalSpinner}></div>
+                <div style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                  Verification Passed! Submitting Inquiry...
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                  Please wait while we confirm your message.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
