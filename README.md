@@ -98,10 +98,30 @@ Processes and records an invitation sent by a user.
 #### `GET /api/cubicon-share`
 Returns all recorded share invitations.
 
+#### `POST /api/contact`
+Receives and records contact inquiries. Requires completion of human verification via the Cubicon spatial puzzle engine.
+- **Request Body**:
+  ```json
+  {
+    "name": "Sarah Connor",
+    "email": "sarah@example.com",
+    "company": "Cyberdyne Systems",
+    "interest": "General Inquiry",
+    "message": "Interested in primary research services.",
+    "isEighteen": true,
+    "verificationSessionId": "sess_1788500000000_abc123"
+  }
+  ```
+- **Validation**:
+  - Requires `verificationSessionId` belonging to the `contact_form` sequence.
+  - Verification pass threshold must meet or exceed 60% (0.60).
+  - Enforces one-time token consumption to prevent automated replay attacks.
+- **Response**: `{ success: true, message: "Inquiry saved successfully.", id: "uuid" }`
+
 #### `GET /api/cubicon-data`
 Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 - **Query Parameters**:
-  - `sequenceId` or `sequence` (slug): Target sequence identifier. Defaults to active sequence.
+  - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). Defaults to the active sequence.
 
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, and sequence completion.

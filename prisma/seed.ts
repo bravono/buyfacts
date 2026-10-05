@@ -253,8 +253,47 @@ async function main() {
   }
   console.log(`   ✓ Seeded ${mediaAssets.length} Media Assets`);
 
-  // 4. Cubicon 3D Tasks
-  console.log("4. Seeding Cubicon 3D Tasks...");
+  // 4. Cubicon 3D Sequences and Tasks
+  console.log("4. Seeding Cubicon 3D Sequences and Tasks...");
+
+  const defaultSeq = await prisma.cubiconSequence.upsert({
+    where: { slug: "default" },
+    update: {
+      title: "Default Verification Challenge",
+      pass_threshold: 0.66,
+      is_active: true,
+    },
+    create: {
+      slug: "default",
+      title: "Default Verification Challenge",
+      description: "Standard anti-bot human verification puzzle sequence",
+      pass_threshold: 0.66,
+      rotation_direction: "left",
+      default_rotation_interval: 15,
+      is_active: true,
+      created_by: "system",
+    },
+  });
+
+  const contactSeq = await prisma.cubiconSequence.upsert({
+    where: { slug: "contact_form" },
+    update: {
+      title: "Contact Form Human Verification",
+      pass_threshold: 0.6,
+      is_active: true,
+    },
+    create: {
+      slug: "contact_form",
+      title: "Contact Form Human Verification",
+      description: "Anti-bot spatial puzzle verification for contact inquiries",
+      pass_threshold: 0.6,
+      rotation_direction: "left",
+      default_rotation_interval: 15,
+      is_active: true,
+      created_by: "system",
+    },
+  });
+
   const cubiconTasks = [
     {
       taskIndex: 0,
@@ -313,15 +352,35 @@ async function main() {
     },
   ];
 
-  const existingCubiconTasks = await prisma.cubiconTask.count();
-  if (existingCubiconTasks === 0) {
+  const defaultTasksCount = await prisma.cubiconTask.count({
+    where: { sequence_id: defaultSeq.id },
+  });
+  if (defaultTasksCount === 0) {
     for (const t of cubiconTasks) {
-      await prisma.cubiconTask.create({ data: t });
+      await prisma.cubiconTask.create({
+        data: {
+          ...t,
+          sequence_id: defaultSeq.id,
+        },
+      });
     }
-    console.log(`   ✓ Seeded ${cubiconTasks.length} Cubicon Tasks`);
-  } else {
-    console.log(`   ✓ ${existingCubiconTasks} Cubicon Tasks already exist`);
   }
+
+  const contactTasksCount = await prisma.cubiconTask.count({
+    where: { sequence_id: contactSeq.id },
+  });
+  if (contactTasksCount === 0) {
+    for (const t of cubiconTasks) {
+      await prisma.cubiconTask.create({
+        data: {
+          ...t,
+          heading: t.heading.replace("Puzzle", "Verification Puzzle"),
+          sequence_id: contactSeq.id,
+        },
+      });
+    }
+  }
+  console.log("   Seeded Cubicon Sequences (default, contact_form) and associated Tasks");
 
   console.log("\n🎉 BuyFacts Core DB seeding completed successfully!");
 }

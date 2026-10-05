@@ -266,10 +266,33 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 15px var(--primary-glow);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #e08800; /* Subtle hover state */
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 153, 0, 0.35);
+}
+
+.btn:disabled,
+.btn[disabled],
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background: #64748b !important;
+  color: #cbd5e1 !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  transform: none !important;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover,
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  background: #64748b !important;
+  color: #cbd5e1 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .btn-secondary {

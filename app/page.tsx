@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ComingSoon from "./ComingSoon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -21,6 +21,9 @@ import {
   ShieldCheck,
   TrendingUp,
   ArrowRight,
+  CheckCircle2,
+  RotateCcw,
+  AlertCircle,
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -56,6 +59,50 @@ export default function Home() {
     message: string;
   }>({ type: null, message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Cubicon Anti-Bot Human Verification State
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<{
+    status: "idle" | "passed" | "failed";
+    message: string;
+  }>({ status: "idle", message: "" });
+  const [verificationKey, setVerificationKey] = useState(0);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== "object") return;
+      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+        const { sessionId, passed, heading, description } = event.data;
+        if (passed) {
+          setIsVerified(true);
+          setVerificationSessionId(sessionId);
+          setVerificationStatus({
+            status: "passed",
+            message: heading || "Verification successful! You are verified as human.",
+          });
+        } else {
+          setIsVerified(false);
+          setVerificationStatus({
+            status: "failed",
+            message: description || "Verification unsuccessful. Please try again.",
+          });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  const handleResetVerification = () => {
+    setIsVerified(false);
+    setVerificationSessionId(null);
+    setVerificationStatus({ status: "idle", message: "" });
+    setVerificationKey((prev) => prev + 1);
+  };
 
   // The 8 Portfolio Cards matching Section 2 of the mockup image
   const portfolioCards: ServiceCardData[] = [
@@ -153,6 +200,14 @@ export default function Home() {
       return;
     }
 
+    if (!isVerified || !verificationSessionId) {
+      setFormStatus({
+        type: "error",
+        message: "Human verification required. Please complete the Cubicon puzzle before submitting.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setFormStatus({ type: null, message: "" });
 
@@ -160,7 +215,10 @@ export default function Home() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          verificationSessionId,
+        }),
       });
 
       const data = await response.json();
@@ -179,6 +237,10 @@ export default function Home() {
           interest: "General Inquiry",
           isEighteen: false,
         });
+        setIsVerified(false);
+        setVerificationSessionId(null);
+        setVerificationStatus({ status: "idle", message: "" });
+        setVerificationKey((prev) => prev + 1);
       } else {
         setFormStatus({
           type: "error",
@@ -681,6 +743,68 @@ export default function Home() {
                 className={styles.contactForm}
                 id="contact-form"
               >
+                {/* Cubicon Anti-Bot Human Verification */}
+                <div className={styles.verificationCard}>
+                  <div className={styles.verificationHeader}>
+                    <ShieldCheck size={22} className={styles.verificationIcon} />
+                    <div>
+                      <h3 className={styles.verificationTitle}>Human Verification</h3>
+                      <p className={styles.verificationSubtitle}>
+                        Before submitting, please complete the 3D Cubicon spatial verification puzzle below to verify you are human.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isVerified ? (
+                    <div>
+                      <div className={styles.verificationIframeWrapper}>
+                        <iframe
+                          key={verificationKey}
+                          src="/cubicon-app/index.html?sequence=contact_form"
+                          title="Cubicon Contact Verification Puzzle"
+                          className={styles.verificationIframe}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        />
+                      </div>
+                      {verificationStatus.status === "failed" && (
+                        <div className={styles.verificationErrorBanner}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <AlertCircle size={16} />
+                            <span>{verificationStatus.message}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleResetVerification}
+                            className={styles.retryBtn}
+                          >
+                            <RotateCcw size={13} /> Retry Puzzle
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={styles.verificationSuccessCard}>
+                      <div className={styles.verifiedSuccessLeft}>
+                        <CheckCircle2 size={24} className={styles.verifiedSuccessIcon} />
+                        <div>
+                          <div className={styles.verifiedSuccessTitle}>Human Verification Passed</div>
+                          <div className={styles.verifiedSuccessText}>
+                            Session {verificationSessionId ? verificationSessionId.slice(0, 16) : ""}... verified. You may now complete and submit your inquiry.
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleResetVerification}
+                        className={styles.resetVerificationBtn}
+                        title="Re-verify with a new puzzle"
+                      >
+                        <RotateCcw size={13} /> Reset
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className={styles.formGroup}>
                   <label htmlFor="name" className={styles.label}>
                     Full Name{" "}
@@ -876,13 +1000,19 @@ export default function Home() {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="btn btn-primary submitBtn"
+                  disabled={isSubmitting || !isVerified}
+                  className={`btn btn-primary ${!isVerified || isSubmitting ? styles.submitBtnDisabled : ""}`}
                   id="contact-submit-btn"
                 >
                   {isSubmitting ? "Sending Inquiry..." : "Submit Inquiry"}{" "}
                   <Send size={16} />
                 </button>
+
+                {!isVerified && (
+                  <p className={styles.verificationHint}>
+                    <ShieldCheck size={15} /> Solve the human verification puzzle above to enable submission.
+                  </p>
+                )}
 
                 {formStatus.type && (
                   <div

@@ -4,12 +4,13 @@ import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendContactEmails } from "@/lib/resend";
+import { evaluateSequencePass } from "@/app/api/cubicon-data/route";
 
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, company, interest, message, isEighteen } = body;
+    const { name, email, company, interest, message, isEighteen, verificationSessionId } = body;
 
     // Server-side validation
     if (!name || !email || !message) {
@@ -34,6 +35,64 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Human verification check via Cubicon
+    if (!verificationSessionId || typeof verificationSessionId !== "string" || !verificationSessionId.trim()) {
+      return NextResponse.json(
+        { error: "Validation error: Human verification required. Please complete the Cubicon puzzle before submitting." },
+        { status: 400 }
+      );
+    }
+
+    const session = await prisma.cubiconSession.findUnique({
+      where: { session_id: verificationSessionId.trim() },
+      include: { sequence: true },
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Validation error: Invalid verification session." },
+        { status: 400 }
+      );
+    }
+
+    if (session.sequence?.slug !== "contact_form") {
+      return NextResponse.json(
+        { error: "Validation error: Verification sequence mismatch." },
+        { status: 400 }
+      );
+    }
+
+    if (session.previous_result === "consumed" || session.previous_result === "used") {
+      return NextResponse.json(
+        { error: "Validation error: This verification session has already been used. Please solve a new puzzle." },
+        { status: 400 }
+      );
+    }
+
+    const totalTasks = await prisma.cubiconTask.count({
+      where: { sequence_id: session.sequence_id },
+    });
+
+    const threshold = session.sequence?.pass_threshold ?? 0.6;
+    const passed = evaluateSequencePass(
+      session.passedPuzzles,
+      totalTasks > 0 ? totalTasks : 1,
+      threshold
+    );
+
+    if (!passed) {
+      return NextResponse.json(
+        { error: "Validation error: Human verification was not passed." },
+        { status: 400 }
+      );
+    }
+
+    // Mark session as used to prevent replay attacks
+    await prisma.cubiconSession.update({
+      where: { id: session.id },
+      data: { previous_result: "used" },
+    });
 
     const submissionId = crypto.randomUUID();
 
@@ -77,6 +136,7 @@ export async function POST(request: Request) {
         interest: interest || "General Inquiry",
         message: message.trim(),
         isEighteen: !!isEighteen,
+        verificationSessionId: verificationSessionId.trim(),
         timestamp: new Date().toISOString()
       };
 
