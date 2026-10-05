@@ -101,6 +101,14 @@ export default function Navbar({
           </Link>
 
           <Link
+            href="/#what-sets-us-apart"
+            className={styles.navLink}
+            id="nav-link-what-sets-us-apart"
+          >
+            WHAT SETS US APART
+          </Link>
+
+          <Link
             href="/#contact"
             className={`${styles.btnNav} btn btn-primary`}
             id="nav-link-contact"
@@ -164,6 +172,14 @@ export default function Navbar({
             id="mob-link-about"
           >
             ABOUT
+          </Link>
+          <Link
+            href="/#what-sets-us-apart"
+            onClick={closeMobileMenu}
+            className={styles.mobileNavLink}
+            id="mob-link-what-sets-us-apart"
+          >
+            WHAT SETS US APART
           </Link>
           <Link
             href="/#contact"

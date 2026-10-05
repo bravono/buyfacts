@@ -280,15 +280,25 @@ Runs the automated test suite verifying database models, conversion matching log
 ## 8. Site Navigation & Dashboard Architecture (Sections 4, 6, 15)
 
 ### Standardized Navigation Menu
-The navigation header provides exact parity across desktop and mobile devices with 6 primary destinations:
+The navigation header provides exact parity across desktop and mobile devices with 7 primary destinations:
 1. `HOME` (`/`)
 2. `INNOVATIONS THAT SAVE TIME` (`/products-services`, replaces legacy "Products and Services")
 3. `RESEARCH IMPERATIVES` (`/research-imperatives`, replaces legacy "Market Research")
 4. `CUBICON` (`/cubicon`, replaces legacy "Bad Bots")
 5. `ABOUT` (`/#about`)
-6. `CONTACT` (`/#contact`)
+6. `WHAT SETS US APART` (`/#what-sets-us-apart`)
+7. `CONTACT` (`/#contact`)
 
 All navigation links support dynamic active state indication via `usePathname()`. Mobile navigation links are left-aligned, compact, and match the desktop destinations. Deprecated routes and broken `/services?tab=...` links have been purged.
+
+### What Sets Us Apart Architecture & Dual CDN Video Showcase
+Located within the About section (`id="about"`) on the homepage, the "What Sets Us Apart" subsection (`id="what-sets-us-apart"`) delivers high-definition video demonstrations over CDN:
+- **Direct Anchor Access**: Directly addressable via `/#what-sets-us-apart` from desktop navigation, mobile drawer, and footer quick links.
+- **Dual CDN Video Player Architecture**:
+  1. *Video 1 (Early Recognition & Spatial Intelligence)*: Demonstrates early movement detection and real-time telemetry.
+  2. *Video 2 (Story-Based Methodology & Return on Effort)*: Illustrates narrative inquiry and participant engagement models.
+- **Resilient CDN Delivery**: Utilizes public S3 CDN endpoints with automated browser error fallback (`onError`) to secondary high-availability CDN streams, ensuring uninterrupted presentation.
+- **Zero-Emoji Compliance**: Adheres to strict corporate design and zero-emoji standards across all UI layers and metadata.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
@@ -474,13 +484,14 @@ Runs the automated test suite verifying database models, conversion matching log
 ## 8. Site Navigation & Dashboard Architecture (Sections 4, 6, 15)
 
 ### Standardized Navigation Menu
-The navigation header provides exact parity across desktop and mobile devices with 6 primary destinations:
+The navigation header provides exact parity across desktop and mobile devices with 7 primary destinations:
 1. `HOME` (`/`)
 2. `INNOVATIONS THAT SAVE TIME` (`/products-services`, replaces legacy "Products and Services")
 3. `RESEARCH IMPERATIVES` (`/research-imperatives`, replaces legacy "Market Research")
 4. `CUBICON` (`/cubicon`, replaces legacy "Bad Bots")
 5. `ABOUT` (`/#about`)
-6. `CONTACT` (`/#contact`)
+6. `WHAT SETS US APART` (`/#what-sets-us-apart`)
+7. `CONTACT` (`/#contact`)
 
 All navigation links support dynamic active state indication via `usePathname()`. Mobile navigation links are left-aligned, compact, and match the desktop destinations. Deprecated routes and broken `/services?tab=...` links have been purged.
 

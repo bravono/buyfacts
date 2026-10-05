@@ -27,6 +27,7 @@ export default function Footer() {
               <li><Link href="/products-services">Innovations that Save Time</Link></li>
               <li><Link href="/research-imperatives">Research Imperatives</Link></li>
               <li><Link href="/#about">About Us</Link></li>
+              <li><Link href="/#what-sets-us-apart">What Sets Us Apart</Link></li>
               <li><Link href="/#contact">Contact</Link></li>
               <li><Link href="/feedback">Feedback & Reviews</Link></li>
             </ul>

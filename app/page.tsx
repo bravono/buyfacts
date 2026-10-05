@@ -25,9 +25,17 @@ import {
   RotateCcw,
   AlertCircle,
   X,
+  Video,
 } from "lucide-react";
 import styles from "./page.module.css";
 import TripletButtonGroup, { TripletButtonItem } from "@/components/TripletButton";
+
+// CDN Video URLs for What Sets Us Apart subsection
+const APART_VIDEO_1_CDN = "https://s3.buyfacts.com/buyfacts-public-assets/videos/what-sets-us-apart-1.mp4";
+const APART_VIDEO_1_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+const APART_VIDEO_2_CDN = "https://s3.buyfacts.com/buyfacts-public-assets/videos/what-sets-us-apart-2.mp4";
+const APART_VIDEO_2_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
@@ -63,6 +71,8 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [apartVideo1Src, setApartVideo1Src] = useState(APART_VIDEO_1_CDN);
+  const [apartVideo2Src, setApartVideo2Src] = useState(APART_VIDEO_2_CDN);
 
   // Hero Triplet Button Pathways
   const heroTripletButtons: TripletButtonItem[] = [
@@ -675,6 +685,80 @@ export default function Home() {
               <a href="#team" className={styles.btnSecondary}>
                 Meet Our Team <ArrowRight size={16} style={{ marginLeft: "0.5rem" }} />
               </a>
+            </div>
+          </div>
+
+          {/* SUBSECTION: What Sets Us Apart */}
+          <div id="what-sets-us-apart" className={styles.apartSubsection}>
+            <div className={styles.apartHeader}>
+              <div className={styles.apartTitleWrapper}>
+                <span className={styles.titleLine}></span>
+                <h3 className={styles.apartTitle}>What Sets Us Apart</h3>
+                <span className={styles.titleLine}></span>
+              </div>
+              <p className={styles.apartDesc}>
+                Explore our innovative approach to research intelligence and discovery through CDN-streamed demonstrations.
+              </p>
+            </div>
+
+            <div className={styles.apartGrid}>
+              <div className={styles.apartCard} id="apart-card-early-recognition">
+                <div className={styles.videoWrapper}>
+                  <video
+                    className={styles.videoPlayer}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    src={apartVideo1Src}
+                    onError={() => {
+                      if (apartVideo1Src !== APART_VIDEO_1_FALLBACK) {
+                        setApartVideo1Src(APART_VIDEO_1_FALLBACK);
+                      }
+                    }}
+                    aria-label="Early Recognition and Spatial Intelligence Video"
+                  />
+                </div>
+                <div className={styles.apartCardBody}>
+                  <span className={styles.apartBadge}>
+                    <Video size={13} /> CDN Video 1
+                  </span>
+                  <h4 className={styles.apartCardTitle}>
+                    Early Recognition &amp; Spatial Intelligence
+                  </h4>
+                  <p className={styles.apartCardText}>
+                    Discover how our dynamic spatial models and real-time telemetry detect emerging market patterns long before traditional linear surveys.
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.apartCard} id="apart-card-story-methodology">
+                <div className={styles.videoWrapper}>
+                  <video
+                    className={styles.videoPlayer}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    src={apartVideo2Src}
+                    onError={() => {
+                      if (apartVideo2Src !== APART_VIDEO_2_FALLBACK) {
+                        setApartVideo2Src(APART_VIDEO_2_FALLBACK);
+                      }
+                    }}
+                    aria-label="Story-Based Methodology and Return on Effort Video"
+                  />
+                </div>
+                <div className={styles.apartCardBody}>
+                  <span className={styles.apartBadge}>
+                    <Video size={13} /> CDN Video 2
+                  </span>
+                  <h4 className={styles.apartCardTitle}>
+                    Story-Based Methodology &amp; Return on Effort
+                  </h4>
+                  <p className={styles.apartCardText}>
+                    See how narrative structures and human-centered design dramatically increase participant engagement while reducing total research cycle times.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

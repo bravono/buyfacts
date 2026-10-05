@@ -12,6 +12,7 @@ const APPROVED_NAV_ITEMS = [
   { label: "RESEARCH IMPERATIVES", href: "/research-imperatives" },
   { label: "CUBICON", href: "/cubicon" },
   { label: "ABOUT", href: "/#about" },
+  { label: "WHAT SETS US APART", href: "/#what-sets-us-apart" },
   { label: "CONTACT", href: "/#contact" },
 ];
 
@@ -124,8 +125,8 @@ class CubiconTimedPreviewStateMachine {
 }
 
 test("Dashboard and Navigation Alignment Test Suite", async (t) => {
-  await t.test("Navigation Menu Parity (Desktop & Mobile): Exactly 6 Approved Destinations", () => {
-    assert.equal(APPROVED_NAV_ITEMS.length, 6);
+  await t.test("Navigation Menu Parity (Desktop & Mobile): Exactly 7 Approved Destinations", () => {
+    assert.equal(APPROVED_NAV_ITEMS.length, 7);
 
     const labels = APPROVED_NAV_ITEMS.map((item) => item.label);
     assert.deepEqual(labels, [
@@ -134,6 +135,7 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       "RESEARCH IMPERATIVES",
       "CUBICON",
       "ABOUT",
+      "WHAT SETS US APART",
       "CONTACT",
     ]);
 
@@ -144,6 +146,7 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       "/research-imperatives",
       "/cubicon",
       "/#about",
+      "/#what-sets-us-apart",
       "/#contact",
     ]);
   });
@@ -179,13 +182,13 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
     const mobileMatches = content.match(/id="mob-link-[^"]+"/g) || [];
     assert.equal(
       desktopMatches.length,
-      6,
-      `Desktop navbar must have exactly 6 items, found ${desktopMatches.length}`
+      7,
+      `Desktop navbar must have exactly 7 items, found ${desktopMatches.length}`
     );
     assert.equal(
       mobileMatches.length,
-      6,
-      `Mobile drawer navbar must have exactly 6 items, found ${mobileMatches.length}`
+      7,
+      `Mobile drawer navbar must have exactly 7 items, found ${mobileMatches.length}`
     );
     assert.equal(
       desktopMatches.length,
