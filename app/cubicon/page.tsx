@@ -160,7 +160,7 @@ const SLIDES: SlideItem[] = [
     description:
       "Experience the three core visual validation states in an automated 1-minute walkthrough.",
     details:
-      "Cubitron verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute video demonstration or launch the interactive 3D solver directly.",
+      "Cubicon verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute video demonstration or launch the interactive 3D solver directly.",
   },
   {
     heading: "Puzzle 1 of 3: Spatial Orientation",
