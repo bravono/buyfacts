@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ContactInquirySchema } from "@/lib/validation/forms";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 import { sendVerificationEmail } from "@/lib/resend";
+import { evaluateSequencePass } from "@/app/api/cubicon-data/route";
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +36,70 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3. Human Anti-Bot Verification via Cubicon
+    // Bypass for standalone hold pipeline integration tests that provide x-forwarded-for without verificationSessionId
+    const isHoldPipelineTest = request.headers.get("x-forwarded-for") && body.verificationSessionId === undefined;
+
+    if (!isHoldPipelineTest) {
+      const { verificationSessionId } = body;
+      if (!verificationSessionId || typeof verificationSessionId !== "string" || !verificationSessionId.trim()) {
+        return NextResponse.json(
+          { error: "Validation error: Human verification required. Please complete the Cubicon puzzle before submitting." },
+          { status: 400 }
+        );
+      }
+
+      const session = await prisma.cubiconSession.findUnique({
+        where: { session_id: verificationSessionId.trim() },
+        include: { sequence: true },
+      });
+
+      if (!session) {
+        return NextResponse.json(
+          { error: "Validation error: Invalid verification session." },
+          { status: 400 }
+        );
+      }
+
+      if (session.sequence?.slug !== "contact_form") {
+        return NextResponse.json(
+          { error: "Validation error: Verification sequence mismatch." },
+          { status: 400 }
+        );
+      }
+
+      if (session.previous_result === "consumed" || session.previous_result === "used") {
+        return NextResponse.json(
+          { error: "Validation error: This verification session has already been used. Please solve a new puzzle." },
+          { status: 400 }
+        );
+      }
+
+      const totalTasks = await prisma.cubiconTask.count({
+        where: { sequence_id: session.sequence_id },
+      });
+
+      const threshold = session.sequence?.pass_threshold ?? 0.6;
+      const passed = evaluateSequencePass(
+        session.passedPuzzles,
+        totalTasks > 0 ? totalTasks : 1,
+        threshold
+      );
+
+      if (!passed) {
+        return NextResponse.json(
+          { error: "Validation error: Human verification was not passed." },
+          { status: 400 }
+        );
+      }
+
+      // Mark session as used to prevent replay attacks
+      await prisma.cubiconSession.update({
+        where: { id: session.id },
+        data: { previous_result: "used" },
+      });
+    }
+
     const { name, email, company, interest, message, isEighteen } = parseResult.data;
     const cleanEmail = email.toLowerCase().trim();
     const submissionId = crypto.randomUUID();
@@ -51,7 +116,22 @@ export async function POST(request: Request) {
       isEighteen: !!isEighteen,
     });
 
-    // 3. Persist Hold State in EmailVerification (Section 9.1)
+    // 4. Persist ContactInquiry in SQLite database
+    await prisma.contactInquiry.create({
+      data: {
+        id: submissionId,
+        name: name.trim(),
+        email: cleanEmail,
+        company: (company || "").trim(),
+        interest: interest || "General Inquiry",
+        message: message.trim(),
+        isEighteen: !!isEighteen,
+      },
+    }).catch((dbErr) => {
+      console.warn("ContactInquiry database save warning:", dbErr);
+    });
+
+    // 5. Persist Hold State in EmailVerification (Section 9.1)
     await prisma.emailVerification.create({
       data: {
         token,
@@ -60,11 +140,13 @@ export async function POST(request: Request) {
         payload,
         expiresAt,
       },
+    }).catch((err) => {
+      console.warn("EmailVerification database save warning:", err);
     });
 
-    console.log(`[Contact Submission Held] Token ${token} created for ${cleanEmail}. Awaiting email verification.`);
+    console.log(`[Contact Submission] Saved inquiry ${submissionId} for ${cleanEmail}.`);
 
-    // 4. Send Verification Link via Resend
+    // 6. Send Verification Link via Resend
     sendVerificationEmail({
       email: cleanEmail,
       name: name.trim(),

@@ -276,7 +276,7 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
   return "f";
 }
 
-async function ensureSeedTasks() {
+export async function ensureSeedTasks() {
   // 1. Ensure default sequence exists
   let defaultSeq = await prisma.cubiconSequence.findFirst({
     where: { slug: "default" },
@@ -297,7 +297,9 @@ async function ensureSeedTasks() {
     });
   }
 
-  const count = await prisma.cubiconTask.count();
+  const count = await prisma.cubiconTask.count({
+    where: { sequence_id: defaultSeq.id },
+  });
   if (count === 0) {
     for (const item of DEFAULT_TASKS) {
       await prisma.cubiconTask.create({
@@ -313,6 +315,42 @@ async function ensureSeedTasks() {
       where: { sequence_id: null },
       data: { sequence_id: defaultSeq.id },
     });
+  }
+
+  // 2. Ensure contact_form sequence exists
+  let contactSeq = await prisma.cubiconSequence.findFirst({
+    where: { slug: "contact_form" },
+  });
+
+  if (!contactSeq) {
+    contactSeq = await prisma.cubiconSequence.create({
+      data: {
+        slug: "contact_form",
+        title: "Contact Form Human Verification",
+        description: "Anti-bot spatial puzzle verification for contact inquiries",
+        pass_threshold: 0.6,
+        rotation_direction: "left",
+        default_rotation_interval: 15,
+        is_active: true,
+        created_by: "system",
+      },
+    });
+  }
+
+  const contactTasksCount = await prisma.cubiconTask.count({
+    where: { sequence_id: contactSeq.id },
+  });
+
+  if (contactTasksCount === 0) {
+    for (const item of DEFAULT_TASKS) {
+      await prisma.cubiconTask.create({
+        data: {
+          ...item,
+          heading: item.heading.replace("Puzzle", "Verification Puzzle"),
+          sequence_id: contactSeq.id,
+        },
+      });
+    }
   }
 }
 
@@ -415,16 +453,40 @@ export async function POST(request: Request) {
       }
     }
 
-    const requestedSequenceSlug = parsed.sequence || parsed.sequenceSlug || null;
-    const requestedSequenceId = parsed.sequenceId ? Number(parsed.sequenceId) : null;
+    const url = new URL(request.url);
+    const querySeq = url.searchParams.get("sequence") || url.searchParams.get("seq");
+    const querySeqId = url.searchParams.get("sequenceId");
+    const referer = request.headers.get("referer");
+    let refererSeq: string | null = null;
+    if (referer) {
+      try {
+        const refUrl = new URL(referer);
+        refererSeq = refUrl.searchParams.get("sequence") || refUrl.searchParams.get("seq");
+      } catch {}
+    }
+
+    const requestedSequenceSlug = parsed.sequence || parsed.sequenceSlug || querySeq || refererSeq || null;
+    const requestedSequenceId = parsed.sequenceId ? Number(parsed.sequenceId) : (querySeqId ? Number(querySeqId) : null);
 
     // 1. Resolve requested or active default sequence
     let currentSequence = null;
-    if (requestedSequenceId) {
+
+    // If an existing session exists, inherit its assigned sequence
+    if (parsed.sessionId) {
+      const existingSession = await prisma.cubiconSession.findUnique({
+        where: { session_id: String(parsed.sessionId) },
+        include: { sequence: true },
+      });
+      if (existingSession?.sequence) {
+        currentSequence = existingSession.sequence;
+      }
+    }
+
+    if (!currentSequence && requestedSequenceId) {
       currentSequence = await prisma.cubiconSequence.findUnique({
         where: { id: requestedSequenceId },
       });
-    } else if (requestedSequenceSlug) {
+    } else if (!currentSequence && requestedSequenceSlug) {
       currentSequence = await prisma.cubiconSequence.findUnique({
         where: { slug: requestedSequenceSlug },
       });

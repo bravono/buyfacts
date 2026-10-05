@@ -95,6 +95,15 @@ test("Founding Client Form and Anchor Navigation Test Suite", async (t) => {
     assert.ok(cubiconContent.includes('id="email"'), "Must include email input");
     assert.ok(cubiconContent.includes('id="emailConfirm"'), "Must include emailConfirm input");
     assert.ok(cubiconContent.includes('id="submit-cubicon-form"'), "Must include submit button");
+
+    // Urgency field must be removed from the form markup
+    assert.ok(!cubiconContent.includes('id="urgency"'), "Must not include urgency input");
+
+    // Cubicon human verification modal must be present
+    assert.ok(
+      cubiconContent.includes("/cubicon-app/index.html?sequence=contact_form"),
+      "Must include Cubicon verification modal"
+    );
   });
 
   await t.test("3. Hash Navigation Simulator: Happy Paths and Edge Cases", () => {

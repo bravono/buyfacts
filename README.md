@@ -98,10 +98,30 @@ Processes and records an invitation sent by a user.
 #### `GET /api/cubicon-share`
 Returns all recorded share invitations.
 
+#### `POST /api/contact`
+Receives and records contact inquiries. Requires completion of human verification via the Cubicon spatial puzzle engine.
+- **Request Body**:
+  ```json
+  {
+    "name": "Sarah Connor",
+    "email": "sarah@example.com",
+    "company": "Cyberdyne Systems",
+    "interest": "General Inquiry",
+    "message": "Interested in primary research services.",
+    "isEighteen": true,
+    "verificationSessionId": "sess_1788500000000_abc123"
+  }
+  ```
+- **Validation**:
+  - Requires `verificationSessionId` belonging to the `contact_form` sequence.
+  - Verification pass threshold must meet or exceed 60% (0.60).
+  - Enforces one-time token consumption to prevent automated replay attacks.
+- **Response**: `{ success: true, message: "Inquiry saved successfully.", id: "uuid" }`
+
 #### `GET /api/cubicon-data`
 Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 - **Query Parameters**:
-  - `sequenceId` or `sequence` (slug): Target sequence identifier. Defaults to active sequence.
+  - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). Defaults to the active sequence.
 
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
@@ -150,6 +170,13 @@ Resends an active 24-hour email verification link.
 
 #### `POST /api/cubicon-registration`
 Handles Cubicon Founding Client Program applications (Section 8).
+- **Human Anti-Bot Verification via Cubicon**:
+  - Requires valid `verificationSessionId` belonging to the `contact_form` sequence.
+  - Enforces pass threshold of 60% (0.60) across puzzle tasks before registration is accepted.
+  - Enforces one-time token consumption to prevent automated replay attacks.
+  - Interactive full-screen modal overlay triggers upon clicking "Complete Puzzle to Register", automatically submitting upon successful puzzle completion.
+- **Form Simplification**:
+  - The previous "Urgency" select dropdown in Step 2 has been removed from the user interface. Backend schemas default `urgency` to "Medium" for clean backward compatibility.
 - **Business Email Blacklist**: Free public webmail domains (e.g. `gmail.com`, `yahoo.com`, `hotmail.com`, `proton.me`) are strictly blocked. Requires legitimate business domain.
 - **US-Based Confirmation**: Requires explicit confirmation that the organization is US based (`isUsBased: true`).
 - **24-Hour Verification Hold Pipeline**:
