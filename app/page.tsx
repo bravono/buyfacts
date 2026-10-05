@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import styles from "./page.module.css";
+import TripletButtonGroup, { TripletButtonItem } from "@/components/TripletButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
@@ -59,6 +60,42 @@ export default function Home() {
     message: string;
   }>({ type: null, message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+  // Hero Triplet Button Pathways
+  const heroTripletButtons: TripletButtonItem[] = [
+    {
+      id: "early-recognition",
+      title: "Early Recognition",
+      tagline: "What is beginning to matter?",
+      href: "/products-services",
+      theme: "orange",
+      fallbackIcon: <TrendingUp size={20} />,
+      iconUrl: "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1789469826637-6ip5wl-Early_Recognition_Locon_APPROVED.png", // Ready for CDN icon URL
+      actionHint: "Explore Recognition",
+    },
+    {
+      id: "story-based-research",
+      title: "Story-Based Research",
+      tagline: "What can we learn from people who actually know and experience it?",
+      href: "/research-imperatives",
+      theme: "blue",
+      fallbackIcon: <FileText size={20} />,
+      iconUrl: "", // Ready for CDN icon URL
+      actionHint: "Explore Research",
+    },
+    {
+      id: "triad",
+      title: "TRIAD",
+      tagline: "How can we capture differences in perspective so patterns can emerge?",
+      href: "/products-services#triad",
+      theme: "purple",
+      fallbackIcon: <Compass size={20} />,
+      iconUrl: "", // Ready for CDN icon URL
+      actionHint: "Explore TRIAD",
+    },
+  ];
 
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
@@ -157,7 +194,7 @@ export default function Home() {
     {
       id: "human-validation",
       title: "Human Validation",
-      subTitle: "Confirm That Survey Respondents Are Real People",
+      subTitle: "Confirm That Survey Participants Are Real People",
       icon: <ShieldCheck size={32} />,
       iconColor: "#14a38b", // Teal
       bgColor: "rgba(20, 163, 139, 0.08)",
@@ -224,11 +261,19 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        const firstName = formState.name.trim().split(" ")[0] || "there";
-        setFormStatus({
-          type: "success",
-          message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
-        });
+        if (data.verificationRequired) {
+          setPendingVerificationEmail(formState.email.trim());
+          setFormStatus({
+            type: "success",
+            message: data.message || `Please check your email at ${formState.email} to verify your inquiry. Inquiries are valid for 24 hours.`,
+          });
+        } else {
+          const firstName = formState.name.trim().split(" ")[0] || "there";
+          setFormStatus({
+            type: "success",
+            message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
+          });
+        }
         setFormState({
           name: "",
           email: "",
@@ -254,6 +299,26 @@ export default function Home() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingVerificationEmail) return;
+    setResendStatus("Sending new verification link...");
+    try {
+      const res = await fetch("/api/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingVerificationEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendStatus("New verification link dispatched! Check your inbox.");
+      } else {
+        setResendStatus(data.error || "Failed to resend verification email.");
+      }
+    } catch {
+      setResendStatus("Network error. Please try again.");
     }
   };
 
@@ -286,11 +351,6 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
-            <div className={styles.heroEyebrow}>
-              <span className={styles.heroEyebrowDot}></span>
-              BuyFacts, Inc
-              <span className={styles.heroEyebrowDot}></span>
-            </div>
             <h1 className={styles.heroTitle}>
               The Early <span className={styles.heroHighlight}>Recognition</span> Company
             </h1>
@@ -298,121 +358,8 @@ export default function Home() {
               Saving You Time So You{" "}
               <span className={styles.heroSubtitleHighlight}>Have the Time</span>
             </p>
-            
-
-            <div className={styles.shoutoutWrapper}>
-              <a href="/cubicon" className={styles.shoutoutBtn}>
-                Click Here to Beat the Survey Bots
-              </a>
-            </div>
-
-            <div className={styles.choiceGrid}>
-              <a href="/services" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <TrendingUp className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>Early Recognition</h3>
-                <p className={styles.choiceDesc}>What is beginning to matter?</p>
-              </a>
-              
-              <a href="/thought-leadership" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <FileText className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>Story-Based Research</h3>
-                <p className={styles.choiceDesc}>What can we learn from people who actually know and experience it?</p>
-              </a>
-
-              <a href="/services" className={styles.miniFrameCard}>
-                <div className={styles.miniFrameTopBorder} />
-                <div className={styles.miniFrameBottomBorder} />
-                
-                <svg className={`${styles.miniCorner} ${styles.miniTopLeft}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 0,90" fill="#00507b" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniTopRight}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,0 300,0 300,90" fill="#e57a45" />
-                  <polygon points="120,0 300,0 300,160" fill="#ffb039" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomLeft}`} viewBox="0 0 300 160" preserveAspectRatio="none">
-                  <polygon points="0,160 180,160 0,0" fill="#ffb039" />
-                  <polygon points="0,160 300,160 0,70" fill="#e57a45" />
-                </svg>
-                <svg className={`${styles.miniCorner} ${styles.miniBottomRight}`} viewBox="0 0 300 120" preserveAspectRatio="none">
-                  <polygon points="0,120 300,120 300,30" fill="#00507b" />
-                </svg>
-
-                <div className={styles.choiceIconWrapper}>
-                  {/* Replace src with your CDN icon link when ready */}
-                  <img 
-                    src="" 
-                    alt="" 
-                    className={styles.choiceIcon}
-                    style={{ display: "none" }}
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <Compass className={styles.choiceIconFallback} size={28} />
-                </div>
-                <h3 className={styles.choiceTitle}>TRIAD</h3>
-                <p className={styles.choiceDesc}>How can we capture differences in perspective so patterns can emerge?</p>
-              </a>
-            </div>
-
-            <p className={styles.heroFootnote}>
-              Recognize meaningful patterns in human experience earlier.
-            </p>
+            {/* Reusable Vibrant Triplet Button Group with brief text below */}
+            <TripletButtonGroup items={heroTripletButtons} />
           </div>
         </div>
 
@@ -638,7 +585,7 @@ export default function Home() {
 
             <div style={{ flex: "0 0 auto" }}>
               <a
-                href="/cubicon"
+                href="/cubicon#founding-client"
                 className="btn btn-primary"
                 id="banner-cta-cubicon"
                 style={{
@@ -998,6 +945,15 @@ export default function Home() {
                   </label>
                 </div>
 
+                <input
+                  type="text"
+                  name="hp_website"
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
+
                 <button
                   type="submit"
                   disabled={isSubmitting || !isVerified}
@@ -1019,6 +975,44 @@ export default function Home() {
                     className={`${styles.formStatus} ${formStatus.type === "success" ? styles.formStatusSuccess : styles.formStatusError}`}
                   >
                     {formStatus.message}
+                  </div>
+                )}
+
+                {pendingVerificationEmail && (
+                  <div
+                    style={{
+                      marginTop: "1.2rem",
+                      padding: "14px 18px",
+                      background: "rgba(59, 130, 246, 0.08)",
+                      border: "1px solid rgba(59, 130, 246, 0.25)",
+                      borderRadius: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    <p style={{ margin: "0 0 10px 0", color: "#93c5fd", lineHeight: 1.5 }}>
+                      Did not receive the verification email? Check your spam folder or request a new link:
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "5px",
+                        padding: "7px 16px",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Resend Verification Email
+                    </button>
+                    {resendStatus && (
+                      <p style={{ margin: "10px 0 0 0", fontSize: "0.85rem", color: "#e2e8f0" }}>
+                        {resendStatus}
+                      </p>
+                    )}
                   </div>
                 )}
               </form>

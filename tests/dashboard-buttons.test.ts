@@ -19,12 +19,12 @@ const PRODUCTS_SERVICES_SPECS = [
   { label: "Survey Field IT", tagline: "Quality-Centric Survey Execution" },
   { label: "Recognize IT", tagline: "Active Pattern Analytics" },
   { label: "Validate IT", tagline: "Opportunity Validation" },
-  { label: "Respondent Validation", tagline: "Play Cubicon Puzzle Games" },
+  { label: "Participant Validation", tagline: "Play Cubicon Puzzle Games" },
   { label: "Story-Based Surveys", tagline: "Execute a Dual-Based Survey Model" },
   { label: "Content Assessment", tagline: "Maximize the Return on Content" },
 ];
 
-const ACTION_BUTTONS = ["More Detail", "3-Minute Video", "Contact Us"];
+const ACTION_BUTTONS = ["Video", "In Depth", "Talk to Us"];
 
 
 function runTests() {
@@ -44,8 +44,8 @@ function runTests() {
   console.log("Passed: Products and Services 9/9 button labels and taglines verified");
 
   assert.equal(ACTION_BUTTONS.length, 3);
-  assert.deepEqual(ACTION_BUTTONS, ["More Detail", "3-Minute Video", "Contact Us"]);
-  console.log("Passed: 3 rounded-corner action buttons verified");
+  assert.deepEqual(ACTION_BUTTONS, ["Video", "In Depth", "Talk to Us"]);
+  console.log("Passed: 3 rounded-corner action buttons verified (Video, In Depth, Talk to Us)");
 
   console.log("\nSuccess: All dashboard and player window tests passed!");
 }

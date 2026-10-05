@@ -82,9 +82,9 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
   },
   {
-    label: "Respondent Validation",
+    label: "Participant Validation",
     tagline: "Play Cubicon Puzzle Games",
-    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to guarantee 100% human-verified respondent participation.",
+    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
     color: "var(--color-orange-2)",
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
@@ -178,7 +178,7 @@ export default function ServicesPage() {
             <DashboardAnimation
               className={styles.dashboardAnimation}
               buttons={customButtons}
-              title="PRODUCTS & SERVICES"
+              title="INNOVATIONS THAT SAVE TIME"
               selectedButtonIndex={selectedButtonIndex}
               onSelectButton={setSelectedButtonIndex}
             />

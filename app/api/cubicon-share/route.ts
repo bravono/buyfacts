@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendCubiconShareEmail } from "@/lib/resend";
+import { ShareSchema } from "@/lib/validation/forms";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
 export async function GET() {
   try {
@@ -19,6 +21,25 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // 1. IP Rate Limiting (Section 13)
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(ip, "share");
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Too many share requests. Please wait ${rateLimit.resetSeconds} seconds before trying again.`,
+          retryAfter: rateLimit.resetSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders().headers,
+            "Retry-After": String(rateLimit.resetSeconds),
+          },
+        }
+      );
+    }
+
     const text = await request.text();
     let parsed: Record<string, any> = {};
 
@@ -48,6 +69,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // 2. Schema Validation (Section 9.3 & 13)
+    const parseResult = ShareSchema.safeParse(parsed);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0]?.message || "Validation failed.";
+      return NextResponse.json(
+        { error: firstError, issues: parseResult.error.issues },
+        { status: 400, headers: corsHeaders().headers }
+      );
+    }
+
     const {
       senderName,
       senderEmail,
@@ -56,37 +87,14 @@ export async function POST(request: Request) {
       sharePlatform,
       shareUrl,
       sessionId,
-    } = parsed;
-
-    if (!senderName?.trim() || !receiverName?.trim() || !receiverEmail?.trim()) {
-      return NextResponse.json(
-        { error: "Sender Name, Receiver Name, and Receiver Email are required." },
-        { status: 400, headers: corsHeaders().headers }
-      );
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(receiverEmail.trim())) {
-      return NextResponse.json(
-        { error: "Please provide a valid receiver email address." },
-        { status: 400, headers: corsHeaders().headers }
-      );
-    }
-
-    const cleanSenderName = senderName.trim();
-    const cleanSenderEmail = senderEmail ? senderEmail.trim().toLowerCase() : "";
-    const cleanReceiverName = receiverName.trim();
-    const cleanReceiverEmail = receiverEmail.trim().toLowerCase();
-    const cleanPlatform = sharePlatform?.trim() || "email";
-    const cleanUrl = shareUrl?.trim() || "";
-    const cleanSessionId = sessionId?.trim() || "";
+    } = parseResult.data;
 
     let emailResult = null;
     try {
       emailResult = await sendCubiconShareEmail({
-        senderName: cleanSenderName,
-        receiverName: cleanReceiverName,
-        receiverEmail: cleanReceiverEmail,
+        senderName,
+        receiverName,
+        receiverEmail,
       });
     } catch (mailErr: any) {
       console.warn("[cubicon-share] Resend email delivery skipped or encountered error:", mailErr.message);
@@ -94,13 +102,13 @@ export async function POST(request: Request) {
 
     const createdShare = await prisma.cubiconShare.create({
       data: {
-        senderName: cleanSenderName,
-        senderEmail: cleanSenderEmail,
-        receiverName: cleanReceiverName,
-        receiverEmail: cleanReceiverEmail,
-        sharePlatform: cleanPlatform,
-        shareUrl: cleanUrl,
-        sessionId: cleanSessionId,
+        senderName,
+        senderEmail,
+        receiverName,
+        receiverEmail,
+        sharePlatform: sharePlatform || "email",
+        shareUrl: shareUrl || "",
+        sessionId: sessionId || "",
         status: "invited",
       },
     });
@@ -136,4 +144,3 @@ function corsHeaders() {
     },
   };
 }
-

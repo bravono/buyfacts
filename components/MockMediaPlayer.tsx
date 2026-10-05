@@ -14,6 +14,8 @@ import {
   Mail,
   Video,
   Headphones,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
@@ -67,6 +69,11 @@ export default function MockMediaPlayer({
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
 
+  // Section 6: Video opening state and In Depth preview states
+  const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">("idle");
+  const [showInDepthModal, setShowInDepthModal] = useState(false);
+  const [downloadConfirmed, setDownloadConfirmed] = useState<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -80,6 +87,8 @@ export default function MockMediaPlayer({
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
+    setVideoMode("idle");
+    setDownloadConfirmed(null);
 
     if (videoRef.current) {
       videoRef.current.load();
@@ -179,32 +188,73 @@ export default function MockMediaPlayer({
   };
 
   const formatTime = (secs: number) => {
-    if (isNaN(secs) || !isFinite(secs)) return "0:00";
+    if (isNaN(secs) || !isFinite(secs) || secs <= 0) return "0:00";
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const isPlayable = mediaType === "video" || mediaType === "audio";
+  const isPlayable = (mediaType === "video" && videoMode === "playing") || mediaType === "audio";
 
-  const handleMoreDetail = () => {
-    if (onMoreDetailClick) {
-      onMoreDetailClick();
-    } else if (onExploreClick) {
-      onExploreClick("more_detail");
-    } else if (pdfUrl || moreDetailUrl) {
-      window.open(pdfUrl || moreDetailUrl, "_blank", "noopener,noreferrer");
-    }
-  };
-
+  // Section 6: Video Button Action
   const handleVideoAction = () => {
     if (onVideoClick) {
       onVideoClick();
     } else if (onExploreClick) {
       onExploreClick("video");
     } else {
-      togglePlay();
+      // Show approved opening animation instead of autostarting
+      setVideoMode("opening");
     }
+  };
+
+  const handleStartVideo = () => {
+    setVideoMode("playing");
+    setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.play().catch((err) => {
+          console.warn("Video play interrupted:", err);
+        });
+        setIsPlaying(true);
+      }
+    }, 50);
+  };
+
+  const handleCancelVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    setVideoMode("idle");
+    setIsPlaying(false);
+  };
+
+  // Section 6: In Depth Action (Opens Preview Modal before download)
+  const handleInDepthAction = () => {
+    if (onMoreDetailClick) {
+      onMoreDetailClick();
+    } else if (onExploreClick) {
+      onExploreClick("more_detail");
+    } else {
+      setShowInDepthModal(true);
+    }
+  };
+
+  const handleDownloadDocument = () => {
+    const targetUrl = pdfUrl || moreDetailUrl || "/sample-details.pdf";
+    // Create temporary link and trigger download
+    const link = document.createElement("a");
+    link.href = targetUrl;
+    link.download = `${displayTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Documentation.pdf`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Close preview modal and show confirmation alert
+    setShowInDepthModal(false);
+    setDownloadConfirmed(`Document download complete: "${displayTitle}" has been saved. Your active dashboard selection remains preserved.`);
   };
 
   const handleContactAction = () => {
@@ -216,12 +266,17 @@ export default function MockMediaPlayer({
   };
 
   return (
-    <div className={styles.playerCard}>
+    <div className={styles.playerCard} id="mock-media-player-card">
       {/* 1. Header Banner Box with Button Label and Tagline Combination */}
       <div className={styles.headerBanner}>
         <div className={styles.headerLeft}>
           <h3 className={styles.headerTitle}>{displayTitle}</h3>
           <p className={styles.headerSubtitle}>{displayTagline}</p>
+        </div>
+        <div className={styles.headerRight}>
+          <Link href="/" style={{ fontSize: "0.78rem", color: "var(--color-blue-3)", textDecoration: "none", fontWeight: 600 }}>
+            Back to Home
+          </Link>
         </div>
       </div>
 
@@ -233,6 +288,33 @@ export default function MockMediaPlayer({
             : styles.audioScreenFrame
         }`}
       >
+        {/* Section 6: Opening Animation Overlay with Start Video & Cancel */}
+        {videoMode === "opening" && (
+          <div className={styles.videoOpeningCard}>
+            <span className={styles.openingBadge}>Preview Presentation</span>
+            <h4 className={styles.openingTitle}>{displayTitle}</h4>
+            <p className={styles.openingTagline}>{displayTagline}</p>
+            <div className={styles.openingButtons}>
+              <button
+                type="button"
+                className={styles.btnStartVideo}
+                onClick={handleStartVideo}
+                id="btn-start-video"
+              >
+                <Play size={16} fill="white" /> Start Video
+              </button>
+              <button
+                type="button"
+                className={styles.btnCancelVideo}
+                onClick={handleCancelVideo}
+                id="btn-cancel-video"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Video Render */}
         {mediaType === "video" && mediaUrl && (
           <video
@@ -246,24 +328,12 @@ export default function MockMediaPlayer({
             onEnded={handleEnded}
             onClick={togglePlay}
             playsInline
+            style={{ display: videoMode === "playing" ? "block" : "none" }}
           />
         )}
 
-        {/* Audio Render */}
-        {mediaType === "audio" && mediaUrl && (
-          <audio
-            ref={audioRef}
-            src={mediaUrl}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={handleEnded}
-          />
-        )}
-
-        {/* Visualizer Background for Audio or Default */}
-        {(mediaType === "audio" || !mediaUrl) && (
+        {/* Idle Video Poster or Audio Wave Background */}
+        {(videoMode !== "playing" || mediaType !== "video") && (
           <div className={styles.videoBackground}>
             <div
               className={styles.dataNode}
@@ -304,6 +374,19 @@ export default function MockMediaPlayer({
           </div>
         )}
 
+        {/* Audio Render */}
+        {mediaType === "audio" && mediaUrl && (
+          <audio
+            ref={audioRef}
+            src={mediaUrl}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={handleEnded}
+          />
+        )}
+
         {/* Image Render */}
         {mediaType === "image" && mediaUrl && (
           <div className={styles.imageViewer}>
@@ -319,33 +402,22 @@ export default function MockMediaPlayer({
         {mediaType === "pdf" && mediaUrl && (
           <div className={styles.pdfViewer}>
             <div className={styles.pdfCard}>
-              <svg
-                className={styles.pdfIcon}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
+              <FileText size={48} color="var(--primary-color)" />
               <h5 className={styles.pdfName}>{displayTitle}</h5>
-              <span className={styles.pdfTag}>Document Mockup</span>
-              <a
-                href={mediaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <span className={styles.pdfTag}>Documentation</span>
+              <button
+                type="button"
+                onClick={handleInDepthAction}
                 className={styles.pdfLink}
+                style={{ cursor: "pointer", border: "none" }}
               >
-                View PDF Document
-              </a>
+                Preview Document
+              </button>
             </div>
           </div>
         )}
 
-        {/* Large Central Play Button (For video/audio) */}
+        {/* Large Central Play Button (when playable) */}
         {isPlayable && (
           <button
             className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""}`}
@@ -371,7 +443,7 @@ export default function MockMediaPlayer({
           className={styles.nextMediaButton}
           onClick={onNextMedia}
           aria-label="Next media option"
-          title="Next slide"
+          title="Next option"
         >
           <ChevronRight size={22} color="#ffffff" />
         </button>
@@ -389,7 +461,7 @@ export default function MockMediaPlayer({
         )}
       </div>
 
-      {/* Seek Control Panel (Only for playables: video/audio) */}
+      {/* Seek Control Panel (Only for active playable media) */}
       {isPlayable && (
         <div className={styles.controlPanel}>
           <div className={styles.sliderWrapper}>
@@ -413,7 +485,9 @@ export default function MockMediaPlayer({
             <div className={styles.timeInfo}>
               <span className={styles.timeText}>{formatTime(currentTime)}</span>
               <span className={styles.timeDivider}>/</span>
-              <span className={styles.timeText}>{formatTime(duration)}</span>
+              <span className={styles.timeText}>
+                {duration > 0 ? formatTime(duration) : "Available on start"}
+              </span>
             </div>
 
             <div className={styles.utilityBtns}>
@@ -432,57 +506,47 @@ export default function MockMediaPlayer({
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </button>
               {mediaType === "video" && (
-                <button
-                  className={styles.utilBtn}
-                  onClick={toggleFullscreen}
-                  title="Full Screen"
-                >
-                  <Maximize size={16} />
-                </button>
+                <>
+                  <button
+                    className={styles.utilBtn}
+                    onClick={toggleFullscreen}
+                    title="Full Screen"
+                  >
+                    <Maximize size={16} />
+                  </button>
+                  <button
+                    className={styles.utilBtn}
+                    onClick={handleCancelVideo}
+                    title="Close Video"
+                    style={{ marginLeft: "6px", color: "#f87171" }}
+                  >
+                    <X size={16} />
+                  </button>
+                </>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* PDF / Audio Download Option below Player Screen */}
-      {pdfUrl && (
-        <div className={styles.pdfDownloadBanner}>
-          <div className={styles.pdfDownloadInfo}>
-            <FileText className={styles.pdfDownloadIcon} size={24} />
-            <div>
-              <span className={styles.pdfDownloadTag}>
-                Detailed Documentation
-              </span>
-              <h5 className={styles.pdfDownloadTitle}>
-                {pdfLabel || "A Deeper Preview"}
-              </h5>
-            </div>
+      {/* Download Confirmation Alert Banner (Section 6) */}
+      {downloadConfirmed && (
+        <div className={styles.downloadSuccessBanner}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <CheckCircle2 size={18} color="#10b981" />
+            <span>{downloadConfirmed}</span>
           </div>
-          <div className={styles.pdfDownloadActionGroup}>
-            <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className={styles.pdfDownloadBtn}
-            >
-              <Download size={18} /> Download PDF
-            </a>
-            <a
-              href={mediaUrl || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className={`${styles.pdfDownloadBtn} ${styles.audioDownloadBtn}`}
-            >
-              <Headphones size={18} /> Audio Recording
-            </a>
-          </div>
+          <button
+            type="button"
+            onClick={() => setDownloadConfirmed(null)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#065f46" }}
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
-      {/* 3. Top-to-Bottom Rapid Reveal Description Paragraph Panel */}
+      {/* 3. Description Paragraph Panel */}
       {description && (
         <div key={displayTitle} className={styles.revealContainer}>
           <p className={styles.descriptionParagraph}>
@@ -497,15 +561,32 @@ export default function MockMediaPlayer({
       {/* 4. Horizontal Separator Divider */}
       <hr className={styles.divider} />
 
-      {/* 5. Bottom Action Buttons: Three Rounded Corner Buttons with Left Icons */}
+      {/* 5. Bottom Action Buttons: Three Principal Choices (Section 6) */}
       <div className={styles.actionSection}>
         <div className={styles.actionButtonsRow}>
-          {/* Button 1: More Detail */}
+          {/* Principal Choice 1: Video */}
+          <button
+            type="button"
+            className={`${styles.roundedActionBtn} ${styles.btnVideo}`}
+            onClick={handleVideoAction}
+            aria-label="Video"
+            id="action-btn-video"
+          >
+            {videoIconUrl ? (
+              <img src={videoIconUrl} alt="" className={styles.btnIconImage} />
+            ) : (
+              <Video size={17} className={styles.btnIconPlaceholder} />
+            )}
+            <span>Video</span>
+          </button>
+
+          {/* Principal Choice 2: In Depth */}
           <button
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnMoreDetail}`}
-            onClick={handleMoreDetail}
-            aria-label="More Detail"
+            onClick={handleInDepthAction}
+            aria-label="In Depth"
+            id="action-btn-in-depth"
           >
             {moreDetailIconUrl ? (
               <img
@@ -516,30 +597,16 @@ export default function MockMediaPlayer({
             ) : (
               <FileText size={17} className={styles.btnIconPlaceholder} />
             )}
-            <span>More Detail</span>
+            <span>In Depth</span>
           </button>
 
-          {/* Button 2: 3-Minute Video */}
-          <button
-            type="button"
-            className={`${styles.roundedActionBtn} ${styles.btnVideo}`}
-            onClick={handleVideoAction}
-            aria-label="3-Minute Video"
-          >
-            {videoIconUrl ? (
-              <img src={videoIconUrl} alt="" className={styles.btnIconImage} />
-            ) : (
-              <Video size={17} className={styles.btnIconPlaceholder} />
-            )}
-            <span>3-Minute Video</span>
-          </button>
-
-          {/* Button 3: Contact Us */}
+          {/* Principal Choice 3: Talk to Us */}
           <Link
             href="/#contact"
             className={`${styles.roundedActionBtn} ${styles.btnContact}`}
             onClick={handleContactAction}
-            aria-label="Contact Us"
+            aria-label="Talk to Us"
+            id="action-btn-talk-to-us"
           >
             {contactIconUrl ? (
               <img
@@ -550,10 +617,73 @@ export default function MockMediaPlayer({
             ) : (
               <Mail size={17} className={styles.btnIconPlaceholder} />
             )}
-            <span>Contact Us</span>
+            <span>Talk to Us</span>
           </Link>
         </div>
       </div>
+
+      {/* Section 6 & 11: In Depth Preview Modal Dialog */}
+      {showInDepthModal && (
+        <div className={styles.modalBackdrop} onClick={() => setShowInDepthModal(false)}>
+          <div className={styles.inDepthModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h4 className={styles.modalTitle}>{displayTitle}</h4>
+                <p className={styles.modalSubtitle}>{displayTagline}</p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setShowInDepthModal(false)}
+                aria-label="Close Preview"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p>
+                Review the comprehensive documentation and methodology specs for <strong>{displayTitle}</strong> before saving the reference file.
+              </p>
+
+              <div className={styles.modalDocCard}>
+                <FileText size={32} color="var(--interactive-blue)" />
+                <div>
+                  <h5 style={{ margin: "0 0 2px 0", fontSize: "0.95rem", color: "#00507b" }}>
+                    {pdfLabel || `${displayTitle} Technical Reference`}
+                  </h5>
+                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                    Executive Briefing (PDF) • Version 2026.1
+                  </span>
+                </div>
+              </div>
+
+              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
+                {description}
+              </p>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.btnCancelVideo}
+                style={{ color: "#475569", borderColor: "#cbd5e1" }}
+                onClick={() => setShowInDepthModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.btnStartVideo}
+                onClick={handleDownloadDocument}
+                id="btn-confirm-download"
+              >
+                <Download size={16} /> Download Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

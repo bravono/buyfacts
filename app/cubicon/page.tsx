@@ -32,12 +32,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  X,
   LogOut,
   BarChart3,
   Video,
   FastForward,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
+import { isBusinessEmail } from "@/lib/validation/forms";
 
 // Interface definitions for the contact areas from the Excel spreadsheet
 interface OptionItem {
@@ -152,36 +154,43 @@ interface SlideItem {
 
 const SLIDES: SlideItem[] = [
   {
-    heading: ``,
+    heading: "1-Minute Preview",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
     description:
-      "In the next 30 seconds we will show you three Cubicon puzzles that validate a human user.",
+      "Experience the three core visual validation states in an automated 1-minute walkthrough.",
     details:
-      "Cubitron is from the planet of Cubicon where bots are the enemy of honest research. He is always on the hunt to verify good humans who live there.",
+      "Cubitron verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute video demonstration or launch the interactive 3D solver directly.",
   },
   {
-    heading: "Puzzle 1 of 3",
+    heading: "Puzzle 1 of 3: Spatial Orientation",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
-    heading: "Puzzle 2 of 3",
+    heading: "Puzzle 2 of 3: Multi-Angle Alignment",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
-    heading: "Puzzle 3 of 3",
+    heading: "Puzzle 3 of 3: 3D Object Verification",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
       "Complete the final validation test. Locate the target where she put the drink in her hands to confirm spatial verification.",
   },
 ];
+
+const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
+  0: "/cubicon-app/arts/ballon.webp",
+  1: "/cubicon-app/arts/Puzzle1_explainer.webp",
+  2: "/cubicon-app/arts/Puzzle2_explainer.webp",
+  3: "/cubicon-app/arts/Puzzle3_explainer.webp",
+};
 
 const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
 const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
@@ -194,6 +203,7 @@ export default function CubiconPage() {
 
   const [showLiveApp, setShowLiveApp] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [isVideoStarted, setIsVideoStarted] = useState(false);
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
   const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -211,12 +221,21 @@ export default function CubiconPage() {
 
   const handleStartVideoClick = () => {
     setShowVideo(true);
+    setIsVideoStarted(true);
     setIsVideoCompleted(false);
     setShowLiveApp(false);
   };
 
+  const handleCancelVideo = () => {
+    setShowVideo(false);
+    setIsVideoStarted(false);
+    setIsVideoCompleted(false);
+  };
+
   const handleSeeLiveClick = () => {
     setShowVideo(false);
+    setIsVideoStarted(false);
+    setIsVideoCompleted(false);
     setIsIframeLoaded(false);
     setShowLiveApp(true);
 
@@ -240,6 +259,7 @@ export default function CubiconPage() {
     urgency: "Medium",
     requestConfirmation: true,
     isEighteen: false,
+    isUsBased: false,
   });
 
   const [selectedOptions, setSelectedOptions] = useState<
@@ -261,7 +281,7 @@ export default function CubiconPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStep, setFormStep] = useState(1);
   const totalSteps = 3;
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   const nextStep = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -286,6 +306,14 @@ export default function CubiconPage() {
         });
         return;
       }
+      if (!isBusinessEmail(formState.email.trim())) {
+        setFormStatus({
+          type: "error",
+          message:
+            "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+        });
+        return;
+      }
       if (
         formState.email.trim().toLowerCase() !==
         formState.emailConfirm.trim().toLowerCase()
@@ -298,6 +326,13 @@ export default function CubiconPage() {
         setFormStatus({
           type: "error",
           message: "You must certify that you are 18 or older.",
+        });
+        return;
+      }
+      if (!formState.isUsBased) {
+        setFormStatus({
+          type: "error",
+          message: "You must confirm that your organization is US based.",
         });
         return;
       }
@@ -407,11 +442,29 @@ export default function CubiconPage() {
       return;
     }
 
+    if (!isBusinessEmail(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message:
+          "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+      });
+      return;
+    }
+
     if (!formState.isEighteen) {
       setFormStatus({
         type: "error",
         message:
           "You must certify that you are 18 years of age or older to submit this form.",
+      });
+      return;
+    }
+
+    if (!formState.isUsBased) {
+      setFormStatus({
+        type: "error",
+        message:
+          "You must confirm that your organization is US based to submit this form.",
       });
       return;
     }
@@ -434,17 +487,26 @@ export default function CubiconPage() {
 
       if (response.ok && data.id) {
         const clientEmail = formState.email.trim();
-        const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
 
-        setFormStatus({
-          type: "success",
-          message:
-            "Registration successful! Redirecting to payment checkout...",
-        });
+        if (data.verificationRequired) {
+          setFormStatus({
+            type: "success",
+            message:
+              data.message ||
+              `Registration received! Please check your inbox at ${clientEmail} to verify your business email address and complete your Founding Client registration.`,
+          });
+        } else {
+          const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
+          setFormStatus({
+            type: "success",
+            message:
+              "Registration successful! Redirecting to payment checkout...",
+          });
 
-        // Instant automatic redirect to dedicated payment page
-        const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
-        router.push(checkoutUrl);
+          // Instant automatic redirect to dedicated payment page
+          const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
+          router.push(checkoutUrl);
+        }
       } else {
         setFormStatus({
           type: "error",
@@ -560,9 +622,22 @@ export default function CubiconPage() {
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      const isNowFullscreen = !!document.fullscreenElement;
+      const isNowFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement
+      );
       setIsFullscreen(isNowFullscreen);
       notifyIframeFullscreen(isNowFullscreen);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isFullscreen) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+      }
     };
 
     const handleCubiconMessage = (event: MessageEvent) => {
@@ -571,14 +646,69 @@ export default function CubiconPage() {
         event.data === "CUBICON_EXIT"
       ) {
         handleExitLiveApp();
+      } else if (
+        event.data?.type === "CUBICON_CONTACT" ||
+        event.data === "CUBICON_CONTACT"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        router.push("/#contact");
+      } else if (
+        event.data?.type === "CUBICON_FEEDBACK" ||
+        event.data === "CUBICON_FEEDBACK"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        const sessId = event.data?.sessionId || "";
+        const targetUrl = sessId ? `/feedback?sessionId=${encodeURIComponent(sessId)}` : "/feedback";
+        router.push(targetUrl);
       }
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("message", handleCubiconMessage);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("message", handleCubiconMessage);
+    };
+  }, [isFullscreen]);
+
+  React.useEffect(() => {
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (
+        hash === "#founding-client" ||
+        hash === "#founding-client-form" ||
+        hash === "#register-form" ||
+        hash === "#cubicon-registration-form"
+      ) {
+        setShowForm(true);
+        setTimeout(() => {
+          const target =
+            document.getElementById("cubicon-registration-form") ||
+            document.getElementById("founding-client") ||
+            document.getElementById("register-form");
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      }
+    };
+
+    handleHashNavigation();
+    window.addEventListener("hashchange", handleHashNavigation);
+    return () => {
+      window.removeEventListener("hashchange", handleHashNavigation);
     };
   }, []);
 
@@ -604,12 +734,21 @@ export default function CubiconPage() {
                 <div className={styles.slideImageContainer}>
                   <img
                     src={SLIDES[currentSlide].image}
-                    alt={SLIDES[currentSlide].heading}
+                    alt={SLIDES[currentSlide].heading || "Cubicon Preview"}
                     className={styles.slideImage}
+                    onError={(e) => {
+                      const fallback =
+                        SLIDE_FALLBACK_IMAGES[currentSlide] ||
+                        "/cubicon-app/arts/ballon.webp";
+                      if (e.currentTarget.src !== fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
                   />
                 </div>
                 <div className={styles.slideDetailsContainer}>
                   <div>
+                  
                     <h3 className={styles.slideTitle}>
                       {SLIDES[currentSlide].heading}
                     </h3>
@@ -621,38 +760,58 @@ export default function CubiconPage() {
                     </p>
                   </div>
 
-                  {currentSlide === SLIDES.length - 1 ? (
+                  {currentSlide === 0 ? (
                     <div className={styles.seeLiveCallout}>
-                      <span className={styles.seeLiveTitle}>
-                        Watch Video Demo First
-                      </span>
                       <button
                         className={styles.seeLiveBtn}
                         onClick={handleStartVideoClick}
-                        title="Watch Cubicon Self-Running CDN Video Demo"
+                        title="Watch Cubicon Self-Running 1-Minute Video Preview"
                       >
-                        <Play size={18} fill="#ffffff" /> SEE CUBICON LIVE!
+                        <Play size={18} fill="#ffffff" /> SEE 1 MINUTE PREVIEW
                       </button>
-                      <span className={styles.seeLiveSubtitle}>
-                        Watch the self-running CDN video preview
-                      </span>
-                    </div>
-                  ) : (
-                    currentSlide === 0 && (
-                      <div className={styles.seeLiveCallout}>
+                     
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                          justifyContent: "center",
+                          width: "100%",
+                          marginTop: "0.25rem",
+                        }}
+                      >
                         <button
-                          className={styles.seeLiveBtn}
-                          onClick={handleStartVideoClick}
-                          title="Watch Cubicon Self-Running CDN Video Demo"
+                          className={styles.controlBtn}
+                          onClick={handleSeeLiveClick}
+                          title="Open Interactive 3D Solver Directly"
                         >
-                          <Play size={18} fill="#ffffff" /> START
+                          <Sparkles size={16} /> See It Live!
                         </button>
-                        <span className={styles.seeLiveSubtitle}>
-                          See a One Minute Video Preview
-                        </span>
                       </div>
-                    )
-                  )}
+                    </div>
+                  ) : currentSlide === SLIDES.length - 1 ? (
+                    <div className={styles.seeLiveCallout} style={{ marginTop: "1.5rem" }}>
+                      <span className={styles.seeLiveTitle}>
+                        Ready to Try Cubicon?
+                      </span>
+                      <button
+                        className={styles.seeLiveBtn}
+                        onClick={handleSeeLiveClick}
+                        title="Launch Interactive 3D Solver"
+                      >
+                        <Sparkles size={18} fill="#ffffff" /> TRY CUBICON LIVE!
+                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button
+                          className={styles.controlBtn}
+                          onClick={handleStartVideoClick}
+                          title="Watch 1-Minute Video Preview"
+                        >
+                          <Play size={14} /> Watch 1-Min Video
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className={styles.slideNavControls}>
                     <button
@@ -727,6 +886,7 @@ export default function CubiconPage() {
                           : CUBICON_VIDEO_CDN_URL
                       );
                       setIsVideoCompleted(false);
+                      setIsVideoStarted(true);
                     }}
                     title="Reload Video Stream"
                   >
@@ -734,10 +894,10 @@ export default function CubiconPage() {
                   </button>
                   <button
                     className={styles.exitBtn}
-                    onClick={() => setShowVideo(false)}
-                    title="Return to Slideshow"
+                    onClick={handleCancelVideo}
+                    title="Return to Preview"
                   >
-                    <LogOut size={14} /> Back to Slideshow
+                    <LogOut size={14} /> Back to Preview
                   </button>
                 </div>
               </div>
@@ -792,7 +952,12 @@ export default function CubiconPage() {
               </div>
             </div>
           ) : (
-            <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
+            <div
+              className={`${styles.appFrameWrapper} ${
+                isFullscreen ? styles.appFrameWrapperPseudoFullscreen : ""
+              }`}
+              ref={appFrameWrapperRef}
+            >
               {isFullscreen && (
                 <div
                   style={{
@@ -875,6 +1040,18 @@ export default function CubiconPage() {
                   >
                     <ExternalLink size={14} /> Launch Standalone
                   </a>
+                  <Link
+                    href="/feedback"
+                    className={styles.controlBtn}
+                    style={{
+                      background: "rgba(245, 158, 11, 0.15)",
+                      borderColor: "rgba(245, 158, 11, 0.4)",
+                      color: "#fbbf24",
+                    }}
+                    title="Provide Feedback & Review"
+                  >
+                    <Star size={14} /> Feedback
+                  </Link>
                   {isAdmin && (
                     <Link
                       href="/cubicon/analytics"
@@ -978,9 +1155,9 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Visual Validation Methods</h3>
               <p className={styles.cardText}>
-                Cubicon improves human survey participation through visual
-                validation methods that automated bots are incapable of
-                evaluating.
+                Cubicon strengthens human survey participation through visual
+                validation methods designed to resist automated script
+                evaluation.
               </p>
             </div>
 
@@ -996,9 +1173,9 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Real Data from Real People</h3>
               <p className={styles.cardText}>
-                Ensure 100% confidence in your strategic decisions by basing
-                them on validated, high-fidelity responses from genuine human
-                participants.
+                Achieve high statistical confidence in your strategic decisions
+                by basing them on validated, high-fidelity responses from genuine
+                human participants.
               </p>
             </div>
           </div>
@@ -1135,9 +1312,11 @@ export default function CubiconPage() {
       {/* REGISTRATION FORM SECTION */}
       <section
         className="section-brand-bg"
-        id="register-form"
+        id="founding-client"
         style={{ padding: "6rem 0" }}
       >
+        <div id="register-form" />
+        <div id="founding-client-form" />
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>APPLY NOW</span>
@@ -1371,6 +1550,23 @@ export default function CubiconPage() {
                           />
                           <span>
                             I certify that I am eighteen (18) years old or older{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </span>
+                        </label>
+
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            name="isUsBased"
+                            checked={formState.isUsBased}
+                            onChange={handleInputChange}
+                            className={styles.checkbox}
+                            required
+                          />
+                          <span>
+                            I confirm that my organization is US based{" "}
                             <span style={{ color: "var(--primary-color)" }}>
                               *
                             </span>
