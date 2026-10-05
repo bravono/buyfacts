@@ -329,6 +329,12 @@ function mapRotationDirection(dir: string): string {
 
 function formatImageUrl(imagePath: string): string {
   if (!imagePath) return "";
+  if (imagePath.includes("s3.buyfacts.com")) {
+    if (imagePath.includes("Puzzle1") || imagePath.includes("1zkn2t")) return "/cubicon-app/arts/Puzzle1.webp";
+    if (imagePath.includes("Puzzle2") || imagePath.includes("kde8r0")) return "/cubicon-app/arts/Puzzle2.webp";
+    if (imagePath.includes("Puzzle3") || imagePath.includes("pcdywj")) return "/cubicon-app/arts/Puzzle3.webp";
+    if (imagePath.includes("ballon") || imagePath.includes("kc35s8")) return "/cubicon-app/arts/ballon.webp";
+  }
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://") || imagePath.startsWith("data:")) {
     return imagePath;
   }
