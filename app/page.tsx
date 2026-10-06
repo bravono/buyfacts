@@ -294,7 +294,8 @@ export default function Home() {
     setFormStatus({ type: null, message: "" });
 
     try {
-      const fullName = `${formState.firstName.trim()} ${formState.lastName.trim()}`.trim();
+      const fullName =
+        `${formState.firstName.trim()} ${formState.lastName.trim()}`.trim();
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -978,14 +979,18 @@ export default function Home() {
                 <p className={styles.contactHeaderDesc}>
                   Have questions about the BuyFacts
                   <sub className={styles.subRegistered}>®</sub> framework,
-                  Cubicon™, or TRIAD™ tools? Let us help you map your B2B research
-                  challenges to high-impact analytical systems.
+                  Cubicon™, or TRIAD™ tools? Let us help you map your B2B
+                  research challenges to high-impact analytical systems.
                 </p>
 
                 <div className={styles.corporateNoticeBanner}>
-                  <ShieldCheck size={18} className={styles.corporateNoticeIcon} />
+                  <ShieldCheck
+                    size={18}
+                    className={styles.corporateNoticeIcon}
+                  />
                   <span>
-                    Email confirmation is required to validate a corporate email address.
+                    Email confirmation is required to validate a corporate email
+                    address.
                   </span>
                 </div>
               </div>
@@ -1224,7 +1229,8 @@ export default function Home() {
                       size={14}
                       style={{ color: "var(--interactive-orange)" }}
                     />
-                    Email confirmation is required to validate a corporate email address.
+                    Email confirmation is required to validate a corporate email
+                    address.
                   </span>
                 </div>
 
@@ -1332,10 +1338,9 @@ export default function Home() {
             className={styles.sectionHeader}
             style={{ marginBottom: "4rem" }}
           >
-            <h2 className={styles.sectionTitleLight}>Our Team</h2>
+            <h2 className={styles.sectionTitleLight}>BuyFacts Leadership</h2>
             <p className={styles.sectionDescLight}>
-              Meet the methodologists, researchers, and engineers who build
-              BuyFacts.
+              Four Decades of Marketing and Primary Research Experience.
             </p>
           </div>
 
@@ -1351,12 +1356,14 @@ export default function Home() {
               <div className={styles.memberInfo}>
                 <h3 className={styles.memberName}>Guduspa Kumar</h3>
                 <span className={styles.memberRole}>
+                  Super Intelligence (SI)
+                  <br></br>
                   Analysis and Analytics
                 </span>
                 <p className={styles.memberBio}>
                   Guduspa translates raw data patterns into predictive models.
-                  He designs quantitative scoring mechanisms to visualize B2B
-                  buyer intent.
+                  He designs quantitative Super Intelligence (SI) scoring
+                  mechanisms to visualize B2B buyer intent.
                 </p>
               </div>
             </div>
@@ -1372,12 +1379,11 @@ export default function Home() {
               <div className={styles.memberInfo}>
                 <h3 className={styles.memberName}>Robert M Johnson</h3>
                 <span className={styles.memberRole}>
-                  Survey Methods and Tools
+                  Time Saving Early Recognition <br></br> Tools and Methods
                 </span>
                 <p className={styles.memberBio}>
-                  Robert designs robust, bias-free questionnaires. He develops
-                  frameworks that ensure quantitative datasets align with
-                  commercial research guidelines.
+                  A Practical Innovator and Serial Maverick with more than a
+                  Dozen Successful Innovations
                 </p>
               </div>
             </div>
@@ -1393,17 +1399,20 @@ export default function Home() {
               <div className={styles.memberInfo}>
                 <h3 className={styles.memberName}>Bernie Rudolph</h3>
                 <span className={styles.memberRole}>
-                  Survey Hosting and Research Quality
+                  Survey Hosting and Participant Quality
                 </span>
                 <p className={styles.memberBio}>
-                  Bernie supervises secure cloud servers and routing mechanisms.
-                  He conducts strict quality control protocols for every
-                  participant panel.
+                  Bernie pioneers many survey participant data quality
+                  safeguards to manage survey hosting for More Than One Hundred
+                  Marketng Teams
                 </p>
               </div>
             </div>
           </div>
         </div>
+        <h2 className={styles.sectionFooter}>
+          A Founding Team of Successful Research Entrepreneurs
+        </h2>
       </section>
 
       {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
