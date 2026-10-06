@@ -128,10 +128,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 5rem;
+  height: 5rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
   margin-right: 0.75rem;
   flex-shrink: 0;
@@ -144,8 +144,7 @@
 }
 
 .cdnIcon {
-  width: 22px;
-  height: 22px;
+  width: 90%;
   object-fit: contain;
   display: block;
 }

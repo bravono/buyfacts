@@ -611,3 +611,62 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
 6. **Automated Test Coverage**:
    - Complete verification suite located in `tests/triplet-button.test.ts` validating specs, CDN fallbacks, link security, and layout defaults.
 
+---
+
+## 12. Homepage Section 2: Peer Benchmark Incentive Surveys
+
+### Component Overview
+Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) presents the core value pillars of BuyFacts' peer benchmark methodology.
+
+### Architecture & Design Elements
+1. **Section Header**:
+   - Primary Title: "Peer Benchmark Incentive Surveys"
+   - Primary Description: "Real-Time Peer Comparisons. Relevant Insight for Eery participant."
+   - Trust Badges: Sleek pill badges with dot indicators ("Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data").
+   - Callout Banner: Integrated highlight banner emphasizing data quality and removing payola incentives.
+2. **8-Pillar Card Grid**:
+   - Card Architecture: Structured white card tiles with subtle brand borders, shadows, and smooth hover elevation.
+   - Header Row: Dual-tone rounded icon squircle alongside two-digit sequential index numerals (`01` through `08`).
+   - Typography: Left-aligned display titles tailored for variable length headlines.
+   - Hover Feedback: Micro-interaction accent bar expanding on card hover.
+3. **Responsive Grid**:
+   - Desktop (>= 1024px): 4-column x 2-row grid.
+   - Tablet (768px - 1023px): 2-column x 4-row grid.
+   - Mobile (< 768px): Single-column stack with adjusted card gap.
+4. **Automated Verification**:
+   - Test suite in `tests/section-two-design.test.ts` validating anchor preservation, exact copy retention, badge system, CSS grid rules, and zero-emoji compliance.
+
+---
+
+## 13. Homepage Section 3: About (Who Is BuyFacts?)
+
+### Component Overview
+Section 3 (`#about` in `app/page.tsx`, styled in `app/page.module.css`) contains the comprehensive corporate narrative and positioning document, "Who Is BuyFacts?", positioned directly above the "Meet Our Team" navigation button.
+
+### Architecture & Key Content Blocks
+1. **Document Card (`.aboutDocument`)**:
+   - Executive white card container with subtle brand borders (`rgba(0, 80, 123, 0.12)`), soft shadows, and responsive internal padding.
+   - Title: "Who Is BuyFacts?" with Josefin Sans display typography.
+   - Lead Paragraph: Clear articulation of BuyFacts as a hybrid research and professional services firm helping B2B marketers gain time and make competitive decisions.
+2. **Core Positioning & Problem Statements**:
+   - Market reality: Marketers competing in crowded markets with resource constraints.
+   - The core challenge: Recognizing what matters early enough to take action.
+3. **Earlier Recognition & Time Cadence**:
+   - The Goal: "The goal is Earlier Recognition."
+   - Indented time creation list: Time to understand, evaluate choices, test, and act before change becomes obvious.
+   - 50% effort reduction metric across directional insight, content development, and research assets.
+4. **Proprietary Approaches**:
+   - **TRIAD**: Directional patterns and emerging market movements.
+   - **Story-based research**: Human context, emotion, and objectives behind data.
+   - **Human validation**: Verifying real participants vs. automated bots.
+   - **Rule of Three assets**: Concise, reusable, co-branded insight assets.
+   - **Edutainment**: Engaging presentation to differentiate vendor offerings.
+5. **Research Longevity & Philosophy**:
+   - Long-life research assets reusable across marketing, sales support, and thought leadership.
+   - Innovation philosophy: Rapid evolution without dismantling proven methods.
+   - Mission statement: Four decades of experience enabling clients to recognize earlier, gain time, create more choices, and make better competitive decisions.
+6. **Automated Verification**:
+   - Test suite in `tests/about-section-document.test.ts` validating anchor retention, exact copy preservation, placement above Meet Our Team button, CSS class rules, and zero-emoji compliance.
+
+
+

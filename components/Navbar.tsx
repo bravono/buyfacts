@@ -53,7 +53,7 @@ export default function Navbar({
               <span className={styles.trademark}>®</span>
             </span>
             <span className={styles.logoSubtitle}>
-              THE EARLY RECOGNITION COMPANY
+              Real Data - Real People
             </span>
           </div>
         </Link>
