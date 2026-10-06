@@ -56,34 +56,52 @@ export function isBusinessEmail(email: string): boolean {
  * Required: Full Name, Business Email, Message, and Age Certification.
  * Includes hidden anti-automation honeypot field.
  */
-export const ContactInquirySchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Full name must be at least 2 characters.")
-    .max(100, "Full name cannot exceed 100 characters."),
-  email: z
-    .string()
-    .trim()
-    .email("Please provide a valid email address.")
-    .max(254, "Email is too long."),
-  company: z.string().trim().max(100).optional().default(""),
-  interest: z.string().trim().max(100).optional().default("General Inquiry"),
-  message: z
-    .string()
-    .trim()
-    .min(5, "Message must be at least 5 characters.")
-    .max(5000, "Message cannot exceed 5,000 characters."),
-  isEighteen: z
-    .boolean()
-    .refine((val) => val === true, "You must certify that you are 18 years of age or older."),
-  // Hidden anti-automation honeypot: if filled by a bot, the submission is rejected
-  hp_website: z
-    .string()
-    .max(0, "Anti-automation check triggered.")
-    .optional()
-    .default(""),
-});
+export const ContactInquirySchema = z
+  .object({
+    firstName: z.string().trim().max(60).optional(),
+    lastName: z.string().trim().max(60).optional(),
+    name: z
+      .string()
+      .trim()
+      .max(120)
+      .optional(),
+    email: z
+      .string()
+      .trim()
+      .email("Please provide a valid email address.")
+      .max(254, "Email is too long."),
+    company: z.string().trim().max(100).optional().default(""),
+    interest: z.string().trim().max(100).optional().default("General Inquiry"),
+    message: z
+      .string()
+      .trim()
+      .min(5, "Message must be at least 5 characters.")
+      .max(5000, "Message cannot exceed 5,000 characters."),
+    isEighteen: z
+      .boolean()
+      .refine((val) => val === true, "You must certify that you are 18 years of age or older."),
+    // Hidden anti-automation honeypot: if filled by a bot, the submission is rejected
+    hp_website: z
+      .string()
+      .max(0, "Anti-automation check triggered.")
+      .optional()
+      .default(""),
+    verificationSessionId: z.string().optional(),
+  })
+  .transform((data) => {
+    let resolvedName = data.name;
+    if (!resolvedName && (data.firstName || data.lastName)) {
+      resolvedName = `${data.firstName || ""} ${data.lastName || ""}`.trim();
+    }
+    return {
+      ...data,
+      name: resolvedName || "",
+    };
+  })
+  .refine((data) => data.name.length >= 2, {
+    message: "Full name must be at least 2 characters.",
+    path: ["name"],
+  });
 
 export type ContactInquiryInput = z.infer<typeof ContactInquirySchema>;
 

@@ -59,7 +59,8 @@ interface ServiceCardData {
 export default function Home() {
   if (COMING_SOON) return <ComingSoon />;
   const [formState, setFormState] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     company: "",
     message: "",
@@ -253,13 +254,15 @@ export default function Home() {
   // Validate required contact form fields before launching verification puzzle
   const validateForm = () => {
     if (
-      !formState.name.trim() ||
+      !formState.firstName.trim() ||
+      !formState.lastName.trim() ||
       !formState.email.trim() ||
       !formState.message.trim()
     ) {
       setFormStatus({
         type: "error",
-        message: "Please fill out all required fields (Name, Email, Message).",
+        message:
+          "Please fill out all required fields (First Name, Last Name, Business Email, Message).",
       });
       return false;
     }
@@ -291,11 +294,13 @@ export default function Home() {
     setFormStatus({ type: null, message: "" });
 
     try {
+      const fullName = `${formState.firstName.trim()} ${formState.lastName.trim()}`.trim();
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formState,
+          name: fullName,
           verificationSessionId: token,
         }),
       });
@@ -312,14 +317,15 @@ export default function Home() {
               `Please check your email at ${formState.email} to verify your inquiry. Inquiries are valid for 24 hours.`,
           });
         } else {
-          const firstName = formState.name.trim().split(" ")[0] || "there";
+          const displayFirstName = formState.firstName.trim() || "there";
           setFormStatus({
             type: "success",
-            message: `Thank you, ${firstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
+            message: `Thank you, ${displayFirstName}! We've received your message. Our team has taken note of your request and will review it promptly to follow up with you.`,
           });
         }
         setFormState({
-          name: "",
+          firstName: "",
+          lastName: "",
           email: "",
           company: "",
           message: "",
@@ -961,145 +967,153 @@ export default function Home() {
       </section>
 
       {/* SECTION 4: Contact Us Form Section */}
-      <section className={styles.section} id="contact">
+      <section className={styles.contactSection} id="contact">
         <div className={styles.container}>
           <div className={styles.contactGrid}>
             <div className={styles.contactInfo}>
               <div>
-                <span className={styles.sectionTagline}>Get In Touch</span>
                 <h2 className={styles.contactHeaderTitle}>
                   Connect with Our Team
                 </h2>
                 <p className={styles.contactHeaderDesc}>
-                  Have questions about the BuyFacts® framework, Cubicon™, or
-                  TRIAD™ tools? Let us help you map your B2B research challenges
-                  to high-impact analytical systems.
+                  Have questions about the BuyFacts
+                  <sub className={styles.subRegistered}>®</sub> framework,
+                  Cubicon™, or TRIAD™ tools? Let us help you map your B2B research
+                  challenges to high-impact analytical systems.
                 </p>
-              </div>
 
-              <div className={styles.infoItem}>
-                <div className={styles.infoIcon}>
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <h4 className={styles.infoTextTitle}>Email Address</h4>
-                  <p className={styles.infoTextVal}>inquiries@buyfacts.com</p>
-                </div>
-              </div>
-
-              <div className={styles.infoItem}>
-                <div className={styles.infoIcon}>
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <h4 className={styles.infoTextTitle}>
-                    Corporate Head Office
-                  </h4>
-                  <p className={styles.infoTextVal}>
-                    BuyFacts, Inc.
-                    <br />
-                    <span style={{ fontSize: "0.7rem" }}>
-                      A Delaware Corporation
-                    </span>
-                    <br />
-                  </p>
+                <div className={styles.corporateNoticeBanner}>
+                  <ShieldCheck size={18} className={styles.corporateNoticeIcon} />
+                  <span>
+                    Email confirmation is required to validate a corporate email address.
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="glass-card" style={{ padding: "3rem" }}>
+            <div className={`glass-card ${styles.contactCard}`}>
               <form
                 noValidate
                 onSubmit={handleSubmit}
                 className={styles.contactForm}
                 id="contact-form"
               >
-                <div className={styles.formGroup}>
-                  <label htmlFor="name" className={styles.label}>
-                    Full Name{" "}
-                    <span style={{ color: "var(--primary-color)" }}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formState.name}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Sarah Connor"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                      required
-                    />
-                    <User
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
+                <div className={styles.formRowDouble}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="firstName" className={styles.label}>
+                      First Name{" "}
+                      <span style={{ color: "var(--primary-color)" }}>*</span>
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        id="firstName"
+                        name="firstName"
+                        value={formState.firstName}
+                        onChange={handleInputChange}
+                        className={styles.input}
+                        style={{ width: "100%", paddingLeft: "2.8rem" }}
+                        required
+                      />
+                      <User
+                        size={16}
+                        style={{
+                          position: "absolute",
+                          left: "1.2rem",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "var(--text-dim)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label htmlFor="lastName" className={styles.label}>
+                      Last Name{" "}
+                      <span style={{ color: "var(--primary-color)" }}>*</span>
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        value={formState.lastName}
+                        onChange={handleInputChange}
+                        className={styles.input}
+                        style={{ width: "100%", paddingLeft: "2.8rem" }}
+                        required
+                      />
+                      <User
+                        size={16}
+                        style={{
+                          position: "absolute",
+                          left: "1.2rem",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "var(--text-dim)",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="email" className={styles.label}>
-                    Business Email{" "}
-                    <span style={{ color: "var(--primary-color)" }}>*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formState.email}
-                      onChange={handleInputChange}
-                      placeholder="e.g. sarah@cyberdyne.com"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                      required
-                    />
-                    <Mail
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
+                <div className={styles.formRowDouble}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="email" className={styles.label}>
+                      Business Email{" "}
+                      <span style={{ color: "var(--primary-color)" }}>*</span>
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formState.email}
+                        onChange={handleInputChange}
+                        className={styles.input}
+                        style={{ width: "100%", paddingLeft: "2.8rem" }}
+                        required
+                      />
+                      <Mail
+                        size={16}
+                        style={{
+                          position: "absolute",
+                          left: "1.2rem",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "var(--text-dim)",
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="company" className={styles.label}>
-                    Company / Organization
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      id="company"
-                      name="company"
-                      value={formState.company}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Cyberdyne Systems"
-                      className={styles.input}
-                      style={{ width: "100%", paddingLeft: "2.8rem" }}
-                    />
-                    <Building2
-                      size={16}
-                      style={{
-                        position: "absolute",
-                        left: "1.2rem",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "var(--text-dim)",
-                      }}
-                    />
+                  <div className={styles.formGroup}>
+                    <label htmlFor="company" className={styles.label}>
+                      Company / Organization
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        id="company"
+                        name="company"
+                        value={formState.company}
+                        onChange={handleInputChange}
+                        className={styles.input}
+                        style={{ width: "100%", paddingLeft: "2.8rem" }}
+                      />
+                      <Building2
+                        size={16}
+                        style={{
+                          position: "absolute",
+                          left: "1.2rem",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "var(--text-dim)",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1161,8 +1175,7 @@ export default function Home() {
                       name="message"
                       value={formState.message}
                       onChange={handleInputChange}
-                      placeholder="Tell us about your research requirements..."
-                      className={styles.textarea}
+                      className={styles.textareaCompact}
                       style={{ width: "100%", paddingLeft: "2.8rem" }}
                       required
                     ></textarea>
@@ -1171,21 +1184,21 @@ export default function Home() {
                       style={{
                         position: "absolute",
                         left: "1.2rem",
-                        top: "1.1rem",
+                        top: "0.85rem",
                         color: "var(--text-dim)",
                       }}
                     />
                   </div>
                 </div>
 
-                <div style={{ margin: "1.2rem 0" }}>
+                <div className={styles.formFooterRow}>
                   <label
                     style={{
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
-                      gap: "0.6rem",
+                      gap: "0.55rem",
                       cursor: "pointer",
-                      fontSize: "0.95rem",
+                      fontSize: "0.88rem",
                       color: "var(--text-main)",
                     }}
                   >
@@ -1195,8 +1208,8 @@ export default function Home() {
                       checked={formState.isEighteen}
                       onChange={handleInputChange}
                       style={{
-                        width: "18px",
-                        height: "18px",
+                        width: "16px",
+                        height: "16px",
                         accentColor: "var(--interactive-blue)",
                         cursor: "pointer",
                       }}
@@ -1206,6 +1219,13 @@ export default function Home() {
                       <span style={{ color: "var(--primary-color)" }}>*</span>
                     </span>
                   </label>
+                  <span className={styles.emailRequirementNote}>
+                    <ShieldCheck
+                      size={14}
+                      style={{ color: "var(--interactive-orange)" }}
+                    />
+                    Email confirmation is required to validate a corporate email address.
+                  </span>
                 </div>
 
                 <input
@@ -1222,7 +1242,7 @@ export default function Home() {
                   disabled={isSubmitting}
                   className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
                   id="contact-submit-btn"
-                  style={{ width: "100%", marginTop: "1rem" }}
+                  style={{ width: "100%", marginTop: "0.5rem" }}
                 >
                   {isSubmitting
                     ? "Submitting Inquiry..."
@@ -1233,7 +1253,7 @@ export default function Home() {
                 </button>
 
                 <p className={styles.verificationHint}>
-                  <ShieldCheck size={15} /> Clicking submit will open a
+                  <ShieldCheck size={14} /> Clicking submit will open a
                   full-screen 3D verification puzzle to confirm you are human.
                 </p>
 

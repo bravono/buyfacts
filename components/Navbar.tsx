@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, X, ArrowUpRight } from "lucide-react";
@@ -13,19 +13,95 @@ export default function Navbar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isContactCollapsed, setIsContactCollapsed] = useState(false);
   const pathname = usePathname() || "/";
 
+  const lastScrollYRef = useRef(0);
+  const ignoreScrollUntilRef = useRef(0);
+
+  // Scroll detection: handle background glass state and scroll-up restoration
   useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      if (isContactCollapsed) {
+        const isPastGracePeriod = Date.now() > ignoreScrollUntilRef.current;
+        const scrolledUp = currentScrollY < lastScrollYRef.current - 8;
+        const reachedTop = currentScrollY <= 20;
+
+        // Bring navbar back when scrolling up or returning to top
+        if (isPastGracePeriod && (scrolledUp || reachedTop)) {
+          setIsContactCollapsed(false);
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, [isContactCollapsed]);
+
+  // Collapse handler for Contact link click
+  const handleContactClick = () => {
+    setIsContactCollapsed(true);
+    setIsMobileMenuOpen(false);
+    // Ignore scroll events for 1000ms while smooth scrolling down to #contact
+    ignoreScrollUntilRef.current = Date.now() + 1000;
+
+    if (pathname === "/") {
+      const contactElem = document.getElementById("contact");
+      if (contactElem) {
+        contactElem.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
+  // Listen for hash changes or document-wide contact links
+  useEffect(() => {
+    const handleDocClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("a");
+      if (target) {
+        const href = target.getAttribute("href");
+        if (href === "/#contact" || href === "#contact") {
+          setIsContactCollapsed(true);
+          setIsMobileMenuOpen(false);
+          ignoreScrollUntilRef.current = Date.now() + 1000;
+        }
+      }
+    };
+
+    const handleHashChange = () => {
+      if (window.location.hash === "#contact") {
+        setIsContactCollapsed(true);
+        ignoreScrollUntilRef.current = Date.now() + 1000;
+      }
+    };
+
+    if (typeof window !== "undefined" && window.location.hash === "#contact") {
+      setIsContactCollapsed(true);
+    }
+
+    document.addEventListener("click", handleDocClick, { capture: true });
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      document.removeEventListener("click", handleDocClick, { capture: true });
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, []);
+
+  // Reset collapse when navigating to another route
+  useEffect(() => {
+    setIsContactCollapsed(false);
+  }, [pathname]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -40,9 +116,11 @@ export default function Navbar({
   const isResearchActive = pathname === "/research-imperatives";
   const isCubiconActive = pathname.startsWith("/cubicon");
 
+  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed;
+
   return (
     <header
-      className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}
+      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${isHidden ? styles.hidden : ""} ${isContactCollapsed ? styles.collapsed : ""}`}
     >
       <div className={styles.container}>
         <Link href="/" className={styles.logo} id="nav-logo-link">
@@ -64,6 +142,7 @@ export default function Navbar({
             href="/"
             className={`${styles.navLink} ${isHomeActive ? styles.navLinkActive : ""}`}
             id="nav-link-home"
+            onClick={() => setIsContactCollapsed(false)}
           >
             HOME
           </Link>
@@ -72,6 +151,7 @@ export default function Navbar({
             href="/products-services"
             className={`${styles.navLink} ${isInnovationsActive ? styles.navLinkActive : ""}`}
             id="nav-link-innovations"
+            onClick={() => setIsContactCollapsed(false)}
           >
             INNOVATIONS THAT SAVE TIME
           </Link>
@@ -80,6 +160,7 @@ export default function Navbar({
             href="/research-imperatives"
             className={`${styles.navLink} ${isResearchActive ? styles.navLinkActive : ""}`}
             id="nav-link-research-imperatives"
+            onClick={() => setIsContactCollapsed(false)}
           >
             RESEARCH IMPERATIVES
           </Link>
@@ -88,6 +169,7 @@ export default function Navbar({
             href="/cubicon"
             className={`${styles.navLink} ${isCubiconActive ? styles.navLinkActive : ""}`}
             id="nav-link-cubicon"
+            onClick={() => setIsContactCollapsed(false)}
           >
             CUBICON
           </Link>
@@ -96,6 +178,7 @@ export default function Navbar({
             href="/#about"
             className={styles.navLink}
             id="nav-link-about"
+            onClick={() => setIsContactCollapsed(false)}
           >
             ABOUT
           </Link>
@@ -104,6 +187,7 @@ export default function Navbar({
             href="/#what-sets-us-apart"
             className={styles.navLink}
             id="nav-link-what-sets-us-apart"
+            onClick={() => setIsContactCollapsed(false)}
           >
             WHAT SETS US APART
           </Link>
@@ -112,6 +196,7 @@ export default function Navbar({
             href="/#contact"
             className={`${styles.btnNav} btn btn-primary`}
             id="nav-link-contact"
+            onClick={handleContactClick}
           >
             CONTACT <ArrowUpRight size={14} />
           </Link>
@@ -135,7 +220,10 @@ export default function Navbar({
         <nav className={styles.navMobile}>
           <Link
             href="/"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={`${styles.mobileNavLink} ${isHomeActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-home"
           >
@@ -143,7 +231,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/products-services"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={`${styles.mobileNavLink} ${isInnovationsActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-innovations"
           >
@@ -151,7 +242,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/research-imperatives"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={`${styles.mobileNavLink} ${isResearchActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-research-imperatives"
           >
@@ -159,7 +253,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/cubicon"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={`${styles.mobileNavLink} ${isCubiconActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-cubicon"
           >
@@ -167,7 +264,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/#about"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={styles.mobileNavLink}
             id="mob-link-about"
           >
@@ -175,7 +275,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/#what-sets-us-apart"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={styles.mobileNavLink}
             id="mob-link-what-sets-us-apart"
           >
@@ -183,7 +286,10 @@ export default function Navbar({
           </Link>
           <Link
             href="/#contact"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              handleContactClick();
+            }}
             className={`${styles.mobileBtnNav} btn btn-primary`}
             id="mob-link-contact"
           >

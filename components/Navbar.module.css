@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   border-bottom: 1px solid transparent;
-  transition: var(--transition-smooth);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, height var(--transition-smooth), background var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 
 .scrolled {
@@ -20,8 +20,9 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
-.hidden {
-  transform: translateY(-100%);
+.hidden,
+.collapsed {
+  transform: translateY(calc(-100% - 30px));
   opacity: 0;
   pointer-events: none;
 }

@@ -47,10 +47,12 @@ test("About Section Document Integration Test Suite", async (t) => {
     );
   });
 
+  const normalizedPage = pageContent.replace(/\s+/g, " ");
+
   await t.test("2. Document Heading, Lead, and Core Positioning Preservation", () => {
     // Title
     assert.ok(
-      pageContent.includes("Who Is BuyFacts?"),
+      normalizedPage.includes("Who Is BuyFacts?"),
       "Document must contain title 'Who Is BuyFacts?'"
     );
 
@@ -58,66 +60,66 @@ test("About Section Document Integration Test Suite", async (t) => {
     const leadSnippet =
       "BuyFacts is a hybrid research and professional services company that combines proprietary time-saving tools and methods with directional pattern recognition, human-validated research, and story-based evergreen assets to help B2B marketers cut through market noise, gain time, and make better competitive decisions.";
     assert.ok(
-      pageContent.includes(leadSnippet),
+      normalizedPage.includes(leadSnippet),
       "Document must contain exact lead paragraph"
     );
 
     // Reality statements
     assert.ok(
-      pageContent.includes("We built BuyFacts around a simple reality."),
+      normalizedPage.includes("We built BuyFacts around a simple reality."),
       "Must contain 'We built BuyFacts around a simple reality.'"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "Marketers are being asked to do more with fewer resources while competing in markets crowded with more data, more content, more messages, and more noise."
       ),
       "Must contain reality statement about marketers' constraints"
     );
     assert.ok(
-      pageContent.includes("The problem is no longer accessing information."),
+      normalizedPage.includes("The problem is no longer accessing information."),
       "Must contain 'The problem is no longer accessing information.'"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "The problem is recognizing what matters early enough to do something useful with it."
       ),
       "Must contain 'The problem is recognizing what matters early enough to do something useful with it.'"
     );
     assert.ok(
-      pageContent.includes("That is where BuyFacts comes in."),
+      normalizedPage.includes("That is where BuyFacts comes in."),
       "Must contain 'That is where BuyFacts comes in.'"
     );
   });
 
   await t.test("3. Time Cadence, 50 Percent Metric, and Earlier Recognition", () => {
     assert.ok(
-      pageContent.includes("The goal is Earlier Recognition."),
+      normalizedPage.includes("The goal is Earlier Recognition."),
       "Must contain 'The goal is Earlier Recognition.'"
     );
     assert.ok(
-      pageContent.includes("Earlier Recognition creates time."),
+      normalizedPage.includes("Earlier Recognition creates time."),
       "Must contain 'Earlier Recognition creates time.'"
     );
     assert.ok(
-      pageContent.includes("Time to understand."),
+      normalizedPage.includes("Time to understand."),
       "Must contain 'Time to understand.'"
     );
     assert.ok(
-      pageContent.includes("Time to evaluate choices."),
+      normalizedPage.includes("Time to evaluate choices."),
       "Must contain 'Time to evaluate choices.'"
     );
     assert.ok(
-      pageContent.includes("Time to test."),
+      normalizedPage.includes("Time to test."),
       "Must contain 'Time to test.'"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "Time to act before a change becomes obvious to everyone else."
       ),
       "Must contain 'Time to act before a change becomes obvious to everyone else.'"
     );
     assert.ok(
-      pageContent.includes("at least 50 percent"),
+      normalizedPage.includes("at least 50 percent"),
       "Must preserve the 'at least 50 percent' effort reduction metric"
     );
   });
@@ -131,23 +133,23 @@ test("About Section Document Integration Test Suite", async (t) => {
       "edutainment",
     ];
 
-    assert.ok(pageContent.includes("TRIAD"), "Must mention TRIAD");
+    assert.ok(normalizedPage.includes("TRIAD"), "Must mention TRIAD");
     assert.ok(
-      pageContent.includes("Story-based research"),
+      normalizedPage.includes("Story-based research"),
       "Must mention Story-based research"
     );
     assert.ok(
-      pageContent.includes("Human validation"),
+      normalizedPage.includes("Human validation"),
       "Must mention Human validation"
     );
     assert.ok(
-      pageContent.includes("Rule of Three assets"),
+      normalizedPage.includes("Rule of Three assets"),
       "Must mention Rule of Three assets"
     );
 
     for (const approach of approaches) {
       assert.ok(
-        pageContent.includes(approach),
+        normalizedPage.includes(approach),
         `Must contain proprietary approach description: ${approach}`
       );
     }
@@ -155,43 +157,43 @@ test("About Section Document Integration Test Suite", async (t) => {
 
   await t.test("5. Innovation Philosophy, History, and Mission Statements", () => {
     assert.ok(
-      pageContent.includes("The result is research with a longer life."),
+      normalizedPage.includes("The result is research with a longer life."),
       "Must contain 'The result is research with a longer life.'"
     );
     assert.ok(
-      pageContent.includes("Not simply a report."),
+      normalizedPage.includes("Not simply a report."),
       "Must contain 'Not simply a report.'"
     );
     assert.ok(
-      pageContent.includes("Not simply another content asset."),
+      normalizedPage.includes("Not simply another content asset."),
       "Must contain 'Not simply another content asset.'"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "We also believe innovation should not require organizations to destroy what already works."
       ),
       "Must contain innovation belief statement"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "BuyFacts is designed around rapid evolution, not wholesale replacement."
       ),
       "Must contain rapid evolution statement"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "BuyFacts began in 2020 and grew from more than four decades of experience"
       ),
       "Must contain company origins statement"
     );
     assert.ok(
-      pageContent.includes(
+      normalizedPage.includes(
         "recognize earlier, gain time, create more choices, and make better competitive decisions."
       ),
       "Must contain client impact statement"
     );
     assert.ok(
-      pageContent.includes("That is why BuyFacts exists."),
+      normalizedPage.includes("That is why BuyFacts exists."),
       "Must contain closing line 'That is why BuyFacts exists.'"
     );
   });

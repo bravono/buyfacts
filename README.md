@@ -495,6 +495,12 @@ The navigation header provides exact parity across desktop and mobile devices wi
 
 All navigation links support dynamic active state indication via `usePathname()`. Mobile navigation links are left-aligned, compact, and match the desktop destinations. Deprecated routes and broken `/services?tab=...` links have been purged.
 
+### Navbar Contact Collapse & Scroll-Up Restoration
+- **Contact Triggered Collapse**: When the user clicks the "CONTACT" link (desktop button or mobile drawer link) or navigates to `/#contact`, the fixed navbar immediately collapses (`translateY(calc(-100% - 30px))`, `opacity: 0`, `pointer-events: none`). This removes the 70px-80px fixed header obstruction so the contact form achieves full viewport visibility on 1080p laptops (e.g. HP ZBook).
+- **Scroll-Up Restoration**: When the user starts scrolling back up (`currentScrollY < lastScrollY - 8`) or returns to the top of the page (`currentScrollY <= 20`), the navbar smoothly animates back into view (`transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease`).
+- **Smooth Scroll Grace Period**: Enforces a 1000ms grace window following the contact click to prevent programmatic downward smooth-scrolling from prematurely uncollapsing the header.
+- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
+
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
 1. **Video**: User-initiated video presentation with an animated opening state, explicit "Start Video" and "Cancel" buttons, "Skip Video", "Reload Video", and next-step instructions upon completion.
@@ -667,6 +673,40 @@ Section 3 (`#about` in `app/page.tsx`, styled in `app/page.module.css`) contains
    - Mission statement: Four decades of experience enabling clients to recognize earlier, gain time, create more choices, and make better competitive decisions.
 6. **Automated Verification**:
    - Test suite in `tests/about-section-document.test.ts` validating anchor retention, exact copy preservation, placement above Meet Our Team button, CSS class rules, and zero-emoji compliance.
+
+---
+
+## 14. Homepage Section 4: Contact Us & Viewport Compactness
+
+### Component Overview
+Section 4 (`#contact` in `app/page.tsx`, styled in `app/page.module.css`) provides the primary communication channel for prospective enterprise clients, founding program inquiries, and general consultations.
+
+### Architecture & Key Enhancements
+1. **Workstation Viewport Visibility (HP ZBook 1080p Displays)**:
+   - Optimized vertical footprint ensuring all form elements, labels, checkboxes, and the submission button fit simultaneously within typical 1080p laptop browser viewports (750px-850px visible height) without vertical scrolling.
+   - Reduced section padding from 7rem to 3rem (`.contactSection`).
+   - Compact card internal padding (`.contactCard`, 1.6rem 2rem).
+   - Paired input rows (`.formRowDouble` with `grid-template-columns: 1fr 1fr; gap: 1rem;`) placing First Name & Last Name side-by-side and Business Email & Company side-by-side.
+   - Compact textarea (`.textareaCompact`, min-height 65px, max-height 140px).
+   - Horizontal footer layout (`.formFooterRow`) pairing age certification and email notices.
+2. **Separation of First Name and Last Name**:
+   - Distinct `firstName` and `lastName` form inputs, labels, and React component state.
+   - Backend validation in `lib/validation/forms.ts` (`ContactInquirySchema`) synthesizes combined `name` for full backwards compatibility with SQLite storage and existing API integrations.
+3. **Placeholder-Free Input Design**:
+   - All `placeholder` attributes removed from contact form inputs (`firstName`, `lastName`, `email`, `company`, `message`).
+   - Form fields rely exclusively on accessible floating labels and field icons for clean, uncluttered enterprise aesthetics.
+4. **Subscript Registered Trademark for BuyFacts**:
+   - Rendered as `BuyFacts<sub className={styles.subRegistered}>®</sub>`.
+   - Styled via `.subRegistered` with `font-size: 0.55em; vertical-align: sub; line-height: 1;`.
+5. **Corporate Email Validation Notice**:
+   - Explicit prominent disclosure banner in the section header: *"Email confirmation is required to validate a corporate email address."*
+   - Inline reminder placed alongside the age certification checkbox in the form footer.
+6. **Mobile Responsiveness**:
+   - Single-column stack layout on screens 768px and below (`@media (max-width: 768px)`).
+   - Vertical stacking of form footer elements with accessible touch target sizing.
+7. **Automated Verification**:
+   - Test suite in `tests/contact-form-hp-zbook.test.ts` validating all 5 user requirements, schema transformations, layout compactness, and zero-emoji compliance.
+
 
 
 
