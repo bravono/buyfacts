@@ -154,31 +154,33 @@ interface SlideItem {
 
 const SLIDES: SlideItem[] = [
   {
-    heading: "1-Minute Preview",
+    heading: "One Minute Preview",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
-    description:
-      "Experience the three core visual validation states in an automated 1-minute walkthrough.",
+    description: "Experience in an automated one-minute walkthrough.",
     details:
-      "Cubicon verifies authentic participants through multi-dimensional visual spatial tasks. Watch this automated 1-minute video demonstration or launch the interactive 3D solver directly.",
+      "Cubicon verifies authentic participants through visual spatial tasks. Watch this automated 1-minute video demonstration or launch the puzzle game",
   },
   {
     heading: "Puzzle 1 of 3: Spatial Orientation",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
       "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
   },
   {
     heading: "Puzzle 2 of 3: Multi-Angle Alignment",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
       "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
   },
   {
     heading: "Puzzle 3 of 3: 3D Object Verification",
-    image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
       "Complete the final validation test. Locate the target where she put the drink in her hands to confirm spatial verification.",
@@ -192,8 +194,10 @@ const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
   3: "/cubicon-app/arts/Puzzle3_explainer.webp",
 };
 
-const CUBICON_VIDEO_CDN_URL = "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
-const CUBICON_VIDEO_CDN_FALLBACK = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+const CUBICON_VIDEO_CDN_URL =
+  "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
+const CUBICON_VIDEO_CDN_FALLBACK =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 export default function CubiconPage() {
   const router = useRouter();
@@ -285,7 +289,9 @@ export default function CubiconPage() {
 
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
-  const [verificationSessionId, setVerificationSessionId] = useState<string | null>(null);
+  const [verificationSessionId, setVerificationSessionId] = useState<
+    string | null
+  >(null);
   const [verificationStatus, setVerificationStatus] = useState<{
     status: "idle" | "passed" | "failed";
     message: string;
@@ -294,7 +300,9 @@ export default function CubiconPage() {
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
   // Ref to hold current registration submission executor to avoid stale closures
-  const submitRegistrationRef = useRef<(token: string) => Promise<void>>(async () => {});
+  const submitRegistrationRef = useRef<(token: string) => Promise<void>>(
+    async () => {},
+  );
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -306,7 +314,8 @@ export default function CubiconPage() {
           setVerificationSessionId(sessionId);
           setVerificationStatus({
             status: "passed",
-            message: heading || "Verification successful! You are verified as human.",
+            message:
+              heading || "Verification successful! You are verified as human.",
           });
           // Automatically submit form upon passing verification
           submitRegistrationRef.current(sessionId);
@@ -314,7 +323,8 @@ export default function CubiconPage() {
           setIsVerified(false);
           setVerificationStatus({
             status: "failed",
-            message: description || "Verification unsuccessful. Please try again.",
+            message:
+              description || "Verification unsuccessful. Please try again.",
           });
         }
       }
@@ -351,7 +361,6 @@ export default function CubiconPage() {
     setVerificationStatus({ status: "idle", message: "" });
     setVerificationKey((prev) => prev + 1);
   };
-
 
   const nextStep = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -650,7 +659,7 @@ export default function CubiconPage() {
     try {
       iframeRef.current?.contentWindow?.postMessage(
         { type: "CUBICON_SET_FULLSCREEN", isFullscreen: fullscreenState },
-        "*"
+        "*",
       );
     } catch {}
   };
@@ -720,8 +729,7 @@ export default function CubiconPage() {
   React.useEffect(() => {
     const handleFullscreenChange = () => {
       const isNowFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement
+        document.fullscreenElement || (document as any).webkitFullscreenElement
       );
       setIsFullscreen(isNowFullscreen);
       notifyIframeFullscreen(isNowFullscreen);
@@ -763,7 +771,9 @@ export default function CubiconPage() {
         setIsFullscreen(false);
         notifyIframeFullscreen(false);
         const sessId = event.data?.sessionId || "";
-        const targetUrl = sessId ? `/feedback?sessionId=${encodeURIComponent(sessId)}` : "/feedback";
+        const targetUrl = sessId
+          ? `/feedback?sessionId=${encodeURIComponent(sessId)}`
+          : "/feedback";
         router.push(targetUrl);
       }
     };
@@ -774,7 +784,10 @@ export default function CubiconPage() {
     window.addEventListener("message", handleCubiconMessage);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("message", handleCubiconMessage);
     };
@@ -842,10 +855,15 @@ export default function CubiconPage() {
                       }
                     }}
                   />
+                  <p>
+                    Bots enter surveys to steal incentives, corrupt data, waste
+                    time and reduce decision confidence. In less than a minute,
+                    see how Cubitron verifies that human respondents will
+                    populate your surveys.
+                  </p>
                 </div>
                 <div className={styles.slideDetailsContainer}>
                   <div>
-                  
                     <h3 className={styles.slideTitle}>
                       {SLIDES[currentSlide].heading}
                     </h3>
@@ -864,9 +882,9 @@ export default function CubiconPage() {
                         onClick={handleStartVideoClick}
                         title="Watch Cubicon Self-Running 1-Minute Video Preview"
                       >
-                        <Play size={18} fill="#ffffff" /> SEE 1 MINUTE PREVIEW
+                        <Play size={18} fill="#ffffff" /> START
                       </button>
-                     
+
                       <div
                         style={{
                           display: "flex",
@@ -887,7 +905,10 @@ export default function CubiconPage() {
                       </div>
                     </div>
                   ) : currentSlide === SLIDES.length - 1 ? (
-                    <div className={styles.seeLiveCallout} style={{ marginTop: "1.5rem" }}>
+                    <div
+                      className={styles.seeLiveCallout}
+                      style={{ marginTop: "1.5rem" }}
+                    >
                       <span className={styles.seeLiveTitle}>
                         Ready to Try Cubicon?
                       </span>
@@ -956,9 +977,7 @@ export default function CubiconPage() {
                     }`}
                   >
                     <Video size={14} />{" "}
-                    {isVideoCompleted
-                      ? "PREVIEW COMPLETE"
-                      : "VIDEO DEMO"}
+                    {isVideoCompleted ? "PREVIEW COMPLETE" : "VIDEO DEMO"}
                   </span>
                   <span className={styles.videoTitle}>
                     Cubicon Self-Running Demonstration
@@ -980,7 +999,7 @@ export default function CubiconPage() {
                       setVideoSrc((prev) =>
                         prev === CUBICON_VIDEO_CDN_URL
                           ? CUBICON_VIDEO_CDN_FALLBACK
-                          : CUBICON_VIDEO_CDN_URL
+                          : CUBICON_VIDEO_CDN_URL,
                       );
                       setIsVideoCompleted(false);
                       setIsVideoStarted(true);
@@ -1027,15 +1046,20 @@ export default function CubiconPage() {
 
                 {isVideoCompleted && (
                   <div className={styles.videoCompletionOverlay}>
-                    <span className={styles.videoBadge} style={{ marginBottom: "0.2rem" }}>
+                    <span
+                      className={styles.videoBadge}
+                      style={{ marginBottom: "0.2rem" }}
+                    >
                       <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
                     </span>
                     <div className={styles.videoCompletionTitle}>
                       Automated Video Demonstration Complete
                     </div>
                     <div className={styles.videoCompletionText}>
-                      You have finished watching the self-running preview of Cubicon.
-                      Click the button below to launch the full interactive 3D spatial solver and validate your response yourself.
+                      You have finished watching the self-running preview of
+                      Cubicon. Click the button below to launch the full
+                      interactive 3D spatial solver and validate your response
+                      yourself.
                     </div>
                     <button
                       className={styles.tryItYourselfBtn}
@@ -1271,8 +1295,8 @@ export default function CubiconPage() {
               <h3 className={styles.cardTitle}>Real Data from Real People</h3>
               <p className={styles.cardText}>
                 Achieve high statistical confidence in your strategic decisions
-                by basing them on validated, high-fidelity responses from genuine
-                human participants.
+                by basing them on validated, high-fidelity responses from
+                genuine human participants.
               </p>
             </div>
           </div>
@@ -1761,15 +1785,20 @@ export default function CubiconPage() {
                         {isSubmitting
                           ? "Submitting Registration..."
                           : isVerified
-                          ? "REGISTER AS FOUNDING CLIENT"
-                          : "COMPLETE PUZZLE TO REGISTER"}{" "}
-                        {isVerified ? <Send size={18} /> : <ShieldCheck size={18} />}
+                            ? "REGISTER AS FOUNDING CLIENT"
+                            : "COMPLETE PUZZLE TO REGISTER"}{" "}
+                        {isVerified ? (
+                          <Send size={18} />
+                        ) : (
+                          <ShieldCheck size={18} />
+                        )}
                       </button>
                     )}
                   </div>
 
                   <p className={styles.verificationHint}>
-                    <ShieldCheck size={15} /> Clicking register will open a full-screen 3D verification puzzle to confirm you are human.
+                    <ShieldCheck size={15} /> Clicking register will open a
+                    full-screen 3D verification puzzle to confirm you are human.
                   </p>
 
                   {formStatus.type && (
@@ -1806,7 +1835,8 @@ export default function CubiconPage() {
                   Human Verification
                 </h3>
                 <p className={styles.modalSubtitle}>
-                  Solve the 3D Cubicon spatial puzzle to verify you are human and complete your Founding Client registration.
+                  Solve the 3D Cubicon spatial puzzle to verify you are human
+                  and complete your Founding Client registration.
                 </p>
               </div>
             </div>
@@ -1828,9 +1858,14 @@ export default function CubiconPage() {
 
           {verificationStatus.status === "failed" && (
             <div className={styles.modalFailureBar}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
                 <AlertCircle size={18} />
-                <span>{verificationStatus.message || "Verification unsuccessful. Please try again."}</span>
+                <span>
+                  {verificationStatus.message ||
+                    "Verification unsuccessful. Please try again."}
+                </span>
               </div>
               <div className={styles.modalFailureActions}>
                 <button

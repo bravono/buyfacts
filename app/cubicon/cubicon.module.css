@@ -11,13 +11,18 @@
   margin: 0 auto;
   padding: 0 1.5rem;
   width: 100%;
+  margin-top: 5%;
 }
 
 /* Hero Section */
 .hero {
   position: relative;
   padding: 8rem 0 4rem 0;
-  background: linear-gradient(180deg, rgba(0, 80, 123, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 80, 123, 0.06) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
 }
@@ -169,9 +174,18 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .appControls {
@@ -305,8 +319,12 @@
 }
 
 @keyframes spinCube {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .appFrameWrapper:fullscreen,
@@ -384,7 +402,9 @@
   .appControls {
     gap: 0.4rem;
   }
-  .controlBtn, .exitBtn, .fullscreenProminentBtn {
+  .controlBtn,
+  .exitBtn,
+  .fullscreenProminentBtn {
     min-height: 44px;
     padding: 0.45rem 0.75rem;
   }
@@ -552,7 +572,8 @@
   margin-bottom: 0.75rem;
 }
 
-.reqDesc, .reqDesc strong {
+.reqDesc,
+.reqDesc strong {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.85) !important;
   line-height: 1.6;
@@ -586,7 +607,9 @@
   color: var(--interactive-blue);
 }
 
-.input, .select, .textarea {
+.input,
+.select,
+.textarea {
   width: 100%;
   padding: 0.8rem 1rem;
   border: 1px solid var(--border-color);
@@ -597,7 +620,9 @@
   transition: var(--transition-smooth);
 }
 
-.input:focus, .select:focus, .textarea:focus {
+.input:focus,
+.select:focus,
+.textarea:focus {
   outline: none;
   border-color: var(--interactive-orange);
   box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15);
@@ -760,6 +785,11 @@
   background: #090d13;
   padding: 2rem;
   overflow: hidden;
+  flex-direction: column;
+  gap: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  font-size: 1.1rem;
 }
 
 .slideImage {
@@ -806,7 +836,7 @@
 }
 
 .slideSubtitle {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: #ff9900;
   margin-bottom: 1.5rem;
@@ -819,7 +849,7 @@
   line-height: 1.6;
 }
 
-.slideLogo{
+.slideLogo {
   border-radius: 16px;
   margin-top: 1.5rem;
   text-align: center;
@@ -906,7 +936,7 @@
   background: rgba(255, 153, 0, 0.05);
   border: 1px dashed rgba(255, 153, 0, 0.3);
   border-radius: 16px;
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
   margin-top: 1.5rem;
   text-align: center;
   display: flex;
@@ -1372,4 +1402,3 @@
     transform: rotate(360deg);
   }
 }
-
