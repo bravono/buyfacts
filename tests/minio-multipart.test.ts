@@ -14,6 +14,7 @@ describe('S3 Multipart Upload Chunking & Resumption Logic', () => {
     assert.equal(calculateParts(5 * 1024 * 1024 + 1), 2); // 5 MB + 1 byte -> 2 parts
     assert.equal(calculateParts(12 * 1024 * 1024), 3); // 12 MB -> 3 parts
     assert.equal(calculateParts(100 * 1024 * 1024), 20); // 100 MB -> 20 parts
+    assert.equal(calculateParts(1024 * 1024 * 1024), 205); // 1 GB (1024 MB) -> 205 parts
   });
 
   test('should calculate accurate chunk byte boundaries for slicing', () => {
@@ -39,6 +40,24 @@ describe('S3 Multipart Upload Chunking & Resumption Logic', () => {
     assert.equal(slices[2].start, 10485760);
     assert.equal(slices[2].end, 12582912);
     assert.equal(slices[2].size, 2097152); // 2 MB (last part can be < 5MB)
+  });
+
+  test('should calculate accurate chunk boundaries and part counts for 1GB file', () => {
+    const oneGig = 1024 * 1024 * 1024;
+    const totalParts = Math.ceil(oneGig / S3_MIN_CHUNK_SIZE);
+    assert.equal(totalParts, 205);
+
+    // Verify first part
+    const firstStart = 0;
+    const firstEnd = Math.min(firstStart + S3_MIN_CHUNK_SIZE, oneGig);
+    assert.equal(firstEnd - firstStart, S3_MIN_CHUNK_SIZE);
+
+    // Verify last part (part 205)
+    const lastStart = (totalParts - 1) * S3_MIN_CHUNK_SIZE;
+    const lastEnd = Math.min(lastStart + S3_MIN_CHUNK_SIZE, oneGig);
+    const lastSize = lastEnd - lastStart;
+    assert.equal(lastStart + lastSize, oneGig);
+    assert.equal(lastSize, 4194304); // 4 MB remainder for the 205th part
   });
 
   test('should format and sort completed parts ascending by PartNumber per S3 spec', () => {

@@ -3,7 +3,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensureBucketExists } from '@/lib/minio';
 import { validateApiAuth } from '@/lib/auth/middleware';
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 export const maxDuration = 60; // 60 seconds timeout for large uploads
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: `File "${file.name}" exceeds 100MB limit.` },
+          { error: `File "${file.name}" exceeds 1GB limit.` },
           { status: 400 }
         );
       }

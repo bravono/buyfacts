@@ -4,8 +4,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getMinioClient, getMinioBucket, generateObjectKey, getPublicUrl, ensureBucketExists } from '@/lib/minio';
 import { validateApiAuth } from '@/lib/auth/middleware';
 
-// Maximum allowed file size (100MB in bytes)
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
+// Maximum allowed file size (1GB in bytes)
+const MAX_FILE_SIZE = 1024 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'File type (MIME) is required for each item' }, { status: 400 });
       }
       if (item.fileSize && item.fileSize > MAX_FILE_SIZE) {
-        return NextResponse.json({ error: `File "${item.filename}" exceeds maximum limit of 100MB` }, { status: 400 });
+        return NextResponse.json({ error: `File "${item.filename}" exceeds maximum limit of 1GB` }, { status: 400 });
       }
     }
 

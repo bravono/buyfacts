@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initiateMultipartUpload } from '@/lib/minio';
 import { validateApiAuth } from '@/lib/auth/middleware';
 
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
+
 export async function POST(req: NextRequest) {
   try {
     const auth = await validateApiAuth(req);
@@ -13,10 +15,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { filename, prefix = 'uploads', contentType = 'application/octet-stream' } = body;
+    const { filename, prefix = 'uploads', contentType = 'application/octet-stream', fileSize } = body;
 
     if (!filename || typeof filename !== 'string') {
       return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
+    }
+
+    if (fileSize && typeof fileSize === 'number' && fileSize > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: `File "${filename}" exceeds maximum limit of 1GB` }, { status: 400 });
     }
 
     const result = await initiateMultipartUpload(filename, prefix, contentType);

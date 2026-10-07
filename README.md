@@ -718,6 +718,31 @@ Section 4 (`#contact` in `app/page.tsx`, styled in `app/page.module.css`) provid
 7. **Automated Verification**:
    - Test suite in `tests/contact-form-hp-zbook.test.ts` validating all 5 user requirements, schema transformations, layout compactness, and zero-emoji compliance.
 
+---
+
+## 15. Media Ingestion & 1GB Resumable Upload Architecture
+
+### Overview
+BuyFacts supports media uploads up to 1GB (`1024 * 1024 * 1024` bytes) across images, videos, audio recordings, 3D glTF/GLB models, PDFs, and archive packages. To support gigabyte-scale transfers reliably across cloud reverse proxies and mobile/residential networks, the ingestion architecture uses S3 Resumable Multipart chunking.
+
+### Architecture & Upload Modes
+1. **S3 Multipart Resumable Upload (Default & Recommended for Large Payloads)**:
+   - Divides large files into 5MB chunks (`CHUNK_SIZE = 5 * 1024 * 1024`).
+   - A 1GB file produces 205 parts, well within the S3 protocol limit of 10,000 parts.
+   - Slices are uploaded directly to MinIO/S3 via presigned PUT URLs, bypassing Node.js server RAM.
+   - Automatic retries with exponential backoff handle transient network disconnects per chunk.
+   - Session resumption tokens stored in `localStorage` prevent loss of progress during connection loss.
+2. **Automatic Route Protection for Payloads > 100MB**:
+   - If a user selects "Direct PUT" or "Server Route", files exceeding 100MB are automatically promoted to multipart chunking in `FileUploader.tsx`.
+   - This prevents intermediate reverse proxies (e.g., Cloudflare 100MB body cap or Nginx `client_max_body_size`) from abruptly terminating single HTTP requests, while preventing Node.js process out-of-memory crashes.
+3. **API Validation Endpoints**:
+   - `POST /api/upload/multipart/initiate`: Validates that requested multipart session file size does not exceed 1GB.
+   - `POST /api/upload/presign`: Enforces 1GB ceiling on single presigned PUT batch requests.
+   - `POST /api/upload`: Enforces 1GB ceiling on direct server form-data uploads.
+4. **Automated Verification**:
+   - Test suites in `tests/upload-limits.test.ts`, `tests/minio-multipart.test.ts`, and `tests/minio-upload.test.ts` validating exact 1GB boundaries, over-limit rejection, chunk count formulas, and path sanitization.
+
+
 
 
 

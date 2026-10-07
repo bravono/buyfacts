@@ -25,8 +25,8 @@ import { FilePreview } from './FilePreview';
 import { sanitizeFolderPrefix } from '@/lib/minio';
 import styles from './FileUploader.module.css';
 
-// 100MB File Size Limit in Bytes
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+// 1GB File Size Limit in Bytes (1024MB)
+const MAX_FILE_SIZE_BYTES = 1024 * 1024 * 1024;
 
 // Allowed file types: Images, Videos, Audio, PDFs, Office Documents, Text, Archives
 const ALLOWED_MIME_PREFIXES = ['image/', 'video/', 'audio/', 'application/pdf', 'text/'];
@@ -127,7 +127,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return `File exceeds maximum limit of 100MB (${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
+      const sizeFormatted = file.size >= 1024 * 1024 * 1024
+        ? `${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`
+        : `${(file.size / (1024 * 1024)).toFixed(1)}MB`;
+      return `File exceeds maximum limit of 1GB (${sizeFormatted})`;
     }
     const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
     const isAllowedMime = ALLOWED_MIME_PREFIXES.some((prefix) => file.type && file.type.startsWith(prefix));
@@ -649,7 +652,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
         try {
           let result: UploadSuccessResult;
-          if (uploadMethod === 'multipart') {
+          // Files exceeding 100MB automatically use multipart chunking to bypass reverse proxy payload caps and avoid server memory spikes
+          if (uploadMethod === 'multipart' || currentItem.file.size > 100 * 1024 * 1024) {
             result = await uploadSingleMultipart(currentItem, destination);
           } else if (uploadMethod === 'presigned') {
             result = await uploadSinglePresigned(currentItem, destination);
@@ -907,7 +911,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   {dragActive ? 'Drop files here...' : 'Click to select or drag & drop files'}
                 </p>
                 <p className={styles.dropzoneSubtitle}>
-                  Supports single or batch upload (Images, Videos, Audio, PDFs, Max 100MB each)
+                  Supports single or batch upload (Images, Videos, Audio, PDFs, Max 1GB each)
                 </p>
               </div>
             </div>
