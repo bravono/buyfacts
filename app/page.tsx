@@ -221,8 +221,8 @@ export default function Home() {
       bgColor: "rgba(20, 163, 139, 0.08)",
     },
     {
-      id: "perticipant-insight-choices",
-      title: "Perticipant Insight Choices",
+      id: "participant-insight-choices",
+      title: "Participant Insight Choices",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259736-v7irdo-BuyFacts_Early_Recognition.svg",
       icon: <Award size={32} />,
@@ -248,8 +248,8 @@ export default function Home() {
       bgColor: "rgba(0, 137, 210, 0.08)",
     },
     {
-      id: "every-question-maps-to-its-purspose",
-      title: "Every Question Maps to Its Purspose",
+      id: "every-question-maps-to-its-purpose",
+      title: "Every Question Maps to Its Purpose",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269426-66lkh2-BuyFacts_Question_Design.svg",
       icon: <Edit3 size={32} />,
@@ -493,7 +493,7 @@ export default function Home() {
               Peer Benchmark Incentive Surveys
             </h2>
             <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Eery participant.
+              Real-Time Peer Comparisons. Relevant Insight for Every participant.
             </p>
 
             {/* Accent Badges matching Mockup image */}
@@ -515,8 +515,8 @@ export default function Home() {
             <div className={styles.calloutBanner}>
               <ShieldCheck size={20} className={styles.calloutIcon} />
               <span className={styles.calloutText}>
-                Protect Data Quality - Remove Payola that Promotes Cash-Grab
-                Perticipation
+                Protect Data Quality - Remove Pay for Participation that Promotes Cash-Grab
+                Participation
               </span>
             </div>
           </div>
@@ -1436,7 +1436,7 @@ export default function Home() {
                 <p className={styles.memberBio}>
                   Bernie pioneers many survey participant data quality
                   safeguards to manage survey hosting for More Than One Hundred
-                  Marketng Teams
+                  Marketing Teams
                 </p>
               </div>
             </div>
