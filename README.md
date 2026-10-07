@@ -630,9 +630,20 @@ Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) pres
    - Primary Description: "Real-Time Peer Comparisons. Relevant Insight for Eery participant."
    - Trust Badges: Sleek pill badges with dot indicators ("Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data").
    - Callout Banner: Integrated highlight banner emphasizing data quality and removing payola incentives.
-2. **8-Pillar Card Grid**:
+2. **8-Pillar Card Grid & CDN Asset Architecture**:
    - Card Architecture: Structured white card tiles with subtle brand borders, shadows, and smooth hover elevation.
-   - Header Row: Dual-tone rounded icon squircle alongside two-digit sequential index numerals (`01` through `08`).
+   - Header Row: Dual-tone rounded icon container alongside two-digit sequential index numerals (`01` through `08`).
+   - CDN Icon Delivery: High-resolution vector SVGs hosted on the BuyFacts public assets S3 CDN (`https://s3.buyfacts.com/buyfacts-public-assets/uploads/`).
+     - Card 01 (Survey Design): `BuyFacts_Survey_Hosting.svg`
+     - Card 02 (Perticipant Insight Choices): `BuyFacts_Early_Recognition.svg`
+     - Card 03 (Traditional and Story-based Instruments): `BuyFacts_Research_Tools_Concept.svg`
+     - Card 04 (Best Practices): `BuyFacts_Best_Practices_Keystone.svg`
+     - Card 05 (Every Question Maps to Its Purspose): `BuyFacts_Question_Design.svg`
+     - Card 06 (Executives Get peer Comparison Not Coffee Cards): `BuyFacts_Value_Quantification.svg`
+     - Card 07 (A Dual Approach Delivers Stories Backed by Facts): `BuyFacts_Thought_Leadership_TL1.svg`
+     - Card 08 (Inclusive Stakeholder Engagement Reduces Malicious Compliance): `BuyFacts_Bot_Detection.svg`
+   - Resilient Fallback: `ServiceCardIcon` component handles asset loading and falls back seamlessly to Lucide vector icons on error (`onError`).
+   - Sizing and Containment: `.cardCdnIcon` class enforces `34px x 34px` dimensions with `object-fit: contain` inside the 54px icon container.
    - Typography: Left-aligned display titles tailored for variable length headlines.
    - Hover Feedback: Micro-interaction accent bar expanding on card hover.
 3. **Responsive Grid**:
@@ -640,7 +651,7 @@ Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) pres
    - Tablet (768px - 1023px): 2-column x 4-row grid.
    - Mobile (< 768px): Single-column stack with adjusted card gap.
 4. **Automated Verification**:
-   - Test suite in `tests/section-two-design.test.ts` validating anchor preservation, exact copy retention, badge system, CSS grid rules, and zero-emoji compliance.
+   - Test suite in `tests/section-two-design.test.ts` validating anchor preservation, exact copy retention, badge system, CDN asset endpoints, image fallback mechanics, CSS grid rules, and zero-emoji compliance.
 
 ---
 

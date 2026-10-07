@@ -195,7 +195,80 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
     );
   });
 
-  await t.test("6. Zero-Emoji Compliance across Modified Source & Test Files", () => {
+  await t.test("6. CDN Icon Integration and Fallback Architecture", () => {
+    // ServiceCardIcon component existence
+    assert.ok(
+      pageContent.includes("function ServiceCardIcon"),
+      "ServiceCardIcon helper component must be defined"
+    );
+    assert.ok(
+      pageContent.includes("<ServiceCardIcon card={card} />"),
+      "Section 2 cards must render ServiceCardIcon inside iconCircle"
+    );
+    assert.ok(
+      pageContent.includes("setImageError(true)"),
+      "ServiceCardIcon must contain onError fallback handler"
+    );
+
+    // CSS class for CDN icon sizing
+    assert.ok(
+      cssContent.includes(".cardCdnIcon {"),
+      "CSS must define .cardCdnIcon"
+    );
+    assert.ok(
+      cssContent.includes("object-fit: contain;"),
+      ".cardCdnIcon must maintain aspect ratio with object-fit: contain"
+    );
+
+    // CDN URLs for all 8 portfolio cards
+    const expectedCdnIcons = [
+      {
+        id: "survey-design",
+        iconFilename: "BuyFacts_Survey_Hosting.svg",
+      },
+      {
+        id: "perticipant-insight-choices",
+        iconFilename: "BuyFacts_Early_Recognition.svg",
+      },
+      {
+        id: "traditional-story-based-instruments",
+        iconFilename: "BuyFacts_Research_Tools_Concept.svg",
+      },
+      {
+        id: "best-practices",
+        iconFilename: "BuyFacts_Best_Practices_Keystone.svg",
+      },
+      {
+        id: "every-question-maps-to-its-purspose",
+        iconFilename: "BuyFacts_Question_Design.svg",
+      },
+      {
+        id: "executives-get-peer-comparison-not-coffee-cards",
+        iconFilename: "BuyFacts_Value_Quantification.svg",
+      },
+      {
+        id: "a-dual-approach-delivers-stories-backed-by-facts",
+        iconFilename: "BuyFacts_Thought_Leadership_TL1.svg",
+      },
+      {
+        id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
+        iconFilename: "BuyFacts_Bot_Detection.svg",
+      },
+    ];
+
+    for (const item of expectedCdnIcons) {
+      assert.ok(
+        pageContent.includes(item.iconFilename),
+        `Section 2 must configure CDN icon ${item.iconFilename} for ${item.id}`
+      );
+      assert.ok(
+        pageContent.includes("https://s3.buyfacts.com/buyfacts-public-assets/uploads/"),
+        "Section 2 CDN icons must use BuyFacts public assets CDN path"
+      );
+    }
+  });
+
+  await t.test("7. Zero-Emoji Compliance across Modified Source & Test Files", () => {
     const emojiRegex =
       /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/u;
 
