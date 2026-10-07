@@ -51,9 +51,27 @@ const COMING_SOON = false;
 interface ServiceCardData {
   id: string;
   title: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
+  iconUrl?: string;
   iconColor: string;
   bgColor: string;
+}
+
+function ServiceCardIcon({ card }: { card: ServiceCardData }) {
+  const [imageError, setImageError] = useState(false);
+
+  if (card.iconUrl && !imageError) {
+    return (
+      <img
+        src={card.iconUrl}
+        alt={card.title}
+        className={styles.cardCdnIcon}
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+
+  return <>{card.icon}</>;
 }
 
 export default function Home() {
@@ -196,6 +214,8 @@ export default function Home() {
     {
       id: "survey-design",
       title: "Survey Design",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315274750-bri2xa-BuyFacts_Survey_Hosting.svg",
       icon: <Compass size={32} />,
       iconColor: "#14a38b", // Teal
       bgColor: "rgba(20, 163, 139, 0.08)",
@@ -203,6 +223,8 @@ export default function Home() {
     {
       id: "perticipant-insight-choices",
       title: "Perticipant Insight Choices",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259736-v7irdo-BuyFacts_Early_Recognition.svg",
       icon: <Award size={32} />,
       iconColor: "#e6a100", // Gold/Amber
       bgColor: "rgba(230, 161, 0, 0.08)",
@@ -210,6 +232,8 @@ export default function Home() {
     {
       id: "traditional-story-based-instruments",
       title: "Traditional and Story-based Instruments",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269875-46dt5y-BuyFacts_Research_Tools_Concept.svg",
       icon: <Search size={32} />,
       iconColor: "#6d6d6d", // Grey
       bgColor: "rgba(109, 109, 109, 0.08)",
@@ -217,6 +241,8 @@ export default function Home() {
     {
       id: "best-practices",
       title: "Best Practices",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259493-khokty-BuyFacts_Best_Practices_Keystone.svg",
       icon: <Target size={32} />,
       iconColor: "#0089d2", // Sky Blue
       bgColor: "rgba(0, 137, 210, 0.08)",
@@ -224,6 +250,8 @@ export default function Home() {
     {
       id: "every-question-maps-to-its-purspose",
       title: "Every Question Maps to Its Purspose",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269426-66lkh2-BuyFacts_Question_Design.svg",
       icon: <Edit3 size={32} />,
       iconColor: "#7cb342", // Lime Green
       bgColor: "rgba(124, 179, 66, 0.08)",
@@ -231,6 +259,8 @@ export default function Home() {
     {
       id: "executives-get-peer-comparison-not-coffee-cards",
       title: "Executives Get peer Comparison Not Coffee Cards",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315281029-irb8ll-BuyFacts_Value_Quantification.svg",
       icon: <Users size={32} />,
       iconColor: "#e57a45", // Coral
       bgColor: "rgba(229, 122, 69, 0.08)",
@@ -238,6 +268,8 @@ export default function Home() {
     {
       id: "a-dual-approach-delivers-stories-backed-by-facts",
       title: "A Dual Approach Delivers Stories Backed by Facts",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315275105-urqpqf-BuyFacts_Thought_Leadership_TL1.svg",
       icon: <ShieldCheck size={32} />,
       iconColor: "#14a38b", // Teal
       bgColor: "rgba(20, 163, 139, 0.08)",
@@ -245,6 +277,8 @@ export default function Home() {
     {
       id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
       title: "Inclusive Stakeholder Engagement Reduces Malicious Compliance",
+      iconUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259585-6u4ucb-BuyFacts_Bot_Detection.svg",
       icon: <TrendingUp size={32} />,
       iconColor: "#ffb039", // Accent Gold
       bgColor: "rgba(255, 176, 57, 0.08)",
@@ -505,7 +539,7 @@ export default function Home() {
                       borderColor: card.iconColor,
                     }}
                   >
-                    {card.icon}
+                    <ServiceCardIcon card={card} />
                   </div>
                   <span className={styles.cardIndex}>
                     {String(index + 1).padStart(2, "0")}
@@ -989,8 +1023,7 @@ export default function Home() {
                     className={styles.corporateNoticeIcon}
                   />
                   <span>
-                    Email confirmation is required to validate a corporate email
-                    address.
+                    {"Email confirmation is required to validate a corporate email address."}
                   </span>
                 </div>
               </div>
@@ -1229,8 +1262,7 @@ export default function Home() {
                       size={14}
                       style={{ color: "var(--interactive-orange)" }}
                     />
-                    Email confirmation is required to validate a corporate email
-                    address.
+                    {"Email confirmation is required to validate a corporate email address."}
                   </span>
                 </div>
 
