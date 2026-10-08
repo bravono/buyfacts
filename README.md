@@ -264,6 +264,9 @@ npx prisma db push
 # Generate Prisma client
 npx prisma generate
 
+# Seed database (replaces existing records to prevent duplicates)
+npm run seed
+
 # Start development server
 npm run dev
 ```

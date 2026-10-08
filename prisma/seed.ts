@@ -15,7 +15,22 @@ const adapter = new PrismaBetterSqlite3({ url: dbPath })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log("🌱 Starting BuyFacts Core DB seed...\n");
+  console.log("Starting BuyFacts Core DB seed...\n");
+
+  // 0. Reset existing database records so seed replaces existing state instead of appending
+  console.log("0. Cleaning existing records to replace database state...");
+  await prisma.cubiconAttempt.deleteMany();
+  await prisma.cubiconSession.deleteMany();
+  await prisma.cubiconTask.deleteMany();
+  await prisma.cubiconSequence.deleteMany();
+  await prisma.cubiconRegistration.deleteMany();
+  await prisma.cubiconShare.deleteMany();
+  await prisma.feedbackSubmission.deleteMany();
+
+  await prisma.dashboardButton.deleteMany();
+  await prisma.mediaAsset.deleteMany();
+  await prisma.user.deleteMany();
+  console.log("   Cleared existing records successfully.\n");
 
   // 1. Users
   console.log("1. Seeding Users...");
@@ -216,7 +231,7 @@ async function main() {
       create: btn,
     });
   }
-  console.log(`   ✓ Seeded ${dashboardButtons.length} Dashboard Buttons`);
+  console.log(`   Seeded ${dashboardButtons.length} Dashboard Buttons`);
 
   // 3. Media Assets
   console.log("3. Seeding Media Assets...");
@@ -251,7 +266,7 @@ async function main() {
       create: asset,
     });
   }
-  console.log(`   ✓ Seeded ${mediaAssets.length} Media Assets`);
+  console.log(`   Seeded ${mediaAssets.length} Media Assets`);
 
   // 4. Cubicon 3D Sequences and Tasks
   console.log("4. Seeding Cubicon 3D Sequences and Tasks...");
@@ -352,37 +367,27 @@ async function main() {
     },
   ];
 
-  const defaultTasksCount = await prisma.cubiconTask.count({
-    where: { sequence_id: defaultSeq.id },
-  });
-  if (defaultTasksCount === 0) {
-    for (const t of cubiconTasks) {
-      await prisma.cubiconTask.create({
-        data: {
-          ...t,
-          sequence_id: defaultSeq.id,
-        },
-      });
-    }
+  for (const t of cubiconTasks) {
+    await prisma.cubiconTask.create({
+      data: {
+        ...t,
+        sequence_id: defaultSeq.id,
+      },
+    });
   }
 
-  const contactTasksCount = await prisma.cubiconTask.count({
-    where: { sequence_id: contactSeq.id },
-  });
-  if (contactTasksCount === 0) {
-    for (const t of cubiconTasks) {
-      await prisma.cubiconTask.create({
-        data: {
-          ...t,
-          heading: t.heading.replace("Puzzle", "Verification Puzzle"),
-          sequence_id: contactSeq.id,
-        },
-      });
-    }
+  for (const t of cubiconTasks) {
+    await prisma.cubiconTask.create({
+      data: {
+        ...t,
+        heading: t.heading.replace("Puzzle", "Verification Puzzle"),
+        sequence_id: contactSeq.id,
+      },
+    });
   }
   console.log("   Seeded Cubicon Sequences (default, contact_form) and associated Tasks");
 
-  console.log("\n🎉 BuyFacts Core DB seeding completed successfully!");
+  console.log("\nBuyFacts Core DB seeding completed successfully!");
 }
 
 
@@ -391,7 +396,7 @@ main()
     await prisma.$disconnect()
   })
   .catch(async (e) => {
-    console.error("❌ Error during seeding:", e)
+    console.error("Error during seeding:", e)
     await prisma.$disconnect()
     process.exit(1)
   })
