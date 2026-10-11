@@ -98,7 +98,7 @@ async function main() {
     {
       id: "btn-srv-005",
       label: "Recognize IT",
-      mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
       mediaType: "video",
       subtitle: "Active Pattern Analytics",
       category: "Products & Services",
@@ -180,8 +180,8 @@ async function main() {
     {
       id: "btn-tl-005",
       label: "Early Recognition",
-      mediaUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80",
-      mediaType: "image",
+      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+      mediaType: "video",
       subtitle: "Earlier Recognition for Your Time Advantage",
       category: "Research Imperatives",
       color: "#ea425f",
