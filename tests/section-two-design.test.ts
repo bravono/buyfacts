@@ -31,7 +31,7 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
     // Primary Description
     assert.ok(
       pageContent.includes(
-        "Real-Time Peer Comparisons. Relevant Insight for Eery participant."
+        "Real-Time Peer Comparisons. Relevant Insight for Every participant."
       ),
       "Section 2 must retain the primary description verbatim"
     );
@@ -44,7 +44,7 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
     const normalizedPage = pageContent.replace(/\s+/g, " ");
     assert.ok(
       normalizedPage.includes(
-        "Protect Data Quality - Remove Payola that Promotes Cash-Grab Perticipation"
+        "Protect Data Quality - Remove Pay for Participation that Promotes Cash-Grab Participation"
       ),
       "Section 2 must preserve the callout text verbatim"
     );
@@ -84,8 +84,8 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
         title: "Survey Design",
       },
       {
-        id: "perticipant-insight-choices",
-        title: "Perticipant Insight Choices",
+        id: "participant-insight-choices",
+        title: "Participant Insight Choices",
       },
       {
         id: "traditional-story-based-instruments",
@@ -96,8 +96,8 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
         title: "Best Practices",
       },
       {
-        id: "every-question-maps-to-its-purspose",
-        title: "Every Question Maps to Its Purspose",
+        id: "every-question-maps-to-its-purpose",
+        title: "Every Question Maps to Its Purpose",
       },
       {
         id: "executives-get-peer-comparison-not-coffee-cards",
@@ -227,7 +227,7 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
         iconFilename: "BuyFacts_Survey_Hosting.svg",
       },
       {
-        id: "perticipant-insight-choices",
+        id: "participant-insight-choices",
         iconFilename: "BuyFacts_Early_Recognition.svg",
       },
       {
@@ -239,7 +239,7 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
         iconFilename: "BuyFacts_Best_Practices_Keystone.svg",
       },
       {
-        id: "every-question-maps-to-its-purspose",
+        id: "every-question-maps-to-its-purpose",
         iconFilename: "BuyFacts_Question_Design.svg",
       },
       {

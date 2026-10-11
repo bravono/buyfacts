@@ -33,12 +33,12 @@ import TripletButtonGroup, {
 
 // CDN Video URLs for What Sets Us Apart subsection
 const APART_VIDEO_1_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/videos/what-sets-us-apart-1.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4";
 const APART_VIDEO_1_FALLBACK =
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 const APART_VIDEO_2_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/videos/what-sets-us-apart-2.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4";
 const APART_VIDEO_2_FALLBACK =
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
 
@@ -103,7 +103,7 @@ export default function Home() {
       id: "validate-survey-participants",
       title: "Validate Survey Participants",
       tagline:
-        "Cubicon uses puzzle games people enjoy but AI bots hate and fail to solve. In less than a minute, it helps validate human survey participants and protect data accuracy from bot pollution. See It Now",
+        "Cubicon uses puzzle games people enjoy but AI bots hate and fail to solve. In less than a minute, it helps validate human survey participants and protect data accuracy from bot pollution.",
       href: "/cubicon",
       theme: "orange",
       fallbackIcon: <TrendingUp size={20} />,
@@ -114,7 +114,7 @@ export default function Home() {
       id: "faster-digital-asset-creation",
       title: "Faster Digital Asset Creation",
       tagline:
-        "Research Libs gives marketers a traditional survey plus a cost-free story-based version that turns survey participants into storytellers. Storyline output adds stories to the facts, supports a twenty-fold increase in message recall, and speeds content creation. See it Now",
+        "Research Libs gives marketers a traditional survey plus a cost-free story-based version that turns survey participants into storytellers. Storyline output adds stories to the facts, supports a twenty-fold increase in message recall, and speeds content creation.",
       href: "/research-lib",
       theme: "blue",
       fallbackIcon: <FileText size={20} />,
@@ -125,7 +125,7 @@ export default function Home() {
       id: "market-changes-in-real-time",
       title: "Market Changes in Real Time",
       tagline:
-        "TRIAD brings earlier recognition of market changes to help marketers stay ahead of competitors and expand their competitive playbook. Three corners and an interactive triangle question reveal directional change and the emotional drivers behind it. See it Now.",
+        "TRIAD brings earlier recognition of market changes to help marketers stay ahead of competitors and expand their competitive playbook. Three corners and an interactive triangle question reveal directional change and the emotional drivers behind it.",
       href: "/triad",
       theme: "purple",
       fallbackIcon: <Compass size={20} />,
@@ -493,7 +493,8 @@ export default function Home() {
               Peer Benchmark Incentive Surveys
             </h2>
             <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Every participant.
+              Real-Time Peer Comparisons. Relevant Insight for Every
+              participant.
             </p>
 
             {/* Accent Badges matching Mockup image */}
@@ -515,8 +516,8 @@ export default function Home() {
             <div className={styles.calloutBanner}>
               <ShieldCheck size={20} className={styles.calloutIcon} />
               <span className={styles.calloutText}>
-                Protect Data Quality - Remove Pay for Participation that Promotes Cash-Grab
-                Participation
+                Protect Data Quality - Remove Pay for Participation that
+                Promotes Cash-Grab Participation
               </span>
             </div>
           </div>
@@ -1023,7 +1024,9 @@ export default function Home() {
                     className={styles.corporateNoticeIcon}
                   />
                   <span>
-                    {"Email confirmation is required to validate a corporate email address."}
+                    {
+                      "Email confirmation is required to validate a corporate email address."
+                    }
                   </span>
                 </div>
               </div>
@@ -1262,7 +1265,9 @@ export default function Home() {
                       size={14}
                       style={{ color: "var(--interactive-orange)" }}
                     />
-                    {"Email confirmation is required to validate a corporate email address."}
+                    {
+                      "Email confirmation is required to validate a corporate email address."
+                    }
                   </span>
                 </div>
 
