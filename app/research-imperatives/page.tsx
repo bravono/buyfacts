@@ -68,8 +68,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     color: "var(--color-accent-crimson)",
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
-    mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80",
+    mediaType: "video",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
   },
   {
     label: "Survey Engagement",
@@ -126,7 +126,8 @@ const PRESET_COLORS = [
 ];
 
 export default function PortfolioPage() {
-  const [selectedButtonIndex, setSelectedButtonIndex] = useState(0);
+  const [selectedButtonIndex, setSelectedButtonIndex] = useState<number | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [thoughtLeadershipButtons, setThoughtLeadershipButtons] = useState<ButtonData[]>(DEFAULT_TL_BUTTONS);
 
   useEffect(() => {
@@ -164,7 +165,10 @@ export default function PortfolioPage() {
     fetchButtons();
   }, []);
 
-  const currentMedia = thoughtLeadershipButtons[selectedButtonIndex] || thoughtLeadershipButtons[0];
+  const currentMedia =
+    selectedButtonIndex !== null
+      ? (thoughtLeadershipButtons[selectedButtonIndex] || thoughtLeadershipButtons[0])
+      : thoughtLeadershipButtons[0];
 
   return (
     <div className={styles.main}>
@@ -186,8 +190,11 @@ export default function PortfolioPage() {
               className={styles.dashboardAnimation}
               buttons={thoughtLeadershipButtons}
               title="RESEARCH IMPERATIVES"
-              selectedButtonIndex={selectedButtonIndex}
-              onSelectButton={setSelectedButtonIndex}
+              selectedButtonIndex={selectedButtonIndex ?? undefined}
+              onSelectButton={(index) => {
+                setSelectedButtonIndex(index);
+                setShowWelcome(false);
+              }}
             />
           </div>
 
@@ -195,16 +202,20 @@ export default function PortfolioPage() {
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
               <MockMediaPlayer
-                title={currentMedia.label}
-                tagline={currentMedia.tagline}
-                description={currentMedia.description}
+                title={showWelcome ? "Getting Started" : currentMedia.label}
+                tagline={showWelcome ? "Welcome to your Marketers tool workspace!" : currentMedia.tagline}
+                description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
-                onNextMedia={() =>
-                  setSelectedButtonIndex((prev) => (prev + 1) % thoughtLeadershipButtons.length)
-                }
+                showWelcome={showWelcome}
+                onShowWelcome={() => setShowWelcome(true)}
+                onDismissWelcome={() => setShowWelcome(false)}
+                onNextMedia={() => {
+                  setShowWelcome(false);
+                  setSelectedButtonIndex((prev) => ((prev ?? -1) + 1) % thoughtLeadershipButtons.length);
+                }}
               />
             </div>
           </div>

@@ -40,6 +40,32 @@ export interface MockMediaPlayerProps {
   onContactClick?: () => void;
   onExploreClick?: (action: string) => void;
   onNextMedia?: () => void;
+  showWelcome?: boolean;
+  onShowWelcome?: () => void;
+  onDismissWelcome?: () => void;
+}
+
+function isYouTubeUrl(url?: string): boolean {
+  if (!url) return false;
+  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
+}
+
+function getYouTubeEmbedUrl(url: string): string {
+  try {
+    if (url.includes("youtu.be/")) {
+      const id = url.split("youtu.be/")[1]?.split(/[?#]/)[0];
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    const parsed = new URL(url);
+    const id = parsed.searchParams.get("v");
+    if (id) {
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes("/embed/")) {
+      return url;
+    }
+  } catch {}
+  return url;
 }
 
 export default function MockMediaPlayer({
@@ -62,12 +88,22 @@ export default function MockMediaPlayer({
   onContactClick,
   onExploreClick,
   onNextMedia,
+  showWelcome,
+  onShowWelcome,
+  onDismissWelcome,
 }: MockMediaPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [isWelcomeActive, setIsWelcomeActive] = useState<boolean>(showWelcome ?? true);
+
+  useEffect(() => {
+    if (showWelcome !== undefined) {
+      setIsWelcomeActive(showWelcome);
+    }
+  }, [showWelcome]);
 
   // Section 6: Video opening state and In Depth preview states
   const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">("idle");
@@ -77,9 +113,23 @@ export default function MockMediaPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const displayTitle = title || "Operational Demonstration";
-  const displayTagline =
-    tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
+  const displayTitle = isWelcomeActive
+    ? "Getting Started"
+    : (title || "Operational Demonstration");
+  const displayTagline = isWelcomeActive
+    ? "Welcome to your Marketers tool workspace!"
+    : (tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough");
+
+  const isYouTube = Boolean(mediaUrl && isYouTubeUrl(mediaUrl));
+  const isPlayable = Boolean(
+    (mediaType === "video" || mediaType === "audio") && mediaUrl && !isYouTube
+  );
+
+  const handleNextMedia = () => {
+    setIsWelcomeActive(false);
+    onDismissWelcome?.();
+    onNextMedia?.();
+  };
 
   // Reset playback states on media change
   useEffect(() => {
@@ -91,9 +141,13 @@ export default function MockMediaPlayer({
     setDownloadConfirmed(null);
 
     if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
       videoRef.current.load();
     }
     if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       audioRef.current.load();
     }
   }, [mediaUrl, mediaType]);
@@ -126,10 +180,16 @@ export default function MockMediaPlayer({
     if (el) {
       if (isPlaying) {
         el.pause();
+        setIsPlaying(false);
       } else {
-        el.play().catch((err) => {
-          console.warn("Playback blocked or failed: ", err);
-        });
+        setVideoMode("playing");
+        el.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((err) => {
+            console.warn("Playback blocked or failed: ", err);
+          });
       }
     }
   };
@@ -194,8 +254,6 @@ export default function MockMediaPlayer({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const isPlayable = (mediaType === "video" && videoMode === "playing") || mediaType === "audio";
-
   // Section 6: Video Button Action
   const handleVideoAction = () => {
     if (onVideoClick) {
@@ -203,8 +261,7 @@ export default function MockMediaPlayer({
     } else if (onExploreClick) {
       onExploreClick("video");
     } else {
-      // Show approved opening animation instead of autostarting
-      setVideoMode("opening");
+      togglePlay();
     }
   };
 
@@ -274,7 +331,34 @@ export default function MockMediaPlayer({
           <p className={styles.headerSubtitle}>{displayTagline}</p>
         </div>
         <div className={styles.headerRight}>
-          <Link href="/" style={{ fontSize: "0.78rem", color: "var(--color-blue-3)", textDecoration: "none", fontWeight: 600 }}>
+          <button
+            type="button"
+            className={`${styles.gettingStartedToggleBtn} ${
+              isWelcomeActive ? styles.gettingStartedToggleBtnActive : ""
+            }`}
+            onClick={() => {
+              const next = !isWelcomeActive;
+              setIsWelcomeActive(next);
+              if (next) {
+                onShowWelcome?.();
+              } else {
+                onDismissWelcome?.();
+              }
+            }}
+            aria-label="Getting Started guide"
+            title="Getting Started guide"
+          >
+            Getting Started
+          </button>
+          <Link
+            href="/"
+            style={{
+              fontSize: "0.78rem",
+              color: "var(--color-blue-3)",
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
             Back to Home
           </Link>
         </div>
@@ -289,7 +373,7 @@ export default function MockMediaPlayer({
         }`}
       >
         {/* Section 6: Opening Animation Overlay with Start Video & Cancel */}
-        {videoMode === "opening" && (
+        {videoMode === "opening" && !isWelcomeActive && (
           <div className={styles.videoOpeningCard}>
             <span className={styles.openingBadge}>Preview Presentation</span>
             <h4 className={styles.openingTitle}>{displayTitle}</h4>
@@ -317,23 +401,35 @@ export default function MockMediaPlayer({
 
         {/* Video Render */}
         {mediaType === "video" && mediaUrl && (
-          <video
-            ref={videoRef}
-            src={mediaUrl}
-            className={styles.realVideo}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={handleEnded}
-            onClick={togglePlay}
-            playsInline
-            style={{ display: videoMode === "playing" ? "block" : "none" }}
-          />
+          isYouTube ? (
+            <iframe
+              src={getYouTubeEmbedUrl(mediaUrl)}
+              className={styles.realVideo}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={mediaUrl}
+              className={styles.realVideo}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onPlay={() => {
+                setIsPlaying(true);
+                setVideoMode("playing");
+              }}
+              onPause={() => setIsPlaying(false)}
+              onEnded={handleEnded}
+              onClick={togglePlay}
+              preload="metadata"
+              playsInline
+            />
+          )
         )}
 
-        {/* Idle Video Poster or Audio Wave Background */}
-        {(videoMode !== "playing" || mediaType !== "video") && (
+        {/* Idle Audio Wave Background or Video Fallback when no url */}
+        {(mediaType !== "video" || !mediaUrl) && (
           <div className={styles.videoBackground}>
             <div
               className={styles.dataNode}
@@ -417,10 +513,10 @@ export default function MockMediaPlayer({
           </div>
         )}
 
-        {/* Large Central Play Button (when playable) */}
-        {isPlayable && (
+        {/* Large Central Play Button (when playable and welcome not active) */}
+        {isPlayable && !isWelcomeActive && (
           <button
-            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""}`}
+            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${mediaType === "video" && isPlaying ? styles.videoPlaying : ""}`}
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
             id="mock-media-play-btn"
@@ -438,18 +534,20 @@ export default function MockMediaPlayer({
           </button>
         )}
 
-        {/* Right Arrow Translucent Action Circle Button */}
-        <button
-          className={styles.nextMediaButton}
-          onClick={onNextMedia}
-          aria-label="Next media option"
-          title="Next option"
-        >
-          <ChevronRight size={22} color="#ffffff" />
-        </button>
+        {/* Right Arrow Translucent Action Circle Button (when welcome not active) */}
+        {!isWelcomeActive && (
+          <button
+            className={styles.nextMediaButton}
+            onClick={handleNextMedia}
+            aria-label="Next media option"
+            title="Next option"
+          >
+            <ChevronRight size={22} color="#ffffff" />
+          </button>
+        )}
 
-        {/* Audio Oscilloscope visualizer when playing audio */}
-        {mediaType === "audio" && isPlaying && (
+        {/* Audio Oscilloscope visualizer when playing audio and welcome not active */}
+        {mediaType === "audio" && isPlaying && !isWelcomeActive && (
           <div className={styles.barsVisualizer}>
             <div className={styles.bar}></div>
             <div className={styles.bar}></div>
@@ -459,10 +557,98 @@ export default function MockMediaPlayer({
             <div className={styles.bar}></div>
           </div>
         )}
+
+        {/* Getting Started Welcome Overlay or Topic Description Overlay */}
+        {isWelcomeActive ? (
+          <div
+            className={`${styles.descriptionOverlay} ${styles.welcomeOverlay} ${
+              isPlaying ? styles.descriptionOverlayHidden : ""
+            }`}
+            id="mock-media-welcome-overlay"
+          >
+            <button
+              type="button"
+              className={styles.welcomeDismissBtn}
+              onClick={() => {
+                setIsWelcomeActive(false);
+                onDismissWelcome?.();
+              }}
+              aria-label="Dismiss guide"
+              title="Explore topics"
+            >
+              <X size={18} />
+            </button>
+            <div className={styles.welcomeContent}>
+              <h4 className={styles.welcomeIntro}>Here are the basics:</h4>
+              <ul className={styles.welcomeList}>
+                <li>
+                  <span
+                    className={styles.bulletDot}
+                    style={{ color: "var(--color-orange-1, #ff9900)" }}
+                  >
+                    •
+                  </span>
+                  <span>Click on Any Tool or Resource topic</span>
+                </li>
+                <li>
+                  <span
+                    className={styles.bulletDot}
+                    style={{ color: "var(--color-accent-green-mint, #42ea86)" }}
+                  >
+                    •
+                  </span>
+                  <span>View a description and available resources</span>
+                </li>
+                <li>
+                  <span
+                    className={styles.bulletDot}
+                    style={{ color: "var(--color-blue-2, #0089d2)" }}
+                  >
+                    •
+                  </span>
+                  <span>See, hear, read and apply our shared learnings that will save you time</span>
+                </li>
+                <li>
+                  <span
+                    className={styles.bulletDot}
+                    style={{ color: "var(--color-accent-green-lime, #b0e843)" }}
+                  >
+                    •
+                  </span>
+                  <span>Pose a question or a request to Robert for help</span>
+                </li>
+                <li>
+                  <span
+                    className={styles.bulletDot}
+                    style={{ color: "var(--color-orange-2, #ffc164)" }}
+                  >
+                    •
+                  </span>
+                  <span>Download and save time with our ideas and tools (no strings attached)</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        ) : (
+          description && (
+            <div
+              className={`${styles.descriptionOverlay} ${
+                isPlaying ? styles.descriptionOverlayHidden : ""
+              }`}
+            >
+              <p className={styles.descriptionOverlayText}>
+                <span className={styles.descriptionHighlight}>
+                  {displayTitle}:{" "}
+                </span>
+                {description}
+              </p>
+            </div>
+          )
+        )}
       </div>
 
-      {/* Seek Control Panel (Only for active playable media) */}
-      {isPlayable && (
+      {/* Seek Control Panel (Only for active playable media and when welcome not active) */}
+      {isPlayable && !isWelcomeActive && (
         <div className={styles.controlPanel}>
           <div className={styles.sliderWrapper}>
             <input
@@ -546,19 +732,7 @@ export default function MockMediaPlayer({
         </div>
       )}
 
-      {/* 3. Description Paragraph Panel */}
-      {description && (
-        <div key={displayTitle} className={styles.revealContainer}>
-          <p className={styles.descriptionParagraph}>
-            <span className={styles.descriptionHighlight}>
-              {displayTitle}:{" "}
-            </span>
-            {description}
-          </p>
-        </div>
-      )}
-
-      {/* 4. Horizontal Separator Divider */}
+      {/* Horizontal Separator Divider */}
       <hr className={styles.divider} />
 
       {/* 5. Bottom Action Buttons: Three Principal Choices (Section 6) */}

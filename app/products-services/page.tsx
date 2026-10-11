@@ -69,7 +69,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
   },
   {
     label: "Validate IT",
@@ -126,7 +126,8 @@ const PRESET_COLORS = [
 ];
 
 export default function ServicesPage() {
-  const [selectedButtonIndex, setSelectedButtonIndex] = useState(0);
+  const [selectedButtonIndex, setSelectedButtonIndex] = useState<number | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [customButtons, setCustomButtons] = useState<ButtonData[]>(DEFAULT_SERVICES_BUTTONS);
 
   useEffect(() => {
@@ -164,14 +165,21 @@ export default function ServicesPage() {
     fetchButtons();
   }, []);
 
-  const currentMedia = customButtons[selectedButtonIndex] || customButtons[0];
+  const currentMedia =
+    selectedButtonIndex !== null
+      ? (customButtons[selectedButtonIndex] || customButtons[0])
+      : customButtons[0];
 
   return (
     <div className={styles.main}>
+      {/* Background blobs for premium glow */}
+      <div className="glow-blob blob-green"></div>
+      <div className="glow-blob blob-blue"></div>
+
       <Navbar />
 
-      {/* Two-Column layout block - Light Theme matching mockup */}
-      <section className={`${styles.dashboardSection} section-light`}>
+      {/* Two-Column layout block - Dark Theme matching research-imperatives */}
+      <section className={styles.dashboardSection} id="innovations">
         <div className={styles.pageGrid}>
           {/* Left Column: interactive service / tool areas graphic */}
           <div className={styles.columnLeft}>
@@ -179,8 +187,11 @@ export default function ServicesPage() {
               className={styles.dashboardAnimation}
               buttons={customButtons}
               title="INNOVATIONS THAT SAVE TIME"
-              selectedButtonIndex={selectedButtonIndex}
-              onSelectButton={setSelectedButtonIndex}
+              selectedButtonIndex={selectedButtonIndex ?? undefined}
+              onSelectButton={(index) => {
+                setSelectedButtonIndex(index);
+                setShowWelcome(false);
+              }}
             />
           </div>
 
@@ -188,16 +199,20 @@ export default function ServicesPage() {
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
               <MockMediaPlayer
-                title={currentMedia.label}
-                tagline={currentMedia.tagline}
-                description={currentMedia.description}
+                title={showWelcome ? "Getting Started" : currentMedia.label}
+                tagline={showWelcome ? "Welcome to your Marketers tool workspace!" : currentMedia.tagline}
+                description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
-                onNextMedia={() =>
-                  setSelectedButtonIndex((prev) => (prev + 1) % customButtons.length)
-                }
+                showWelcome={showWelcome}
+                onShowWelcome={() => setShowWelcome(true)}
+                onDismissWelcome={() => setShowWelcome(false)}
+                onNextMedia={() => {
+                  setShowWelcome(false);
+                  setSelectedButtonIndex((prev) => ((prev ?? -1) + 1) % customButtons.length);
+                }}
               />
             </div>
           </div>

@@ -29,7 +29,7 @@ export type DashboardButton = {
 export const DEFAULT_BUTTONS: DashboardButton[] = [
   { label: "Survey Define IT", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Survey Field IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Respondent Validation", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Respondent Validation", mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4" },
   { label: "Survey Refine IT", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Recognize IT", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Story-Based Surveys", mediaUrl: "https://www.buyfacts.com/" },

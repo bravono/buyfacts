@@ -308,10 +308,21 @@ Located within the About section (`id="about"`) on the homepage, the "What Sets 
 - **Zero-Emoji Compliance**: Adheres to strict corporate design and zero-emoji standards across all UI layers and metadata.
 
 ### Dashboard & Media Player Model
-The dashboard and media player provide three standardized action choices at the base of the player window:
-1. **Video**: User-initiated video presentation with an animated opening state, explicit "Start Video" and "Cancel" buttons, "Skip Video", "Reload Video", and next-step instructions upon completion.
-2. **In Depth**: Presents an executive document preview modal with title, estimated reading time, file format, and key takeaways before download confirmation. Preserves selected item highlight on the dashboard upon completion.
-3. **Talk to Us**: Direct navigation to `/#contact`.
+The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MockMediaPlayer.tsx)) renders dynamic media associated with the active dashboard selection:
+- **Direct Video Playability**: When an active button is associated with a video link (`mediaType: "video"`), the video element is directly loaded and playable. A prominent central Play button is rendered on the screen frame.
+- **Enlarged Media Player Dimensions**: With the description moved inside the canvas frame, the player card max-width is expanded to 860px and screen frame max-height to 480px (with 340px on compact screens), providing a substantially larger viewing surface.
+- **Getting Started Welcome Overlay**: When users land on `/products-services` or `/research-imperatives`, the media player presents the "Getting Started" guide across the entirety of the media display area. When the welcome overlay is active, media controls (central play button, right next chevron button, seek control panel, audio visualizer, and opening card) are automatically hidden. To avoid duplication with the top banner ("Getting Started" title and "Welcome to your Marketers tool workspace!" subtitle), the display area focuses cleanly on the actionable onboarding steps ("Here are the basics:") and bullet items. Includes a header toggle button to review the guide at any time and a prominent dismissal action to begin exploring topics immediately.
+- **Consistent Colorful Visual Theme**: Both `/products-services` and `/research-imperatives` share the dark background canvas with vibrant ambient glow blobs (`glow-blob blob-green`, `glow-blob blob-blue`) and robust color protection on all overlay highlights (`#ff9900`), mint accents (`#42ea86`), and text layers, preventing any accidental grey muting.
+- **Contextual Description Overlay**: When a tool or research topic is selected, the media title and description render directly inside the media player frame with a readable gradient backdrop. The overlay automatically disappears during active playback (`isPlaying`) and reappears on pause, keeping the video unobstructed.
+- **Click-Through Interactivity**: The overlay utilizes `pointer-events: none` (for topic descriptions) and interactive click handlers (for welcome dismiss), allowing clicks anywhere on the video canvas to toggle play/pause directly.
+- **Interactive Playback Controls**: Includes a seek bar, real-time current time/duration display, mute/unmute toggle, playback reset, and full-screen controls.
+- **Hover-Aware Play Button**: The central play button transitions smoothly during playback, fading out during active video viewing and reappearing on hover or pause for quick access.
+- **Surface Interactivity**: Clicking directly on the video element or clicking the primary "Video" button at the bottom toggles play and pause immediately.
+- **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Recognize IT" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
+- **Three Standardized Action Choices**:
+  1. **Video**: User-initiated video presentation with direct play/pause toggling.
+  2. **In Depth**: Presents an executive document preview modal with title, estimated reading time, file format, and key takeaways before download confirmation, preserving selected item highlight on the dashboard upon completion.
+  3. **Talk to Us**: Direct navigation to `/#contact`.
 
 ---
 
