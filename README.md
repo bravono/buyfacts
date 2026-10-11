@@ -579,10 +579,11 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 - **Canvas Touch Action & Interaction Guards**:
   - `canvas { touch-action: none !important; }` prevents single-finger and multi-finger gestures (orbiting the cube, drawing circles, or dragging marker coordinates) from triggering parent page scrolling.
   - `#root` and `#root > div` enforce `overflow: hidden; width: 100vw; height: 100dvh;` to eliminate synthetic scroll bars and touch jitter.
-- **Fullscreen & Pseudo-Fullscreen Fallback**:
-  - Supports standard browser `requestFullscreen()` with bidirectional `postMessage` synchronization (`CUBICON_SET_FULLSCREEN`).
-  - Implements `.appFrameWrapperPseudoFullscreen` (`position: fixed; inset: 0; width: 100dvw; height: 100dvh; z-index: 99999;`) as a robust fallback for iOS Safari and mobile devices where native element fullscreen is restricted.
-  - Floating exit buttons (`.exitFullscreenFloatingBtn` with `z-index: 100000` and minimum 44px height) and `Escape` key listeners guarantee seamless exit across all platforms.
+- **Fullscreen Default State Upon Launch & Pseudo-Fullscreen Fallback**:
+  - Cubicon always begins in full screen as its default state immediately upon launch (via "TRY CUBICON LIVE!", "TRY IT YOURSELF NOW", or `#live` / `#cubicon-live` / `#launch` anchor navigation).
+  - Automatically requests standard browser `requestFullscreen()` with bidirectional `postMessage` synchronization (`CUBICON_SET_FULLSCREEN`).
+  - Implements `.appFrameWrapperPseudoFullscreen` (`position: fixed; inset: 0; width: 100dvw; height: 100dvh; z-index: 99999;`) as an immediate and robust default fallback for iOS Safari, mobile viewports, or environments where native browser fullscreen permissions are restricted.
+  - Floating exit buttons (`.exitFullscreenFloatingBtn` with `z-index: 100000` and minimum 44px height), toolbar controls, and `Escape` key listeners guarantee seamless transitions between full screen and embedded modes across all platforms.
 - **Responsive Viewport & Typography Clamping (Sections 7.3 & 14)**:
   - Task card headings and descriptions utilize `clamp(...)` typography (`clamp(0.95rem, 4vw, 1.25rem)` on 390px screens) ensuring cards never collide with the 3D cube or push action buttons out of view.
   - Touch targets enforce minimum 44x44px dimensions per Section 14 accessibility guidelines.

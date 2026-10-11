@@ -355,6 +355,11 @@
   background-color: #0f141c !important;
 }
 
+.appFrameWrapperPseudoFullscreen .iframeHostLoader {
+  top: 0 !important;
+  z-index: 9998 !important;
+}
+
 .exitFullscreenFloatingBtn {
   position: fixed;
   top: 20px;

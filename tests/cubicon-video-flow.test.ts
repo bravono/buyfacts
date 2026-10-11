@@ -10,6 +10,7 @@ class CubiconViewportStateMachine {
   showVideo: boolean = false;
   isVideoCompleted: boolean = false;
   isIframeLoaded: boolean = false;
+  isFullscreen: boolean = false;
   videoSrc: string = CUBICON_VIDEO_CDN_URL;
 
   get isNavbarVisible(): boolean {
@@ -34,6 +35,7 @@ class CubiconViewportStateMachine {
     this.showVideo = false;
     this.showLiveApp = true;
     this.isIframeLoaded = false;
+    this.isFullscreen = true;
   }
 
   handleIframeLoad() {
@@ -49,6 +51,7 @@ class CubiconViewportStateMachine {
     this.showLiveApp = false;
     this.isVideoCompleted = false;
     this.isIframeLoaded = false;
+    this.isFullscreen = false;
   }
 
   handleVideoError() {
@@ -153,16 +156,16 @@ test("Cubicon Video Preview Flow Test Suite", async (t) => {
     assert.equal(sm.isIframeLoaded, true);
   });
 
-  await t.test("Launching live 3D app does not automatically trigger fullscreen", () => {
+  await t.test("Launching live 3D app automatically begins in fullscreen as default state", () => {
     const sm = new CubiconViewportStateMachine();
-    let fullscreenTriggered = false;
+    assert.equal(sm.isFullscreen, false);
 
     // Simulate handleSeeLiveClick
     sm.handleSeeLiveClick();
 
-    // Verify it stays embedded unless explicitly chosen
+    // Verify it begins in fullscreen as default state
     assert.equal(sm.showLiveApp, true);
-    assert.equal(fullscreenTriggered, false);
+    assert.equal(sm.isFullscreen, true);
   });
 
   await t.test("Analytics shortcut visibility is restricted to authenticated admins", () => {

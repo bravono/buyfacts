@@ -37,6 +37,7 @@ import {
   BarChart3,
   Video,
   FastForward,
+  ArrowRight,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
 import { isBusinessEmail } from "@/lib/validation/forms";
@@ -242,11 +243,23 @@ export default function CubiconPage() {
     setIsVideoCompleted(false);
     setIsIframeLoaded(false);
     setShowLiveApp(true);
+    setIsFullscreen(true);
+    notifyIframeFullscreen(true);
 
-    // Smoothly scroll the interactive 3D app into view without automatically forcing fullscreen
+    // Request native browser fullscreen if supported, with automatic fallback to CSS pseudo-fullscreen
     setTimeout(() => {
       if (appFrameWrapperRef.current) {
-        appFrameWrapperRef.current.scrollIntoView({
+        const elem = appFrameWrapperRef.current;
+        const requestMethod =
+          elem.requestFullscreen ||
+          (elem as any).webkitRequestFullscreen ||
+          (elem as any).msRequestFullscreen;
+        if (requestMethod) {
+          requestMethod.call(elem).catch(() => {
+            // Fullscreen request rejected or unsupported; pseudo-fullscreen remains active
+          });
+        }
+        elem.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
@@ -812,6 +825,12 @@ export default function CubiconPage() {
             target.scrollIntoView({ behavior: "smooth" });
           }
         }, 100);
+      } else if (
+        hash === "#live" ||
+        hash === "#cubicon-live" ||
+        hash === "#launch"
+      ) {
+        handleSeeLiveClick();
       }
     };
 
@@ -1181,6 +1200,9 @@ export default function CubiconPage() {
                 onLoad={() => {
                   setIsIframeLoaded(true);
                   notifyIframeFullscreen(isFullscreen);
+                  setTimeout(() => {
+                    notifyIframeFullscreen(isFullscreen);
+                  }, 150);
                 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               />
