@@ -1211,6 +1211,76 @@ export default function CubiconPage() {
         </div>
       </section>
 
+      {/* CUBICON FOUNDING CLIENT INVITATION */}
+      <section
+        className="section-brand-bg"
+        id="founding-client-invitation"
+        style={{ padding: "6rem 0" }}
+      >
+        <div className={styles.container}>
+          <div className={styles.sectionHeader} style={{ marginBottom: "0" }}>
+            <span className={styles.sectionTag}>EXCLUSIVE INVITATION</span>
+            <h2 className={styles.sectionTitle}>
+              Cubicon Founding Client Invitation
+            </h2>
+            <p
+              style={{
+                fontSize: "1.3rem",
+                fontWeight: 600,
+                color: "var(--interactive-blue)",
+                marginTop: "1.25rem",
+                marginBottom: "1.25rem",
+                lineHeight: "1.5",
+              }}
+            >
+              Become a Founding client and experience the future of survey participant validation.
+            </p>
+            <p
+              className={styles.sectionDesc}
+              style={{
+                maxWidth: "850px",
+                margin: "0 auto",
+                fontSize: "1.1rem",
+                lineHeight: "1.7",
+              }}
+            >
+              BuyFacts is inviting qualified organizations to become the first
+              users of Cubriton&apos;s revolutionary validation method, designed
+              to insure genuine human survey participation prior to pending
+              commercial launch.
+            </p>
+            <div style={{ marginTop: "2.5rem" }}>
+              <a
+                href="#founding-client"
+                className="btn btn-primary"
+                id="invitation-apply-now-btn"
+                onClick={() => {
+                  setShowForm(true);
+                  const target =
+                    document.getElementById("cubicon-registration-form") ||
+                    document.getElementById("founding-client") ||
+                    document.getElementById("register-form");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                style={{
+                  padding: "1rem 2.5rem",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  boxShadow: "0 8px 24px rgba(255, 153, 0, 0.35)",
+                }}
+              >
+                Apply Now <ArrowRight size={18} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* WHY WE CREATED CUBICON */}
       <section className="section-light" style={{ padding: "6rem 0" }}>
         <div className={styles.container}>
@@ -1219,9 +1289,9 @@ export default function CubiconPage() {
             <h2 className={styles.sectionTitle}>Why We Created Cubicon</h2>
             <p className={styles.sectionDesc}>
               Organizations are placing increasing reliance on online research.
-              Before organizations can place confidence in what people say,
-              there must be confidence that people, rather than automated bots,
-              are the participants.
+              Before people can place confidence in what people say, there must
+              be confidence that people, rather than automated bots are the
+              participants.
             </p>
           </div>
 
@@ -1256,9 +1326,8 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Visual Validation Methods</h3>
               <p className={styles.cardText}>
-                Cubicon strengthens human survey participation through visual
-                validation methods designed to resist automated script
-                evaluation.
+                Cubicon improves human survey participation though visual
+                validation methods that automated bots are incapable evaluating.
               </p>
             </div>
 
@@ -1274,9 +1343,9 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.cardTitle}>Real Data from Real People</h3>
               <p className={styles.cardText}>
-                Achieve high statistical confidence in your strategic decisions
-                by basing them on validated, high-fidelity responses from
-                genuine human participants.
+                Real data from real people. Achieve high statistical confidence
+                in your strategic decisions by basing them on validated,
+                high-fidelity responses from genuine human participants.
               </p>
             </div>
           </div>
@@ -1306,11 +1375,11 @@ export default function CubiconPage() {
                 <Zap size={32} />
               </div>
               <h3 className={styles.benefitTitle}>
-                30% Permanent Wholesale Price
+                Permanent Wholesale Pricing
               </h3>
               <p className={styles.benefitDesc}>
-                Lock in permanent wholesale pricing 30% below current and future
-                Cubicon commercial list prices.
+                Permanent wholesale pricing 30% below current and future Cubicon
+                prices
               </p>
             </div>
 
@@ -1319,11 +1388,11 @@ export default function CubiconPage() {
               <div className={styles.benefitIcon}>
                 <Gift size={32} />
               </div>
-              <h3 className={styles.benefitTitle}>Real-World Taste Test</h3>
+              <h3 className={styles.benefitTitle}>Taste Test Evaluation</h3>
               <p className={styles.benefitDesc}>
                 A taste test including one use with an upcoming survey or online
-                activity, allowing you to evaluate Cubicon under real-world
-                conditions using your own project.
+                activity allowing you to evaluate Cubicon under real world
+                conditions using your own project
               </p>
             </div>
 
@@ -1349,7 +1418,7 @@ export default function CubiconPage() {
               <h3 className={styles.benefitTitle}>Priority Access</h3>
               <p className={styles.benefitDesc}>
                 Priority access to future Cubicon enhancements and other
-                BuyFacts innovations before general market release.
+                BuyFacts innovations
               </p>
             </div>
           </div>
@@ -1362,7 +1431,7 @@ export default function CubiconPage() {
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>QUALIFICATION CRITERIA</span>
             <h2 className={styles.sectionTitle}>
-              Founding Client Requirements
+              Foundation Client Requirements
             </h2>
             <p className={styles.sectionDesc}>
               We are accepting a limited cohort of founding clients based on the
@@ -1374,11 +1443,10 @@ export default function CubiconPage() {
             <div className={styles.reqCard}>
               <div className={styles.reqNumber}>01</div>
               <h3 className={styles.reqTitle}>
-                US Headquartered B2B Organization
+                US Headquarter B-2-B Organization
               </h3>
               <p className={styles.reqDesc}>
-                Registration is open to US headquartered B2B organizations
-                looking to protect survey data validity.
+                Registration to US headquarter B-2-B organization
               </p>
             </div>
 
@@ -1388,13 +1456,10 @@ export default function CubiconPage() {
                 $100 Trial Taste Test Investment
               </h3>
               <p className={styles.reqDesc}>
-                $100 investment to complete the trial test taste survey.{" "}
-                <strong>
-                  The $100 fee is fully refundable on request if Cubicon does
-                  not uncover at least 10% automated bots
-                </strong>{" "}
-                among your survey participants. (In tests to date, bot
-                participation often exceeded 30%).
+                $100 investment to complete the trial test taste survey. The
+                $100 fee is fully refundable on request if Cubicon does not
+                uncover at 10% automated bots among the survey participants. In
+                tests to date, bot participation often exceeded 30%.
               </p>
             </div>
 
@@ -1402,8 +1467,7 @@ export default function CubiconPage() {
               <div className={styles.reqNumber}>03</div>
               <h3 className={styles.reqTitle}>60-Day Start Requirement</h3>
               <p className={styles.reqDesc}>
-                Survey or online research project must begin within 60 days of
-                registration to qualify for the founding client benefits.
+                Survey or online must begin within 60 days of registration
               </p>
             </div>
           </div>

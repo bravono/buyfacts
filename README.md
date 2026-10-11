@@ -594,7 +594,13 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
   - `CUBICON_SET_FULLSCREEN`: Dispatched from host to iframe to sync canvas FOV and object scaling dynamically.
 - **Dedicated Routes & Anchors**:
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
-  - `/cubicon#founding-client`: Direct anchor targeting the Founding Client Registration section. Form fields are immediately visible by default with client-side hash detection and smooth scrolling. Backward-compatible aliases `#register-form` and `#founding-client-form` are fully supported.
+  - `/cubicon`: Primary landing page for Cubicon featuring:
+    - **Interactive Viewport**: 1-minute video preview and embedded 3D spatial puzzle solver.
+    - **Cubicon Founding Client Invitation** (`#founding-client-invitation`): Invitation statement for qualified organizations to become first users of revolutionary validation methods prior to commercial launch.
+    - **Why We Created Cubicon**: Addressing bot pollution in online research through visual validation methods and delivering real data from real people.
+    - **Founding Client Benefits** (`#founding-client-benefits`): 30% permanent wholesale pricing, real-world project taste test, referral bonus, and priority access to future enhancements.
+    - **Foundation Client Requirements**: US headquartered B2B registration, $100 refundable taste test trial (with 10% bot discovery refund guarantee), and 60-day project commencement window.
+    - **Founding Client Registration** (`#founding-client`, `#register-form`, `#founding-client-form`): Immediate registration form with contact fields, priority scoring model, and 3D human verification.
 
 ---
 
