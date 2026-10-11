@@ -157,33 +157,33 @@ const SLIDES: SlideItem[] = [
     heading: "One Minute Preview",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
-    description: "Experience in an automated one-minute walkthrough.",
+    description: "",
     details:
-      "Cubicon verifies authentic participants through visual spatial tasks. Watch this automated 1-minute video demonstration or launch the puzzle game",
+      "Cubicon verifies authentic participants through visual spatial tasks.",
   },
   {
-    heading: "Puzzle 1 of 3: Spatial Orientation",
+    heading: "Puzzle 1 of 3",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
     description: "Who gets concerned by howling?",
     details:
-      "Identify the character concerned by howling. Click and draw a precise circle around the target area on the active front face of the cube to validate your response.",
+      "Identify the character concerned by howling. Click and draw a circle around the target area on the active puzzle to register your response.",
   },
   {
-    heading: "Puzzle 2 of 3: Multi-Angle Alignment",
+    heading: "Puzzle 2 of 3",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
     description: "Who's in line for a change of shirt?",
     details:
-      "Locate the person in line for a change of shirt. Click directly on the target character on the right-side profile face of the cube.",
+      "Locate the person in line for a change of shirt. Click directly on the target character on the active puzzle.",
   },
   {
-    heading: "Puzzle 3 of 3: 3D Object Verification",
+    heading: "Puzzle 3 of 3",
     image:
       "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
     description: "Where does his next go?",
     details:
-      "Complete the final validation test. Locate the target where she put the drink in her hands to confirm spatial verification.",
+      "Complete the final validation test. Locate the place where she puts the drink.",
   },
 ];
 
@@ -855,12 +855,14 @@ export default function CubiconPage() {
                       }
                     }}
                   />
-                  <p>
-                    Bots enter surveys to steal incentives, corrupt data, waste
-                    time and reduce decision confidence. In less than a minute,
-                    see how Cubitron verifies that human respondents will
-                    populate your surveys.
-                  </p>
+                  {currentSlide === 0 && (
+                    <p>
+                      Bots enter surveys to steal incentives, corrupt data,
+                      waste time and reduce decision confidence. In less than a
+                      minute, see how Cubitron verifies that human respondents
+                      will populate your surveys.
+                    </p>
+                  )}
                 </div>
                 <div className={styles.slideDetailsContainer}>
                   <div>
@@ -884,25 +886,6 @@ export default function CubiconPage() {
                       >
                         <Play size={18} fill="#ffffff" /> START
                       </button>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          flexWrap: "wrap",
-                          justifyContent: "center",
-                          width: "100%",
-                          marginTop: "0.25rem",
-                        }}
-                      >
-                        <button
-                          className={styles.controlBtn}
-                          onClick={handleSeeLiveClick}
-                          title="Open Interactive 3D Solver Directly"
-                        >
-                          <Sparkles size={16} /> See It Live!
-                        </button>
-                      </div>
                     </div>
                   ) : currentSlide === SLIDES.length - 1 ? (
                     <div
@@ -919,15 +902,6 @@ export default function CubiconPage() {
                       >
                         <Sparkles size={18} fill="#ffffff" /> TRY CUBICON LIVE!
                       </button>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                          className={styles.controlBtn}
-                          onClick={handleStartVideoClick}
-                          title="Watch 1-Minute Video Preview"
-                        >
-                          <Play size={14} /> Watch 1-Min Video
-                        </button>
-                      </div>
                     </div>
                   ) : null}
 
@@ -1118,15 +1092,7 @@ export default function CubiconPage() {
                   <span className={styles.liveIndicator}>
                     <span className={styles.pulseDot}></span> LIVE 3D ENGINE
                   </span>
-                  <span
-                    style={{
-                      fontSize: "0.9rem",
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Cubicon Interactive Spatial Solver v1.0
-                  </span>
+                  
                 </div>
                 <div className={styles.appControls}>
                   <button
@@ -1134,7 +1100,7 @@ export default function CubiconPage() {
                     onClick={reloadApp}
                     title="Reload 3D App"
                   >
-                    <RotateCcw size={14} /> Restart Scene
+                    <RotateCcw size={14} /> Restart
                   </button>
                   <button
                     className={styles.fullscreenProminentBtn}
@@ -1152,15 +1118,7 @@ export default function CubiconPage() {
                     )}
                     {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </button>
-                  <a
-                    href="/cubicon-app/index.html"
-                    target="_blank"
-                    rel="noreferrer"
-                    className={styles.controlBtn}
-                    title="Open in new window"
-                  >
-                    <ExternalLink size={14} /> Launch Standalone
-                  </a>
+                  
                   <Link
                     href="/feedback"
                     className={styles.controlBtn}
@@ -1171,7 +1129,7 @@ export default function CubiconPage() {
                     }}
                     title="Provide Feedback & Review"
                   >
-                    <Star size={14} /> Feedback
+                    <Star size={14} /> Comment
                   </Link>
                   {isAdmin && (
                     <Link

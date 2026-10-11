@@ -11,7 +11,7 @@
   margin: 0 auto;
   padding: 0 1.5rem;
   width: 100%;
-  margin-top: 5%;
+  margin-top: 1%;
 }
 
 /* Hero Section */
@@ -385,8 +385,15 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(234, 66, 95, 0.4);
 }
-
+@media (max-width: 1280px) {
+  .container {
+    margin-top: 3%;
+  }
+}
 @media (max-width: 768px) {
+  .container {
+    margin-top: 1%;
+  }
   .appViewportSection {
     padding: 1.5rem 0 3rem 0;
     overflow-x: hidden;
@@ -828,7 +835,7 @@
 }
 
 .slideTitle {
-  font-size: 2rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #ffffff;
   margin-bottom: 1.5rem;
@@ -836,7 +843,7 @@
 }
 
 .slideSubtitle {
-  font-size: 0.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #ff9900;
   margin-bottom: 1.5rem;
