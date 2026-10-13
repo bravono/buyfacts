@@ -53,6 +53,20 @@ test("Cubicon Founding Client Facts & Sections Verification Suite", async (t) =>
       normalizedContent.includes("Apply Now"),
       "Must display 'Apply Now' button text"
     );
+
+    // Founding Client Benefits button linking to benefits section on the same page
+    assert.ok(
+      rawContent.includes('id="invitation-benefits-btn"'),
+      "Exclusive invitation section must include 'invitation-benefits-btn'"
+    );
+    assert.ok(
+      rawContent.includes('href="#founding-client-benefits"'),
+      "Benefits button must link to #founding-client-benefits anchor"
+    );
+    assert.ok(
+      normalizedContent.includes("Founding Client Benefits"),
+      "Must display 'Founding Client Benefits' button text"
+    );
   });
 
   await t.test("2. WHY WE CREATED CUBICON Section Copy Verification", () => {

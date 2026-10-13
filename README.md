@@ -610,7 +610,7 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
   - `/contact`: Automatically redirects direct visits to `/#contact` on the main BuyFacts landing page.
   - `/cubicon`: Primary landing page for Cubicon featuring:
     - **Interactive Viewport**: 1-minute video preview and embedded 3D spatial puzzle solver.
-    - **Cubicon Founding Client Invitation** (`#founding-client-invitation`): Invitation statement for qualified organizations to become first users of revolutionary validation methods prior to commercial launch.
+    - **Cubicon Founding Client Invitation** (`#founding-client-invitation`): Invitation statement for qualified organizations to become first users of revolutionary validation methods prior to commercial launch, featuring dual action buttons for "Apply Now" (scrolling to `#founding-client`) and "Founding Client Benefits" (scrolling to `#founding-client-benefits`).
     - **Why We Created Cubicon**: Addressing bot pollution in online research through visual validation methods and delivering real data from real people.
     - **Founding Client Benefits** (`#founding-client-benefits`): 30% permanent wholesale pricing, real-world project taste test, referral bonus, and priority access to future enhancements.
     - **Foundation Client Requirements**: US headquartered B2B registration, $100 refundable taste test trial (with 10% bot discovery refund guarantee), and 60-day project commencement window.

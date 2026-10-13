@@ -731,7 +731,7 @@ export default function CubiconPage() {
 
     setTimeout(() => {
       const benefitsSection = document.getElementById(
-        "founding-client-benefits",
+        "founding-client-invitation",
       );
       if (benefitsSection) {
         benefitsSection.scrollIntoView({ behavior: "smooth" });
@@ -1249,7 +1249,16 @@ export default function CubiconPage() {
               to insure genuine human survey participation prior to pending
               commercial launch.
             </p>
-            <div style={{ marginTop: "2.5rem" }}>
+            <div
+              style={{
+                marginTop: "2.5rem",
+                display: "flex",
+                gap: "1.25rem",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
               <a
                 href="#founding-client"
                 className="btn btn-primary"
@@ -1275,6 +1284,33 @@ export default function CubiconPage() {
                 }}
               >
                 Apply Now <ArrowRight size={18} />
+              </a>
+              <a
+                href="#founding-client-benefits"
+                className="btn btn-secondary"
+                id="invitation-benefits-btn"
+                onClick={() => {
+                  const target = document.getElementById(
+                    "founding-client-benefits",
+                  );
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                style={{
+                  padding: "1rem 2.5rem",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  background: "#ffffff",
+                  borderColor: "var(--border-color)",
+                  color: "var(--interactive-blue)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                Founding Client Benefits <Gift size={18} />
               </a>
             </div>
           </div>
