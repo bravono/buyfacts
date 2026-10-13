@@ -283,6 +283,8 @@ export function sanitizePublicPayload(data: {
   score?: number;
   result?: "p" | "f" | null;
   redirectUrl?: string;
+  question_type?: string;
+  questionType?: string;
 }): Record<string, any> {
   const isComplete = Boolean(data.completed);
   const isPassed = Boolean(data.passed);
@@ -307,5 +309,9 @@ export function sanitizePublicPayload(data: {
     score: data.score ?? (isPassed ? 1 : 0),
     result: data.result ?? null,
     redirectUrl: data.redirectUrl || "",
+    ...(data.questionType || data.question_type ? {
+      questionType: data.questionType || data.question_type,
+      question_type: data.question_type || data.questionType,
+    } : {}),
   };
 }

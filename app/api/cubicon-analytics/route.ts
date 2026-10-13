@@ -35,8 +35,8 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "desc" },
       }),
       prisma.cubiconAttempt.findMany({
-        where: dateFilter ? { submitted_at: { gte: dateFilter } } : undefined,
-        orderBy: { submitted_at: "desc" },
+        where: dateFilter ? { submittedAt: { gte: dateFilter } } : undefined,
+        orderBy: { submittedAt: "desc" },
       }),
       prisma.cubiconShare.findMany({
         where: dateFilter ? { createdAt: { gte: dateFilter } } : undefined,
@@ -59,10 +59,10 @@ export async function GET(request: Request) {
     const sessionEmailMap = new Map<string, string>(); // sessionId -> email
 
     sessions.forEach((s) => {
-      if (s.user_email) {
-        const clean = s.user_email.trim().toLowerCase();
+      if (s.userEmail) {
+        const clean = s.userEmail.trim().toLowerCase();
         activeEmails.add(clean);
-        sessionEmailMap.set(s.session_id, clean);
+        sessionEmailMap.set(s.sessionId, clean);
         if (s.taskIndex >= totalTasksCount || (s.passedPuzzles && s.passedPuzzles >= totalTasksCount)) {
           completedEmails.add(clean);
         }
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     });
 
     attempts.forEach((a) => {
-      const email = (a.user_email || sessionEmailMap.get(a.session_id) || "").trim().toLowerCase();
+      const email = (a.userEmail || sessionEmailMap.get(a.sessionId) || "").trim().toLowerCase();
       if (email) {
         activeEmails.add(email);
         if (a.taskIndex >= totalTasksCount - 1 && a.result === "p") {
@@ -197,11 +197,11 @@ export async function GET(request: Request) {
 
     // Merge sessions
     sessions.forEach((sess) => {
-      const email = (sess.user_email || `sess_${sess.session_id.slice(0, 8)}`).trim().toLowerCase();
+      const email = (sess.userEmail || `sess_${sess.sessionId.slice(0, 8)}`).trim().toLowerCase();
       const existing = participantMap.get(email) || {
         id: `user_${sess.id}`,
-        email: sess.user_email || `Session ${sess.session_id.slice(0, 8)}`,
-        name: sess.user_email ? sess.user_email.split("@")[0] : `Tester (${sess.session_id.slice(0, 6)})`,
+        email: sess.userEmail || `Session ${sess.sessionId.slice(0, 8)}`,
+        name: sess.userEmail ? sess.userEmail.split("@")[0] : `Tester (${sess.sessionId.slice(0, 6)})`,
         company: "Direct Tester",
         role: "Spatial Tester",
         phone: "",
@@ -236,17 +236,17 @@ export async function GET(request: Request) {
 
     // Merge attempts telemetry
     attempts.forEach((att) => {
-      const email = (att.user_email || sessionEmailMap.get(att.session_id) || `sess_${att.session_id.slice(0, 8)}`).trim().toLowerCase();
+      const email = (att.userEmail || sessionEmailMap.get(att.sessionId) || `sess_${att.sessionId.slice(0, 8)}`).trim().toLowerCase();
       const existing = participantMap.get(email) || {
         id: `att_${att.id}`,
-        email: att.user_email || `Session ${att.session_id.slice(0, 8)}`,
-        name: att.user_email ? att.user_email.split("@")[0] : `Tester (${att.session_id.slice(0, 6)})`,
+        email: att.userEmail || `Session ${att.sessionId.slice(0, 8)}`,
+        name: att.userEmail ? att.userEmail.split("@")[0] : `Tester (${att.sessionId.slice(0, 6)})`,
         company: "Direct Tester",
         role: "Spatial Tester",
         phone: "",
-        registeredAt: att.submitted_at,
-        firstSeen: att.submitted_at,
-        lastSeen: att.submitted_at,
+        registeredAt: att.submittedAt,
+        firstSeen: att.submittedAt,
+        lastSeen: att.submittedAt,
         sessionsCount: 1,
         maxTaskIndex: -1,
         status: "In Progress",
@@ -260,8 +260,8 @@ export async function GET(request: Request) {
       if (att.taskIndex > existing.maxTaskIndex) {
         existing.maxTaskIndex = att.taskIndex;
       }
-      if (att.submitted_at && att.submitted_at < existing.firstSeen) existing.firstSeen = att.submitted_at;
-      if (att.submitted_at && att.submitted_at > existing.lastSeen) existing.lastSeen = att.submitted_at;
+      if (att.submittedAt && att.submittedAt < existing.firstSeen) existing.firstSeen = att.submittedAt;
+      if (att.submittedAt && att.submittedAt > existing.lastSeen) existing.lastSeen = att.submittedAt;
 
       if (att.taskIndex >= totalTasksCount - 1 && att.result === "p") {
         existing.status = "Completed";
@@ -271,17 +271,17 @@ export async function GET(request: Request) {
 
       let parsedClicks: any = {};
       try {
-        if (att.clicks_data) parsedClicks = JSON.parse(att.clicks_data);
+        if (att.clicksData) parsedClicks = JSON.parse(att.clicksData);
       } catch {}
 
       existing.attempts.push({
         id: att.id,
-        sessionId: att.session_id,
+        sessionId: att.sessionId,
         taskIndex: att.taskIndex,
         clicksCount: Object.keys(parsedClicks).length,
         clicksData: parsedClicks,
-        startTime: att.start_time,
-        submittedAt: att.submitted_at,
+        startTime: att.startTime,
+        submittedAt: att.submittedAt,
         result: att.result,
       });
 
@@ -333,12 +333,12 @@ export async function GET(request: Request) {
 
     // 5. Funnel & Step Drop-off Analysis
     const effectiveTasks = tasks.length > 0 ? tasks : [
-      { taskIndex: 0, task_number: 1, heading: "Task 1: Spatial Orientation", screen: "Active_front" },
-      { taskIndex: 1, task_number: 2, heading: "Task 2: Symmetry Validation", screen: "Active_side_l" },
-      { taskIndex: 2, task_number: 3, heading: "Task 3: Pattern Completion", screen: "Active_back" },
+      { taskIndex: 0, taskNumber: 1, heading: "Task 1: Spatial Orientation", screen: "Active_front" },
+      { taskIndex: 1, taskNumber: 2, heading: "Task 2: Symmetry Validation", screen: "Active_side_l" },
+      { taskIndex: 2, taskNumber: 3, heading: "Task 3: Pattern Completion", screen: "Active_back" },
     ];
 
-    const funnelStats = effectiveTasks.map((t, idx) => {
+    const funnelStats = effectiveTasks.map((t: any, idx: number) => {
       const taskAttempts = attempts.filter((a) => a.taskIndex === t.taskIndex);
       const passedCount = taskAttempts.filter((a) => a.result === "p").length;
       const totalInTask = taskAttempts.length;
@@ -346,7 +346,7 @@ export async function GET(request: Request) {
       // Unique users who reached this step
       const usersReached = new Set<string>();
       taskAttempts.forEach((a) => {
-        const email = a.user_email || a.session_id;
+        const email = a.userEmail || a.sessionId;
         if (email) usersReached.add(email);
       });
 
@@ -354,8 +354,8 @@ export async function GET(request: Request) {
       let taskClicksTotal = 0;
       taskAttempts.forEach((a) => {
         try {
-          if (a.clicks_data) {
-            const parsed = JSON.parse(a.clicks_data);
+          if (a.clicksData) {
+            const parsed = JSON.parse(a.clicksData);
             taskClicksTotal += Object.keys(parsed).length;
           }
         } catch {}
@@ -365,7 +365,7 @@ export async function GET(request: Request) {
 
       return {
         taskIndex: t.taskIndex,
-        taskNumber: t.task_number || idx + 1,
+        taskNumber: t.taskNumber || t.task_number || idx + 1,
         heading: t.heading,
         screen: t.screen || "Active_front",
         participantsReached: Math.max(usersReached.size, totalInTask > 0 ? usersReached.size : Math.max(1, totalUniqueTesters - idx)),

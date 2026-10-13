@@ -121,12 +121,12 @@ export async function GET(request: NextRequest) {
 
     // Completed responses count for this user
     const completedCount = await prisma.researchLibResponse.count({
-      where: { user_id: userId },
+      where: { userId },
     });
 
     const surveys = await prisma.researchLibSurvey.findMany({
       where: {
-        OR: [{ user_id: userId }, { user_id: "system_default" }],
+        OR: [{ userId }, { userId: "system_default" }],
       },
       orderBy: { id: "asc" },
     });
@@ -214,20 +214,20 @@ export async function POST(request: NextRequest) {
     // Save response into narrative_responses table
     await prisma.researchLibResponse.create({
       data: {
-        user_id: userId,
-        survey_id: payload.survey_id ? Number(payload.survey_id) : null,
+        userId,
+        surveyId: payload.surveyId || payload.survey_id ? Number(payload.surveyId || payload.survey_id) : null,
         answers: JSON.stringify(answers),
         story: payload.story ? String(payload.story) : null,
       },
     });
 
     const completedCount = await prisma.researchLibResponse.count({
-      where: { user_id: userId },
+      where: { userId },
     });
 
     const surveys = await prisma.researchLibSurvey.findMany({
       where: {
-        OR: [{ user_id: userId }, { user_id: "system_default" }],
+        OR: [{ userId }, { userId: "system_default" }],
       },
       orderBy: { id: "asc" },
     });

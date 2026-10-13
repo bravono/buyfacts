@@ -66,8 +66,8 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
 
     const clickTask = {
       taskIndex: 1,
-      question_type: "click",
-      correct_coordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
+      questionType: "click",
+      correctCoordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
       tolerance: 0.5
     };
 
@@ -96,8 +96,8 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
     // Double-click puzzle verification
     const doubleClickTask = {
       taskIndex: 9,
-      question_type: "double_click",
-      correct_coordinates: JSON.stringify([{ x: 0.0, y: 0.0, z: 1.0 }]),
+      questionType: "double_click",
+      correctCoordinates: JSON.stringify([{ x: 0.0, y: 0.0, z: 1.0 }]),
       tolerance: 0.5
     };
 
@@ -132,8 +132,8 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
   await t.test("5. Up to 3-Coordinate Drag Feature Evaluation (Order-Independent Array)", async () => {
     const dragTask = {
       taskIndex: 2,
-      question_type: "Anticipation",
-      correct_coordinates: JSON.stringify([
+      questionType: "Anticipation",
+      correctCoordinates: JSON.stringify([
         { x: -0.60, y: 0.10, z: 1.0 },
         { x: 0.0, y: 0.35, z: 1.0 },
         { x: 0.60, y: 0.10, z: 1.0 }
@@ -183,18 +183,18 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
     const testTask = await prisma.cubiconTask.create({
       data: {
         taskIndex: 99,
-        task_number: 99,
+        taskNumber: 99,
         heading: "Test Seed Task",
         description: "Test description for validation",
         screen: "Active_front",
         image: "https://example.com/test.webp",
         rotation: "left",
         rotationInterval: 15,
-        question_type: "Selection",
-        correct_coordinates: JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]),
-        start_point: JSON.stringify({ x: 0.1, y: 0.2, z: 1.0 }),
-        mid_point: "",
-        end_point: "",
+        questionType: "Selection",
+        correctCoordinates: JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]),
+        startPoint: JSON.stringify({ x: 0.1, y: 0.2, z: 1.0 }),
+        midPoint: "",
+        endPoint: "",
         tolerance: 0.5,
         isFinal: false,
       },
@@ -202,7 +202,7 @@ test("BuyFacts Cubicon Task Coordinates and Drag Features Test Suite", async (t)
 
     assert.ok(testTask.id);
     assert.equal(testTask.taskIndex, 99);
-    assert.equal(testTask.correct_coordinates, JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]));
+    assert.equal(testTask.correctCoordinates, JSON.stringify([{ x: 0.1, y: 0.2, z: 1.0 }]));
 
     // Cleanup
     await prisma.cubiconTask.delete({

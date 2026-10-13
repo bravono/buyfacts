@@ -34,15 +34,15 @@ export async function POST(
       );
     }
 
-    // Set all sequences is_active to false
+    // Set all sequences isActive to false
     await prisma.cubiconSequence.updateMany({
-      data: { is_active: false },
+      data: { isActive: false },
     });
 
     // Activate selected sequence
     const activated = await prisma.cubiconSequence.update({
       where: { id: seqId },
-      data: { is_active: true },
+      data: { isActive: true },
       include: { tasks: { orderBy: { taskIndex: "asc" } } },
     });
 

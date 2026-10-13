@@ -231,14 +231,18 @@ Additionally, a quick-access "Feedback" button is available in the 3D solver hea
 
 ## 5. Database Schema
 
-- **`EmailVerification`** (`email_verifications`): Hold queue for pending inquiries awaiting email verification (`token`, `email`, `type`, `payload`, `expiresAt`, `verifiedAt`, `reminderSentAt`).
-- **`CubiconSequence`** (`cubicon_sequences`): Puzzle group configuration (`slug`, `title`, `description`, `pass_threshold`, `rotation_direction`, `default_rotation_interval`, `is_active`, `created_by`).
-- **`CubiconTask`** (`cubicon_tasks`): Puzzles and 3D faces configuration linked to `sequence_id`.
-- **`CubiconSession`** (`cubicon_sessions`): Active user verification sessions linked to `sequence_id`.
-- **`CubiconAttempt`** (`cubicon_attempts`): Granular click telemetry and submit logs linked to `sequence_id`.
-- **`CubiconRegistration`** (`cubicon_registrations`): Founding client registration submissions (`name`, `email`, `company`, `role`, `interest`, `notes`, `isUsBased`).
-- **`CubiconShare`** (`cubicon_shares`): Invitation records (`senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `status`, `createdAt`).
-- **`FeedbackSubmission`** (`cubicon_feedback`): User star ratings and feedback commentary.
+The database schema is standardized on PascalCase table names (matching Prisma model names directly) and camelCase column names across both the SQLite database and Prisma Client models:
+
+- **`EmailVerification`**: Hold queue for pending inquiries awaiting email verification (`id`, `token`, `email`, `type`, `payload`, `expiresAt`, `verifiedAt`, `reminderSentAt`, `createdAt`).
+- **`CubiconSequence`**: Puzzle group configuration (`id`, `slug`, `title`, `description`, `passThreshold`, `rotationDirection`, `defaultRotationInterval`, `isActive`, `createdBy`, `createdAt`, `updatedAt`).
+- **`CubiconTask`**: Puzzles and 3D faces configuration linked to `sequenceId` (`id`, `sequenceId`, `taskIndex`, `taskNumber`, `heading`, `description`, `screen`, `image`, `rotation`, `rotationInterval`, `questionType`, `correctCoordinates`, `startPoint`, `midPoint`, `endPoint`, `tolerance`, `isFinal`, `createdAt`).
+- **`CubiconSession`**: Active user verification sessions linked to `sequenceId` (`id`, `sessionId`, `sequenceId`, `taskIndex`, `userEmail`, `passedPuzzles`, `totalPuzzlesAttempted`, `previousResult`, `createdAt`, `updatedAt`).
+- **`CubiconAttempt`**: Granular click telemetry and submit logs linked to `sequenceId` (`id`, `sessionId`, `sequenceId`, `taskIndex`, `userEmail`, `result`, `clicksData`, `startTime`, `submittedAt`).
+- **`CubiconRegistration`**: Founding client registration submissions (`id`, `firstName`, `lastName`, `email`, `phone`, `company`, `role`, `interest`, `notes`, `isUsBased`, `status`, `createdAt`, `updatedAt`).
+- **`CubiconShare`**: Invitation records (`id`, `senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `shareUrl`, `sessionId`, `status`, `createdAt`).
+- **`FeedbackSubmission`**: User star ratings and feedback commentary (`id`, `userId`, `userEmail`, `sessionId`, `feedbackText`, `rating`, `createdAt`).
+- **`ResearchLibSurvey`**: Research library survey definitions linked to `userId` (`id`, `userId`, `title`, `description`, `category`, `status`, `createdAt`, `updatedAt`).
+- **`ResearchLibResponse`**: Research survey responses linked to `surveyId` and `userId` (`id`, `surveyId`, `userId`, `answers`, `completed`, `submittedAt`).
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
@@ -456,14 +460,18 @@ Executes data retention policy. Call with `?purge=30d` to remove feedback record
 
 ## 5. Database Schema
 
-- **`EmailVerification`** (`email_verifications`): Hold queue for pending inquiries awaiting email verification (`token`, `email`, `type`, `payload`, `expiresAt`, `verifiedAt`, `reminderSentAt`).
-- **`CubiconSequence`** (`cubicon_sequences`): Puzzle group configuration (`slug`, `title`, `description`, `pass_threshold`, `rotation_direction`, `default_rotation_interval`, `is_active`, `created_by`).
-- **`CubiconTask`** (`cubicon_tasks`): Puzzles and 3D faces configuration linked to `sequence_id`.
-- **`CubiconSession`** (`cubicon_sessions`): Active user verification sessions linked to `sequence_id`.
-- **`CubiconAttempt`** (`cubicon_attempts`): Granular click telemetry and submit logs linked to `sequence_id`.
-- **`CubiconRegistration`** (`cubicon_registrations`): Founding client registration submissions (`name`, `email`, `company`, `role`, `interest`, `notes`, `isUsBased`).
-- **`CubiconShare`** (`cubicon_shares`): Invitation records (`senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `status`, `createdAt`).
-- **`FeedbackSubmission`** (`cubicon_feedback`): User star ratings and feedback commentary.
+The database schema is standardized on PascalCase table names (matching Prisma model names directly) and camelCase column names across both the SQLite database and Prisma Client models:
+
+- **`EmailVerification`**: Hold queue for pending inquiries awaiting email verification (`id`, `token`, `email`, `type`, `payload`, `expiresAt`, `verifiedAt`, `reminderSentAt`, `createdAt`).
+- **`CubiconSequence`**: Puzzle group configuration (`id`, `slug`, `title`, `description`, `passThreshold`, `rotationDirection`, `defaultRotationInterval`, `isActive`, `createdBy`, `createdAt`, `updatedAt`).
+- **`CubiconTask`**: Puzzles and 3D faces configuration linked to `sequenceId` (`id`, `sequenceId`, `taskIndex`, `taskNumber`, `heading`, `description`, `screen`, `image`, `rotation`, `rotationInterval`, `questionType`, `correctCoordinates`, `startPoint`, `midPoint`, `endPoint`, `tolerance`, `isFinal`, `createdAt`).
+- **`CubiconSession`**: Active user verification sessions linked to `sequenceId` (`id`, `sessionId`, `sequenceId`, `taskIndex`, `userEmail`, `passedPuzzles`, `totalPuzzlesAttempted`, `previousResult`, `createdAt`, `updatedAt`).
+- **`CubiconAttempt`**: Granular click telemetry and submit logs linked to `sequenceId` (`id`, `sessionId`, `sequenceId`, `taskIndex`, `userEmail`, `result`, `clicksData`, `startTime`, `submittedAt`).
+- **`CubiconRegistration`**: Founding client registration submissions (`id`, `firstName`, `lastName`, `email`, `phone`, `company`, `role`, `interest`, `notes`, `isUsBased`, `status`, `createdAt`, `updatedAt`).
+- **`CubiconShare`**: Invitation records (`id`, `senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `shareUrl`, `sessionId`, `status`, `createdAt`).
+- **`FeedbackSubmission`**: User star ratings and feedback commentary (`id`, `userId`, `userEmail`, `sessionId`, `feedbackText`, `rating`, `createdAt`).
+- **`ResearchLibSurvey`**: Research library survey definitions linked to `userId` (`id`, `userId`, `title`, `description`, `category`, `status`, `createdAt`, `updatedAt`).
+- **`ResearchLibResponse`**: Research survey responses linked to `surveyId` and `userId` (`id`, `surveyId`, `userId`, `answers`, `completed`, `submittedAt`).
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.

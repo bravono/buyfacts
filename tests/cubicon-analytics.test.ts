@@ -80,9 +80,9 @@ test("Cubicon Analytics & Share Test Suite", async (t) => {
     const sessionId = `sess_conv_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: sessionId,
+        sessionId: sessionId,
         taskIndex: 3,
-        user_email: receiver1,
+        userEmail: receiver1,
         passedPuzzles: 3,
         totalPuzzlesAttempted: 3,
       },
@@ -90,9 +90,9 @@ test("Cubicon Analytics & Share Test Suite", async (t) => {
 
     await prisma.cubiconAttempt.create({
       data: {
-        session_id: sessionId,
+        sessionId: sessionId,
         taskIndex: 2,
-        user_email: receiver1,
+        userEmail: receiver1,
         result: "p",
       },
     });
@@ -122,16 +122,16 @@ test("Cubicon Analytics & Share Test Suite", async (t) => {
 
   await t.test("Funnel Step Aggregation Edge Cases", async () => {
     const tasks = [
-      { taskIndex: 0, task_number: 1, heading: "Task 1" },
-      { taskIndex: 1, task_number: 2, heading: "Task 2" },
-      { taskIndex: 2, task_number: 3, heading: "Task 3" },
+      { taskIndex: 0, taskNumber: 1, heading: "Task 1" },
+      { taskIndex: 1, taskNumber: 2, heading: "Task 2" },
+      { taskIndex: 2, taskNumber: 3, heading: "Task 3" },
     ];
 
     const sampleAttempts = [
-      { taskIndex: 0, result: "p", clicks_data: JSON.stringify({ 1: { x: 10, y: 20 }, 2: { x: 30, y: 40 } }) },
-      { taskIndex: 0, result: "p", clicks_data: JSON.stringify({ 1: { x: 12, y: 22 } }) },
-      { taskIndex: 1, result: "p", clicks_data: JSON.stringify({ 1: { x: 50, y: 60 } }) },
-      { taskIndex: 2, result: "f", clicks_data: "{}" },
+      { taskIndex: 0, result: "p", clicksData: JSON.stringify({ 1: { x: 10, y: 20 }, 2: { x: 30, y: 40 } }) },
+      { taskIndex: 0, result: "p", clicksData: JSON.stringify({ 1: { x: 12, y: 22 } }) },
+      { taskIndex: 1, result: "p", clicksData: JSON.stringify({ 1: { x: 50, y: 60 } }) },
+      { taskIndex: 2, result: "f", clicksData: "{}" },
     ];
 
     const task0Attempts = sampleAttempts.filter((a) => a.taskIndex === 0);
@@ -140,7 +140,7 @@ test("Cubicon Analytics & Share Test Suite", async (t) => {
 
     let task0Clicks = 0;
     task0Attempts.forEach((a) => {
-      task0Clicks += Object.keys(JSON.parse(a.clicks_data)).length;
+      task0Clicks += Object.keys(JSON.parse(a.clicksData)).length;
     });
     const avgClicks = task0Clicks / task0Attempts.length;
     assert.equal(avgClicks, 1.5, "Average clicks should be 3/2 = 1.5");

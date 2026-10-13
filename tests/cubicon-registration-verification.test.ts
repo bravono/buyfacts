@@ -28,7 +28,7 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
     }
     if (createdSessionIds.length > 0) {
       await prisma.cubiconSession.deleteMany({
-        where: { session_id: { in: createdSessionIds } },
+        where: { sessionId: { in: createdSessionIds } },
       });
     }
   });
@@ -268,8 +268,8 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
       createdSessionIds.push(wrongSeqSessionId);
       await prisma.cubiconSession.create({
         data: {
-          session_id: wrongSeqSessionId,
-          sequence_id: defaultSeq.id,
+          sessionId: wrongSeqSessionId,
+          sequenceId: defaultSeq.id,
           passedPuzzles: 3,
           totalPuzzlesAttempted: 3,
         },
@@ -308,8 +308,8 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
     createdSessionIds.push(unpassedSessionId);
     await prisma.cubiconSession.create({
       data: {
-        session_id: unpassedSessionId,
-        sequence_id: contactSeq.id,
+        sessionId: unpassedSessionId,
+        sequenceId: contactSeq.id,
         passedPuzzles: 1,
         totalPuzzlesAttempted: 3,
       },
@@ -348,8 +348,8 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
     createdSessionIds.push(passedSessionId);
     await prisma.cubiconSession.create({
       data: {
-        session_id: passedSessionId,
-        sequence_id: contactSeq.id,
+        sessionId: passedSessionId,
+        sequenceId: contactSeq.id,
         passedPuzzles: 2,
         totalPuzzlesAttempted: 3,
       },

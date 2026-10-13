@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       }
 
       const session = await prisma.cubiconSession.findUnique({
-        where: { session_id: verificationSessionId.trim() },
+        where: { sessionId: verificationSessionId.trim() },
         include: { sequence: true },
       });
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         );
       }
 
-      if (session.previous_result === "consumed" || session.previous_result === "used") {
+      if (session.previousResult === "consumed" || session.previousResult === "used") {
         return NextResponse.json(
           { error: "Validation error: This verification session has already been used. Please solve a new puzzle." },
           { status: 400 }
@@ -76,10 +76,10 @@ export async function POST(request: Request) {
       }
 
       const totalTasks = await prisma.cubiconTask.count({
-        where: { sequence_id: session.sequence_id },
+        where: { sequenceId: session.sequenceId },
       });
 
-      const threshold = session.sequence?.pass_threshold ?? 0.6;
+      const threshold = session.sequence?.passThreshold ?? 0.6;
       const passed = evaluateSequencePass(
         session.passedPuzzles,
         totalTasks > 0 ? totalTasks : 1,
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       // Mark session as used to prevent replay attacks
       await prisma.cubiconSession.update({
         where: { id: session.id },
-        data: { previous_result: "used" },
+        data: { previousResult: "used" },
       });
     }
 

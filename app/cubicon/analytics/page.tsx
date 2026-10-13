@@ -99,11 +99,16 @@ interface SequenceItem {
   slug: string;
   title: string;
   description: string;
-  pass_threshold: number;
-  rotation_direction: string;
-  default_rotation_interval: number;
-  is_active: boolean;
-  created_by: string;
+  passThreshold?: number;
+  pass_threshold?: number;
+  rotationDirection?: string;
+  rotation_direction?: string;
+  defaultRotationInterval?: number;
+  default_rotation_interval?: number;
+  isActive?: boolean;
+  is_active?: boolean;
+  createdBy?: string;
+  created_by?: string;
   tasks?: Array<{
     id: number;
     taskIndex: number;
@@ -238,6 +243,10 @@ export default function CubiconAnalyticsPage() {
 
       const payload = {
         ...newSeq,
+        passThreshold: newSeq.pass_threshold,
+        rotationDirection: newSeq.rotation_direction,
+        defaultRotationInterval: newSeq.default_rotation_interval,
+        isActive: newSeq.is_active,
         tasks,
       };
 
@@ -1003,39 +1012,49 @@ export default function CubiconAnalyticsPage() {
                     sequences.map((seq) => (
                       <tr key={seq.id}>
                         <td>
-                          <span
-                            style={{
-                              display: "inline-block",
-                              padding: "4px 10px",
-                              borderRadius: "9999px",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              background: seq.is_active ? "rgba(16, 185, 129, 0.15)" : "rgba(148, 163, 184, 0.1)",
-                              color: seq.is_active ? "#34d399" : "#94a3b8",
-                              border: seq.is_active ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(148, 163, 184, 0.2)",
-                            }}
-                          >
-                            {seq.is_active ? "ACTIVE DEFAULT" : "INACTIVE"}
-                          </span>
+                          {(() => {
+                            const isAct = seq.isActive !== undefined ? seq.isActive : seq.is_active;
+                            return (
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  padding: "4px 10px",
+                                  borderRadius: "9999px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  background: isAct ? "rgba(16, 185, 129, 0.15)" : "rgba(148, 163, 184, 0.1)",
+                                  color: isAct ? "#34d399" : "#94a3b8",
+                                  border: isAct ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(148, 163, 184, 0.2)",
+                                }}
+                              >
+                                {isAct ? "ACTIVE DEFAULT" : "INACTIVE"}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td>
                           <div style={{ fontWeight: 600, color: "#ffffff" }}>{seq.title}</div>
                           <div style={{ fontSize: "0.8rem", color: "#38bdf8" }}>{seq.slug}</div>
                         </td>
                         <td>
-                          <span style={{ fontWeight: 600, color: "#cbd5e1" }}>
-                            {seq.pass_threshold > 1
-                              ? `${seq.pass_threshold} Tasks`
-                              : `${Math.round(seq.pass_threshold * 100)}%`}
-                          </span>
+                          {(() => {
+                            const threshold = seq.passThreshold !== undefined ? seq.passThreshold : (seq.pass_threshold ?? 0.66);
+                            return (
+                              <span style={{ fontWeight: 600, color: "#cbd5e1" }}>
+                                {threshold > 1
+                                  ? `${threshold} Tasks`
+                                  : `${Math.round(threshold * 100)}%`}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td>
                           <div style={{ textTransform: "capitalize", color: "#ffffff" }}>
-                            Direction: <strong>{seq.rotation_direction || "left"}</strong>
+                            Direction: <strong>{seq.rotationDirection || seq.rotation_direction || "left"}</strong>
                           </div>
                           <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                            Interval: {seq.default_rotation_interval || 15}s
+                            Interval: {seq.defaultRotationInterval ?? seq.default_rotation_interval ?? 15}s
                           </div>
                         </td>
                         <td>
@@ -1048,7 +1067,7 @@ export default function CubiconAnalyticsPage() {
                         </td>
                         <td>
                           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                            {!seq.is_active && (
+                            {!(seq.isActive !== undefined ? seq.isActive : seq.is_active) && (
                               <button
                                 className={styles.btnPrimary}
                                 style={{ padding: "5px 10px", fontSize: "0.75rem" }}

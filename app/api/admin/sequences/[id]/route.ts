@@ -88,39 +88,48 @@ export async function PUT(
       slug,
       description,
       pass_threshold,
+      passThreshold,
       rotation_direction,
+      rotationDirection,
       default_rotation_interval,
+      defaultRotationInterval,
       is_active,
+      isActive,
       tasks,
     } = body;
+
+    const rawThreshold = passThreshold !== undefined ? passThreshold : pass_threshold;
+    const rawRotDir = rotationDirection !== undefined ? rotationDirection : rotation_direction;
+    const rawInterval = defaultRotationInterval !== undefined ? defaultRotationInterval : default_rotation_interval;
+    const rawIsActive = isActive !== undefined ? isActive : is_active;
 
     const updateData: any = {};
     if (title !== undefined) updateData.title = title.trim();
     if (slug !== undefined) updateData.slug = slug.trim();
     if (description !== undefined) updateData.description = description.trim();
-    if (pass_threshold !== undefined) {
-      const parsed = parseFloat(pass_threshold);
-      if (!isNaN(parsed)) updateData.pass_threshold = parsed;
+    if (rawThreshold !== undefined) {
+      const parsed = parseFloat(rawThreshold);
+      if (!isNaN(parsed)) updateData.passThreshold = parsed;
     }
-    if (rotation_direction !== undefined) {
-      updateData.rotation_direction =
-        (rotation_direction || "left").toLowerCase() === "right"
+    if (rawRotDir !== undefined) {
+      updateData.rotationDirection =
+        (rawRotDir || "left").toLowerCase() === "right"
           ? "right"
           : "left";
     }
-    if (default_rotation_interval !== undefined) {
-      const parsed = parseInt(default_rotation_interval, 10);
-      if (!isNaN(parsed)) updateData.default_rotation_interval = parsed;
+    if (rawInterval !== undefined) {
+      const parsed = parseInt(rawInterval, 10);
+      if (!isNaN(parsed)) updateData.defaultRotationInterval = parsed;
     }
 
-    if (is_active) {
+    if (rawIsActive === true) {
       await prisma.cubiconSequence.updateMany({
         where: { id: { not: seqId } },
-        data: { is_active: false },
+        data: { isActive: false },
       });
-      updateData.is_active = true;
-    } else if (is_active === false) {
-      updateData.is_active = false;
+      updateData.isActive = true;
+    } else if (rawIsActive === false) {
+      updateData.isActive = false;
     }
 
     await prisma.cubiconSequence.update({
@@ -130,43 +139,50 @@ export async function PUT(
 
     if (Array.isArray(tasks)) {
       await prisma.cubiconTask.deleteMany({
-        where: { sequence_id: seqId },
+        where: { sequenceId: seqId },
       });
 
-      const rotDir = updateData.rotation_direction || existing.rotation_direction || "left";
-      const rotInterval = updateData.default_rotation_interval || existing.default_rotation_interval || 15;
+      const rotDir = updateData.rotationDirection || existing.rotationDirection || "left";
+      const rotInterval = updateData.defaultRotationInterval || existing.defaultRotationInterval || 15;
 
       for (let i = 0; i < tasks.length; i++) {
         const t = tasks[i];
+        const taskCoords = t.correctCoordinates !== undefined ? t.correctCoordinates : t.correct_coordinates;
+        const taskStart = t.startPoint !== undefined ? t.startPoint : t.start_point;
+        const taskMid = t.midPoint !== undefined ? t.midPoint : t.mid_point;
+        const taskEnd = t.endPoint !== undefined ? t.endPoint : t.end_point;
+        const taskRotInterval = t.rotationInterval || t.rotation_interval || rotInterval;
+        const taskQuestionType = t.questionType || t.question_type || "Selection";
+        const taskNum = t.taskNumber || t.task_number || i + 1;
+
         await prisma.cubiconTask.create({
           data: {
-            sequence_id: seqId,
+            sequenceId: seqId,
             taskIndex: i,
-            task_number: i + 1,
+            taskNumber: taskNum,
             heading: t.heading || `Task ${i + 1}`,
             description: t.description || "Solve the puzzle",
             screen: t.screen || "Active_front",
             image: t.image || "",
             rotation: t.rotation || rotDir,
-            rotation_interval: t.rotation_interval || rotInterval,
-            rotationInterval: t.rotationInterval || rotInterval,
-            question_type: t.question_type || "Selection",
-            correct_coordinates:
-              typeof t.correct_coordinates === "string"
-                ? t.correct_coordinates
-                : JSON.stringify(t.correct_coordinates || ""),
-            start_point:
-              typeof t.start_point === "string"
-                ? t.start_point
-                : JSON.stringify(t.start_point || ""),
-            mid_point:
-              typeof t.mid_point === "string"
-                ? t.mid_point
-                : JSON.stringify(t.mid_point || ""),
-            end_point:
-              typeof t.end_point === "string"
-                ? t.end_point
-                : JSON.stringify(t.end_point || ""),
+            rotationInterval: taskRotInterval,
+            questionType: taskQuestionType,
+            correctCoordinates:
+              typeof taskCoords === "string"
+                ? taskCoords
+                : JSON.stringify(taskCoords || ""),
+            startPoint:
+              typeof taskStart === "string"
+                ? taskStart
+                : JSON.stringify(taskStart || ""),
+            midPoint:
+              typeof taskMid === "string"
+                ? taskMid
+                : JSON.stringify(taskMid || ""),
+            endPoint:
+              typeof taskEnd === "string"
+                ? taskEnd
+                : JSON.stringify(taskEnd || ""),
             tolerance:
               t.tolerance !== undefined && t.tolerance !== null
                 ? parseFloat(t.tolerance)
@@ -232,7 +248,7 @@ export async function DELETE(
     }
 
     await prisma.cubiconTask.deleteMany({
-      where: { sequence_id: seqId },
+      where: { sequenceId: seqId },
     });
 
     await prisma.cubiconSequence.delete({

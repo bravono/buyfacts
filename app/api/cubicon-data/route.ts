@@ -41,83 +41,84 @@ export function evaluateSequencePass(
 const DEFAULT_TASKS = [
   {
     taskIndex: 0,
-    task_number: 1,
+    taskNumber: 1,
     heading: "Puzzle 1 of 3",
     description: "Who gets concerned by howling? (Draw a circle)",
     screen: "Active_front",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "drag",
-    correct_coordinates: JSON.stringify([{ x: 0.15, y: 0.45, z: 1.0 }]),
-    start_point: JSON.stringify({ x: 0.15, y: 0.45, z: 1.0 }),
-    mid_point: "",
-    end_point: "",
+    questionType: "drag",
+    correctCoordinates: JSON.stringify([{ x: 0.15, y: 0.45, z: 1.0 }]),
+    startPoint: JSON.stringify({ x: 0.15, y: 0.45, z: 1.0 }),
+    midPoint: "",
+    endPoint: "",
     tolerance: 0.5,
     isFinal: false,
   },
   {
     taskIndex: 1,
-    task_number: 2,
+    taskNumber: 2,
     description: "Who's in line for a change of shirt? (click to choose)",
     heading: "Puzzle 2 of 3",
     screen: "Active_side_l",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "click",
-    correct_coordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
-    start_point: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
-    mid_point: "",
-    end_point: "",
+    questionType: "click",
+    correctCoordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
+    startPoint: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
+    midPoint: "",
+    endPoint: "",
     tolerance: 0.5,
     isFinal: false,
   },
   {
     taskIndex: 2,
-    task_number: 3,
+    taskNumber: 3,
     heading: "Puzzle 3 of 3",
     description: "Where does his next go? (click to choose)",
     screen: "Active_back",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "drag",
-    correct_coordinates: JSON.stringify([
+    questionType: "drag",
+    correctCoordinates: JSON.stringify([
       { x: -0.60, y: 0.10, z: 1.0 },
       { x: 0.0, y: 0.35, z: 1.0 },
       { x: 0.60, y: 0.10, z: 1.0 },
     ]),
-    start_point: JSON.stringify({ x: -0.60, y: 0.10, z: 1.0 }),
-    mid_point: JSON.stringify({ x: 0.0, y: 0.35, z: 1.0 }),
-    end_point: JSON.stringify({ x: 0.60, y: 0.10, z: 1.0 }),
+    startPoint: JSON.stringify({ x: -0.60, y: 0.10, z: 1.0 }),
+    midPoint: JSON.stringify({ x: 0.0, y: 0.35, z: 1.0 }),
+    endPoint: JSON.stringify({ x: 0.60, y: 0.10, z: 1.0 }),
     tolerance: 0.5,
     isFinal: false,
   },
   {
     taskIndex: 3,
-    task_number: 4,
+    taskNumber: 4,
     heading: "Verification Challenge",
     description: "Final verification task to complete validation (click to choose)",
     screen: "Active_side_r",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
     rotation: "left",
     rotationInterval: 15,
-    question_type: "click",
-    correct_coordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
-    start_point: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
-    mid_point: "",
-    end_point: "",
+    questionType: "click",
+    correctCoordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
+    startPoint: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
+    midPoint: "",
+    endPoint: "",
     tolerance: 0.5,
     isFinal: true,
   },
 ];
 
-export function parseCoordinate(coord: any): { x: number; y: number; z: number } | null {
+export function parseCoordinate(coord: unknown): { x: number; y: number; z: number } | null {
   if (!coord) return null;
-  if (typeof coord === "object") {
-    if (typeof coord.x === "number" && typeof coord.y === "number") {
-      return { x: Number(coord.x), y: Number(coord.y), z: Number(coord.z || 0) };
+  if (typeof coord === "object" && coord !== null) {
+    const obj = coord as Record<string, unknown>;
+    if (typeof obj.x === "number" && typeof obj.y === "number") {
+      return { x: Number(obj.x), y: Number(obj.y), z: Number(obj.z || 0) };
     }
     if (Array.isArray(coord) && coord.length >= 2) {
       return { x: Number(coord[0]), y: Number(coord[1]), z: Number(coord[2] || 0) };
@@ -147,37 +148,42 @@ export function distance3D(p1: { x: number; y: number; z: number } | null, p2: {
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-export function parseClicksList(clicks: any): Array<{ x: number; y: number; z: number; t?: number }> {
+export function parseClicksList(clicks: unknown): Array<{ x: number; y: number; z: number; t?: number }> {
   if (!clicks) return [];
   if (Array.isArray(clicks)) {
     return clicks
       .map((item) => {
         const pt = parseCoordinate(item);
         if (!pt) return null;
-        return { ...pt, t: item.t || 0 };
+        const itemObj = typeof item === "object" && item !== null ? (item as Record<string, unknown>) : {};
+        return { ...pt, t: typeof itemObj.t === "number" ? itemObj.t : 0 };
       })
       .filter(Boolean) as Array<{ x: number; y: number; z: number; t?: number }>;
   }
-  if (typeof clicks === "object") {
-    const keys = Object.keys(clicks).sort((a, b) => {
+  if (typeof clicks === "object" && clicks !== null) {
+    const clicksObj = clicks as Record<string, unknown>;
+    const keys = Object.keys(clicksObj).sort((a, b) => {
       const numA = Number(a);
       const numB = Number(b);
       if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-      return (clicks[a]?.t || 0) - (clicks[b]?.t || 0);
+      const tA = (clicksObj[a] as Record<string, unknown> | undefined)?.t;
+      const tB = (clicksObj[b] as Record<string, unknown> | undefined)?.t;
+      return (typeof tA === "number" ? tA : 0) - (typeof tB === "number" ? tB : 0);
     });
     return keys
       .map((k) => {
-        const item = clicks[k];
+        const item = clicksObj[k];
         const pt = parseCoordinate(item);
         if (!pt) return null;
-        return { ...pt, t: item?.t || 0 };
+        const itemObj = typeof item === "object" && item !== null ? (item as Record<string, unknown>) : {};
+        return { ...pt, t: typeof itemObj.t === "number" ? itemObj.t : 0 };
       })
       .filter(Boolean) as Array<{ x: number; y: number; z: number; t?: number }>;
   }
   return [];
 }
 
-export function normalizePuzzleType(type: any): "click" | "drag" | "double_click" {
+export function normalizePuzzleType(type: unknown): "click" | "drag" | "double_click" {
   if (!type) return "click";
   const normalized = String(type).trim().toLowerCase();
   if (["drag", "anticipation", "drawing", "sequence"].includes(normalized)) {
@@ -189,26 +195,28 @@ export function normalizePuzzleType(type: any): "click" | "drag" | "double_click
   return "click";
 }
 
-export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
+export function evaluateTaskAttempt(task: Record<string, unknown> | null | undefined, clicks: unknown): "p" | "f" {
   if (!task) return "p";
 
   const tolerance = typeof task.tolerance === "number" ? task.tolerance : 0.5;
   const clicksList = parseClicksList(clicks);
 
-  // Parse correct_coordinates as the primary array of target points
+  // Parse correctCoordinates (or legacy correct_coordinates) as primary array of target points
   let targetPoints: Array<{ x: number; y: number; z: number }> = [];
-  if (task.correct_coordinates) {
+  const rawCoords = task.correctCoordinates !== undefined ? task.correctCoordinates : task.correct_coordinates;
+  if (rawCoords) {
     try {
-      const parsed = typeof task.correct_coordinates === "string"
-        ? JSON.parse(task.correct_coordinates)
-        : task.correct_coordinates;
+      const parsed = typeof rawCoords === "string"
+        ? JSON.parse(rawCoords)
+        : rawCoords;
       if (Array.isArray(parsed)) {
-        targetPoints = parsed.map(parseCoordinate).filter(Boolean) as any;
+        targetPoints = parsed.map(parseCoordinate).filter((p): p is { x: number; y: number; z: number } => p !== null);
       } else if (typeof parsed === "object" && parsed !== null) {
         // Fallback for legacy nested object { start, mid, end }
+        const parsedObj = parsed as Record<string, unknown>;
         ["start", "mid", "end"].forEach((key) => {
-          if (parsed[key]) {
-            const pt = parseCoordinate(parsed[key]);
+          if (parsedObj[key]) {
+            const pt = parseCoordinate(parsedObj[key]);
             if (pt) targetPoints.push(pt);
           }
         });
@@ -216,11 +224,14 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
     } catch {}
   }
 
-  // Fallback to legacy start_point, mid_point, end_point columns if correct_coordinates had no points
+  // Fallback to startPoint, midPoint, endPoint columns if targetPoints had no points
   if (targetPoints.length === 0) {
-    const startPt = parseCoordinate(task.start_point);
-    const midPt = parseCoordinate(task.mid_point);
-    const endPt = parseCoordinate(task.end_point);
+    const rawStart = task.startPoint !== undefined ? task.startPoint : task.start_point;
+    const rawMid = task.midPoint !== undefined ? task.midPoint : task.mid_point;
+    const rawEnd = task.endPoint !== undefined ? task.endPoint : task.end_point;
+    const startPt = parseCoordinate(rawStart);
+    const midPt = parseCoordinate(rawMid);
+    const endPt = parseCoordinate(rawEnd);
     if (startPt) targetPoints.push(startPt);
     if (midPt) targetPoints.push(midPt);
     if (endPt) targetPoints.push(endPt);
@@ -236,7 +247,8 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
     return "f";
   }
 
-  const puzzleType = normalizePuzzleType(task.question_type);
+  const rawQuestionType = task.questionType || task.question_type;
+  const puzzleType = normalizePuzzleType(rawQuestionType);
 
   // Drag puzzles require at least 2 clicks (start and end). Fewer than 2 clicks is an instant failure.
   if (puzzleType === "drag" && clicksList.length < 2) {
@@ -263,7 +275,7 @@ export function evaluateTaskAttempt(task: any, clicks: any): "p" | "f" {
     return allClicksMatched ? "p" : "f";
   }
 
-  // Drag / Drawing puzzles (up to 3 points in correct_coordinates):
+  // Drag / Drawing puzzles (up to 3 points in correctCoordinates):
   // All target points in the array must be matched within tolerance.
   // Traversal order does not matter since users may start drawing from any point.
   if (puzzleType === "drag") {
@@ -288,32 +300,32 @@ export async function ensureSeedTasks() {
         slug: "default",
         title: "Default Verification Challenge",
         description: "Standard anti-bot human verification puzzle sequence",
-        pass_threshold: 0.66,
-        rotation_direction: "left",
-        default_rotation_interval: 15,
-        is_active: true,
-        created_by: "system",
+        passThreshold: 0.66,
+        rotationDirection: "left",
+        defaultRotationInterval: 15,
+        isActive: true,
+        createdBy: "system",
       },
     });
   }
 
   const count = await prisma.cubiconTask.count({
-    where: { sequence_id: defaultSeq.id },
+    where: { sequenceId: defaultSeq.id },
   });
   if (count === 0) {
     for (const item of DEFAULT_TASKS) {
       await prisma.cubiconTask.create({
         data: {
           ...item,
-          sequence_id: defaultSeq.id,
+          sequenceId: defaultSeq.id,
         },
       });
     }
   } else {
     // Ensure existing tasks are attached to default sequence
     await prisma.cubiconTask.updateMany({
-      where: { sequence_id: null },
-      data: { sequence_id: defaultSeq.id },
+      where: { sequenceId: null },
+      data: { sequenceId: defaultSeq.id },
     });
   }
 
@@ -328,17 +340,17 @@ export async function ensureSeedTasks() {
         slug: "contact_form",
         title: "Contact Form Human Verification",
         description: "Anti-bot spatial puzzle verification for contact inquiries",
-        pass_threshold: 0.6,
-        rotation_direction: "left",
-        default_rotation_interval: 15,
-        is_active: true,
-        created_by: "system",
+        passThreshold: 0.6,
+        rotationDirection: "left",
+        defaultRotationInterval: 15,
+        isActive: true,
+        createdBy: "system",
       },
     });
   }
 
   const contactTasksCount = await prisma.cubiconTask.count({
-    where: { sequence_id: contactSeq.id },
+    where: { sequenceId: contactSeq.id },
   });
 
   if (contactTasksCount === 0) {
@@ -347,7 +359,7 @@ export async function ensureSeedTasks() {
         data: {
           ...item,
           heading: item.heading.replace("Puzzle", "Verification Puzzle"),
-          sequence_id: contactSeq.id,
+          sequenceId: contactSeq.id,
         },
       });
     }
@@ -405,7 +417,7 @@ export async function GET(request: Request) {
 
     if (!sequence) {
       sequence = await prisma.cubiconSequence.findFirst({
-        where: { is_active: true },
+        where: { isActive: true },
         include: { tasks: { orderBy: { taskIndex: "asc" } } },
       });
     }
@@ -415,9 +427,10 @@ export async function GET(request: Request) {
       : await prisma.cubiconTask.findMany({ orderBy: { taskIndex: "asc" } });
 
     return NextResponse.json({ sequence, tasks }, corsHeaders());
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     console.error("[cubicon-data] GET Error:", err);
-    return NextResponse.json({ error: "Failed to fetch tasks", details: err.message }, { status: 500, ...corsHeaders() });
+    return NextResponse.json({ error: "Failed to fetch tasks", details: errorMessage }, { status: 500, ...corsHeaders() });
   }
 }
 
@@ -426,7 +439,7 @@ export async function POST(request: Request) {
     await ensureSeedTasks();
 
     const text = await request.text();
-    let parsed: Record<string, any> = {};
+    let parsed: Record<string, unknown> = {};
     if (text) {
       try {
         if (text.startsWith("data=")) {
@@ -465,8 +478,11 @@ export async function POST(request: Request) {
       } catch {}
     }
 
-    const requestedSequenceSlug = parsed.sequence || parsed.sequenceSlug || querySeq || refererSeq || null;
-    const requestedSequenceId = parsed.sequenceId ? Number(parsed.sequenceId) : (querySeqId ? Number(querySeqId) : null);
+    const rawSeqSlug = parsed.sequence || parsed.sequenceSlug || querySeq || refererSeq || null;
+    const requestedSequenceSlug: string | null = rawSeqSlug ? String(rawSeqSlug) : null;
+    const requestedSequenceId: number | null = parsed.sequenceId
+      ? Number(parsed.sequenceId)
+      : (querySeqId ? Number(querySeqId) : null);
 
     // 1. Resolve requested or active default sequence
     let currentSequence = null;
@@ -474,7 +490,7 @@ export async function POST(request: Request) {
     // If an existing session exists, inherit its assigned sequence
     if (parsed.sessionId) {
       const existingSession = await prisma.cubiconSession.findUnique({
-        where: { session_id: String(parsed.sessionId) },
+        where: { sessionId: String(parsed.sessionId) },
         include: { sequence: true },
       });
       if (existingSession?.sequence) {
@@ -494,7 +510,7 @@ export async function POST(request: Request) {
 
     if (!currentSequence) {
       currentSequence = await prisma.cubiconSequence.findFirst({
-        where: { is_active: true },
+        where: { isActive: true },
       });
     }
 
@@ -503,16 +519,13 @@ export async function POST(request: Request) {
     }
 
     const seqId = currentSequence?.id || null;
-    const seqRotationDir = currentSequence?.rotation_direction || "left";
-    const seqDefaultInterval = currentSequence?.default_rotation_interval || 15;
-    const seqThreshold = currentSequence?.pass_threshold !== null && currentSequence?.pass_threshold !== undefined
-      ? currentSequence.pass_threshold
-      : 0.66;
+    const seqRotationDir = currentSequence?.rotationDirection || "left";
+    const seqDefaultInterval = currentSequence?.defaultRotationInterval || 15;
 
     // Fetch tasks for this sequence (or fallback)
     let sequenceTasks = seqId
       ? await prisma.cubiconTask.findMany({
-          where: { sequence_id: seqId },
+          where: { sequenceId: seqId },
           orderBy: { taskIndex: "asc" },
         })
       : [];
@@ -535,28 +548,28 @@ export async function POST(request: Request) {
         : generateSessionId();
 
       const existingSession = await prisma.cubiconSession.findUnique({
-        where: { session_id: sessionId },
+        where: { sessionId: sessionId },
       });
 
       if (existingSession) {
         await prisma.cubiconSession.update({
           where: { id: existingSession.id },
           data: {
-            sequence_id: seqId,
+            sequenceId: seqId,
             taskIndex: 0,
-            user_email: providedUserEmail || existingSession.user_email,
+            userEmail: providedUserEmail || existingSession.userEmail,
             passedPuzzles: 0,
             totalPuzzlesAttempted: 0,
-            previous_result: null,
+            previousResult: null,
           },
         });
       } else {
         await prisma.cubiconSession.create({
           data: {
-            session_id: sessionId,
-            sequence_id: seqId,
+            sessionId: sessionId,
+            sequenceId: seqId,
             taskIndex: 0,
-            user_email: providedUserEmail,
+            userEmail: providedUserEmail,
             passedPuzzles: 0,
             totalPuzzlesAttempted: 0,
           },
@@ -583,8 +596,8 @@ export async function POST(request: Request) {
           passed: false,
           redirectUrl: "",
           result: null,
-          question_type: firstPuzzle.question_type || "drag",
-          questionType: firstPuzzle.question_type || "drag",
+          question_type: firstPuzzle.questionType || "drag",
+          questionType: firstPuzzle.questionType || "drag",
         }),
         corsHeaders()
       );
@@ -592,7 +605,7 @@ export async function POST(request: Request) {
 
     const sessionId = String(parsed.sessionId ?? "");
     let session = await prisma.cubiconSession.findUnique({
-      where: { session_id: sessionId },
+      where: { sessionId: sessionId },
     });
 
     // 1. Unlimited Retries Handler (Section 7.4)
@@ -604,7 +617,7 @@ export async function POST(request: Request) {
             taskIndex: 0,
             passedPuzzles: 0,
             totalPuzzlesAttempted: 0,
-            previous_result: "retry",
+            previousResult: "retry",
           },
         });
       }
@@ -628,8 +641,8 @@ export async function POST(request: Request) {
           passed: false,
           result: null,
           redirectUrl: "",
-          question_type: firstPuzzle.question_type || "drag",
-          questionType: firstPuzzle.question_type || "drag",
+          question_type: firstPuzzle.questionType || "drag",
+          questionType: firstPuzzle.questionType || "drag",
         }),
         corsHeaders()
       );
@@ -639,10 +652,10 @@ export async function POST(request: Request) {
       const newSessionId = generateSessionId();
       session = await prisma.cubiconSession.create({
         data: {
-          session_id: newSessionId,
-          sequence_id: seqId,
+          sessionId: newSessionId,
+          sequenceId: seqId,
           taskIndex: 0,
-          user_email: providedUserEmail,
+          userEmail: providedUserEmail,
           passedPuzzles: 0,
           totalPuzzlesAttempted: 0,
         },
@@ -668,8 +681,8 @@ export async function POST(request: Request) {
           passed: false,
           redirectUrl: "",
           result: null,
-          question_type: puzzle.question_type || "drag",
-          questionType: puzzle.question_type || "drag",
+          question_type: puzzle.questionType || "drag",
+          questionType: puzzle.questionType || "drag",
         }),
         corsHeaders()
       );
@@ -677,13 +690,13 @@ export async function POST(request: Request) {
 
     // 2. Terminal State Lockdown: Prevent browser Back or page refresh from altering results
     const isAlreadyCompleted =
-      session.previous_result?.startsWith("passed_") ||
-      session.previous_result?.startsWith("failed_") ||
-      session.previous_result?.startsWith("early_") ||
-      session.previous_result?.startsWith("two_incorrect_");
+      session.previousResult?.startsWith("passed_") ||
+      session.previousResult?.startsWith("failed_") ||
+      session.previousResult?.startsWith("early_") ||
+      session.previousResult?.startsWith("two_incorrect_");
 
     if (isAlreadyCompleted) {
-      const alreadyPassed = session.previous_result?.startsWith("passed_") || false;
+      const alreadyPassed = session.previousResult?.startsWith("passed_") || false;
       const lastPuzzle = fallbackTasks[Math.min(session.taskIndex, totalTasks - 1)] || fallbackTasks[0];
       return NextResponse.json(
         sanitizePublicPayload({
@@ -716,9 +729,14 @@ export async function POST(request: Request) {
     }
 
     // 3. Duplicate click protection (idempotency guard)
+    const submittedTaskIndex = typeof parsed.taskIndex === "number"
+      ? parsed.taskIndex
+      : (parsed.taskIndex !== undefined ? Number(parsed.taskIndex) : undefined);
+
     if (
-      parsed.taskIndex !== undefined &&
-      parsed.taskIndex < session.taskIndex &&
+      submittedTaskIndex !== undefined &&
+      !isNaN(submittedTaskIndex) &&
+      submittedTaskIndex < session.taskIndex &&
       session.taskIndex >= 0
     ) {
       const activePuzzle = fallbackTasks[session.taskIndex] || fallbackTasks[0];
@@ -740,10 +758,10 @@ export async function POST(request: Request) {
           completed: false,
           passed: false,
           score: session.passedPuzzles,
-          result: session.previous_result === "p" || session.previous_result === "f" ? session.previous_result : null,
+          result: session.previousResult === "p" || session.previousResult === "f" ? session.previousResult : null,
           redirectUrl: "",
-          question_type: activePuzzle.question_type || "drag",
-          questionType: activePuzzle.question_type || "drag",
+          question_type: activePuzzle.questionType || "drag",
+          questionType: activePuzzle.questionType || "drag",
         }),
         corsHeaders()
       );
@@ -759,12 +777,12 @@ export async function POST(request: Request) {
     try {
       await prisma.cubiconAttempt.create({
         data: {
-          session_id: sessionId,
-          sequence_id: seqId || session.sequence_id || undefined,
+          sessionId: sessionId,
+          sequenceId: seqId || session.sequenceId || undefined,
           taskIndex: currentTaskIndex,
-          user_email: session.user_email || providedUserEmail,
-          clicks_data: JSON.stringify(rawClicks),
-          start_time: parsed.startTime ? String(parsed.startTime) : null,
+          userEmail: session.userEmail || providedUserEmail,
+          clicksData: JSON.stringify(rawClicks),
+          startTime: parsed.startTime ? String(parsed.startTime) : null,
           result: attemptResult,
         },
       });
@@ -774,8 +792,8 @@ export async function POST(request: Request) {
 
     // 5. Gather session attempt history and evaluate 4-path scoring state machine
     const sessionAttempts = await prisma.cubiconAttempt.findMany({
-      where: { session_id: sessionId },
-      orderBy: { submitted_at: "asc" },
+      where: { sessionId: sessionId },
+      orderBy: { submittedAt: "asc" },
       select: { taskIndex: true, result: true },
     });
 
@@ -806,7 +824,7 @@ export async function POST(request: Request) {
         taskIndex: scoringDecision.isCompleted ? session.taskIndex : scoringDecision.nextTaskIndex,
         totalPuzzlesAttempted: newAttemptedCount,
         passedPuzzles: newPassedCount,
-        previous_result: scoringDecision.internalStage,
+        previousResult: scoringDecision.internalStage,
       },
     });
 
@@ -865,8 +883,8 @@ export async function POST(request: Request) {
         score: newPassedCount,
         redirectUrl: "",
         result: attemptResult,
-        question_type: nextPuzzle.question_type || "drag",
-        questionType: nextPuzzle.question_type || "drag",
+        question_type: nextPuzzle.questionType || "drag",
+        questionType: nextPuzzle.questionType || "drag",
       }),
       corsHeaders()
     );

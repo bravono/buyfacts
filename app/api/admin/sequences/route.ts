@@ -50,9 +50,13 @@ export async function POST(request: Request) {
       slug,
       description,
       pass_threshold,
+      passThreshold,
       rotation_direction,
+      rotationDirection,
       default_rotation_interval,
+      defaultRotationInterval,
       is_active,
+      isActive,
       tasks,
     } = body;
 
@@ -81,26 +85,30 @@ export async function POST(request: Request) {
       );
     }
 
-    if (is_active) {
+    const rawIsActive = isActive !== undefined ? isActive : is_active;
+    if (rawIsActive) {
       await prisma.cubiconSequence.updateMany({
-        data: { is_active: false },
+        data: { isActive: false },
       });
     }
 
+    const rawThreshold = passThreshold !== undefined ? passThreshold : pass_threshold;
     const parsedThreshold =
-      pass_threshold !== undefined && pass_threshold !== null
-        ? parseFloat(pass_threshold)
+      rawThreshold !== undefined && rawThreshold !== null
+        ? parseFloat(rawThreshold)
         : 0.66;
 
+    const rawRotDir = rotationDirection !== undefined ? rotationDirection : rotation_direction;
     const rotDir =
-      (rotation_direction || "left").toLowerCase() === "right"
+      (rawRotDir || "left").toLowerCase() === "right"
         ? "right"
         : "left";
 
+    const rawInterval = defaultRotationInterval !== undefined ? defaultRotationInterval : default_rotation_interval;
     const rotInterval =
-      default_rotation_interval !== undefined &&
-      default_rotation_interval !== null
-        ? parseInt(default_rotation_interval, 10)
+      rawInterval !== undefined &&
+      rawInterval !== null
+        ? parseInt(rawInterval, 10)
         : 15;
 
     const newSequence = await prisma.cubiconSequence.create({
@@ -108,46 +116,53 @@ export async function POST(request: Request) {
         title: title.trim(),
         slug: cleanSlug,
         description: description ? description.trim() : "",
-        pass_threshold: isNaN(parsedThreshold) ? 0.66 : parsedThreshold,
-        rotation_direction: rotDir,
-        default_rotation_interval: isNaN(rotInterval) ? 15 : rotInterval,
-        is_active: Boolean(is_active),
-        created_by: auth.user?.email || auth.user?.userId || "admin",
+        passThreshold: isNaN(parsedThreshold) ? 0.66 : parsedThreshold,
+        rotationDirection: rotDir,
+        defaultRotationInterval: isNaN(rotInterval) ? 15 : rotInterval,
+        isActive: Boolean(rawIsActive),
+        createdBy: auth.user?.email || auth.user?.userId || "admin",
       },
     });
 
     if (Array.isArray(tasks) && tasks.length > 0) {
       for (let i = 0; i < tasks.length; i++) {
         const t = tasks[i];
+        const taskCoords = t.correctCoordinates !== undefined ? t.correctCoordinates : t.correct_coordinates;
+        const taskStart = t.startPoint !== undefined ? t.startPoint : t.start_point;
+        const taskMid = t.midPoint !== undefined ? t.midPoint : t.mid_point;
+        const taskEnd = t.endPoint !== undefined ? t.endPoint : t.end_point;
+        const taskRotInterval = t.rotationInterval || t.rotation_interval || rotInterval;
+        const taskQuestionType = t.questionType || t.question_type || "Selection";
+        const taskNum = t.taskNumber || t.task_number || i + 1;
+
         await prisma.cubiconTask.create({
           data: {
-            sequence_id: newSequence.id,
+            sequenceId: newSequence.id,
             taskIndex: i,
-            task_number: i + 1,
+            taskNumber: taskNum,
             heading: t.heading || `Task ${i + 1}`,
             description: t.description || "Solve the puzzle",
             screen: t.screen || "Active_front",
             image: t.image || "",
             rotation: t.rotation || rotDir,
-            rotation_interval: t.rotation_interval || rotInterval,
-            rotationInterval: t.rotationInterval || rotInterval,
-            question_type: t.question_type || "Selection",
-            correct_coordinates:
-              typeof t.correct_coordinates === "string"
-                ? t.correct_coordinates
-                : JSON.stringify(t.correct_coordinates || ""),
-            start_point:
-              typeof t.start_point === "string"
-                ? t.start_point
-                : JSON.stringify(t.start_point || ""),
-            mid_point:
-              typeof t.mid_point === "string"
-                ? t.mid_point
-                : JSON.stringify(t.mid_point || ""),
-            end_point:
-              typeof t.end_point === "string"
-                ? t.end_point
-                : JSON.stringify(t.end_point || ""),
+            rotationInterval: taskRotInterval,
+            questionType: taskQuestionType,
+            correctCoordinates:
+              typeof taskCoords === "string"
+                ? taskCoords
+                : JSON.stringify(taskCoords || ""),
+            startPoint:
+              typeof taskStart === "string"
+                ? taskStart
+                : JSON.stringify(taskStart || ""),
+            midPoint:
+              typeof taskMid === "string"
+                ? taskMid
+                : JSON.stringify(taskMid || ""),
+            endPoint:
+              typeof taskEnd === "string"
+                ? taskEnd
+                : JSON.stringify(taskEnd || ""),
             tolerance:
               t.tolerance !== undefined && t.tolerance !== null
                 ? parseFloat(t.tolerance)

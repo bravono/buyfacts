@@ -43,8 +43,6 @@ model EmailVerification {
   verifiedAt     DateTime?
   reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
-
-  @@map("email_verifications")
 }
 
 // 3. Coming Soon Notification Form
@@ -79,7 +77,7 @@ model MediaAsset {
 // 6. ResearchLib / Research Lib Embedded Survey Platform
 model ResearchLibSurvey {
   id            Int      @id @default(autoincrement())
-  user_id       String   @default("system_default")
+  userId        String   @default("system_default")
   heading       String
   instruction   String
   widget        String
@@ -91,123 +89,104 @@ model ResearchLibSurvey {
   timeCounter   String?  @default("down")
   isFollowup    Int?     @default(1)
   createdAt     DateTime @default(now())
-
-  @@map("research_lib_surveys")
 }
 
 model ResearchLibResponse {
   id        Int      @id @default(autoincrement())
-  user_id   String
-  survey_id Int?
+  userId    String
+  surveyId  Int?
   answers   String   // JSON string of answers
   story     String?
   createdAt DateTime @default(now())
-
-  @@map("research_lib_responses")
 }
 
 model ResearchLibTimer {
   id           Int      @id @default(autoincrement())
-  user_id      String   @unique
+  userId       String   @unique
   sessionTimer String?  @default("{}")
   pauseTimer   String?  @default("{}")
   updatedAt    DateTime @default(now()) @updatedAt
-
-  @@map("research_lib_timers")
 }
 
 model ResearchLibElement {
   id        Int      @id @default(autoincrement())
-  user_id   String   @unique
+  userId    String   @unique
   state     String?  @default("{}")
   updatedAt DateTime @default(now()) @updatedAt
-
-  @@map("research_lib_elements")
 }
 
 model ResearchLibAppState {
   id        Int      @id @default(autoincrement())
-  user_id   String   @unique
+  userId    String   @unique
   state     String?  @default("{}")
   updatedAt DateTime @default(now()) @updatedAt
-
-  @@map("research_lib_app_states")
 }
 
 // 7. Cubicon 3D Interactive Survey & Verification Platform
 model CubiconSequence {
-  id                        Int              @id @default(autoincrement())
-  slug                      String           @unique
-  title                     String
-  description               String?          @default("")
-  pass_threshold            Float?           @default(0.66)
-  rotation_direction        String?          @default("left")
-  default_rotation_interval Int?             @default(15)
-  is_active                 Boolean?         @default(true)
-  created_by                String?          @default("system")
-  created_at                DateTime?        @default(now())
-  updated_at                DateTime?        @default(now()) @updatedAt
-  tasks                     CubiconTask[]
-  sessions                  CubiconSession[]
-  attempts                  CubiconAttempt[]
-
-  @@map("cubicon_sequences")
+  id                     Int              @id @default(autoincrement())
+  slug                   String           @unique
+  title                  String
+  description            String?          @default("")
+  passThreshold          Float?           @default(0.66)
+  rotationDirection      String?          @default("left")
+  defaultRotationInterval Int?            @default(15)
+  isActive               Boolean?         @default(true)
+  createdBy              String?          @default("system")
+  createdAt              DateTime?        @default(now())
+  updatedAt              DateTime?        @default(now()) @updatedAt
+  tasks                  CubiconTask[]
+  sessions               CubiconSession[]
+  attempts               CubiconAttempt[]
 }
 
 model CubiconTask {
-  id                  Int              @id @default(autoincrement())
-  sequence_id         Int?
-  sequence            CubiconSequence? @relation(fields: [sequence_id], references: [id])
-  taskIndex           Int              @default(0)
-  task_number         Int?
-  heading             String
-  description         String
-  screen              String?          @default("")
-  image               String
-  rotation            String?          @default("left")
-  rotation_interval   Int?             @default(15)
-  rotationInterval    Int?             @default(15)
-  question_type       String?          @default("Selection")
-  correct_coordinates String?          @default("")
-  start_point         String?          @default("")
-  mid_point           String?          @default("")
-  end_point           String?          @default("")
-  tolerance           Float?           @default(0.5)
-  isFinal             Boolean          @default(false)
-  createdAt           DateTime         @default(now())
-
-  @@map("cubicon_tasks")
+  id                 Int              @id @default(autoincrement())
+  sequenceId         Int?
+  sequence           CubiconSequence? @relation(fields: [sequenceId], references: [id])
+  taskIndex          Int              @default(0)
+  taskNumber         Int?
+  heading            String
+  description        String
+  screen             String?          @default("")
+  image              String
+  rotation           String?          @default("left")
+  rotationInterval   Int?             @default(15)
+  questionType       String?          @default("Selection")
+  correctCoordinates String?          @default("")
+  startPoint         String?          @default("")
+  midPoint           String?          @default("")
+  endPoint           String?          @default("")
+  tolerance          Float?           @default(0.5)
+  isFinal            Boolean          @default(false)
+  createdAt          DateTime         @default(now())
 }
 
 model CubiconSession {
   id                    Int              @id @default(autoincrement())
-  session_id            String           @unique
-  sequence_id           Int?
-  sequence              CubiconSequence? @relation(fields: [sequence_id], references: [id])
+  sessionId             String           @unique
+  sequenceId            Int?
+  sequence              CubiconSequence? @relation(fields: [sequenceId], references: [id])
   taskIndex             Int              @default(0)
-  user_email            String?          @default("")
+  userEmail             String?          @default("")
   passedPuzzles         Int              @default(0)
   totalPuzzlesAttempted Int              @default(0)
-  previous_result       String?          @default("")
+  previousResult        String?          @default("")
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @default(now()) @updatedAt
-
-  @@map("cubicon_sessions")
 }
 
 model CubiconAttempt {
-  id           Int              @id @default(autoincrement())
-  session_id   String
-  sequence_id  Int?
-  sequence     CubiconSequence? @relation(fields: [sequence_id], references: [id])
-  taskIndex    Int
-  user_email   String?
-  clicks_data  String?          @default("{}")
-  start_time   String?
-  result       String
-  submitted_at DateTime         @default(now())
-
-  @@map("cubicon_attempts")
+  id          Int              @id @default(autoincrement())
+  sessionId   String
+  sequenceId  Int?
+  sequence    CubiconSequence? @relation(fields: [sequenceId], references: [id])
+  taskIndex   Int
+  userEmail   String?
+  clicksData  String?          @default("{}")
+  startTime   String?
+  result      String
+  submittedAt DateTime         @default(now())
 }
 
 model CubiconRegistration {
@@ -220,8 +199,6 @@ model CubiconRegistration {
   notes     String?
   isUsBased Boolean  @default(true)
   createdAt DateTime @default(now())
-
-  @@map("cubicon_registrations")
 }
 
 model CubiconShare {
@@ -235,8 +212,6 @@ model CubiconShare {
   sessionId     String?   @default("")
   status        String?   @default("invited")
   createdAt     DateTime? @default(now())
-
-  @@map("cubicon_shares")
 }
 
 model FeedbackSubmission {
@@ -247,8 +222,4 @@ model FeedbackSubmission {
   feedbackText String
   rating       Int?      @default(0)
   createdAt    DateTime? @default(now())
-
-  @@map("cubicon_feedback")
 }
-
-

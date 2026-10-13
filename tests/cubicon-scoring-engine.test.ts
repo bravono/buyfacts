@@ -200,11 +200,11 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     const testSessionId = `test_sess_retry_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: testSessionId,
+        sessionId: testSessionId,
         taskIndex: 2,
         passedPuzzles: 1,
         totalPuzzlesAttempted: 2,
-        previous_result: "in_progress_task_2",
+        previousResult: "in_progress_task_2",
       },
     });
 
@@ -225,14 +225,14 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
       assert.equal(data.task, 1);
 
       const updated = await prisma.cubiconSession.findUnique({
-        where: { session_id: testSessionId },
+        where: { sessionId: testSessionId },
       });
       assert.equal(updated?.taskIndex, 0);
       assert.equal(updated?.passedPuzzles, 0);
       assert.equal(updated?.totalPuzzlesAttempted, 0);
     } finally {
       await prisma.cubiconSession.deleteMany({
-        where: { session_id: testSessionId },
+        where: { sessionId: testSessionId },
       });
     }
   });
@@ -244,11 +244,11 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     const testSessionId = `test_sess_lock_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: testSessionId,
+        sessionId: testSessionId,
         taskIndex: 3,
         passedPuzzles: 3,
         totalPuzzlesAttempted: 3,
-        previous_result: "passed_clean_3_of_3",
+        previousResult: "passed_clean_3_of_3",
       },
     });
 
@@ -272,7 +272,7 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
       assert.equal(data.fireworks, true);
     } finally {
       await prisma.cubiconSession.deleteMany({
-        where: { session_id: testSessionId },
+        where: { sessionId: testSessionId },
       });
     }
   });
@@ -284,11 +284,11 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     const testSessionId = `test_sess_dup_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: testSessionId,
+        sessionId: testSessionId,
         taskIndex: 1, // Currently at task index 1 (Task 2)
         passedPuzzles: 1,
         totalPuzzlesAttempted: 1,
-        previous_result: "in_progress_task_1",
+        previousResult: "in_progress_task_1",
       },
     });
 
@@ -312,13 +312,13 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
       assert.equal(data.task, 2);
 
       const checkSession = await prisma.cubiconSession.findUnique({
-        where: { session_id: testSessionId },
+        where: { sessionId: testSessionId },
       });
       assert.equal(checkSession?.taskIndex, 1);
       assert.equal(checkSession?.totalPuzzlesAttempted, 1);
     } finally {
       await prisma.cubiconSession.deleteMany({
-        where: { session_id: testSessionId },
+        where: { sessionId: testSessionId },
       });
     }
   });

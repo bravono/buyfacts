@@ -9,10 +9,10 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
   t.after(async () => {
     if (createdSessionIds.length > 0) {
       await prisma.cubiconAttempt.deleteMany({
-        where: { session_id: { in: createdSessionIds } },
+        where: { sessionId: { in: createdSessionIds } },
       });
       await prisma.cubiconSession.deleteMany({
-        where: { session_id: { in: createdSessionIds } },
+        where: { sessionId: { in: createdSessionIds } },
       });
     }
   });
@@ -35,7 +35,7 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
 
     // Verify session persistence in database
     const sessionRecord = await prisma.cubiconSession.findUnique({
-      where: { session_id: data.sessionId },
+      where: { sessionId: data.sessionId },
     });
     assert.ok(sessionRecord, "Session record must exist in database");
     assert.equal(sessionRecord.taskIndex, 0, "Initial session taskIndex must be 0 for first puzzle");
@@ -119,7 +119,7 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     createdSessionIds.push(data.sessionId);
 
     const session = await prisma.cubiconSession.findUnique({
-      where: { session_id: data.sessionId },
+      where: { sessionId: data.sessionId },
       include: { sequence: true },
     });
     assert.ok(session);
@@ -138,11 +138,11 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     // Pre-create session at taskIndex 2 with prior results
     await prisma.cubiconSession.create({
       data: {
-        session_id: customSessionId,
+        sessionId: customSessionId,
         taskIndex: 2,
         passedPuzzles: 1,
         totalPuzzlesAttempted: 2,
-        previous_result: "in_progress_task_2",
+        previousResult: "in_progress_task_2",
       },
     });
 
@@ -164,12 +164,12 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     assert.ok(data.heading.includes("Puzzle 1"));
 
     const updated = await prisma.cubiconSession.findUnique({
-      where: { session_id: customSessionId },
+      where: { sessionId: customSessionId },
     });
     assert.equal(updated?.taskIndex, 0, "Must reset taskIndex to 0");
     assert.equal(updated?.passedPuzzles, 0, "Must reset passed count to 0");
     assert.equal(updated?.totalPuzzlesAttempted, 0, "Must reset attempted count to 0");
-    assert.equal(updated?.previous_result, null, "Must clear previous_result");
+    assert.equal(updated?.previousResult, null, "Must clear previousResult");
   });
 
   await t.test("6. URL-encoded form data data={...} initialization format is supported", async () => {
@@ -231,7 +231,7 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     assert.equal(submitData.score, 1, "Must record 1 passed puzzle");
 
     const sessionInDb = await prisma.cubiconSession.findUnique({
-      where: { session_id: sessionId },
+      where: { sessionId: sessionId },
     });
     assert.equal(sessionInDb?.taskIndex, 1, "Session taskIndex must advance to 1 in database");
     assert.equal(sessionInDb?.passedPuzzles, 1);

@@ -17,7 +17,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
 
     assert.ok(contactSeq, "contact_form sequence should exist in database");
     assert.equal(contactSeq.slug, "contact_form");
-    assert.equal(contactSeq.pass_threshold, 0.6, "pass_threshold must be 0.6 (60%) per requirement");
+    assert.equal(contactSeq.passThreshold, 0.6, "passThreshold must be 0.6 (60%) per requirement");
     assert.ok(contactSeq.tasks.length >= 3, "contact_form sequence should have at least 3 tasks");
   });
 
@@ -31,7 +31,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     assert.equal(res.status, 200);
     assert.ok(data.sequence);
     assert.equal(data.sequence.slug, "contact_form");
-    assert.equal(data.sequence.pass_threshold, 0.6);
+    assert.equal(data.sequence.passThreshold, 0.6);
     assert.ok(Array.isArray(data.tasks));
     assert.ok(data.tasks.length >= 3);
   });
@@ -52,7 +52,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     assert.ok(data.sessionId);
 
     const session = await prisma.cubiconSession.findUnique({
-      where: { session_id: data.sessionId },
+      where: { sessionId: data.sessionId },
       include: { sequence: true },
     });
 
@@ -114,8 +114,8 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     const wrongSeqSessionId = `test_wrong_seq_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: wrongSeqSessionId,
-        sequence_id: defaultSeq.id,
+        sessionId: wrongSeqSessionId,
+        sequenceId: defaultSeq.id,
         passedPuzzles: 3,
         totalPuzzlesAttempted: 3,
       },
@@ -139,7 +139,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
       assert.equal(res.status, 400);
       assert.match(data.error, /Verification sequence mismatch/i);
     } finally {
-      await prisma.cubiconSession.deleteMany({ where: { session_id: wrongSeqSessionId } });
+      await prisma.cubiconSession.deleteMany({ where: { sessionId: wrongSeqSessionId } });
     }
   });
 
@@ -151,8 +151,8 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     const unpassedSessionId = `test_unpassed_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: unpassedSessionId,
-        sequence_id: contactSeq.id,
+        sessionId: unpassedSessionId,
+        sequenceId: contactSeq.id,
         passedPuzzles: 1,
         totalPuzzlesAttempted: 3,
       },
@@ -176,7 +176,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
       assert.equal(res.status, 400);
       assert.match(data.error, /Human verification was not passed/i);
     } finally {
-      await prisma.cubiconSession.deleteMany({ where: { session_id: unpassedSessionId } });
+      await prisma.cubiconSession.deleteMany({ where: { sessionId: unpassedSessionId } });
     }
   });
 
@@ -189,8 +189,8 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     const passedSessionId = `test_passed_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: passedSessionId,
-        sequence_id: contactSeq.id,
+        sessionId: passedSessionId,
+        sequenceId: contactSeq.id,
         passedPuzzles: 2,
         totalPuzzlesAttempted: 3,
       },
@@ -219,9 +219,9 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
 
       // Verify the session in DB was marked as used
       const updatedSession = await prisma.cubiconSession.findUnique({
-        where: { session_id: passedSessionId },
+        where: { sessionId: passedSessionId },
       });
-      assert.equal(updatedSession?.previous_result, "used");
+      assert.equal(updatedSession?.previousResult, "used");
 
       // Clean up the created inquiry
       await prisma.contactInquiry.delete({ where: { id: data1.id } });
@@ -244,7 +244,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
       assert.equal(res2.status, 400);
       assert.match(data2.error, /already been used/i);
     } finally {
-      await prisma.cubiconSession.deleteMany({ where: { session_id: passedSessionId } });
+      await prisma.cubiconSession.deleteMany({ where: { sessionId: passedSessionId } });
     }
   });
 
@@ -340,8 +340,8 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     const autoPassedSessionId = `auto_pass_${Date.now()}`;
     await prisma.cubiconSession.create({
       data: {
-        session_id: autoPassedSessionId,
-        sequence_id: contactSeq.id,
+        sessionId: autoPassedSessionId,
+        sequenceId: contactSeq.id,
         passedPuzzles: 2,
         totalPuzzlesAttempted: 3,
       },
@@ -382,7 +382,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
       // Clean up
       await prisma.contactInquiry.delete({ where: { id: data.id } });
     } finally {
-      await prisma.cubiconSession.deleteMany({ where: { session_id: autoPassedSessionId } });
+      await prisma.cubiconSession.deleteMany({ where: { sessionId: autoPassedSessionId } });
     }
   });
 

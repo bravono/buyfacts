@@ -64,21 +64,21 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
       data: {
         slug: seqSlug,
         title: "Pass Test Sequence",
-        pass_threshold: 0.5,
-        is_active: false,
+        passThreshold: 0.5,
+        isActive: false,
       },
     });
 
     const task = await prisma.cubiconTask.create({
       data: {
-        sequence_id: seq.id,
+        sequenceId: seq.id,
         taskIndex: 0,
         heading: "Task 1",
         description: "Task 1 Description",
         screen: "Active_front",
         image: "https://example.com/art1.webp",
-        question_type: "Selection",
-        start_point: JSON.stringify({ x: 0.0, y: 0.0, z: 1.0 }),
+        questionType: "Selection",
+        startPoint: JSON.stringify({ x: 0.0, y: 0.0, z: 1.0 }),
         tolerance: 0.5,
         isFinal: true,
       },
@@ -89,10 +89,10 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
       const sessionId = `test_sess_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       await prisma.cubiconSession.create({
         data: {
-          session_id: sessionId,
-          sequence_id: seq.id,
+          sessionId: sessionId,
+          sequenceId: seq.id,
           taskIndex: 0,
-          user_email: "tester@example.com",
+          userEmail: "tester@example.com",
           passedPuzzles: 0,
           totalPuzzlesAttempted: 0,
         },
@@ -123,13 +123,13 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
     } finally {
       // Cleanup
       await prisma.cubiconAttempt.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconSession.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconTask.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconSequence.delete({
         where: { id: seq.id },
@@ -144,21 +144,21 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
       data: {
         slug: seqSlug,
         title: "Fail Test Sequence",
-        pass_threshold: 0.5,
-        is_active: false,
+        passThreshold: 0.5,
+        isActive: false,
       },
     });
 
     const task = await prisma.cubiconTask.create({
       data: {
-        sequence_id: seq.id,
+        sequenceId: seq.id,
         taskIndex: 0,
         heading: "Task 1",
         description: "Task 1 Description",
         screen: "Active_front",
         image: "https://example.com/art1.webp",
-        question_type: "Selection",
-        start_point: JSON.stringify({ x: 0.0, y: 0.0, z: 1.0 }),
+        questionType: "Selection",
+        startPoint: JSON.stringify({ x: 0.0, y: 0.0, z: 1.0 }),
         tolerance: 0.2,
         isFinal: true,
       },
@@ -169,10 +169,10 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
       const sessionId = `test_sess_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       await prisma.cubiconSession.create({
         data: {
-          session_id: sessionId,
-          sequence_id: seq.id,
+          sessionId: sessionId,
+          sequenceId: seq.id,
           taskIndex: 0,
-          user_email: "tester-fail@example.com",
+          userEmail: "tester-fail@example.com",
           passedPuzzles: 0,
           totalPuzzlesAttempted: 0,
         },
@@ -203,13 +203,13 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
     } finally {
       // Cleanup
       await prisma.cubiconAttempt.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconSession.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconTask.deleteMany({
-        where: { sequence_id: seq.id },
+        where: { sequenceId: seq.id },
       });
       await prisma.cubiconSequence.delete({
         where: { id: seq.id },
