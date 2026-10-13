@@ -326,10 +326,14 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
 - **Hover-Aware Play Button**: The central play button transitions smoothly during playback, fading out during active video viewing and reappearing on hover or pause for quick access.
 - **Surface Interactivity**: Clicking directly on the video element or clicking the primary "Video" button at the bottom toggles play and pause immediately.
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Recognize IT" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
-- **Three Standardized Action Choices**:
-  1. **Video**: User-initiated video presentation with direct play/pause toggling.
-  2. **In Depth**: Presents an executive document preview modal with title, estimated reading time, file format, and key takeaways before download confirmation, preserving selected item highlight on the dashboard upon completion.
-  3. **Talk to Us**: Direct navigation to `/#contact`.
+- **Four Consistent Action Buttons**:
+  Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
+  1. **SEE IT**: User-initiated video presentation with direct play/pause toggling and Video icon.
+  2. **HEAR IT**: Audio stream presentation and listen actions with Headphones icon.
+  3. **READ IT**: Executive documentation preview modal and technical reference download with FileText icon, preserving active dashboard selection upon completion.
+  4. **CONTACT US**: Direct navigation to `/#contact` with Mail icon.
+- **Responsive Layout & Dimensional Uniformity**:
+  Action buttons maintain strictly uniform dimensions (120px width by 36px height) across desktop, tablet, and smartphone screens. The control row employs flex-wrap rearrangement into fewer columns on narrower viewports rather than stretching or shrinking buttons, ensuring a clean responsive flow. Other buttons (such as the contact inquiry submit button) are styled to fit their label with padding (`width: fit-content`) rather than expanding to the full container width.
 
 ---
 

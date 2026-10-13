@@ -16,7 +16,7 @@ const APPROVED_NAV_ITEMS = [
   { label: "CONTACT", href: "/#contact" },
 ];
 
-const APPROVED_ACTION_BUTTONS = ["Video", "In Depth", "Talk to Us"];
+const APPROVED_ACTION_BUTTONS = ["SEE IT", "HEAR IT", "READ IT", "CONTACT US"];
 
 // State Machine Simulator for Section 6 Dashboard & Media Player Model
 class DashboardPlayerStateMachine {
@@ -232,9 +232,9 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
     assert.ok(content.includes("/research-imperatives"), "Footer.tsx must link to /research-imperatives");
   });
 
-  await t.test("Dashboard Action Buttons conform to Section 6 (Video, In Depth, Talk to Us)", () => {
-    assert.equal(APPROVED_ACTION_BUTTONS.length, 3);
-    assert.deepEqual(APPROVED_ACTION_BUTTONS, ["Video", "In Depth", "Talk to Us"]);
+  await t.test("Dashboard Action Buttons conform to Specification (SEE IT, HEAR IT, READ IT, CONTACT US)", () => {
+    assert.equal(APPROVED_ACTION_BUTTONS.length, 4);
+    assert.deepEqual(APPROVED_ACTION_BUTTONS, ["SEE IT", "HEAR IT", "READ IT", "CONTACT US"]);
 
     const playerPath = path.join(BUYFACTS_ROOT, "components", "MockMediaPlayer.tsx");
     assert.ok(fs.existsSync(playerPath), "MockMediaPlayer.tsx must exist");

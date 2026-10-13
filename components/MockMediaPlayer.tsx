@@ -34,9 +34,11 @@ export interface MockMediaPlayerProps {
   moreDetailUrl?: string;
   moreDetailIconUrl?: string;
   videoIconUrl?: string;
+  audioIconUrl?: string;
   contactIconUrl?: string;
   onMoreDetailClick?: () => void;
   onVideoClick?: () => void;
+  onAudioClick?: () => void;
   onContactClick?: () => void;
   onExploreClick?: (action: string) => void;
   onNextMedia?: () => void;
@@ -82,9 +84,11 @@ export default function MockMediaPlayer({
   moreDetailUrl,
   moreDetailIconUrl,
   videoIconUrl,
+  audioIconUrl,
   contactIconUrl,
   onMoreDetailClick,
   onVideoClick,
+  onAudioClick,
   onContactClick,
   onExploreClick,
   onNextMedia,
@@ -254,13 +258,29 @@ export default function MockMediaPlayer({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  // Section 6: Video Button Action
+  // Section 6: Video Button Action (SEE IT)
   const handleVideoAction = () => {
     if (onVideoClick) {
       onVideoClick();
     } else if (onExploreClick) {
       onExploreClick("video");
     } else {
+      togglePlay();
+    }
+  };
+
+  // Section 6: Audio Button Action (HEAR IT)
+  const handleAudioAction = () => {
+    if (onAudioClick) {
+      onAudioClick();
+    } else if (onExploreClick) {
+      onExploreClick("audio");
+    } else {
+      if (isMuted) {
+        setIsMuted(false);
+        if (videoRef.current) videoRef.current.muted = false;
+        if (audioRef.current) audioRef.current.muted = false;
+      }
       togglePlay();
     }
   };
@@ -735,32 +755,48 @@ export default function MockMediaPlayer({
       {/* Horizontal Separator Divider */}
       <hr className={styles.divider} />
 
-      {/* 5. Bottom Action Buttons: Three Principal Choices (Section 6) */}
+      {/* 5. Bottom Action Buttons: Four Choices (SEE IT, HEAR IT, READ IT, CONTACT US) */}
       <div className={styles.actionSection}>
         <div className={styles.actionButtonsRow}>
-          {/* Principal Choice 1: Video */}
+          {/* Choice 1: SEE IT */}
           <button
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnVideo}`}
             onClick={handleVideoAction}
-            aria-label="Video"
-            id="action-btn-video"
+            aria-label="SEE IT"
+            id="action-btn-see-it"
           >
             {videoIconUrl ? (
               <img src={videoIconUrl} alt="" className={styles.btnIconImage} />
             ) : (
-              <Video size={17} className={styles.btnIconPlaceholder} />
+              <Video size={14} className={styles.btnIconPlaceholder} />
             )}
-            <span>Video</span>
+            <span>SEE IT</span>
           </button>
 
-          {/* Principal Choice 2: In Depth */}
+          {/* Choice 2: HEAR IT */}
+          <button
+            type="button"
+            className={`${styles.roundedActionBtn} ${styles.btnAudio}`}
+            onClick={handleAudioAction}
+            aria-label="HEAR IT"
+            id="action-btn-hear-it"
+          >
+            {audioIconUrl ? (
+              <img src={audioIconUrl} alt="" className={styles.btnIconImage} />
+            ) : (
+              <Headphones size={14} className={styles.btnIconPlaceholder} />
+            )}
+            <span>HEAR IT</span>
+          </button>
+
+          {/* Choice 3: READ IT */}
           <button
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnMoreDetail}`}
             onClick={handleInDepthAction}
-            aria-label="In Depth"
-            id="action-btn-in-depth"
+            aria-label="READ IT"
+            id="action-btn-read-it"
           >
             {moreDetailIconUrl ? (
               <img
@@ -769,18 +805,18 @@ export default function MockMediaPlayer({
                 className={styles.btnIconImage}
               />
             ) : (
-              <FileText size={17} className={styles.btnIconPlaceholder} />
+              <FileText size={14} className={styles.btnIconPlaceholder} />
             )}
-            <span>In Depth</span>
+            <span>READ IT</span>
           </button>
 
-          {/* Principal Choice 3: Talk to Us */}
+          {/* Choice 4: CONTACT US */}
           <Link
             href="/#contact"
             className={`${styles.roundedActionBtn} ${styles.btnContact}`}
             onClick={handleContactAction}
-            aria-label="Talk to Us"
-            id="action-btn-talk-to-us"
+            aria-label="CONTACT US"
+            id="action-btn-contact-us"
           >
             {contactIconUrl ? (
               <img
@@ -789,9 +825,9 @@ export default function MockMediaPlayer({
                 className={styles.btnIconImage}
               />
             ) : (
-              <Mail size={17} className={styles.btnIconPlaceholder} />
+              <Mail size={14} className={styles.btnIconPlaceholder} />
             )}
-            <span>Talk to Us</span>
+            <span>CONTACT US</span>
           </Link>
         </div>
       </div>

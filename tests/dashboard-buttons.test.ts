@@ -24,8 +24,10 @@ const PRODUCTS_SERVICES_SPECS = [
   { label: "Content Assessment", tagline: "Maximize the Return on Content" },
 ];
 
-const ACTION_BUTTONS = ["Video", "In Depth", "Talk to Us"];
+const ACTION_BUTTONS = ["SEE IT", "HEAR IT", "READ IT", "CONTACT US"];
 
+import fs from "node:fs";
+import path from "node:path";
 
 function runTests() {
   console.log("Running BuyFacts Dashboard & Media Player Tests ...\n");
@@ -43,9 +45,42 @@ function runTests() {
   }
   console.log("Passed: Products and Services 9/9 button labels and taglines verified");
 
-  assert.equal(ACTION_BUTTONS.length, 3);
-  assert.deepEqual(ACTION_BUTTONS, ["Video", "In Depth", "Talk to Us"]);
-  console.log("Passed: 3 rounded-corner action buttons verified (Video, In Depth, Talk to Us)");
+  // Verify four action buttons below player window
+  assert.equal(ACTION_BUTTONS.length, 4);
+  assert.deepEqual(ACTION_BUTTONS, ["SEE IT", "HEAR IT", "READ IT", "CONTACT US"]);
+  console.log("Passed: 4 action buttons verified (SEE IT, HEAR IT, READ IT, CONTACT US)");
+
+  // Verify MockMediaPlayer source file has all 4 uppercase buttons and icons
+  const playerPath = path.join(__dirname, "..", "components", "MockMediaPlayer.tsx");
+  assert.ok(fs.existsSync(playerPath), "MockMediaPlayer.tsx must exist");
+  const playerContent = fs.readFileSync(playerPath, "utf-8");
+
+  for (const btn of ACTION_BUTTONS) {
+    assert.ok(playerContent.includes(`<span>${btn}</span>`), `MockMediaPlayer.tsx must render uppercase label "${btn}"`);
+  }
+  assert.ok(playerContent.includes("<Video"), "SEE IT button must retain Video icon");
+  assert.ok(playerContent.includes("<Headphones"), "HEAR IT button must retain Headphones icon");
+  assert.ok(playerContent.includes("<FileText"), "READ IT button must retain FileText icon");
+  assert.ok(playerContent.includes("<Mail"), "CONTACT US button must retain Mail icon");
+  console.log("Passed: All 4 buttons retain icons and uppercase labels");
+
+  // Verify CSS module rules for uniform dimensions (120px x 36px), 12px gap, and responsive flex-wrap
+  const cssPath = path.join(__dirname, "..", "components", "MockMediaPlayer.module.css");
+  assert.ok(fs.existsSync(cssPath), "MockMediaPlayer.module.css must exist");
+  const cssContent = fs.readFileSync(cssPath, "utf-8");
+
+  assert.ok(cssContent.includes("width: 120px"), "Action buttons must be reduced to 120px width");
+  assert.ok(cssContent.includes("height: 36px"), "Action buttons must be reduced to 36px height");
+  assert.ok(cssContent.includes("gap: 12px"), "Buttons must have 12px gap between buttons");
+  assert.ok(cssContent.includes("flex-wrap: wrap"), "Action buttons row must support flex-wrap for responsive rearrangement");
+  assert.ok(cssContent.includes("text-transform: uppercase"), "Buttons must use uppercase styling");
+  console.log("Passed: CSS enforces uniform 120px x 36px dimensions, 12px gap, and responsive rearrangement");
+
+  // Verify zero emojis
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+  assert.ok(!emojiRegex.test(playerContent), "MockMediaPlayer.tsx must contain zero emojis");
+  assert.ok(!emojiRegex.test(cssContent), "MockMediaPlayer.module.css must contain zero emojis");
+  console.log("Passed: Zero-emoji compliance verified");
 
   console.log("\nSuccess: All dashboard and player window tests passed!");
 }
