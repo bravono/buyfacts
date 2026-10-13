@@ -125,6 +125,9 @@ Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
+- **Session Initialization (`task: "init"`)**:
+  - Automatically initializes or resets the session at `taskIndex: 0`.
+  - Immediately serves Task 1 (the first puzzle in the sequence) with active rotation, task heading, description, and image URL so the solver begins seamlessly without displaying a placeholder welcome screen.
 - **Section 7.4 Deterministic Scoring Paths**:
   - **Path 1**: Three correct out of three -> Immediate Pass (`fireworks: true`).
   - **Path 2**: Two correct after three -> Presents a 4th fallback question.
@@ -386,6 +389,9 @@ Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
+- **Session Initialization (`task: "init"`)**:
+  - Automatically initializes or resets the session at `taskIndex: 0`.
+  - Immediately serves Task 1 (the first puzzle in the sequence) with active rotation, task heading, description, and image URL so the solver begins seamlessly without displaying a placeholder welcome screen.
 - **Section 7.4 Deterministic Scoring Paths**:
   - **Path 1**: Three correct out of three -> Immediate Pass (`fireworks: true`).
   - **Path 2**: Two correct after three -> Presents a 4th fallback question.

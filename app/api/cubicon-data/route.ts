@@ -530,37 +530,61 @@ export async function POST(request: Request) {
     const providedUserEmail = parsed.userEmail ? String(parsed.userEmail).trim() : "";
 
     if (isInit) {
-      const sessionId = generateSessionId();
-      await prisma.cubiconSession.create({
-        data: {
-          session_id: sessionId,
-          sequence_id: seqId,
-          taskIndex: -1,
-          user_email: providedUserEmail,
-          passedPuzzles: 0,
-          totalPuzzlesAttempted: 0,
-        },
+      const sessionId = (parsed.sessionId && parsed.sessionId !== "12345")
+        ? String(parsed.sessionId)
+        : generateSessionId();
+
+      const existingSession = await prisma.cubiconSession.findUnique({
+        where: { session_id: sessionId },
       });
 
+      if (existingSession) {
+        await prisma.cubiconSession.update({
+          where: { id: existingSession.id },
+          data: {
+            sequence_id: seqId,
+            taskIndex: 0,
+            user_email: providedUserEmail || existingSession.user_email,
+            passedPuzzles: 0,
+            totalPuzzlesAttempted: 0,
+            previous_result: null,
+          },
+        });
+      } else {
+        await prisma.cubiconSession.create({
+          data: {
+            session_id: sessionId,
+            sequence_id: seqId,
+            taskIndex: 0,
+            user_email: providedUserEmail,
+            passedPuzzles: 0,
+            totalPuzzlesAttempted: 0,
+          },
+        });
+      }
+
+      const firstPuzzle = fallbackTasks[0];
       return NextResponse.json(
         sanitizePublicPayload({
           sessionId,
           sequenceId: seqId,
-          sequenceTitle: currentSequence?.title || "Welcome to Cubicon",
+          sequenceTitle: currentSequence?.title || "Cubicon Challenge",
           ofTasks: Math.min(3, totalTasks),
-          task: 0,
-          heading: "Welcome to Cubicon",
-          description: "Press Start to begin your puzzle.",
-          screen: "Active_front",
-          image: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
+          task: 1,
+          heading: firstPuzzle.heading,
+          description: firstPuzzle.description,
+          screen: firstPuzzle.screen || "Active_front",
+          image: formatImageUrl(firstPuzzle.image),
           rotation: [0, 0, 0],
-          rotationInterval: 0,
-          rotationDirection: mapRotationDirection(seqRotationDir),
-          isFinal: false,
+          rotationInterval: firstPuzzle.rotationInterval || seqDefaultInterval,
+          rotationDirection: mapRotationDirection(firstPuzzle.rotation || seqRotationDir),
+          isFinal: totalTasks === 1,
           completed: false,
           passed: false,
           redirectUrl: "",
           result: null,
+          question_type: firstPuzzle.question_type || "drag",
+          questionType: firstPuzzle.question_type || "drag",
         }),
         corsHeaders()
       );
@@ -604,6 +628,8 @@ export async function POST(request: Request) {
           passed: false,
           result: null,
           redirectUrl: "",
+          question_type: firstPuzzle.question_type || "drag",
+          questionType: firstPuzzle.question_type || "drag",
         }),
         corsHeaders()
       );
@@ -642,6 +668,8 @@ export async function POST(request: Request) {
           passed: false,
           redirectUrl: "",
           result: null,
+          question_type: puzzle.question_type || "drag",
+          questionType: puzzle.question_type || "drag",
         }),
         corsHeaders()
       );
@@ -714,6 +742,8 @@ export async function POST(request: Request) {
           score: session.passedPuzzles,
           result: session.previous_result === "p" || session.previous_result === "f" ? session.previous_result : null,
           redirectUrl: "",
+          question_type: activePuzzle.question_type || "drag",
+          questionType: activePuzzle.question_type || "drag",
         }),
         corsHeaders()
       );
@@ -835,6 +865,8 @@ export async function POST(request: Request) {
         score: newPassedCount,
         redirectUrl: "",
         result: attemptResult,
+        question_type: nextPuzzle.question_type || "drag",
+        questionType: nextPuzzle.question_type || "drag",
       }),
       corsHeaders()
     );
