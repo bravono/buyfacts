@@ -1086,8 +1086,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   disabled={isUploading || fileQueue.every((i) => i.status === 'success')}
                   className="btn btn-primary"
                   style={{
-                    width: '100%',
-                    padding: '0.9rem',
+                    width: 'fit-content',
+                    padding: '0.9rem 1.6rem',
                     borderRadius: '12px',
                     display: 'flex',
                     alignItems: 'center',

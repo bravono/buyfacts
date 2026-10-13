@@ -1346,7 +1346,9 @@ export default function CubiconPage() {
               <p className={styles.cardText}>
                 Automated bots skew survey datasets and destroy research
                 integrity. Traditional CAPTCHA tests are failing to stop modern
-                scripted bots from polluting commercial panels.
+                scripted bots from polluting commercial panels. Cubicon is
+                designed to resist automated script attacks while ensuring
+                authentic participant verification.
               </p>
             </div>
 
@@ -1814,16 +1816,21 @@ export default function CubiconPage() {
                   )}
 
                   <div
-                    style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}
+                    style={{
+                      display: "flex",
+                      gap: "1rem",
+                      marginTop: "2rem",
+                      alignItems: "center",
+                    }}
                   >
                     {formStep > 1 && (
                       <button
                         type="button"
                         onClick={prevStep}
                         style={{
-                          padding: "1.1rem",
+                          padding: "0.85rem 1.8rem",
                           fontSize: "1rem",
-                          flex: 1,
+                          width: "fit-content",
                           background: "transparent",
                           border: "1px solid var(--interactive-blue)",
                           color: "var(--interactive-blue)",
@@ -1842,9 +1849,9 @@ export default function CubiconPage() {
                         onClick={nextStep}
                         className="btn btn-primary"
                         style={{
-                          padding: "1.1rem",
-                          fontSize: "1.1rem",
-                          flex: 2,
+                          padding: "0.85rem 2.2rem",
+                          fontSize: "1.05rem",
+                          width: "fit-content",
                         }}
                       >
                         Continue
@@ -1856,9 +1863,9 @@ export default function CubiconPage() {
                         disabled={isSubmitting}
                         className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
                         style={{
-                          padding: "1.1rem",
-                          fontSize: "1.1rem",
-                          flex: 2,
+                          padding: "0.85rem 2.2rem",
+                          fontSize: "1.05rem",
+                          width: "fit-content",
                         }}
                         id="submit-cubicon-form"
                       >

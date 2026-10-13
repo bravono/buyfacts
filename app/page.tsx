@@ -493,8 +493,7 @@ export default function Home() {
               Peer Benchmark Incentive Surveys
             </h2>
             <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Every
-              participant.
+              Real-Time Peer Comparisons. Relevant Insight for Every participant.
             </p>
 
             {/* Accent Badges matching Mockup image */}
@@ -1285,7 +1284,11 @@ export default function Home() {
                   disabled={isSubmitting}
                   className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
                   id="contact-submit-btn"
-                  style={{ width: "100%", marginTop: "0.5rem" }}
+                  style={{
+                    width: "fit-content",
+                    alignSelf: "center",
+                    margin: "0.5rem auto 0 auto",
+                  }}
                 >
                   {isSubmitting
                     ? "Submitting Inquiry..."
