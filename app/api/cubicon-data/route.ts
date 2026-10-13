@@ -577,6 +577,7 @@ export async function POST(request: Request) {
       }
 
       const firstPuzzle = fallbackTasks[0];
+      const firstPuzzle = fallbackTasks[0];
       return NextResponse.json(
         sanitizePublicPayload({
           sessionId,
