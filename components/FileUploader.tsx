@@ -1001,7 +1001,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                className="hidden"
+                style={{ display: 'none' }}
                 disabled={isUploading}
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
@@ -1015,7 +1015,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 type="file"
                 multiple
                 {...({ webkitdirectory: '', directory: '' } as any)}
-                className="hidden"
+                style={{ display: 'none' }}
                 disabled={isUploading}
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
