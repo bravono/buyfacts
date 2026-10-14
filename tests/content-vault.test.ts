@@ -371,6 +371,9 @@ test("Content Vault Asset Hub and Social Syndication Test Suite", async (t) => {
     const vaultFiles = [
       path.join(BUYFACTS_ROOT, "lib", "vault.ts"),
       path.join(BUYFACTS_ROOT, "app", "vault", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      path.join(BUYFACTS_ROOT, "components", "Navbar.tsx"),
       path.join(BUYFACTS_ROOT, "app", "api", "vault", "syndicate", "route.ts"),
       path.join(BUYFACTS_ROOT, "components", "vault", "VaultLayout.tsx"),
       path.join(BUYFACTS_ROOT, "components", "vault", "TopicSidebar.tsx"),
@@ -393,5 +396,59 @@ test("Content Vault Asset Hub and Social Syndication Test Suite", async (t) => {
         );
       }
     }
+  });
+
+  await t.test("14. Content Vault Entry Points (Navbar & Homepage Hero Gateway)", () => {
+    const navbarPath = path.join(BUYFACTS_ROOT, "components", "Navbar.tsx");
+    const homePath = path.join(BUYFACTS_ROOT, "app", "page.tsx");
+    const homeCssPath = path.join(BUYFACTS_ROOT, "app", "page.module.css");
+
+    assert.ok(fs.existsSync(navbarPath), "Navbar.tsx must exist");
+    assert.ok(fs.existsSync(homePath), "app/page.tsx must exist");
+    assert.ok(fs.existsSync(homeCssPath), "app/page.module.css must exist");
+
+    const navbarContent = fs.readFileSync(navbarPath, "utf-8");
+    const homeContent = fs.readFileSync(homePath, "utf-8");
+    const homeCssContent = fs.readFileSync(homeCssPath, "utf-8");
+
+    // Desktop & Mobile Navbar Links
+    assert.ok(
+      navbarContent.includes('id="nav-link-vault"'),
+      "Navbar.tsx must contain desktop link with id nav-link-vault"
+    );
+    assert.ok(
+      navbarContent.includes('href="/vault"'),
+      "Navbar.tsx must link to /vault"
+    );
+    assert.ok(
+      navbarContent.includes('CONTENT VAULT'),
+      "Navbar.tsx must display CONTENT VAULT label"
+    );
+    assert.ok(
+      navbarContent.includes('id="mob-link-vault"'),
+      "Navbar.tsx must contain mobile link with id mob-link-vault"
+    );
+
+    // Homepage Hero Gateway Banner
+    assert.ok(
+      homeContent.includes('id="hero-vault-banner"'),
+      "app/page.tsx must contain hero-vault-banner container"
+    );
+    assert.ok(
+      homeContent.includes('id="hero-vault-cta-btn"'),
+      "app/page.tsx must contain hero-vault-cta-btn link"
+    );
+    assert.ok(
+      homeContent.includes('href="/vault"'),
+      "app/page.tsx hero banner must link to /vault"
+    );
+    assert.ok(
+      homeContent.includes("Welcome Guest! Explore Our Multi-Format Resource Vault"),
+      "app/page.tsx hero banner must greet Guests"
+    );
+    assert.ok(
+      homeCssContent.includes(".vaultHeroBanner"),
+      "app/page.module.css must define .vaultHeroBanner styling"
+    );
   });
 });

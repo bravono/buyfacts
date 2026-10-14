@@ -115,6 +115,7 @@ export default function Navbar({
   const isInnovationsActive = pathname === "/products-services";
   const isResearchActive = pathname === "/research-imperatives";
   const isCubiconActive = pathname.startsWith("/cubicon");
+  const isVaultActive = pathname.startsWith("/vault");
 
   const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed;
 
@@ -172,6 +173,15 @@ export default function Navbar({
             onClick={() => setIsContactCollapsed(false)}
           >
             CUBICON
+          </Link>
+
+          <Link
+            href="/vault"
+            className={`${styles.navLink} ${isVaultActive ? styles.navLinkActive : ""}`}
+            id="nav-link-vault"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            CONTENT VAULT
           </Link>
 
           <Link
@@ -261,6 +271,17 @@ export default function Navbar({
             id="mob-link-cubicon"
           >
             CUBICON
+          </Link>
+          <Link
+            href="/vault"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isVaultActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-vault"
+          >
+            CONTENT VAULT
           </Link>
           <Link
             href="/#about"
