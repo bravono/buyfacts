@@ -53,15 +53,7 @@ export default function Footer() {
             <span style={{ opacity: 0.3, color: 'var(--text-muted)' }}>•</span>
             <Link
               href="/file-upload"
-              style={{
-                fontSize: '0.8rem',
-                color: 'var(--text-muted)',
-                opacity: 0.6,
-                textDecoration: 'none',
-                transition: 'opacity 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+              className={styles.adminLink}
             >
               Admin Access
             </Link>
