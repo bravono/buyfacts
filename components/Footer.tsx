@@ -29,6 +29,7 @@ export default function Footer() {
               <li><Link href="/#about">About Us</Link></li>
               <li><Link href="/#what-sets-us-apart">What Sets Us Apart</Link></li>
               <li><Link href="/#contact">Contact</Link></li>
+              <li><Link href="/vault">Content Vault</Link></li>
               <li><Link href="/feedback">Feedback & Reviews</Link></li>
             </ul>
           </div>

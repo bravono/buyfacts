@@ -816,6 +816,91 @@ BuyFacts supports media uploads up to 1GB (`1024 * 1024 * 1024` bytes) across im
 4. **Automated Verification**:
    - Test suites in `tests/upload-limits.test.ts`, `tests/minio-multipart.test.ts`, and `tests/minio-upload.test.ts` validating exact 1GB boundaries, over-limit rejection, chunk count formulas, and path sanitization.
 
+---
+
+## 16. Content Vault Asset Hub & Social Syndication Pipeline (/vault)
+
+### Overview
+The **Content Vault** (`/vault`) is a structured, multi-format resource hub aggregating B2B research articles, videos, PDFs, and audio content, organized by products and dashboard topics with AI-powered keyword indexing. Site visitors are referred to as **"Guests"** throughout the codebase, UX copy, and components.
+
+### Information Architecture & Routing
+- **Route**: `/vault`
+- **Header Bar**: Global keyword search input (`VaultSearch`) + format filter tabs (`All`, `Articles`, `Videos`, `PDFs`, `Audio`).
+- **Left Sidebar**: `TopicSidebar` organizing categories into **Products** (e.g., Cubicon 3D, ResearchLib, TRIAD Framework, Value Quantification) and **Dashboard Topics** (e.g., Research Planning, Survey Design, Story-Based Surveys, Participant Validation, Pattern Insights) with live asset counts.
+- **Main Content Area**: Expandable asset list/cards sorted strictly chronologically (`ORDER BY publishedAt DESC`), showing title, format badge, publication date, generated keywords, and topic tags with interactive video players, audio controls, and PDF viewers.
+
+### Database Schema (Prisma)
+- **ContentFormat Enum**: `ARTICLE`, `VIDEO`, `PDF`, `AUDIO`.
+- **VaultAsset Model**: `id` (CUID), `title`, `description`, `format`, `sourceUrl`, `embedCode`, `topicId`, `keywords` (JSON serialized for SQLite / array for PostgreSQL), `isPublished`, `publishedAt`, `createdAt`, `updatedAt`.
+  - Indexes on `publishedAt(sort: Desc)`, `format`, and `topicId`.
+- **Topic Model**: `id` (CUID), `name` (unique), `slug` (unique), `category` ("Product" or "Dashboard Topic"), `assets` (relation), `createdAt`.
+
+### PostgreSQL Equivalent Schema Definition
+```prisma
+enum ContentFormat {
+  ARTICLE
+  VIDEO
+  PDF
+  AUDIO
+}
+
+model VaultAsset {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?       @db.Text
+  format       ContentFormat
+  sourceUrl    String?       // YouTube video URL, LinkedIn post URL, PDF/Audio cloud link
+  embedCode    String?       // Dynamic embed frame/player if applicable
+  topicId      String
+  topic        Topic         @relation(fields: [topicId], references: [id])
+  keywords     String[]      // AI-generated tags for fast search matching
+  isPublished  Boolean       @default(true)
+  publishedAt  DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([format])
+  @@index([topicId])
+}
+
+model Topic {
+  id          String       @id @default(cuid())
+  name        String       @unique // e.g., "Product A", "Analytics Dashboard"
+  slug        String       @unique
+  category    String       // "Product" or "Dashboard Topic"
+  assets      VaultAsset[]
+  createdAt   DateTime     @default(now())
+}
+```
+
+### Ingestion & AI Auto-Tagging Pipeline (/api/vault/syndicate)
+Webhook endpoint receiving new content triggers (YouTube, LinkedIn, manual uploads):
+1. **Payload Processing**: Parses title, media URL/file, raw transcript or text body, format, topic, and custom keywords.
+2. **AI Keyword Generation**: Passes the incoming text/transcript to an LLM completion API (OpenAI/Claude) with prompt:
+   > *"Extract 5 to 7 high-intent search keywords and classify into existing topic categories from the provided text."*
+   Falls back to a deterministic NLP keyword extraction engine when external API keys are not supplied.
+3. **Storage**: Saves normalized asset to `VaultAsset` table with extracted `keywords` array, topic relation, and default `publishedAt` timestamp.
+
+### Component Architecture
+- `app/vault/page.tsx`: Server Component fetching assets and topics based on URL search parameters (`topic`, `format`, `q`).
+- `components/vault/VaultLayout.tsx`: Master layout coordinating header bar, format filter tabs, sidebar, and grid.
+- `components/vault/TopicSidebar.tsx`: Category filtering by Products and Dashboard Topics.
+- `components/vault/AssetGrid.tsx`: Chronological grid container with empty state handling.
+- `components/vault/AssetCard.tsx`: Individual asset card featuring format badges, publication date, keyword chips, and interactive media player triggers (YouTube embed, HTML5 video/audio, and embedded PDF viewer).
+- `components/vault/VaultSearch.tsx`: Real-time keyword search bar greeting Guests.
+
+### Automated Verification
+- Full test suite in `tests/content-vault.test.ts` covering:
+  - Utility functions (`parseKeywords`, `serializeKeywords`, `normalizeContentFormat`, `generateYouTubeEmbed`).
+  - Deterministic NLP keyword extraction (5 to 7 high-intent keywords).
+  - AI keyword generation and topic classification pipeline.
+  - Syndication API endpoints (`GET /api/vault/syndicate` and `POST /api/vault/syndicate`).
+  - Server-side asset filtering and strict chronological ordering (`publishedAt DESC`).
+  - UX terminology compliance ("Guest" / "Guests").
+  - Zero-emoji compliance across all source and test files.
+
+
 
 
 

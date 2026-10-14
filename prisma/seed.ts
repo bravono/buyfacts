@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ContentFormat } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import path from 'path'
 import { hashPassword } from '../lib/auth/password'
@@ -26,6 +26,9 @@ async function main() {
   await prisma.cubiconRegistration.deleteMany();
   await prisma.cubiconShare.deleteMany();
   await prisma.feedbackSubmission.deleteMany();
+
+  await prisma.vaultAsset.deleteMany();
+  await prisma.topic.deleteMany();
 
   await prisma.dashboardButton.deleteMany();
   await prisma.mediaAsset.deleteMany();
@@ -385,7 +388,133 @@ async function main() {
       },
     });
   }
-  console.log("   Seeded Cubicon Sequences (default, contact_form) and associated Tasks");
+  // 8. Content Vault Topics and Multi-Format Assets
+  console.log("8. Seeding Content Vault Topics and Assets for Guests...");
+
+  const vaultTopics = [
+    // Products
+    { name: "Cubicon 3D", slug: "cubicon-3d", category: "Product" },
+    { name: "ResearchLib", slug: "research-lib", category: "Product" },
+    { name: "TRIAD Framework", slug: "triad-framework", category: "Product" },
+    { name: "Value Quantification", slug: "value-quantification", category: "Product" },
+    // Dashboard Topics
+    { name: "Research Planning", slug: "research-planning", category: "Dashboard Topic" },
+    { name: "Survey Design", slug: "survey-design", category: "Dashboard Topic" },
+    { name: "Story-Based Surveys", slug: "story-based-surveys", category: "Dashboard Topic" },
+    { name: "Participant Validation", slug: "participant-validation", category: "Dashboard Topic" },
+    { name: "Pattern Insights", slug: "pattern-insights", category: "Dashboard Topic" },
+  ];
+
+  const createdTopics: Record<string, string> = {};
+  for (const t of vaultTopics) {
+    const topicRecord = await prisma.topic.create({
+      data: t,
+    });
+    createdTopics[t.slug] = topicRecord.id;
+  }
+  console.log(`   Seeded ${vaultTopics.length} Topics (Products and Dashboard Topics)`);
+
+  const vaultAssets: Array<{
+    title: string;
+    description: string;
+    format: ContentFormat;
+    sourceUrl: string;
+    embedCode?: string;
+    topicId: string;
+    keywords: string;
+    isPublished: boolean;
+    publishedAt: Date;
+  }> = [
+    {
+      title: "The Rule of Three in B2B Customer Discovery",
+      description: "How triangulating qualitative responses through three distinct validation layers reduces market uncertainty before full-scale investments.",
+      format: ContentFormat.ARTICLE,
+      sourceUrl: "https://www.linkedin.com/pulse/rule-of-three-b2b-customer-discovery-buyfacts",
+      topicId: createdTopics["triad-framework"],
+      keywords: JSON.stringify(["rule of three", "customer discovery", "b2b research", "validation layers", "market uncertainty", "decision making"]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-15T10:00:00Z"),
+    },
+    {
+      title: "Cubicon 3D Spatial Survey Architecture Walkthrough",
+      description: "Complete guided walkthrough of spatial 3D puzzle validation and drag-and-drop coordinate evaluation.",
+      format: ContentFormat.VIDEO,
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      embedCode: '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Cubicon 3D Spatial Survey Architecture Walkthrough" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+      topicId: createdTopics["cubicon-3d"],
+      keywords: JSON.stringify(["cubicon 3d", "spatial survey", "puzzle validation", "interactive coordinate", "participant engagement"]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-20T14:30:00Z"),
+    },
+    {
+      title: "Return on Effort (ROE) Framework Whitepaper",
+      description: "Comprehensive architectural whitepaper detailing mathematical models for maximizing researcher yield per fieldwork hour.",
+      format: ContentFormat.PDF,
+      sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
+      topicId: createdTopics["value-quantification"],
+      keywords: JSON.stringify(["return on effort", "roe framework", "research yield", "fieldwork economics", "b2b metrics"]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-28T09:00:00Z"),
+    },
+    {
+      title: "Early Market Movement Recognition Audio Briefing",
+      description: "Executive audio briefing on detecting subtle behavioral shifts in enterprise buyer panels before quarterly churn signals appear.",
+      format: ContentFormat.AUDIO,
+      sourceUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      topicId: createdTopics["pattern-insights"],
+      keywords: JSON.stringify(["early signals", "market movement", "buyer patterns", "executive briefing", "b2b intelligence"]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-02T16:00:00Z"),
+    },
+    {
+      title: "Survey Design Imperatives: Eliminating Acquiescence Bias",
+      description: "Empirical strategies for framing dual-choice prompts and story-based exercises that force deliberate cognitive engagement.",
+      format: ContentFormat.ARTICLE,
+      sourceUrl: "https://buyfacts.com/research-imperatives",
+      topicId: createdTopics["survey-design"],
+      keywords: JSON.stringify(["survey design", "bias elimination", "story-based surveys", "cognitive engagement", "question framing"]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-08T11:15:00Z"),
+    },
+    {
+      title: "ResearchLib Narrative Survey Demo",
+      description: "Demonstration of dynamic fill-in-the-blank narrative survey interfaces that dramatically improve completion fidelity.",
+      format: ContentFormat.VIDEO,
+      sourceUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      embedCode: '<video controls preload="metadata" style="width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4"></video>',
+      topicId: createdTopics["research-lib"],
+      keywords: JSON.stringify(["researchlib", "narrative survey", "fill in the blanks", "completion fidelity", "storytelling"]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-12T13:45:00Z"),
+    },
+    {
+      title: "Participant Validation Protocol Reference",
+      description: "Standard operating procedures for establishing verified identity and domain authority during high-stakes survey intake.",
+      format: ContentFormat.PDF,
+      sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
+      topicId: createdTopics["participant-validation"],
+      keywords: JSON.stringify(["participant validation", "identity verification", "high stakes research", "data fidelity", "panel management"]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-13T10:00:00Z"),
+    },
+    {
+      title: "Story-Based Survey Methodology Deep Dive",
+      description: "In-depth audio masterclass on turning standard survey friction into engaging narrative exploration.",
+      format: ContentFormat.AUDIO,
+      sourceUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      topicId: createdTopics["story-based-surveys"],
+      keywords: JSON.stringify(["story based surveys", "narrative friction", "audio masterclass", "qualitative depth", "engagement"]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-14T08:30:00Z"),
+    },
+  ];
+
+  for (const a of vaultAssets) {
+    await prisma.vaultAsset.create({
+      data: a,
+    });
+  }
+  console.log(`   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`);
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }

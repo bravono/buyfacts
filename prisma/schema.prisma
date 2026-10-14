@@ -226,3 +226,40 @@ model FeedbackSubmission {
   rating       Int?      @default(0)
   createdAt    DateTime? @default(now())
 }
+
+enum ContentFormat {
+  ARTICLE
+  VIDEO
+  PDF
+  AUDIO
+}
+
+model VaultAsset {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  format       ContentFormat
+  sourceUrl    String?
+  embedCode    String?
+  topicId      String
+  topic        Topic         @relation(fields: [topicId], references: [id])
+  keywords     String        // Stored as JSON string or comma-separated string for SQLite compatibility
+  isPublished  Boolean       @default(true)
+  publishedAt  DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([format])
+  @@index([topicId])
+}
+
+model Topic {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  category    String
+  assets      VaultAsset[]
+  createdAt   DateTime     @default(now())
+}
+
