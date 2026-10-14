@@ -11,6 +11,7 @@ BuyFacts is an enterprise B2B research methodology and survey technology platfor
 - **Frontend Framework**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: CSS Modules, responsive design, dark-mode glassmorphic cyber theme
 - **Database & ORM**: SQLite (`prisma/dev.db`), Prisma ORM v7 with `@prisma/adapter-better-sqlite3`
+- **3D Graphics & Visuals**: Three.js (`three`), Canvas-Confetti (`canvas-confetti`)
 - **Email Delivery**: Resend API (`lib/resend.ts`)
 - **Testing Engine**: Node.js Test Runner (`node:test`, `node:assert/strict`, `tsx`)
 
