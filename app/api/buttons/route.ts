@@ -217,23 +217,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { id, mediaUrl, mediaType, subtitle } = await req.json();
+    const { id, mediaUrl, seeItUrl, hearItUrl, readItUrl, mediaType, subtitle } = await req.json();
 
     if (!id) {
       return NextResponse.json({ error: "Button ID is required" }, { status: 400 });
     }
 
-    if (!mediaUrl) {
-      return NextResponse.json({ error: "Media URL is required" }, { status: 400 });
+    const updateData: Record<string, any> = {};
+    if (mediaUrl !== undefined) updateData.mediaUrl = mediaUrl;
+    if (seeItUrl !== undefined) updateData.seeItUrl = seeItUrl;
+    if (hearItUrl !== undefined) updateData.hearItUrl = hearItUrl;
+    if (readItUrl !== undefined) updateData.readItUrl = readItUrl;
+    if (mediaType !== undefined) updateData.mediaType = mediaType;
+    if (subtitle !== undefined) updateData.subtitle = subtitle;
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No fields provided to update" }, { status: 400 });
     }
 
     const updatedButton = await prisma.dashboardButton.update({
       where: { id },
-      data: {
-        mediaUrl,
-        ...(mediaType && { mediaType }),
-        ...(subtitle && { subtitle }),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, button: updatedButton });

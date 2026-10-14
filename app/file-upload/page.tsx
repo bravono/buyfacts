@@ -34,6 +34,8 @@ import {
   Copy,
   ExternalLink,
   Layers,
+  Video,
+  Headphones,
 } from "lucide-react";
 
 interface SavedRecord {
@@ -49,6 +51,9 @@ interface DatabaseButton {
   id: string;
   label: string;
   mediaUrl: string;
+  seeItUrl?: string | null;
+  hearItUrl?: string | null;
+  readItUrl?: string | null;
   mediaType: string;
   subtitle: string | null;
   category: string;
@@ -266,6 +271,48 @@ export default function FileUploadDemoPage() {
       fetchHistory();
       fetchStorageFiles(selectedFolderFilter);
     }
+  };
+
+  const [savingButtonSubLinkId, setSavingButtonSubLinkId] = useState<string | null>(null);
+
+  const handleUpdateSubLink = async (
+    buttonId: string,
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    url: string
+  ) => {
+    const key = `${buttonId}-${field}`;
+    setSavingButtonSubLinkId(key);
+    try {
+      const res = await fetch("/api/buttons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: buttonId,
+          [field]: url,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setMockButtons((prev) =>
+          prev.map((btn) => (btn.id === buttonId ? { ...btn, [field]: url } : btn))
+        );
+      }
+    } catch (err) {
+      console.error(`Failed to update ${field} on button:`, err);
+    } finally {
+      setTimeout(() => setSavingButtonSubLinkId(null), 1500);
+    }
+  };
+
+  const handleLocalSubLinkChange = (
+    buttonId: string,
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    val: string
+  ) => {
+    setMockButtons((prev) =>
+      prev.map((btn) => (btn.id === buttonId ? { ...btn, [field]: val } : btn))
+    );
   };
 
   const handleAssignUrl = async (buttonId: string, url: string) => {
@@ -615,58 +662,261 @@ export default function FileUploadDemoPage() {
                     const BtnIcon = getIconForType(btn.mediaType);
                     return (
                       <div key={btn.id} className={styles.card}>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.75rem",
-                          }}
-                        >
-                          <div className={styles.cardHeader}>
-                            <div className={styles.cardIcon}>
-                              <BtnIcon className="w-4 h-4" />
-                            </div>
-                            <span className={styles.cardLabel}>{btn.label}</span>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.cardIcon}>
+                            <BtnIcon className="w-4 h-4" />
                           </div>
-
-                          <div className={styles.linkSection}>
-                            <span className={styles.linkLabel}>Assigned Link</span>
-                            <div className={styles.linkBox} title={btn.mediaUrl}>
-                              {btn.mediaUrl}
-                            </div>
+                          <div>
+                            <span className={styles.cardLabel}>{btn.label}</span>
+                            {btn.subtitle && (
+                              <span className={styles.cardSubtitle}>{btn.subtitle}</span>
+                            )}
                           </div>
                         </div>
 
-                        <div className={styles.cardFooter}>
-                          <button
-                            type="button"
-                            disabled={!lastUploadedUrl}
-                            onClick={() => handleAssignUrl(btn.id, lastUploadedUrl!)}
-                            className={`${styles.linkBtn} ${
-                              assigningButtonId === btn.id
-                                ? styles.linkBtnSuccess
-                                : lastUploadedUrl
-                                ? styles.linkBtnEnabled
-                                : styles.linkBtnDisabled
-                            }`}
-                          >
-                            {assigningButtonId === btn.id ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" /> Linked!
-                              </>
-                            ) : (
-                              "Link URL"
-                            )}
-                          </button>
+                        {/* Four Media Action Rows: Button Link, SEE IT, HEAR IT, READ IT */}
+                        <div className={styles.subLinksSection}>
+                          {/* 1. BUTTON LINK (Primary Default Link) */}
+                          <div className={styles.subLinkRow}>
+                            <div className={styles.subLinkHeader}>
+                              <div className={styles.subLinkLabel}>
+                                <LinkIcon className="w-3.5 h-3.5 text-[var(--interactive-blue)]" />
+                                <span>BUTTON LINK (Primary)</span>
+                              </div>
+                              <div className={styles.subLinkActions}>
+                                <button
+                                  type="button"
+                                  disabled={!lastUploadedUrl}
+                                  onClick={() =>
+                                    handleUpdateSubLink(btn.id, "mediaUrl", lastUploadedUrl!)
+                                  }
+                                  className={styles.subLinkPasteBtn}
+                                  title={
+                                    lastUploadedUrl
+                                      ? `Link staged URL: ${lastUploadedUrl}`
+                                      : "No staged URL"
+                                  }
+                                >
+                                  {savingButtonSubLinkId === `${btn.id}-mediaUrl` ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <LinkIcon className="w-3 h-3" /> Link Staged
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!btn.mediaUrl}
+                                  onClick={() =>
+                                    triggerPreview(btn.mediaUrl, `${btn.label} - Button Link`)
+                                  }
+                                  className={styles.previewIconBtn}
+                                  title="Preview Button Link"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className={styles.subLinkInputWrapper}>
+                              <input
+                                type="text"
+                                value={btn.mediaUrl ?? ""}
+                                onChange={(e) =>
+                                  handleLocalSubLinkChange(btn.id, "mediaUrl", e.target.value)
+                                }
+                                onBlur={(e) =>
+                                  handleUpdateSubLink(btn.id, "mediaUrl", e.target.value)
+                                }
+                                placeholder="Paste or type main button link (e.g. S3 URL, video, doc, web)..."
+                                className={styles.subLinkInput}
+                              />
+                            </div>
+                          </div>
 
-                          <button
-                            type="button"
-                            onClick={() => triggerPreview(btn.mediaUrl, btn.label)}
-                            className={styles.previewIconBtn}
-                            title="Preview Linked Asset"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          {/* 2. SEE IT (Video) */}
+                          <div className={styles.subLinkRow}>
+                            <div className={styles.subLinkHeader}>
+                              <div className={styles.subLinkLabel}>
+                                <Video className="w-3.5 h-3.5 text-[#ea425f]" />
+                                <span>SEE IT (Video)</span>
+                              </div>
+                              <div className={styles.subLinkActions}>
+                                <button
+                                  type="button"
+                                  disabled={!lastUploadedUrl}
+                                  onClick={() =>
+                                    handleUpdateSubLink(btn.id, "seeItUrl", lastUploadedUrl!)
+                                  }
+                                  className={styles.subLinkPasteBtn}
+                                  title={
+                                    lastUploadedUrl
+                                      ? `Link staged URL: ${lastUploadedUrl}`
+                                      : "No staged URL"
+                                  }
+                                >
+                                  {savingButtonSubLinkId === `${btn.id}-seeItUrl` ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <LinkIcon className="w-3 h-3" /> Link Staged
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!btn.seeItUrl && !btn.mediaUrl}
+                                  onClick={() =>
+                                    triggerPreview(
+                                      btn.seeItUrl || btn.mediaUrl,
+                                      `${btn.label} - SEE IT`
+                                    )
+                                  }
+                                  className={styles.previewIconBtn}
+                                  title="Preview SEE IT Video"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className={styles.subLinkInputWrapper}>
+                              <input
+                                type="text"
+                                value={btn.seeItUrl ?? ""}
+                                onChange={(e) =>
+                                  handleLocalSubLinkChange(btn.id, "seeItUrl", e.target.value)
+                                }
+                                onBlur={(e) =>
+                                  handleUpdateSubLink(btn.id, "seeItUrl", e.target.value)
+                                }
+                                placeholder="Paste or type video link (e.g. .mp4, YouTube, S3)..."
+                                className={styles.subLinkInput}
+                              />
+                            </div>
+                          </div>
+
+                          {/* 3. HEAR IT (Audio) */}
+                          <div className={styles.subLinkRow}>
+                            <div className={styles.subLinkHeader}>
+                              <div className={styles.subLinkLabel}>
+                                <Headphones className="w-3.5 h-3.5 text-[#006398]" />
+                                <span>HEAR IT (Audio)</span>
+                              </div>
+                              <div className={styles.subLinkActions}>
+                                <button
+                                  type="button"
+                                  disabled={!lastUploadedUrl}
+                                  onClick={() =>
+                                    handleUpdateSubLink(btn.id, "hearItUrl", lastUploadedUrl!)
+                                  }
+                                  className={styles.subLinkPasteBtn}
+                                  title={
+                                    lastUploadedUrl
+                                      ? `Link staged URL: ${lastUploadedUrl}`
+                                      : "No staged URL"
+                                  }
+                                >
+                                  {savingButtonSubLinkId === `${btn.id}-hearItUrl` ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <LinkIcon className="w-3 h-3" /> Link Staged
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!btn.hearItUrl}
+                                  onClick={() =>
+                                    triggerPreview(btn.hearItUrl!, `${btn.label} - HEAR IT`)
+                                  }
+                                  className={styles.previewIconBtn}
+                                  title="Preview HEAR IT Audio"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className={styles.subLinkInputWrapper}>
+                              <input
+                                type="text"
+                                value={btn.hearItUrl ?? ""}
+                                onChange={(e) =>
+                                  handleLocalSubLinkChange(btn.id, "hearItUrl", e.target.value)
+                                }
+                                onBlur={(e) =>
+                                  handleUpdateSubLink(btn.id, "hearItUrl", e.target.value)
+                                }
+                                placeholder="Paste or type audio link (e.g. .mp3, S3)..."
+                                className={styles.subLinkInput}
+                              />
+                            </div>
+                          </div>
+
+                          {/* 4. READ IT (Text / Document) */}
+                          <div className={styles.subLinkRow}>
+                            <div className={styles.subLinkHeader}>
+                              <div className={styles.subLinkLabel}>
+                                <FileText className="w-3.5 h-3.5 text-[#ff9900]" />
+                                <span>READ IT (Text / Doc)</span>
+                              </div>
+                              <div className={styles.subLinkActions}>
+                                <button
+                                  type="button"
+                                  disabled={!lastUploadedUrl}
+                                  onClick={() =>
+                                    handleUpdateSubLink(btn.id, "readItUrl", lastUploadedUrl!)
+                                  }
+                                  className={styles.subLinkPasteBtn}
+                                  title={
+                                    lastUploadedUrl
+                                      ? `Link staged URL: ${lastUploadedUrl}`
+                                      : "No staged URL"
+                                  }
+                                >
+                                  {savingButtonSubLinkId === `${btn.id}-readItUrl` ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <LinkIcon className="w-3 h-3" /> Link Staged
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!btn.readItUrl}
+                                  onClick={() =>
+                                    triggerPreview(btn.readItUrl!, `${btn.label} - READ IT`)}
+                                  className={styles.previewIconBtn}
+                                  title="Preview READ IT Document"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className={styles.subLinkInputWrapper}>
+                              <input
+                                type="text"
+                                value={btn.readItUrl ?? ""}
+                                onChange={(e) =>
+                                  handleLocalSubLinkChange(btn.id, "readItUrl", e.target.value)
+                                }
+                                onBlur={(e) =>
+                                  handleUpdateSubLink(btn.id, "readItUrl", e.target.value)
+                                }
+                                placeholder="Paste or type text/document link (e.g. .pdf, doc)..."
+                                className={styles.subLinkInput}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );

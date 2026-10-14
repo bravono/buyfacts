@@ -12,6 +12,7 @@ import {
   Server,
   ArrowRight,
   Folder,
+  FolderTree,
   Layers,
   Plus,
   Trash2,
@@ -50,6 +51,7 @@ export type QueueItemStatus = 'ready' | 'uploading' | 'success' | 'error';
 export interface QueueItem {
   id: string;
   file: File;
+  relativePath?: string; // Relative path inside dropped or chosen folder, e.g. "my-folder/sub/icon.png"
   status: QueueItemStatus;
   progress: number;
   error?: string;
@@ -108,6 +110,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const [batchResults, setBatchResults] = useState<UploadSuccessResult[] | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dirInputRef = useRef<HTMLInputElement>(null);
   const abortControllersRef = useRef<{ [id: string]: XMLHttpRequest }>({});
 
   const detectMediaType = (file: File): 'video' | 'image' | 'audio' | 'pdf' => {
@@ -141,15 +144,101 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     return null;
   };
 
-  // Add files to queue
-  const addFilesToQueue = useCallback((newFiles: FileList | File[]) => {
+  // Helper to extract all files from DataTransfer (recursively scanning dropped directories)
+  const extractFilesFromDataTransfer = async (
+    dataTransfer: DataTransfer
+  ): Promise<{ file: File; relativePath?: string }[]> => {
+    const items = dataTransfer.items;
+    const results: { file: File; relativePath?: string }[] = [];
+
+    if (!items || items.length === 0) {
+      return Array.from(dataTransfer.files).map((file) => ({
+        file,
+        relativePath: (file as any).webkitRelativePath || undefined,
+      }));
+    }
+
+    const traverseEntry = async (entry: any, path = ''): Promise<void> => {
+      if (!entry) return;
+      if (entry.isFile) {
+        await new Promise<void>((resolve) => {
+          entry.file(
+            (file: File) => {
+              results.push({
+                file,
+                relativePath: path ? `${path}/${file.name}` : undefined,
+              });
+              resolve();
+            },
+            () => resolve()
+          );
+        });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const readEntries = async (): Promise<any[]> => {
+          let all: any[] = [];
+          while (true) {
+            const batch: any[] = await new Promise((resolve) => {
+              reader.readEntries((entries: any[]) => resolve(entries), () => resolve([]));
+            });
+            if (!batch || batch.length === 0) break;
+            all = all.concat(batch);
+          }
+          return all;
+        };
+
+        const currentPath = path ? `${path}/${entry.name}` : entry.name;
+        const subEntries = await readEntries();
+        for (const sub of subEntries) {
+          await traverseEntry(sub, currentPath);
+        }
+      }
+    };
+
+    const promises: Promise<void>[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i] as any;
+      const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null;
+      if (entry) {
+        promises.push(traverseEntry(entry, ''));
+      } else if (items[i].kind === 'file') {
+        const file = items[i].getAsFile();
+        if (file) {
+          results.push({ file });
+        }
+      }
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+
+    if (results.length === 0 && dataTransfer.files.length > 0) {
+      return Array.from(dataTransfer.files).map((file) => ({
+        file,
+        relativePath: (file as any).webkitRelativePath || undefined,
+      }));
+    }
+
+    return results;
+  };
+
+  // Add files to queue (handles both single files and directory entries with relative paths)
+  const addFilesToQueue = useCallback((
+    newFiles: FileList | File[] | { file: File; relativePath?: string }[]
+  ) => {
     setGlobalError(null);
     setBatchResults(null);
 
     const itemsToAdd: QueueItem[] = [];
     const errors: string[] = [];
 
-    Array.from(newFiles).forEach((file) => {
+    Array.from(newFiles as any[]).forEach((itemEntry: any) => {
+      const file: File = itemEntry && typeof itemEntry === 'object' && 'file' in itemEntry ? itemEntry.file : itemEntry;
+      const relativePath: string | undefined = itemEntry && typeof itemEntry === 'object' && 'relativePath' in itemEntry
+        ? itemEntry.relativePath
+        : (file as any).webkitRelativePath || undefined;
+
       const error = validateFile(file);
       if (error) {
         errors.push(`${file.name}: ${error}`);
@@ -157,6 +246,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         itemsToAdd.push({
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           file,
+          relativePath,
           status: 'ready',
           progress: 0,
           mediaType: detectMediaType(file),
@@ -184,13 +274,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      addFilesToQueue(e.dataTransfer.files);
+    if (e.dataTransfer) {
+      const extracted = await extractFilesFromDataTransfer(e.dataTransfer);
+      if (extracted.length > 0) {
+        addFilesToQueue(extracted);
+      }
     }
   }, [addFilesToQueue]);
 
@@ -210,6 +303,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     setBatchResults(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (dirInputRef.current) {
+      dirInputRef.current.value = '';
     }
   };
 
@@ -650,15 +746,27 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
         updateItem(currentItem.id, { status: 'uploading', progress: 0, error: undefined });
 
+        // If file is inside a relative folder hierarchy (e.g. "my-folder/textures/diffuse.png"),
+        // merge with the active destination folder (e.g. "cubicon/my-folder/textures")
+        let itemDestination = destination;
+        if (currentItem.relativePath) {
+          const normalized = currentItem.relativePath.replace(/\\/g, '/');
+          const lastSlash = normalized.lastIndexOf('/');
+          if (lastSlash > 0) {
+            const subDir = normalized.substring(0, lastSlash);
+            itemDestination = `${destination}/${subDir}`;
+          }
+        }
+
         try {
           let result: UploadSuccessResult;
           // Files exceeding 100MB automatically use multipart chunking to bypass reverse proxy payload caps and avoid server memory spikes
           if (uploadMethod === 'multipart' || currentItem.file.size > 100 * 1024 * 1024) {
-            result = await uploadSingleMultipart(currentItem, destination);
+            result = await uploadSingleMultipart(currentItem, itemDestination);
           } else if (uploadMethod === 'presigned') {
-            result = await uploadSinglePresigned(currentItem, destination);
+            result = await uploadSinglePresigned(currentItem, itemDestination);
           } else {
-            result = await uploadSingleServer(currentItem, destination);
+            result = await uploadSingleServer(currentItem, itemDestination);
           }
 
           updateItem(currentItem.id, { status: 'success', progress: 100, result });
@@ -899,6 +1007,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   if (e.target.files && e.target.files.length > 0) {
                     addFilesToQueue(e.target.files);
                   }
+                  e.target.value = '';
+                }}
+              />
+              <input
+                ref={dirInputRef}
+                type="file"
+                multiple
+                {...({ webkitdirectory: '', directory: '' } as any)}
+                className="hidden"
+                disabled={isUploading}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    addFilesToQueue(e.target.files);
+                  }
+                  e.target.value = '';
                 }}
               />
 
@@ -908,11 +1031,32 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
               <div>
                 <p className={styles.dropzoneTitle}>
-                  {dragActive ? 'Drop files here...' : 'Click to select or drag & drop files'}
+                  {dragActive ? 'Drop files or folders here...' : 'Drag & drop files or entire folders here'}
                 </p>
                 <p className={styles.dropzoneSubtitle}>
-                  Supports single or batch upload (Images, Videos, Audio, PDFs, Max 1GB each)
+                  Supports individual files, batch files, or entire folders with subdirectories
                 </p>
+              </div>
+
+              <div className={styles.dropzoneActions} onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={styles.browseBtn}
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  Choose Files
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dirInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={styles.browseBtn}
+                >
+                  <FolderTree className="w-4 h-4 text-[var(--interactive-orange)]" />
+                  Choose Folder
+                </button>
               </div>
             </div>
 
@@ -943,7 +1087,15 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                         className={styles.queueBtnText}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
                       >
-                        <Plus className="w-3.5 h-3.5" /> Add more
+                        <Plus className="w-3.5 h-3.5" /> Add Files
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => dirInputRef.current?.click()}
+                        className={styles.queueBtnText}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <FolderTree className="w-3.5 h-3.5 text-[var(--interactive-orange)]" /> Add Folder
                       </button>
                       <button
                         type="button"
@@ -968,6 +1120,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                           </div>
                           <div className={styles.queueItemMeta}>
                             <div className={styles.queueItemName} title={item.file.name}>
+                              {item.relativePath && item.relativePath.includes('/') && (
+                                <span className={styles.relativePathBadge}>
+                                  {item.relativePath.substring(0, item.relativePath.lastIndexOf('/') + 1)}
+                                </span>
+                              )}
                               {item.file.name}
                             </div>
                             <div className={styles.queueItemDetails}>

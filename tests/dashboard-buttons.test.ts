@@ -82,6 +82,15 @@ function runTests() {
   assert.ok(!emojiRegex.test(cssContent), "MockMediaPlayer.module.css must contain zero emojis");
   console.log("Passed: Zero-emoji compliance verified");
 
+  // Verify Prisma schema contains seeItUrl, hearItUrl, and readItUrl fields on DashboardButton
+  const schemaPath = path.join(__dirname, "..", "prisma", "schema.prisma");
+  assert.ok(fs.existsSync(schemaPath), "schema.prisma must exist");
+  const schemaContent = fs.readFileSync(schemaPath, "utf-8");
+  assert.ok(schemaContent.includes("seeItUrl"), "schema.prisma must include seeItUrl field");
+  assert.ok(schemaContent.includes("hearItUrl"), "schema.prisma must include hearItUrl field");
+  assert.ok(schemaContent.includes("readItUrl"), "schema.prisma must include readItUrl field");
+  console.log("Passed: DashboardButton seeItUrl, hearItUrl, and readItUrl fields verified");
+
   console.log("\nSuccess: All dashboard and player window tests passed!");
 }
 

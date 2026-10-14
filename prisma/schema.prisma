@@ -57,10 +57,13 @@ model DashboardButton {
   id        String   @id @default(uuid())
   label     String
   mediaUrl  String
+  seeItUrl  String?  // Video link for SEE IT
+  hearItUrl String?  // Audio link for HEAR IT
+  readItUrl String?  // Document/PDF link for READ IT
   mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"
-  color     String? // Optional visual color configuration
+  color     String?  // Optional visual color configuration
   updatedAt DateTime @updatedAt
 }
 

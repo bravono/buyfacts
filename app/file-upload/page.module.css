@@ -862,3 +862,99 @@
   color: var(--text-muted);
 }
 
+.cardSubtitle {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.subLinksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.subLinkRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg-alt, #F8F8F8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+
+.subLinkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subLinkLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-color);
+}
+
+.subLinkActions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.subLinkPasteBtn {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--interactive-blue);
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: var(--transition-smooth);
+}
+
+.subLinkPasteBtn:hover:not(:disabled) {
+  border-color: var(--interactive-orange);
+  color: var(--interactive-orange);
+}
+
+.subLinkPasteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subLinkInputWrapper {
+  width: 100%;
+}
+
+.subLinkInput {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  font-family: ui-monospace, monospace;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  outline: none;
+  box-sizing: border-box;
+  transition: var(--transition-smooth);
+}
+
+.subLinkInput:focus {
+  border-color: var(--interactive-blue);
+  box-shadow: 0 0 0 2px rgba(0, 80, 123, 0.1);
+}
+
+
