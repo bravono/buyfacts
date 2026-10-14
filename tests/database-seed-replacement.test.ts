@@ -8,7 +8,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     // Intentionally inject extraneous duplicate button records with random UUIDs
     await prisma.dashboardButton.create({
       data: {
-        label: "Content Assessment",
+        label: "Content Value",
         mediaUrl: "https://example.com/test1",
         mediaType: "video",
         subtitle: "Duplicate item test 1",
@@ -18,7 +18,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
 
     await prisma.dashboardButton.create({
       data: {
-        label: "Survey Define IT",
+        label: "Research Planning",
         mediaUrl: "https://example.com/test2",
         mediaType: "video",
         subtitle: "Duplicate item test 2",
@@ -97,15 +97,15 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     });
 
     const expectedServiceLabels = [
-      "Survey Define IT",
-      "Survey Refine IT",
-      "Survey Build IT",
-      "Survey Field IT",
-      "Recognize IT",
-      "Validate IT",
-      "Respondent Validation",
+      "Research Planning",
+      "Survey Design",
       "Story-Based Surveys",
-      "Content Assessment",
+      "Improve Surveys",
+      "Participant Validation",
+      "Survey Fieldwork",
+      "Content Value",
+      "Pattern Insights",
+      "Audience Validation",
     ];
 
     for (let i = 0; i < expectedServiceLabels.length; i++) {

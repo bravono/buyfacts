@@ -1,27 +1,27 @@
 import assert from "node:assert/strict";
 
 const THOUGHT_LEADERSHIP_SPECS = [
-  { label: "Research Leadership", tagline: "Return on Primary Research" },
-  { label: "Marketing Leadership", tagline: "Best Practices by Marketing Area" },
-  { label: "Cohort Research", tagline: "Smaller Groups that Know the Topic" },
-  { label: "Hybrid Marketing", tagline: "Digital Reach and a Human Touch" },
-  { label: "Early Recognition", tagline: "Earlier Recognition for Your Time Advantage" },
-  { label: "Survey Engagement", tagline: "Optimize Question Value" },
-  { label: "Content Creation", tagline: "Assets that Engage with Thought Leadership" },
   { label: "Research Methods", tagline: "Exceed Stakeholder Wants and Needs" },
+  { label: "Cohort Research", tagline: "Smaller Groups that Know the Topic" },
+  { label: "Survey Engagement", tagline: "Optimize Question Value" },
+  { label: "Hybrid Marketing", tagline: "Digital Reach and a Human Touch" },
+  { label: "Content Creation", tagline: "Assets that Engage with Thought Leadership" },
+  { label: "Marketing Leadership", tagline: "Best Practices by Marketing Area" },
+  { label: "Research Leadership", tagline: "Return on Primary Research" },
+  { label: "Early Recognition", tagline: "Earlier Recognition for Your Time Advantage" },
   { label: "Wisdom Gap", tagline: "Research Becomes Intellectual Currency" },
 ];
 
 const PRODUCTS_SERVICES_SPECS = [
-  { label: "Survey Define IT", tagline: "Inclusive Research Definition" },
-  { label: "Survey Refine IT", tagline: "Increase the Return on Research" },
-  { label: "Survey Build IT", tagline: "Make Each Question Actionable" },
-  { label: "Survey Field IT", tagline: "Quality-Centric Survey Execution" },
-  { label: "Recognize IT", tagline: "Active Pattern Analytics" },
-  { label: "Validate IT", tagline: "Opportunity Validation" },
-  { label: "Participant Validation", tagline: "Play Cubicon Puzzle Games" },
+  { label: "Research Planning", tagline: "Inclusive Research Definition" },
+  { label: "Survey Design", tagline: "Make Each Question Actionable" },
   { label: "Story-Based Surveys", tagline: "Execute a Dual-Based Survey Model" },
-  { label: "Content Assessment", tagline: "Maximize the Return on Content" },
+  { label: "Improve Surveys", tagline: "Increase the Return on Research" },
+  { label: "Participant Validation", tagline: "Play Cubicon Puzzle Games" },
+  { label: "Survey Fieldwork", tagline: "Quality-Centric Survey Execution" },
+  { label: "Content Value", tagline: "Maximize the Return on Content" },
+  { label: "Pattern Insights", tagline: "Active Pattern Analytics" },
+  { label: "Audience Validation", tagline: "Opportunity Validation" },
 ];
 
 const ACTION_BUTTONS = ["SEE IT", "HEAR IT", "READ IT", "CONTACT US"];

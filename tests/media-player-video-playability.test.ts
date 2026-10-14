@@ -260,7 +260,7 @@ test("Media Player Video Playability & Controls Test Suite", async (t) => {
     );
   });
 
-  await t.test("10. Public S3 Affinity video URL is wired to Recognize IT and Early Recognition buttons", () => {
+  await t.test("10. Public S3 Affinity video URL is wired to Pattern Insights and Early Recognition buttons", () => {
     const s3VideoUrl = "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4";
     const seedPath = path.join(__dirname, "..", "prisma", "seed.ts");
     const psPath = path.join(__dirname, "..", "app", "products-services", "page.tsx");

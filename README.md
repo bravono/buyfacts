@@ -325,7 +325,7 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
 - **Interactive Playback Controls**: Includes a seek bar, real-time current time/duration display, mute/unmute toggle, playback reset, and full-screen controls.
 - **Hover-Aware Play Button**: The central play button transitions smoothly during playback, fading out during active video viewing and reappearing on hover or pause for quick access.
 - **Surface Interactivity**: Clicking directly on the video element or clicking the primary "Video" button at the bottom toggles play and pause immediately.
-- **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Recognize IT" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
+- **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
   1. **SEE IT**: User-initiated video presentation with direct play/pause toggling and Video icon.
@@ -334,6 +334,36 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
   4. **CONTACT US**: Direct navigation to `/#contact` with Mail icon.
 - **Responsive Layout & Dimensional Uniformity**:
   Action buttons maintain strictly uniform dimensions (120px width by 36px height) across desktop, tablet, and smartphone screens. The control row employs flex-wrap rearrangement into fewer columns on narrower viewports rather than stretching or shrinking buttons, ensuring a clean responsive flow. Other buttons (such as the contact inquiry submit button) are styled to fit their label with padding (`width: fit-content`) rather than expanding to the full container width.
+
+### Interactive Dashboard Buttons Configuration (3x3 Layout)
+
+Both the **Innovations That Save Time** (`/products-services`) and **Research Imperatives** (`/research-imperatives`) interactive pages feature a standardized 3x3 grid layout (9 slots organized across rows 1 to 3 and columns 1 to 3):
+
+#### Products and Services Buttons (Innovations That Save Time)
+| Position | Row | Column | Website Label | Tagline | Content Folder |
+| :---: | :---: | :---: | :--- | :--- | :--- |
+| 1 | 1 | 1 | Research Planning | Inclusive Research Definition | 01 - Products and Services/01 - Research Planning |
+| 2 | 1 | 2 | Survey Design | Make Each Question Actionable | 01 - Products and Services/02 - Survey Design |
+| 3 | 1 | 3 | Story-Based Surveys | Execute a Dual-Based Survey Model | 01 - Products and Services/03 - Story-Based Surveys |
+| 4 | 2 | 1 | Improve Surveys | Increase the Return on Research | 01 - Products and Services/04 - Improve Surveys |
+| 5 | 2 | 2 | Participant Validation | Play Cubicon Puzzle Games | 01 - Products and Services/05 - Participant Validation |
+| 6 | 2 | 3 | Survey Fieldwork | Quality-Centric Survey Execution | 01 - Products and Services/06 - Survey Fieldwork |
+| 7 | 3 | 1 | Content Value | Maximize the Return on Content | 01 - Products and Services/07 - Content Value |
+| 8 | 3 | 2 | Pattern Insights | Active Pattern Analytics | 01 - Products and Services/08 - Pattern Insights |
+| 9 | 3 | 3 | Audience Validation | Opportunity Validation | 01 - Products and Services/09 - Audience Validation |
+
+#### Best Practices and Thought Leadership Buttons (Research Imperatives)
+| Position | Row | Column | Website Label | Tagline | Content Folder |
+| :---: | :---: | :---: | :--- | :--- | :--- |
+| 1 | 1 | 1 | Research Methods | Exceed Stakeholder Wants and Needs | 02 - Best Practices and Thought Leadership/01 - Research Methods |
+| 2 | 1 | 2 | Cohort Research | Smaller Groups that Know the Topic | 02 - Best Practices and Thought Leadership/02 - Cohort Research |
+| 3 | 1 | 3 | Survey Engagement | Optimize Question Value | 02 - Best Practices and Thought Leadership/03 - Survey Engagement |
+| 4 | 2 | 1 | Hybrid Marketing | Digital Reach and a Human Touch | 02 - Best Practices and Thought Leadership/04 - Hybrid Marketing |
+| 5 | 2 | 2 | Content Creation | Assets that Engage with Thought Leadership | 02 - Best Practices and Thought Leadership/05 - Content Creation |
+| 6 | 2 | 3 | Marketing Leadership | Best Practices by Marketing Area | 02 - Best Practices and Thought Leadership/06 - Marketing Leadership |
+| 7 | 3 | 1 | Research Leadership | Return on Primary Research | 02 - Best Practices and Thought Leadership/07 - Research Leadership |
+| 8 | 3 | 2 | Early Recognition | Earlier Recognition for Your Time Advantage | 02 - Best Practices and Thought Leadership/08 - Early Recognition |
+| 9 | 3 | 3 | Wisdom Gap | Research Becomes Intellectual Currency | 02 - Best Practices and Thought Leadership/09 - Wisdom Gap |
 
 ---
 

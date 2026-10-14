@@ -27,15 +27,15 @@ export type DashboardButton = {
  * 0–2 left column, 3–5 center column, 6–8 right column
  */
 export const DEFAULT_BUTTONS: DashboardButton[] = [
-  { label: "Survey Define IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Survey Field IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Respondent Validation", mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4" },
-  { label: "Survey Refine IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Recognize IT", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Research Planning", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Survey Design", mediaUrl: "https://www.buyfacts.com/" },
   { label: "Story-Based Surveys", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Survey Build IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Validate IT", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Content Assessment", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Improve Surveys", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Participant Validation", mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4" },
+  { label: "Survey Fieldwork", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Content Value", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Pattern Insights", mediaUrl: "https://www.buyfacts.com/" },
+  { label: "Audience Validation", mediaUrl: "https://www.buyfacts.com/" },
 ];
 
 /** @deprecated Use DEFAULT_BUTTONS */
@@ -45,8 +45,7 @@ export type DashboardAnimationProps = SVGProps<SVGSVGElement> & {
   /** Arc title text */
   title?: string;
   /**
-   * List of up to 9 buttons. Order maps to fixed SVG slots:
-   * left (0–2), center (3–5), right (6–8).
+   * List of up to 9 buttons. Order maps to 3x3 layout (row 1: 0-2, row 2: 3-5, row 3: 6-8).
    * Missing slots fall back to DEFAULT_BUTTONS.
    */
   buttons?: DashboardButton[];
@@ -71,10 +70,14 @@ type ButtonSlotMeta = {
 };
 
 /**
- * Fixed geometry for the 9 button slots (left → center → right).
+ * Fixed geometry for the 9 button slots in 3x3 row-major order:
+ * Row 1 (0-2: Left, Center, Right)
+ * Row 2 (3-5: Left, Center, Right)
+ * Row 3 (6-8: Left, Center, Right)
  * textTransform points are button centers; labels use textAnchor="middle".
  */
 const BUTTON_SLOTS: ButtonSlotMeta[] = [
+  // Position 1: Row 1, Column 1 (Top Left)
   {
     id: "slot-0",
     d: "m64.52,523v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
@@ -82,27 +85,32 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     fontSize: 28,
     maxWidth: 150,
   },
+  // Position 2: Row 1, Column 2 (Top Center)
   {
     id: "slot-1",
-    d: "m64.52,613.32v67.78c0,4.62,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-8.96-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
-    textTransform: "translate(168 698) rotate(20) scale(1.06 .94) skewX(17.82)",
-    fontSize: 28,
-    maxWidth: 150,
-  },
-  {
-    id: "slot-2",
-    d: "m67.59,704.59v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
-    textTransform: "translate(171 789) rotate(20) scale(1.06 .94) skewX(17.82)",
-    fontSize: 28,
-    maxWidth: 150,
-  },
-  {
-    id: "slot-3",
     d: "m542.15,602.28c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
     textTransform: "translate(434 647)",
     fontSize: 26,
     maxWidth: 170,
   },
+  // Position 3: Row 1, Column 3 (Top Right)
+  {
+    id: "slot-2",
+    d: "m800.04,519.98c-62.78,34.83-129.33,59.76-197.48,74.86-4.63,1.04-8.4,5.48-8.4,10.01v67.78c0,4.63,3.78,7.46,8.4,6.42,68.16-15.1,134.71-40.03,197.48-74.76,4.25-2.36,7.65-8.02,7.65-12.56v-67.78c0-3.21-1.7-5-4.15-5-1.04,0-2.27.38-3.49,1.04Z",
+    textTransform:
+      "translate(700 608) rotate(-20) scale(1.06 .94) skewX(-17.82)",
+    fontSize: 26,
+    maxWidth: 150,
+  },
+  // Position 4: Row 2, Column 1 (Mid Left)
+  {
+    id: "slot-3",
+    d: "m64.52,613.32v67.78c0,4.62,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-8.96-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
+    textTransform: "translate(168 698) rotate(20) scale(1.06 .94) skewX(17.82)",
+    fontSize: 28,
+    maxWidth: 150,
+  },
+  // Position 5: Row 2, Column 2 (Mid Center)
   {
     id: "slot-4",
     d: "m542.15,696.45c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
@@ -110,29 +118,32 @@ const BUTTON_SLOTS: ButtonSlotMeta[] = [
     fontSize: 26,
     maxWidth: 170,
   },
+  // Position 6: Row 2, Column 3 (Mid Right)
   {
     id: "slot-5",
-    d: "m541.75,790.82c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
-    textTransform: "translate(434 836)",
-    fontSize: 26,
-    maxWidth: 170,
-  },
-  {
-    id: "slot-6",
-    d: "m800.04,519.98c-62.78,34.83-129.33,59.76-197.48,74.86-4.63,1.04-8.4,5.48-8.4,10.01v67.78c0,4.63,3.78,7.46,8.4,6.42,68.16-15.1,134.71-40.03,197.48-74.76,4.25-2.36,7.65-8.02,7.65-12.56v-67.78c0-3.21-1.7-5-4.15-5-1.04,0-2.27.38-3.49,1.04Z",
-    textTransform:
-      "translate(700 608) rotate(-20) scale(1.06 .94) skewX(-17.82)",
-    fontSize: 26,
-    maxWidth: 150,
-  },
-  {
-    id: "slot-7",
     d: "m800.04,611.1c-62.78,34.83-129.33,59.76-197.49,74.86-4.63,1.04-8.4,5.48-8.4,10.01v67.78c0,4.63,3.78,7.46,8.4,6.42,68.16-15.1,134.71-40.03,197.49-74.77,4.25-2.36,7.65-8.02,7.65-12.56v-67.78c0-3.21-1.7-5-4.15-5-1.04,0-2.27.38-3.49,1.04Z",
     textTransform:
       "translate(700 699) rotate(-20) scale(1.06 .94) skewX(-17.82)",
     fontSize: 26,
     maxWidth: 150,
   },
+  // Position 7: Row 3, Column 1 (Bottom Left)
+  {
+    id: "slot-6",
+    d: "m67.59,704.59v67.78c0,4.53,3.39,10.18,7.73,12.54,62.78,34.5,129.43,59.11,197.69,73.91,4.62.94,8.39-1.98,8.39-6.5v-67.78c0-4.53-3.77-9.05-8.39-9.99-68.25-14.8-134.9-39.41-197.69-73.91-1.32-.66-2.55-1.04-3.58-1.04-2.45,0-4.15,1.79-4.15,5Z",
+    textTransform: "translate(171 789) rotate(20) scale(1.06 .94) skewX(17.82)",
+    fontSize: 28,
+    maxWidth: 150,
+  },
+  // Position 8: Row 3, Column 2 (Bottom Center)
+  {
+    id: "slot-7",
+    d: "m541.75,790.82c-68.95,9.96-138.93,10.13-207.97.52-4.64-.69-8.41,2.4-8.41,6.96v67.75c0,4.55,3.78,8.84,8.41,9.53,69.04,9.62,139.02,9.53,207.97-.52,4.64-.69,8.41-4.98,8.41-9.53v-67.75c0-4.12-3.09-7.04-7.21-7.04-.34,0-.77,0-1.2.09Z",
+    textTransform: "translate(434 836)",
+    fontSize: 26,
+    maxWidth: 170,
+  },
+  // Position 9: Row 3, Column 3 (Bottom Right)
   {
     id: "slot-8",
     d: "m800.18,703.24c-62.78,34.83-129.33,59.76-197.49,74.86-4.63,1.04-8.4,5.48-8.4,10.01v67.78c0,4.63,3.78,7.46,8.4,6.42,68.16-15.1,134.71-40.03,197.49-74.76,4.25-2.36,7.65-8.02,7.65-12.56v-67.78c0-3.21-1.7-5-4.15-5-1.04,0-2.27.38-3.49,1.04Z",
