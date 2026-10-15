@@ -290,5 +290,34 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.equal(shouldHideBorderFrame(null), false);
     assert.equal(shouldHideBorderFrame(""), false);
   });
+
+  test("Admin Navigation: should feature prominent Upload Asset link to /file-upload", async () => {
+    const fs = await import("fs/promises");
+    const adminPageCode = await fs.readFile("app/admin/page.tsx", "utf-8");
+
+    // Header must contain the Upload Asset button pointing to /file-upload
+    assert.match(adminPageCode, /href="\/file-upload"/);
+    assert.match(adminPageCode, /Upload Asset/);
+
+    // Media asset views should contain shortcut link
+    assert.match(adminPageCode, /activeTab === "mediaAsset"/);
+  });
+
+  test("Authentication Compatibility: admin and file-upload share unified session endpoint", async () => {
+    const fs = await import("fs/promises");
+    const fileUploadCode = await fs.readFile("app/file-upload/page.tsx", "utf-8");
+    const adminCode = await fs.readFile("app/admin/page.tsx", "utf-8");
+
+    // Both pages must target /api/auth/login and /api/auth/me
+    assert.match(fileUploadCode, /\/api\/auth\/login/);
+    assert.match(fileUploadCode, /\/api\/auth\/me/);
+    assert.match(adminCode, /\/api\/auth\/login/);
+    assert.match(adminCode, /\/api\/auth\/me/);
+
+    // Both must verify application/json content-type before parsing
+    assert.match(fileUploadCode, /contentType\.includes\("application\/json"\)/);
+    assert.match(adminCode, /contentType\.includes\("application\/json"\)/);
+  });
 });
+
 

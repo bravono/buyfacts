@@ -36,6 +36,7 @@ import {
   Copy,
   Check,
   Lock,
+  Upload,
 } from "lucide-react";
 
 interface UserSession {
@@ -105,9 +106,14 @@ export default function AdminDatabaseDashboard() {
     setIsCheckingAuth(true);
     try {
       const res = await fetch("/api/auth/me");
-      const data = await res.json();
-      if (data.success && data.authenticated && data.user) {
-        setSession(data.user);
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json().catch(() => ({}));
+        if (data.success && data.authenticated && data.user) {
+          setSession(data.user);
+        } else {
+          setSession(null);
+        }
       } else {
         setSession(null);
       }
@@ -203,13 +209,23 @@ export default function AdminDatabaseDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
-      const data = await res.json();
 
-      if (data.success && data.user) {
+      let data: any = {};
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        data = await res.json().catch(() => ({}));
+      }
+
+      if (res.ok && data.success && data.user) {
         setSession(data.user);
         setLoginPassword("");
       } else {
-        setLoginError(data.error || "Invalid credentials.");
+        setLoginError(
+          data.error ||
+          (!res.ok
+            ? `Server responded with status ${res.status}. Please check your credentials.`
+            : "Invalid credentials.")
+        );
       }
     } catch {
       setLoginError("An unexpected error occurred during login.");
@@ -532,11 +548,11 @@ export default function AdminDatabaseDashboard() {
           </div>
 
           <div className={styles.headerActions}>
+            <Link href="/file-upload" className={styles.uploadAssetBtn} title="Upload Assets to AWS S3 & Content Vault">
+              <Upload size={14} /> Upload Asset
+            </Link>
             <Link href="/admin/cubicon-analytics" className={styles.navBtn}>
               <Activity size={14} /> Cubicon Analytics
-            </Link>
-            <Link href="/file-upload" className={styles.navBtn}>
-              <FileText size={14} /> Asset Manager
             </Link>
             <button
               onClick={() => {
@@ -794,6 +810,11 @@ export default function AdminDatabaseDashboard() {
                 </div>
 
                 <div className={styles.tableActions}>
+                  {(activeTab === "mediaAsset" || activeTab === "vaultAsset") && (
+                    <Link href="/file-upload" className={styles.uploadAssetBtn} title="Upload New Asset">
+                      <Upload size={14} /> Upload Asset
+                    </Link>
+                  )}
                   <button onClick={openCreateModal} className={styles.createBtn}>
                     <Plus size={16} /> Create Record
                   </button>

@@ -112,6 +112,28 @@
   color: var(--interactive-orange, #ff9900);
 }
 
+.uploadAssetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  background-color: var(--interactive-blue, #00507b);
+  color: #ffffff;
+  border: 1px solid var(--interactive-blue, #00507b);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.uploadAssetBtn:hover {
+  background-color: #003a5a;
+  border-color: #003a5a;
+  color: #ffffff;
+}
+
 .userBadge {
   display: flex;
   align-items: center;

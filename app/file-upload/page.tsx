@@ -94,9 +94,14 @@ export default function FileUploadDemoPage() {
     const checkSession = async () => {
       try {
         const res = await fetch("/api/auth/me");
-        const data = await res.json();
-        if (data.success && data.authenticated) {
-          setIsAuthorized(true);
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json().catch(() => ({}));
+          if (data.success && data.authenticated) {
+            setIsAuthorized(true);
+          } else {
+            setIsAuthorized(false);
+          }
         } else {
           setIsAuthorized(false);
         }
@@ -133,12 +138,22 @@ export default function FileUploadDemoPage() {
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        data = await res.json().catch(() => ({}));
+      }
+
       if (res.ok && data.success) {
         setIsAuthorized(true);
         setAuthPassword("");
       } else {
-        setAuthError(data.error || "Authorization failed. Please check your credentials.");
+        setAuthError(
+          data.error ||
+          (!res.ok
+            ? `Server responded with status ${res.status}. Please check your credentials.`
+            : "Authorization failed. Please check your credentials.")
+        );
       }
     } catch (err) {
       console.error("Login error:", err);
