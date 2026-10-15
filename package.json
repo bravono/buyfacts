@@ -22,7 +22,7 @@
     "@hookform/resolvers": "^5.5.7",
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
-    "better-sqlite3": "^13.0.1",
+    "better-sqlite3": "13.0.1",
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.4.2",
     "fs": "^0.0.1-security",
