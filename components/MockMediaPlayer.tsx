@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Play,
   Pause,
@@ -16,9 +17,17 @@ import {
   Headphones,
   CheckCircle2,
   X,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
+import {
+  isPdfUrl,
+  isDocxUrl,
+  fetchAndConvertDocx,
+  getOfficeViewerUrl,
+} from "../lib/document-parser";
 
 export interface MockMediaPlayerProps {
   title?: string;
@@ -27,7 +36,7 @@ export interface MockMediaPlayerProps {
   description?: string;
   rightTitle?: string;
   rightSubtitle?: string;
-  mediaType?: "video" | "audio" | "image" | "pdf";
+  mediaType?: "video" | "audio" | "image" | "pdf" | "docx";
   mediaUrl?: string;
   pdfUrl?: string;
   pdfLabel?: string;
@@ -114,6 +123,39 @@ export default function MockMediaPlayer({
   const [showInDepthModal, setShowInDepthModal] = useState(false);
   const [downloadConfirmed, setDownloadConfirmed] = useState<string | null>(null);
 
+  // Document state for DOCX client-side rendering
+  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  const [isLoadingDoc, setIsLoadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+  const [modalDocxHtml, setModalDocxHtml] = useState<string | null>(null);
+  const [isLoadingModalDoc, setIsLoadingModalDoc] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Synchronize body class and notify Navbar when document reader modal opens or closes
+  useEffect(() => {
+    if (showInDepthModal) {
+      document.body.classList.add("document-reader-open");
+      window.dispatchEvent(
+        new CustomEvent("document-reader-toggle", { detail: { isOpen: true } })
+      );
+    } else {
+      document.body.classList.remove("document-reader-open");
+      window.dispatchEvent(
+        new CustomEvent("document-reader-toggle", { detail: { isOpen: false } })
+      );
+    }
+    return () => {
+      document.body.classList.remove("document-reader-open");
+      window.dispatchEvent(
+        new CustomEvent("document-reader-toggle", { detail: { isOpen: false } })
+      );
+    };
+  }, [showInDepthModal]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -124,10 +166,105 @@ export default function MockMediaPlayer({
     ? "Welcome to your Marketers tool workspace!"
     : (tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough");
 
+  const isDocx =
+    mediaType === "docx" ||
+    isDocxUrl(mediaUrl) ||
+    Boolean(mediaUrl && /\.(docx|doc)($|\?|#)/i.test(mediaUrl));
+
+  const isPdf =
+    mediaType === "pdf" ||
+    isPdfUrl(mediaUrl) ||
+    Boolean(mediaUrl && /\.pdf($|\?|#)/i.test(mediaUrl));
+
+  const isDocument = isDocx || isPdf;
+
   const isYouTube = Boolean(mediaUrl && isYouTubeUrl(mediaUrl));
   const isPlayable = Boolean(
-    (mediaType === "video" || mediaType === "audio") && mediaUrl && !isYouTube
+    (mediaType === "video" || mediaType === "audio") && mediaUrl && !isYouTube && !isDocument
   );
+
+  const targetDocUrl =
+    (isDocument && mediaUrl ? mediaUrl : null) ||
+    pdfUrl ||
+    moreDetailUrl ||
+    "/sample-details.pdf";
+
+  const isTargetDocx = isDocxUrl(targetDocUrl);
+
+  // Fetch and convert main inline DOCX media
+  useEffect(() => {
+    if (!isDocx || !mediaUrl) {
+      setDocxHtml(null);
+      setIsLoadingDoc(false);
+      setDocError(null);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingDoc(true);
+    setDocError(null);
+
+    fetchAndConvertDocx(mediaUrl)
+      .then((result) => {
+        if (!isMounted) return;
+        if (result.success && result.html) {
+          setDocxHtml(result.html);
+          setDocError(null);
+        } else {
+          setDocError(result.error || "Failed to convert Word document to HTML");
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isMounted) return;
+        const msg = err instanceof Error ? err.message : "Error reading document";
+        setDocError(msg);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingDoc(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isDocx, mediaUrl]);
+
+  // Fetch and convert modal DOCX target document when reader modal opens
+  useEffect(() => {
+    if (!showInDepthModal || !isTargetDocx || !targetDocUrl) {
+      setModalDocxHtml(null);
+      setIsLoadingModalDoc(false);
+      return;
+    }
+
+    if (isDocx && docxHtml && targetDocUrl === mediaUrl) {
+      setModalDocxHtml(docxHtml);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingModalDoc(true);
+    fetchAndConvertDocx(targetDocUrl)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && res.html) {
+          setModalDocxHtml(res.html);
+        } else {
+          setModalDocxHtml(null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setModalDocxHtml(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingModalDoc(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showInDepthModal, isTargetDocx, targetDocUrl, isDocx, docxHtml, mediaUrl]);
 
   const handleNextMedia = () => {
     setIsWelcomeActive(false);
@@ -318,11 +455,13 @@ export default function MockMediaPlayer({
   };
 
   const handleDownloadDocument = () => {
-    const targetUrl = pdfUrl || moreDetailUrl || "/sample-details.pdf";
+    const targetUrl = targetDocUrl;
+    const isDocxTarget = isDocxUrl(targetUrl);
+    const extension = isDocxTarget ? "docx" : "pdf";
     // Create temporary link and trigger download
     const link = document.createElement("a");
     link.href = targetUrl;
-    link.download = `${displayTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Documentation.pdf`;
+    link.download = `${displayTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Documentation.${extension}`;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     document.body.appendChild(link);
@@ -514,21 +653,80 @@ export default function MockMediaPlayer({
           </div>
         )}
 
-        {/* PDF Render */}
-        {mediaType === "pdf" && mediaUrl && (
-          <div className={styles.pdfViewer}>
-            <div className={styles.pdfCard}>
-              <FileText size={48} color="var(--primary-color)" />
-              <h5 className={styles.pdfName}>{displayTitle}</h5>
-              <span className={styles.pdfTag}>Documentation</span>
-              <button
-                type="button"
-                onClick={handleInDepthAction}
-                className={styles.pdfLink}
-                style={{ cursor: "pointer", border: "none" }}
-              >
-                Preview Document
-              </button>
+        {/* Document Render: PDF */}
+        {isPdf && !isDocx && mediaUrl && (
+          <div className={styles.inlineDocViewer}>
+            <div className={styles.inlineDocHeader}>
+              <div className={styles.inlineDocBadge}>
+                <FileText size={14} color="#00507b" />
+                <span>PDF Document</span>
+              </div>
+              <div className={styles.inlineDocActions}>
+                <button
+                  type="button"
+                  className={styles.inlineDocActionBtn}
+                  onClick={handleInDepthAction}
+                  title="Expand to Full Reader"
+                >
+                  <Maximize size={12} />
+                  <span>Expand</span>
+                </button>
+              </div>
+            </div>
+            <div className={styles.inlineDocBody}>
+              <iframe
+                src={`${mediaUrl}#view=FitH&toolbar=0&navpanes=0`}
+                className={styles.inlineDocIframe}
+                title={displayTitle}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Document Render: DOCX */}
+        {isDocx && mediaUrl && (
+          <div className={styles.inlineDocViewer}>
+            <div className={styles.inlineDocHeader}>
+              <div className={styles.inlineDocBadge}>
+                <FileText size={14} color="#00507b" />
+                <span>Word Document (.docx)</span>
+              </div>
+              <div className={styles.inlineDocActions}>
+                <button
+                  type="button"
+                  className={styles.inlineDocActionBtn}
+                  onClick={handleInDepthAction}
+                  title="Expand to Full Reader"
+                >
+                  <Maximize size={12} />
+                  <span>Expand</span>
+                </button>
+              </div>
+            </div>
+            <div className={styles.inlineDocBody}>
+              {isLoadingDoc && (
+                <div className={styles.inlineDocLoading}>
+                  <Loader2 size={24} className={styles.docSpinnerIcon} />
+                  <span>Rendering Word document...</span>
+                </div>
+              )}
+              {docError && (
+                <div className={styles.inlineDocFallback}>
+                  <iframe
+                    src={getOfficeViewerUrl(mediaUrl)}
+                    className={styles.inlineDocIframe}
+                    title={displayTitle}
+                  />
+                </div>
+              )}
+              {!isLoadingDoc && !docError && docxHtml && (
+                <div className={styles.inlineDocxScroll}>
+                  <div
+                    className={styles.inlineDocxContent}
+                    dangerouslySetInnerHTML={{ __html: docxHtml }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -832,68 +1030,111 @@ export default function MockMediaPlayer({
         </div>
       </div>
 
-      {/* Section 6 & 11: In Depth Preview Modal Dialog */}
-      {showInDepthModal && (
-        <div className={styles.modalBackdrop} onClick={() => setShowInDepthModal(false)}>
-          <div className={styles.inDepthModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <div>
-                <h4 className={styles.modalTitle}>{displayTitle}</h4>
-                <p className={styles.modalSubtitle}>{displayTagline}</p>
-              </div>
-              <button
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setShowInDepthModal(false)}
-                aria-label="Close Preview"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <p>
-                Review the comprehensive documentation and methodology specs for <strong>{displayTitle}</strong> before saving the reference file.
-              </p>
-
-              <div className={styles.modalDocCard}>
-                <FileText size={32} color="var(--interactive-blue)" />
+      {/* Section 6 & 11: In Depth Preview Modal Dialog rendered at document body via Portal */}
+      {(() => {
+        if (!showInDepthModal) return null;
+        const modalNode = (
+          <div className={styles.modalBackdrop} onClick={() => setShowInDepthModal(false)}>
+            <div className={styles.inDepthModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
                 <div>
-                  <h5 style={{ margin: "0 0 2px 0", fontSize: "0.95rem", color: "#00507b" }}>
-                    {pdfLabel || `${displayTitle} Technical Reference`}
-                  </h5>
-                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                    Executive Briefing (PDF) • Version 2026.1
+                  <h4 className={styles.modalTitle}>{displayTitle}</h4>
+                  <p className={styles.modalSubtitle}>{displayTagline}</p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.modalCloseBtn}
+                  onClick={() => setShowInDepthModal(false)}
+                  aria-label="Close Preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className={styles.modalBody}>
+                <div className={styles.modalDocMetaRow}>
+                  <span className={styles.modalDocBadge}>
+                    <FileText size={14} />
+                    {isTargetDocx ? "Word Document (.docx)" : "Executive Briefing (PDF)"}
                   </span>
+                  <span className={styles.modalDocPrompt}>
+                    In-browser live reader. You do not need to download this file to review its contents.
+                  </span>
+                </div>
+
+                {description && (
+                  <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0.25rem 0 0.5rem 0" }}>
+                    {description}
+                  </p>
+                )}
+
+                {/* Interactive document reader container */}
+                <div className={styles.modalViewerContainer}>
+                  {isTargetDocx ? (
+                    isLoadingModalDoc ? (
+                      <div className={styles.inlineDocLoading}>
+                        <Loader2 size={28} className={styles.docSpinnerIcon} />
+                        <span>Formatting Word document for reading...</span>
+                      </div>
+                    ) : modalDocxHtml ? (
+                      <div className={styles.modalDocxScroll}>
+                        <div
+                          className={styles.inlineDocxContent}
+                          dangerouslySetInnerHTML={{ __html: modalDocxHtml }}
+                        />
+                      </div>
+                    ) : (
+                      <iframe
+                        src={getOfficeViewerUrl(targetDocUrl)}
+                        className={styles.modalDocIframe}
+                        title={`${displayTitle} - Online Reader`}
+                      />
+                    )
+                  ) : (
+                    <iframe
+                      src={`${targetDocUrl}#view=FitH&toolbar=1`}
+                      className={styles.modalDocIframe}
+                      title={`${displayTitle} - Detailed Reader`}
+                    />
+                  )}
                 </div>
               </div>
 
-              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
-                {description}
-              </p>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.btnCancelVideo}
-                style={{ color: "#475569", borderColor: "#cbd5e1" }}
-                onClick={() => setShowInDepthModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.btnStartVideo}
-                onClick={handleDownloadDocument}
-                id="btn-confirm-download"
-              >
-                <Download size={16} /> Download Document
-              </button>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnCancelVideo}
+                  style={{ color: "#475569", borderColor: "#cbd5e1" }}
+                  onClick={() => setShowInDepthModal(false)}
+                >
+                  Close Reader
+                </button>
+                <a
+                  href={`/document-viewer?url=${encodeURIComponent(targetDocUrl)}&title=${encodeURIComponent(displayTitle)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.btnOpenExternal}
+                  id="btn-open-in-new-tab"
+                >
+                  <ExternalLink size={15} /> Open in New Tab
+                </a>
+                <button
+                  type="button"
+                  className={styles.btnStartVideo}
+                  onClick={handleDownloadDocument}
+                  id="btn-confirm-download"
+                >
+                  <Download size={15} /> Download Copy
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+
+        return isClient && typeof document !== "undefined"
+          ? createPortal(modalNode, document.body)
+          : modalNode;
+      })()}
     </div>
   );
 }

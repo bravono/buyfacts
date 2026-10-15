@@ -14,6 +14,7 @@ export default function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isContactCollapsed, setIsContactCollapsed] = useState(false);
+  const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
   const pathname = usePathname() || "/";
 
   const lastScrollYRef = useRef(0);
@@ -103,6 +104,23 @@ export default function Navbar({
     setIsContactCollapsed(false);
   }, [pathname]);
 
+  // Listen for document reader modal state to get out of the way
+  useEffect(() => {
+    const handleReaderState = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen?: boolean }>;
+      if (customEvent.detail && typeof customEvent.detail.isOpen === "boolean") {
+        setIsReaderModalOpen(customEvent.detail.isOpen);
+      } else {
+        setIsReaderModalOpen(document.body.classList.contains("document-reader-open"));
+      }
+    };
+
+    window.addEventListener("document-reader-toggle", handleReaderState);
+    return () => {
+      window.removeEventListener("document-reader-toggle", handleReaderState);
+    };
+  }, []);
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -117,7 +135,7 @@ export default function Navbar({
   const isCubiconActive = pathname.startsWith("/cubicon");
   const isVaultActive = pathname.startsWith("/vault");
 
-  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed;
+  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed || isReaderModalOpen;
 
   return (
     <header

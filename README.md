@@ -326,12 +326,23 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
 - **Interactive Playback Controls**: Includes a seek bar, real-time current time/duration display, mute/unmute toggle, playback reset, and full-screen controls.
 - **Hover-Aware Play Button**: The central play button transitions smoothly during playback, fading out during active video viewing and reappearing on hover or pause for quick access.
 - **Surface Interactivity**: Clicking directly on the video element or clicking the primary "Video" button at the bottom toggles play and pause immediately.
+- **In-Browser Document Rendering (PDF & DOCX)**:
+  - Users do not need to download `.pdf` or `.docx` files to inspect their contents.
+  - Selecting any document media item (`mediaType: "pdf"` or `mediaType: "docx"`, or URL ending in `.pdf` or `.docx`) immediately renders the readable content directly within the player window (`screenFrame`).
+  - **Fit-to-Width & No Horizontal Scrolling**: Both the inline media player preview and the expanded reader modal scale the document width so the entire width fits the parent container with zero horizontal scrolling. Vertical scrolling remains fully enabled for fluid reading.
+  - **PDF Rendering**: Native browser iframe embedding with `#view=FitH&toolbar=0&navpanes=0` for width-fitted inline viewing, plus an Expand action to open the full reader.
+  - **DOCX Rendering**: Client-side conversion to styled semantic HTML using `mammoth` (`convertToHtml({ arrayBuffer })`), scaling typography, headings, tables, lists, and images to fit container width without external dependencies or mandatory downloads.
+  - **Clean Inline Player Toolbar**: The inline document viewer toolbar features a format badge and a single clear **Expand** action, avoiding any ambiguous inline download triggers.
+  - **Dedicated `/document-viewer` Route for "Open in New Tab"**: Clicking **Open in New Tab** in the modal opens a dedicated full-screen reader page ([`app/document-viewer/page.tsx`](file:///c:/Users/USER/BuyFacts/app/document-viewer/page.tsx)) in a new browser tab without triggering a download. For users who specifically want a local file, the distinct **Download Copy** button performs the file download.
+  - **Navigation Bar Auto-Hiding**: When the document reader modal is opened, the top site navigation bar automatically hides (`document-reader-open` state) so it never gets in the way of reading. The navigation bar smoothly restores the moment the modal is closed.
+  - **Top-Level Portal Rendering**: The reader modal is mounted at the root of `document.body` via `createPortal` with `z-index: 99999`, preventing stacking context trapping by lower section wrappers.
+  - **File Upload & Asset Preview Integration**: Uploaded `.docx` and `.pdf` documents on `/file-upload` also leverage the document parser ([`lib/document-parser.ts`](file:///c:/Users/USER/BuyFacts/lib/document-parser.ts)) to render inline previews via [`components/FilePreview.tsx`](file:///c:/Users/USER/BuyFacts/components/FilePreview.tsx).
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
   1. **SEE IT**: User-initiated video presentation with direct play/pause toggling and Video icon.
   2. **HEAR IT**: Audio stream presentation and listen actions with Headphones icon.
-  3. **READ IT**: Executive documentation preview modal and technical reference download with FileText icon, preserving active dashboard selection upon completion.
+  3. **READ IT**: Executive documentation preview modal and technical reference reader with FileText icon, preserving active dashboard selection upon completion.
   4. **CONTACT US**: Direct navigation to `/#contact` with Mail icon.
 - **Responsive Layout & Dimensional Uniformity**:
   Action buttons maintain strictly uniform dimensions (120px width by 36px height) across desktop, tablet, and smartphone screens. The control row employs flex-wrap rearrangement into fewer columns on narrower viewports rather than stretching or shrinking buttons, ensuring a clean responsive flow. Other buttons (such as the contact inquiry submit button) are styled to fit their label with padding (`width: fit-content`) rather than expanding to the full container width.

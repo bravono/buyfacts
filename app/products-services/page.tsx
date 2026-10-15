@@ -16,7 +16,7 @@ interface ButtonData {
   color: string;
   textColor: string;
   hoverShadow: string;
-  mediaType: "video" | "image" | "audio" | "pdf";
+  mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
 }
 
@@ -148,7 +148,7 @@ export default function ServicesPage() {
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf",
+                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
                 mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
               };
             });

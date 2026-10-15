@@ -1103,7 +1103,7 @@
   height: 100vh;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
-  z-index: 2000;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1111,14 +1111,26 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Hide site navigation when document reader modal is active */
+:global(body.document-reader-open) :global(header) {
+  transform: translateY(calc(-100% - 60px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .inDepthModal {
   background: #ffffff;
   border-radius: 12px;
-  max-width: 540px;
+  max-width: min(92vw, 900px);
   width: 100%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border-color, #e2e8f0);
+  position: relative;
+  z-index: 100000;
 }
 
 .modalHeader {
@@ -1128,6 +1140,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -1156,10 +1169,12 @@
 }
 
 .modalBody {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   color: #334155;
   font-size: 0.92rem;
   line-height: 1.6;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .modalDocCard {
@@ -1195,4 +1210,361 @@
   align-items: center;
   justify-content: space-between;
   animation: fadeIn 0.25s ease-out;
+}
+
+/* Document In-Browser Rendering Elements */
+.inlineDocViewer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  z-index: 5;
+}
+
+.inlineDocHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
+  flex-shrink: 0;
+  z-index: 6;
+}
+
+.inlineDocBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00507b;
+}
+
+.inlineDocActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inlineDocActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.inlineDocActionBtn:hover {
+  background: #f8fafc;
+  color: #00507b;
+  border-color: #94a3b8;
+}
+
+.inlineDocBody {
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 32px);
+  position: relative;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.inlineDocIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+  display: block;
+}
+
+.inlineDocLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  background: #f8fafc;
+}
+
+.docSpinnerIcon {
+  animation: docSpin 1s linear infinite;
+  color: #00507b;
+}
+
+@keyframes docSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.inlineDocFallback {
+  width: 100%;
+  height: 100%;
+}
+
+.inlineDocxScroll {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  padding: 0.65rem 0.85rem;
+  background: #ffffff;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.inlineDocxContent {
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  line-height: 1.45;
+  font-size: 0.72rem;
+  color: #334155;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.inlineDocxContent * {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.inlineDocxContent h1 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #00507b;
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #002d45;
+  margin-top: 0.6rem;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent h3,
+.inlineDocxContent h4 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 0.45rem;
+  margin-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent p {
+  margin: 0.3rem 0;
+  font-size: 0.72rem;
+  color: #334155;
+  word-break: break-word;
+}
+
+.inlineDocxContent strong,
+.inlineDocxContent b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.inlineDocxContent ul,
+.inlineDocxContent ol {
+  margin: 0.35rem 0;
+  padding-left: 1.25rem;
+}
+
+.inlineDocxContent li {
+  margin-bottom: 0.2rem;
+  font-size: 0.72rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.66rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent th,
+.inlineDocxContent td {
+  border: 1px solid #cbd5e1;
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.inlineDocxContent th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.inlineDocxContent img {
+  max-width: 100% !important;
+  height: auto;
+}
+
+.inlineDocxContent pre,
+.inlineDocxContent code {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Modal Document Viewer Enhancements */
+.modalDocMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.modalDocBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #00507b;
+  background: #e0f2fe;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+
+.modalDocPrompt {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.modalViewerContainer {
+  width: 100%;
+  max-width: 100%;
+  height: 60vh;
+  min-height: 380px;
+  max-height: 620px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow-x: hidden !important;
+  overflow-y: hidden;
+  box-sizing: border-box;
+}
+
+.modalDocIframe {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+  display: block;
+  overflow-x: hidden;
+}
+
+.modalDocxScroll {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.modalDocxScroll .inlineDocxContent {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.modalDocxScroll .inlineDocxContent h1 {
+  font-size: 1.35rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.modalDocxScroll .inlineDocxContent h2 {
+  font-size: 1.15rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.modalDocxScroll .inlineDocxContent h3,
+.modalDocxScroll .inlineDocxContent h4 {
+  font-size: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.modalDocxScroll .inlineDocxContent p {
+  font-size: 0.92rem;
+  margin: 0.5rem 0;
+}
+
+.modalDocxScroll .inlineDocxContent li {
+  font-size: 0.92rem;
+  margin-bottom: 0.25rem;
+}
+
+.modalDocxScroll .inlineDocxContent table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed;
+  font-size: 0.85rem;
+}
+
+.modalDocxScroll .inlineDocxContent th,
+.modalDocxScroll .inlineDocxContent td {
+  padding: 0.45rem 0.65rem;
+}
+
+.btnOpenExternal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #00507b;
+  background: #ffffff;
+  border: 1px solid #00507b;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnOpenExternal:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
 }
