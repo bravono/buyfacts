@@ -708,19 +708,19 @@ export default function AdminDatabaseDashboard() {
                     <div className={styles.activityCardTitle}>
                       <Mail size={16} /> Latest Contact Inquiries
                     </div>
-                    {summary?.recentActivity.inquiries.length === 0 && (
+                    {summary?.recentActivity?.inquiries?.length === 0 && (
                       <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No inquiries yet.</p>
                     )}
-                    {summary?.recentActivity.inquiries.map((inq: any) => (
-                      <div key={inq.id} className={styles.activityItem}>
+                    {summary?.recentActivity?.inquiries?.map((inq: any, idx: number) => (
+                      <div key={inq?.id || idx} className={styles.activityItem}>
                         <div className={styles.activityItemMain}>
-                          <span>{inq.name}</span>
+                          <span>{inq?.name || "Anonymous"}</span>
                           <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                            {new Date(inq.createdAt).toLocaleDateString()}
+                            {inq?.createdAt ? new Date(inq.createdAt).toLocaleDateString() : ""}
                           </span>
                         </div>
                         <div className={styles.activityItemSub}>
-                          {inq.email} {inq.company ? `• ${inq.company}` : ""}
+                          {inq?.email || ""} {inq?.company ? `• ${inq.company}` : ""}
                         </div>
                       </div>
                     ))}
@@ -731,18 +731,18 @@ export default function AdminDatabaseDashboard() {
                     <div className={styles.activityCardTitle}>
                       <Activity size={16} /> Latest Feedback Submissions
                     </div>
-                    {summary?.recentActivity.feedback.length === 0 && (
+                    {summary?.recentActivity?.feedback?.length === 0 && (
                       <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No feedback yet.</p>
                     )}
-                    {summary?.recentActivity.feedback.map((fb: any) => (
-                      <div key={fb.id} className={styles.activityItem}>
+                    {summary?.recentActivity?.feedback?.map((fb: any, idx: number) => (
+                      <div key={fb?.id || idx} className={styles.activityItem}>
                         <div className={styles.activityItemMain}>
-                          <span>{fb.userEmail || "Anonymous"}</span>
+                          <span>{fb?.userEmail || "Anonymous"}</span>
                           <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--interactive-orange)" }}>
-                            ★ {fb.rating}/5
+                            {fb?.rating != null ? `★ ${fb.rating}/5` : ""}
                           </span>
                         </div>
-                        <div className={styles.activityItemSub}>{fb.feedbackText}</div>
+                        <div className={styles.activityItemSub}>{fb?.feedbackText || ""}</div>
                       </div>
                     ))}
                   </div>
@@ -752,18 +752,20 @@ export default function AdminDatabaseDashboard() {
                     <div className={styles.activityCardTitle}>
                       <Box size={16} /> Recent Cubicon Sessions
                     </div>
-                    {summary?.recentActivity.sessions.length === 0 && (
+                    {summary?.recentActivity?.sessions?.length === 0 && (
                       <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No sessions yet.</p>
                     )}
-                    {summary?.recentActivity.sessions.map((sess: any) => {
-                      const sid = sess.sessionId || sess.session_id || "";
-                      const userMail = sess.userEmail || sess.user_email || "Unregistered visitor";
+                    {summary?.recentActivity?.sessions?.map((sess: any, idx: number) => {
+                      const sid = String(sess?.sessionId || sess?.session_id || `Session-${idx + 1}`);
+                      const userMail = sess?.userEmail || sess?.user_email || "Unregistered visitor";
                       return (
-                        <div key={sess.id} className={styles.activityItem}>
+                        <div key={sess?.id || idx} className={styles.activityItem}>
                           <div className={styles.activityItemMain}>
-                            <span style={{ fontFamily: "monospace" }}>{sid.length > 18 ? sid.substring(0, 18) + "..." : sid || "Session"}</span>
+                            <span style={{ fontFamily: "monospace" }}>
+                              {sid.length > 18 ? sid.substring(0, 18) + "..." : sid}
+                            </span>
                             <span style={{ fontSize: "0.75rem" }}>
-                              Passed: {sess.passedPuzzles}/{sess.totalPuzzlesAttempted}
+                              Passed: {sess?.passedPuzzles ?? 0}/{sess?.totalPuzzlesAttempted ?? 0}
                             </span>
                           </div>
                           <div className={styles.activityItemSub}>
