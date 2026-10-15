@@ -51,19 +51,12 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} BuyFacts, Inc. All rights reserved.
             </p>
             <span style={{ opacity: 0.3, color: 'var(--text-muted)' }}>•</span>
-            <a
+            <Link
               href="/admin"
-              style={{
-                fontSize: '0.8rem',
-                color: 'var(--text-muted)',
-                opacity: 0.6,
-                textDecoration: 'none',
-                transition: 'opacity 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+              className={styles.adminLink}
             >
               Admin Access
+            </Link>
           </div>
           <p className={styles.disclaimer}>
             BuyFacts, Cubicon, TRIAD, and Rule of Three are trademarks or registered trademarks of BuyFacts, Inc.

@@ -755,19 +755,23 @@ export default function AdminDatabaseDashboard() {
                     {summary?.recentActivity.sessions.length === 0 && (
                       <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No sessions yet.</p>
                     )}
-                    {summary?.recentActivity.sessions.map((sess: any) => (
-                      <div key={sess.id} className={styles.activityItem}>
-                        <div className={styles.activityItemMain}>
-                          <span style={{ fontFamily: "monospace" }}>{sess.session_id.substring(0, 18)}...</span>
-                          <span style={{ fontSize: "0.75rem" }}>
-                            Passed: {sess.passedPuzzles}/{sess.totalPuzzlesAttempted}
-                          </span>
+                    {summary?.recentActivity.sessions.map((sess: any) => {
+                      const sid = sess.sessionId || sess.session_id || "";
+                      const userMail = sess.userEmail || sess.user_email || "Unregistered visitor";
+                      return (
+                        <div key={sess.id} className={styles.activityItem}>
+                          <div className={styles.activityItemMain}>
+                            <span style={{ fontFamily: "monospace" }}>{sid.length > 18 ? sid.substring(0, 18) + "..." : sid || "Session"}</span>
+                            <span style={{ fontSize: "0.75rem" }}>
+                              Passed: {sess.passedPuzzles}/{sess.totalPuzzlesAttempted}
+                            </span>
+                          </div>
+                          <div className={styles.activityItemSub}>
+                            {userMail}
+                          </div>
                         </div>
-                        <div className={styles.activityItemSub}>
-                          {sess.user_email || "Unregistered visitor"}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
