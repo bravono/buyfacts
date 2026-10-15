@@ -3,13 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="./src/assets/cubicon_logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Cubicon</title>
-    <!-- Preload puzzle textures to prevent delay on material updates -->
-    <link rel="preload" href="/cubicon-app/arts/Puzzle1.png" as="image" crossorigin="anonymous" />
-    <link rel="preload" href="/cubicon-app/arts/Puzzle2.png" as="image" crossorigin="anonymous" />
-    <link rel="preload" href="/cubicon-app/arts/Puzzle3.png" as="image" crossorigin="anonymous" />
-    <link rel="preload" href="/cubicon-app/arts/Puzzle4.png" as="image" crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -28,6 +23,7 @@
       src="https://kit.fontawesome.com/ea5f6dcb80.js"
       crossorigin="anonymous"
     ></script>
+    <!-- Passive Wheel Event Listener Helper -->
     <script>
       const originalAddEventListener = EventTarget.prototype.addEventListener;
       EventTarget.prototype.addEventListener = function(type, listener, options) {
@@ -41,21 +37,31 @@
         return originalAddEventListener.call(this, type, listener, options);
       };
     </script>
+    <!-- Overlay Styles: Touch Action & Interaction Guards -->
     <style>
+      :root, html, body, #root {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #0f141c !important;
+        background: #0f141c !important;
+        color-scheme: dark !important;
+        color: #f1f5f9;
+      }
       canvas {
-        touch-action: pan-y !important;
+        touch-action: none !important;
+        outline: none;
+        user-select: none;
+        -webkit-user-select: none;
       }
-      #root > div {
-        touch-action: pan-y !important;
-      }
-    </style>
-    <script type="module" crossorigin src="./assets/index-DQS34Hxf.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Do5xKSQC.css">
-    <style>
       .my-navbar, .custom-navbar, .NavbarItems, nav {
         display: none !important;
       }
     </style>
+    <script type="module" crossorigin src="./assets/index--v3vdRt3.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-KPSNMo3V.css">
   </head>
   <body>
     <div id="root"></div>

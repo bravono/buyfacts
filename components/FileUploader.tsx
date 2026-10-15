@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import {
   UploadCloud,
   File as FileIcon,
@@ -14,12 +11,23 @@ import {
   Zap,
   Server,
   ArrowRight,
+  Folder,
+  FolderTree,
+  Layers,
+  Plus,
+  Trash2,
+  FileText,
+  Image as ImageIcon,
+  Film,
+  Music,
+  ExternalLink,
 } from 'lucide-react';
 import { FilePreview } from './FilePreview';
+import { sanitizeFolderPrefix } from '@/lib/minio';
 import styles from './FileUploader.module.css';
 
-// 100MB File Size Limit in Bytes
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+// 1GB File Size Limit in Bytes (1024MB)
+const MAX_FILE_SIZE_BYTES = 1024 * 1024 * 1024;
 
 // Allowed file types: Images, Videos, Audio, PDFs, Office Documents, Text, Archives
 const ALLOWED_MIME_PREFIXES = ['image/', 'video/', 'audio/', 'application/pdf', 'text/'];
@@ -30,30 +38,6 @@ const ALLOWED_EXTENSIONS = [
   'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'
 ];
 
-/**
- * Zod validation schema for file selection
- */
-const uploadSchema = z.object({
-  file: z
-    .instanceof(File, { message: 'Please select a file to upload.' })
-    .refine((file) => file.size <= MAX_FILE_SIZE_BYTES, {
-      message: `File size exceeds the 100MB limit. Please select a smaller file.`,
-    })
-    .refine(
-      (file) => {
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
-        const isAllowedMime = ALLOWED_MIME_PREFIXES.some((prefix) => file.type.startsWith(prefix));
-        const isAllowedExt = ALLOWED_EXTENSIONS.includes(fileExt);
-        return isAllowedMime || isAllowedExt;
-      },
-      {
-        message: 'Unsupported file type. Allowed formats: images, videos, audio, PDFs, documents, archives.',
-      }
-    ),
-});
-
-type UploadFormData = z.infer<typeof uploadSchema>;
-
 export interface UploadSuccessResult {
   publicUrl: string;
   objectKey: string;
@@ -62,72 +46,222 @@ export interface UploadSuccessResult {
   fileSize: number;
 }
 
+export type QueueItemStatus = 'ready' | 'uploading' | 'success' | 'error';
+
+export interface QueueItem {
+  id: string;
+  file: File;
+  relativePath?: string; // Relative path inside dropped or chosen folder, e.g. "my-folder/sub/icon.png"
+  status: QueueItemStatus;
+  progress: number;
+  error?: string;
+  result?: UploadSuccessResult;
+  mediaType: 'video' | 'image' | 'audio' | 'pdf';
+}
+
 interface FileUploaderProps {
   /** Callback fired upon successful upload with the returned public URL and file details */
   onUploadSuccess?: (result: UploadSuccessResult) => void;
-  /** Subfolder prefix inside MinIO bucket (default: 'uploads') */
+  /** Callback fired when all batch uploads finish with all successful results */
+  onBatchUploadSuccess?: (results: UploadSuccessResult[]) => void;
+  /** Initial subfolder prefix inside MinIO bucket (default: 'uploads') */
   folderPrefix?: string;
   /** Custom container class */
   className?: string;
 }
 
+const PRESET_FOLDERS = [
+  { value: 'products-services', label: 'Products & Services' },
+  { value: 'research-imperatives', label: 'Research Imperatives' },
+  { value: 'cubicon', label: 'Cubicon' },
+  { value: 'research-lib', label: 'Research Lib' },
+  { value: 'triad', label: 'Triad' },
+  { value: 'rule-of-three', label: 'Rule of Three' },
+  { value: 'uploads', label: 'Uploads' },
+  { value: 'custom', label: 'Custom folder...' },
+];
+
 export const FileUploader: React.FC<FileUploaderProps> = ({
   onUploadSuccess,
+  onBatchUploadSuccess,
   folderPrefix = 'uploads',
   className = '',
 }) => {
-  // State variables
+  // Folder destination state
+  const [folderPreset, setFolderPreset] = useState<string>(() => {
+    const matched = PRESET_FOLDERS.find((p) => p.value === folderPrefix);
+    return matched ? matched.value : 'custom';
+  });
+  const [customFolder, setCustomFolder] = useState<string>(folderPrefix);
+
+  // Computed destination folder
+  const activeDestinationFolder = folderPreset === 'custom'
+    ? sanitizeFolderPrefix(customFolder)
+    : folderPreset;
+
+  // Upload method (default: 'multipart' for robust resumable chunked transfers)
+  const [uploadMethod, setUploadMethod] = useState<'multipart' | 'server' | 'presigned'>('multipart');
+
+  // Drag and drop & Queue state
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [fileQueue, setFileQueue] = useState<QueueItem[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadResult, setUploadResult] = useState<UploadSuccessResult | null>(null);
-  const [uploadMethod, setUploadMethod] = useState<'presigned' | 'server'>('presigned');
-  const [selectedMediaType, setSelectedMediaType] = useState<'video' | 'image' | 'audio' | 'pdf'>('video');
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [batchResults, setBatchResults] = useState<UploadSuccessResult[] | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const dirInputRef = useRef<HTMLInputElement>(null);
+  const abortControllersRef = useRef<{ [id: string]: XMLHttpRequest }>({});
 
-  // React Hook Form initialization
-  const {
-    handleSubmit,
-    setValue,
-    clearErrors,
-    formState: { errors },
-  } = useForm<UploadFormData>({
-    resolver: zodResolver(uploadSchema),
-  });
-
-  // Handle file selection from input or dropzone
-  const handleFileChange = useCallback((file: File | null) => {
-    setUploadError(null);
-    setUploadProgress(0);
-    setUploadResult(null);
-
-    if (file) {
-      setSelectedFile(file);
-      setValue('file', file, { shouldValidate: true });
-
-      // Auto-detect media type
-      const mime = file.type || '';
-      const name = file.name.toLowerCase();
-      if (mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name)) {
-        setSelectedMediaType('image');
-      } else if (mime.startsWith('video/') || /\.(mp4|webm|ogg|mov|mkv)$/i.test(name)) {
-        setSelectedMediaType('video');
-      } else if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(name)) {
-        setSelectedMediaType('audio');
-      } else if (mime === 'application/pdf' || /\.pdf$/i.test(name)) {
-        setSelectedMediaType('pdf');
-      } else {
-        setSelectedMediaType('video'); // default fallback
-      }
-    } else {
-      setSelectedFile(null);
-      setValue('file', null as any, { shouldValidate: true });
+  const detectMediaType = (file: File): 'video' | 'image' | 'audio' | 'pdf' => {
+    const mime = file.type || '';
+    const name = file.name.toLowerCase();
+    if (mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name)) {
+      return 'image';
+    } else if (mime.startsWith('video/') || /\.(mp4|webm|ogg|mov|mkv)$/i.test(name)) {
+      return 'video';
+    } else if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|aac|flac|m4a)$/i.test(name)) {
+      return 'audio';
+    } else if (mime === 'application/pdf' || /\.pdf$/i.test(name)) {
+      return 'pdf';
     }
-  }, [setValue]);
+    return 'video';
+  };
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeFormatted = file.size >= 1024 * 1024 * 1024
+        ? `${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`
+        : `${(file.size / (1024 * 1024)).toFixed(1)}MB`;
+      return `File exceeds maximum limit of 1GB (${sizeFormatted})`;
+    }
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+    const isAllowedMime = ALLOWED_MIME_PREFIXES.some((prefix) => file.type && file.type.startsWith(prefix));
+    const isAllowedExt = ALLOWED_EXTENSIONS.includes(fileExt);
+    if (!isAllowedMime && !isAllowedExt) {
+      return 'Unsupported file format.';
+    }
+    return null;
+  };
+
+  // Helper to extract all files from DataTransfer (recursively scanning dropped directories)
+  const extractFilesFromDataTransfer = async (
+    dataTransfer: DataTransfer
+  ): Promise<{ file: File; relativePath?: string }[]> => {
+    const items = dataTransfer.items;
+    const results: { file: File; relativePath?: string }[] = [];
+
+    if (!items || items.length === 0) {
+      return Array.from(dataTransfer.files).map((file) => ({
+        file,
+        relativePath: (file as any).webkitRelativePath || undefined,
+      }));
+    }
+
+    const traverseEntry = async (entry: any, path = ''): Promise<void> => {
+      if (!entry) return;
+      if (entry.isFile) {
+        await new Promise<void>((resolve) => {
+          entry.file(
+            (file: File) => {
+              results.push({
+                file,
+                relativePath: path ? `${path}/${file.name}` : undefined,
+              });
+              resolve();
+            },
+            () => resolve()
+          );
+        });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const readEntries = async (): Promise<any[]> => {
+          let all: any[] = [];
+          while (true) {
+            const batch: any[] = await new Promise((resolve) => {
+              reader.readEntries((entries: any[]) => resolve(entries), () => resolve([]));
+            });
+            if (!batch || batch.length === 0) break;
+            all = all.concat(batch);
+          }
+          return all;
+        };
+
+        const currentPath = path ? `${path}/${entry.name}` : entry.name;
+        const subEntries = await readEntries();
+        for (const sub of subEntries) {
+          await traverseEntry(sub, currentPath);
+        }
+      }
+    };
+
+    const promises: Promise<void>[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i] as any;
+      const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null;
+      if (entry) {
+        promises.push(traverseEntry(entry, ''));
+      } else if (items[i].kind === 'file') {
+        const file = items[i].getAsFile();
+        if (file) {
+          results.push({ file });
+        }
+      }
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+
+    if (results.length === 0 && dataTransfer.files.length > 0) {
+      return Array.from(dataTransfer.files).map((file) => ({
+        file,
+        relativePath: (file as any).webkitRelativePath || undefined,
+      }));
+    }
+
+    return results;
+  };
+
+  // Add files to queue (handles both single files and directory entries with relative paths)
+  const addFilesToQueue = useCallback((
+    newFiles: FileList | File[] | { file: File; relativePath?: string }[]
+  ) => {
+    setGlobalError(null);
+    setBatchResults(null);
+
+    const itemsToAdd: QueueItem[] = [];
+    const errors: string[] = [];
+
+    Array.from(newFiles as any[]).forEach((itemEntry: any) => {
+      const file: File = itemEntry && typeof itemEntry === 'object' && 'file' in itemEntry ? itemEntry.file : itemEntry;
+      const relativePath: string | undefined = itemEntry && typeof itemEntry === 'object' && 'relativePath' in itemEntry
+        ? itemEntry.relativePath
+        : (file as any).webkitRelativePath || undefined;
+
+      const error = validateFile(file);
+      if (error) {
+        errors.push(`${file.name}: ${error}`);
+      } else {
+        itemsToAdd.push({
+          id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          file,
+          relativePath,
+          status: 'ready',
+          progress: 0,
+          mediaType: detectMediaType(file),
+        });
+      }
+    });
+
+    if (errors.length > 0) {
+      setGlobalError(errors.join(' | '));
+    }
+
+    if (itemsToAdd.length > 0) {
+      setFileQueue((prev) => [...prev, ...itemsToAdd]);
+    }
+  }, []);
 
   // Drag and Drop handlers
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -140,41 +274,60 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      handleFileChange(droppedFile);
+    if (e.dataTransfer) {
+      const extracted = await extractFilesFromDataTransfer(e.dataTransfer);
+      if (extracted.length > 0) {
+        addFilesToQueue(extracted);
+      }
     }
-  }, [handleFileChange]);
+  }, [addFilesToQueue]);
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setValue('file', null as any);
-    clearErrors('file');
-    setUploadProgress(0);
-    setUploadError(null);
+  const handleRemoveFromQueue = (id: string) => {
+    if (abortControllersRef.current[id]) {
+      abortControllersRef.current[id].abort();
+      delete abortControllersRef.current[id];
+    }
+    setFileQueue((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearQueue = () => {
+    Object.values(abortControllersRef.current).forEach((xhr) => xhr.abort());
+    abortControllersRef.current = {};
+    setFileQueue([]);
+    setGlobalError(null);
+    setBatchResults(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    if (dirInputRef.current) {
+      dirInputRef.current.value = '';
+    }
+  };
+
+  const updateItem = (id: string, updates: Partial<QueueItem>) => {
+    setFileQueue((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+    );
   };
 
   /**
-   * Performs file upload using Presigned PUT URL with XMLHttpRequest to track real-time progress
+   * Uploads single file via Presigned PUT URL
    */
-  const uploadViaPresignedUrl = async (file: File): Promise<UploadSuccessResult> => {
-    // Step 1: Request presigned URL from API Route
+  const uploadSinglePresigned = async (item: QueueItem, folder: string): Promise<UploadSuccessResult> => {
+    // Step 1: Request presigned URL
     const res = await fetch('/api/upload/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        filename: file.name,
-        fileType: file.type || 'application/octet-stream',
-        fileSize: file.size,
-        prefix: folderPrefix,
+        filename: item.file.name,
+        fileType: item.file.type || 'application/octet-stream',
+        fileSize: item.file.size,
+        prefix: folder,
       }),
     });
 
@@ -185,72 +338,208 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
     const { uploadUrl, publicUrl, objectKey } = await res.json();
 
-    // Step 2: Upload file directly to MinIO using XMLHttpRequest for progress tracking
+    // Step 2: Stream file directly to MinIO
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhrRef.current = xhr;
+      abortControllersRef.current[item.id] = xhr;
 
+      let lastProgressPercent = 0;
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percentComplete);
+          const percent = Math.round((event.loaded / event.total) * 100);
+          lastProgressPercent = percent;
+          updateItem(item.id, { progress: percent });
         }
       };
 
       xhr.onload = () => {
+        delete abortControllersRef.current[item.id];
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve({
+          const result: UploadSuccessResult = {
             publicUrl,
             objectKey,
-            fileName: file.name,
-            fileType: file.type || 'application/octet-stream',
-            fileSize: file.size,
-          });
+            fileName: item.file.name,
+            fileType: item.mediaType,
+            fileSize: item.file.size,
+          };
+          resolve(result);
         } else {
-          let errorMsg = `MinIO Upload failed with HTTP status ${xhr.status}.`;
+          let errorMsg = `Upload failed with status ${xhr.status}`;
           try {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xhr.responseText, 'text/xml');
             const code = xmlDoc.getElementsByTagName('Code')[0]?.textContent;
             const message = xmlDoc.getElementsByTagName('Message')[0]?.textContent;
-            if (code && message) {
-              errorMsg = `${code}: ${message}`;
-            }
+            if (code && message) errorMsg = `${code}: ${message}`;
           } catch (_) {}
           reject(new Error(errorMsg));
         }
       };
 
       xhr.onerror = () => {
-        reject(new Error('Network error or CORS violation occurred during MinIO direct upload.'));
+        delete abortControllersRef.current[item.id];
+        const statusDetail = xhr.status ? ` (HTTP ${xhr.status})` : '';
+        reject(
+          new Error(
+            `Connection was terminated by server at ${lastProgressPercent}%${statusDetail}. This occurs when an intermediate reverse proxy (e.g. Nginx client_max_body_size or Cloudflare 100MB/timeout limits) severs the stream.`
+          )
+        );
       };
 
       xhr.onabort = () => {
-        reject(new Error('Upload was cancelled.'));
+        delete abortControllersRef.current[item.id];
+        reject(new Error('Upload cancelled.'));
       };
 
       xhr.open('PUT', uploadUrl, true);
-      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-      xhr.send(file);
+      xhr.setRequestHeader('Content-Type', item.file.type || 'application/octet-stream');
+      xhr.setRequestHeader('Content-Disposition', 'inline');
+      xhr.send(item.file);
     });
   };
 
   /**
-   * Fallback method: Direct multipart upload via Next.js server route
+   * Uploads single file via Server Route
    */
-  const uploadViaServer = async (file: File): Promise<UploadSuccessResult> => {
+  const uploadSingleServer = async (item: QueueItem, folder: string): Promise<UploadSuccessResult> => {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('prefix', folderPrefix);
+    formData.append('file', item.file);
+    formData.append('prefix', folder);
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhrRef.current = xhr;
+      abortControllersRef.current[item.id] = xhr;
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percentComplete);
+          const percent = Math.round((event.loaded / event.total) * 100);
+          updateItem(item.id, { progress: percent });
+        }
+      };
+
+      xhr.onload = () => {
+        delete abortControllersRef.current[item.id];
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            const result: UploadSuccessResult = {
+              publicUrl: data.publicUrl,
+              objectKey: data.objectKey,
+              fileName: item.file.name,
+              fileType: item.mediaType,
+              fileSize: item.file.size,
+            };
+            resolve(result);
+          } catch {
+            reject(new Error('Failed to parse server upload response.'));
+          }
+        } else {
+          let errorMsg = `Server upload failed with status ${xhr.status}`;
+          try {
+            const errData = JSON.parse(xhr.responseText);
+            if (errData.error) errorMsg = errData.error;
+          } catch (_) {}
+          reject(new Error(errorMsg));
+        }
+      };
+
+      xhr.onerror = () => {
+        delete abortControllersRef.current[item.id];
+        reject(new Error('Server upload network error.'));
+      };
+
+      xhr.open('POST', '/api/upload', true);
+      xhr.send(formData);
+    });
+  };
+
+  /**
+   * Uploads a single chunk directly to MinIO using a presigned PUT URL
+   */
+  const uploadChunkDirect = (
+    objectKey: string,
+    uploadId: string,
+    partNumber: number,
+    chunk: Blob,
+    itemId: string,
+    baseUploadedBytes: number,
+    totalBytes: number
+  ): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const presignRes = await fetch(
+          `/api/upload/multipart/part?objectKey=${encodeURIComponent(objectKey)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`
+        );
+        if (!presignRes.ok) {
+          const err = await presignRes.json().catch(() => ({}));
+          return reject(new Error(err.error || `Failed to get presigned URL for part ${partNumber}`));
+        }
+        const { presignedUrl } = await presignRes.json();
+
+        const xhr = new XMLHttpRequest();
+        abortControllersRef.current[itemId] = xhr;
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const currentTotal = baseUploadedBytes + event.loaded;
+            const percent = Math.min(99, Math.round((currentTotal / totalBytes) * 100));
+            updateItem(itemId, { progress: percent });
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const rawEtag = xhr.getResponseHeader('ETag') || '';
+            const etag = rawEtag.replace(/^"+|"+$/g, '');
+            if (!etag) {
+              return reject(new Error('Missing ETag response header from MinIO for part upload.'));
+            }
+            resolve(etag);
+          } else {
+            reject(new Error(`Direct part upload failed with status ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error(`Network error uploading part ${partNumber} directly`));
+        };
+
+        xhr.open('PUT', presignedUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.send(chunk);
+      } catch (err: any) {
+        reject(err);
+      }
+    });
+  };
+
+  /**
+   * Fallback: Uploads a single 5MB chunk via Next.js Server Route
+   */
+  const uploadChunkViaServer = (
+    objectKey: string,
+    uploadId: string,
+    partNumber: number,
+    chunk: Blob,
+    itemId: string,
+    baseUploadedBytes: number,
+    totalBytes: number
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('objectKey', objectKey);
+      formData.append('uploadId', uploadId);
+      formData.append('partNumber', partNumber.toString());
+      formData.append('chunk', chunk, `part-${partNumber}.bin`);
+
+      const xhr = new XMLHttpRequest();
+      abortControllersRef.current[itemId] = xhr;
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const currentTotal = baseUploadedBytes + event.loaded;
+          const percent = Math.min(99, Math.round((currentTotal / totalBytes) * 100));
+          updateItem(itemId, { progress: percent });
         }
       };
 
@@ -258,72 +547,258 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText);
-            resolve({
-              publicUrl: data.publicUrl,
-              objectKey: data.objectKey,
-              fileName: file.name,
-              fileType: file.type || 'application/octet-stream',
-              fileSize: file.size,
-            });
-          } catch (e) {
-            reject(new Error('Failed to parse server upload response.'));
+            if (data.success && data.etag) {
+              resolve(data.etag);
+            } else {
+              reject(new Error(data.error || 'Server route returned invalid part upload result'));
+            }
+          } catch {
+            reject(new Error('Failed to parse server part upload response.'));
           }
         } else {
-          let errorMsg = `Server upload failed with status ${xhr.status}.`;
-          try {
-            const errData = JSON.parse(xhr.responseText);
-            if (errData.error) {
-              errorMsg = errData.error;
-            }
-          } catch (_) {}
-          reject(new Error(errorMsg));
+          reject(new Error(`Server part upload failed with status ${xhr.status}`));
         }
       };
 
-      xhr.onerror = () => reject(new Error('Server upload network error.'));
-      xhr.open('POST', '/api/upload', true);
+      xhr.onerror = () => {
+        reject(new Error(`Network error uploading part ${partNumber} via server route`));
+      };
+
+      xhr.open('POST', '/api/upload/multipart/part', true);
       xhr.send(formData);
     });
   };
 
-  // Main Submit Handler
-  const onSubmit = async () => {
-    if (!selectedFile) return;
+  /**
+   * Uploads single file via S3 Resumable Multipart Upload (5MB Chunks)
+   */
+  const uploadSingleMultipart = async (item: QueueItem, folder: string): Promise<UploadSuccessResult> => {
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB minimum S3 part size
+    const file = item.file;
+    const totalParts = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+    const storageKey = `s3_multipart_${file.name}_${file.size}_${file.lastModified}_${folder}`;
 
-    setIsUploading(true);
-    setUploadError(null);
-    setUploadProgress(0);
+    // Step 1: Check localStorage for existing resumable session
+    let uploadId: string | null = null;
+    let objectKey: string | null = null;
+    let completedParts: { PartNumber: number; ETag: string }[] = [];
 
-    try {
-      let result: UploadSuccessResult;
-      if (uploadMethod === 'presigned') {
-        result = await uploadViaPresignedUrl(selectedFile);
-      } else {
-        result = await uploadViaServer(selectedFile);
+    const savedSessionRaw = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    if (savedSessionRaw) {
+      try {
+        const saved = JSON.parse(savedSessionRaw);
+        if (saved.uploadId && saved.objectKey) {
+          // Verify with MinIO that this upload session is still valid
+          const checkRes = await fetch(
+            `/api/upload/multipart/list-parts?objectKey=${encodeURIComponent(saved.objectKey)}&uploadId=${encodeURIComponent(saved.uploadId)}`
+          );
+          if (checkRes.ok) {
+            const checkData = await checkRes.json();
+            if (checkData.success && Array.isArray(checkData.parts)) {
+              uploadId = saved.uploadId;
+              objectKey = saved.objectKey;
+              completedParts = checkData.parts.map((p: any) => ({
+                PartNumber: p.partNumber,
+                ETag: p.etag,
+              }));
+            }
+          }
+        }
+      } catch (_) {
+        // Corrupted session, ignore
       }
-
-      const finalResult = {
-        ...result,
-        fileType: selectedMediaType,
-      };
-
-      setUploadResult(finalResult);
-      if (onUploadSuccess) {
-        onUploadSuccess(finalResult);
-      }
-    } catch (err: any) {
-      console.error('File upload error:', err);
-      setUploadError(err.message || 'An unexpected error occurred during upload.');
-    } finally {
-      setIsUploading(false);
-      xhrRef.current = null;
     }
+
+    // If no existing session, initiate new S3 multipart upload
+    if (!uploadId || !objectKey) {
+      const initRes = await fetch('/api/upload/multipart/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          prefix: folder,
+          contentType: file.type || 'application/octet-stream',
+          fileSize: file.size,
+        }),
+      });
+
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to initiate multipart upload session.');
+      }
+
+      const initData = await initRes.json();
+      uploadId = initData.uploadId;
+      objectKey = initData.objectKey;
+      completedParts = [];
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({ uploadId, objectKey, createdAt: Date.now() })
+        );
+      }
+    }
+
+    // Step 2: Upload parts with retries on drops
+    const completedPartNumbers = new Set(completedParts.map((p) => p.PartNumber));
+    let uploadedBytes = completedParts.length * CHUNK_SIZE;
+
+    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+      if (completedPartNumbers.has(partNumber)) {
+        continue;
+      }
+
+      const start = (partNumber - 1) * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunkBlob = file.slice(start, end);
+      const chunkSize = end - start;
+
+      let partEtag: string | null = null;
+      let lastError: Error | null = null;
+      const MAX_RETRIES = 5;
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Attempt 1: Direct part PUT with presigned URL
+          partEtag = await uploadChunkDirect(objectKey!, uploadId!, partNumber, chunkBlob, item.id, uploadedBytes, file.size);
+          break;
+        } catch (directErr: any) {
+          console.warn(`Direct part ${partNumber} upload attempt ${attempt} failed, trying server part fallback:`, directErr);
+          try {
+            // Attempt fallback: Server route for chunk
+            partEtag = await uploadChunkViaServer(objectKey!, uploadId!, partNumber, chunkBlob, item.id, uploadedBytes, file.size);
+            break;
+          } catch (serverErr: any) {
+            lastError = serverErr;
+            if (attempt < MAX_RETRIES) {
+              // Exponential backoff wait for satellite/network drop recovery (1.5s, 3s, 4.5s...)
+              await new Promise((r) => setTimeout(r, attempt * 1500));
+            }
+          }
+        }
+      }
+
+      if (!partEtag) {
+        throw new Error(
+          `Failed to upload part ${partNumber} of ${totalParts} after ${MAX_RETRIES} attempts. Connection dropped: ${lastError?.message || 'Network error'}`
+        );
+      }
+
+      completedParts.push({ PartNumber: partNumber, ETag: partEtag });
+      completedPartNumbers.add(partNumber);
+      uploadedBytes += chunkSize;
+
+      const percent = Math.min(99, Math.round((uploadedBytes / file.size) * 100));
+      updateItem(item.id, { progress: percent });
+    }
+
+    // Step 3: Complete multipart upload
+    const completeRes = await fetch('/api/upload/multipart/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        objectKey,
+        uploadId,
+        parts: completedParts,
+      }),
+    });
+
+    if (!completeRes.ok) {
+      const err = await completeRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to complete multipart upload assembly in MinIO.');
+    }
+
+    const completeData = await completeRes.json();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(storageKey);
+    }
+
+    return {
+      publicUrl: completeData.publicUrl,
+      objectKey: completeData.objectKey,
+      fileName: file.name,
+      fileType: item.mediaType,
+      fileSize: file.size,
+    };
   };
 
-  const handleReset = () => {
-    handleRemoveFile();
-    setUploadResult(null);
-    setUploadError(null);
+  // Upload Batch
+  const handleUploadAll = async () => {
+    if (fileQueue.length === 0 || isUploading) return;
+
+    setIsUploading(true);
+    setGlobalError(null);
+    setBatchResults(null);
+
+    const itemsToUpload = fileQueue.filter((item) => item.status !== 'success');
+    const successfulResults: UploadSuccessResult[] = [];
+    const destination = activeDestinationFolder;
+
+    // Concurrency pool (up to 3 parallel uploads)
+    const CONCURRENCY = 3;
+    let index = 0;
+
+    const runWorker = async () => {
+      while (index < itemsToUpload.length) {
+        const currentItem = itemsToUpload[index];
+        index++;
+
+        updateItem(currentItem.id, { status: 'uploading', progress: 0, error: undefined });
+
+        // If file is inside a relative folder hierarchy (e.g. "my-folder/textures/diffuse.png"),
+        // merge with the active destination folder (e.g. "cubicon/my-folder/textures")
+        let itemDestination = destination;
+        if (currentItem.relativePath) {
+          const normalized = currentItem.relativePath.replace(/\\/g, '/');
+          const lastSlash = normalized.lastIndexOf('/');
+          if (lastSlash > 0) {
+            const subDir = normalized.substring(0, lastSlash);
+            itemDestination = `${destination}/${subDir}`;
+          }
+        }
+
+        try {
+          let result: UploadSuccessResult;
+          // Files exceeding 100MB automatically use multipart chunking to bypass reverse proxy payload caps and avoid server memory spikes
+          if (uploadMethod === 'multipart' || currentItem.file.size > 100 * 1024 * 1024) {
+            result = await uploadSingleMultipart(currentItem, itemDestination);
+          } else if (uploadMethod === 'presigned') {
+            result = await uploadSinglePresigned(currentItem, itemDestination);
+          } else {
+            result = await uploadSingleServer(currentItem, itemDestination);
+          }
+
+          updateItem(currentItem.id, { status: 'success', progress: 100, result });
+          successfulResults.push(result);
+
+          if (onUploadSuccess) {
+            onUploadSuccess(result);
+          }
+        } catch (err: any) {
+          console.error(`Error uploading ${currentItem.file.name}:`, err);
+          updateItem(currentItem.id, {
+            status: 'error',
+            error: err.message || 'Upload failed',
+          });
+        }
+      }
+    };
+
+    const workers = Array.from({ length: Math.min(CONCURRENCY, itemsToUpload.length) }, () =>
+      runWorker()
+    );
+
+    await Promise.all(workers);
+
+    setIsUploading(false);
+
+    if (successfulResults.length > 0) {
+      setBatchResults(successfulResults);
+      if (onBatchUploadSuccess) {
+        onBatchUploadSuccess(successfulResults);
+      }
+    }
   };
 
   const formatBytes = (bytes: number) => {
@@ -334,20 +809,33 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getMediaIcon = (type: string) => {
+    switch (type) {
+      case 'image': return <ImageIcon className="w-4 h-4" />;
+      case 'video': return <Film className="w-4 h-4" />;
+      case 'audio': return <Music className="w-4 h-4" />;
+      case 'pdf': return <FileText className="w-4 h-4" />;
+      default: return <FileIcon className="w-4 h-4" />;
+    }
+  };
+
+  const totalUploaded = fileQueue.filter((i) => i.status === 'success').length;
+  const overallProgress = fileQueue.length > 0
+    ? Math.round(fileQueue.reduce((acc, curr) => acc + curr.progress, 0) / fileQueue.length)
+    : 0;
+
   return (
     <div className={`${styles.uploaderContainer} ${className}`}>
-      {/* Container Card */}
       <div className={styles.uploadCard}>
-        
         {/* Header Section */}
         <div className={styles.headerRow}>
           <div className={styles.headerText}>
             <h3>
               <UploadCloud className="w-5 h-5" />
-              File Ingestion
+              File Ingestion & Batch Uploader
             </h3>
             <p>
-              Direct browser upload to S3-compatible cloud storage
+              Direct batch upload to S3-compatible cloud storage with custom destination folders
             </p>
           </div>
 
@@ -355,12 +843,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           <div className={styles.modeToggle}>
             <button
               type="button"
-              onClick={() => setUploadMethod('presigned')}
-              className={`${styles.toggleBtn} ${uploadMethod === 'presigned' ? styles.toggleBtnActive : ''}`}
-              title="Uploads directly from browser to MinIO using S3 presigned URL"
+              onClick={() => setUploadMethod('multipart')}
+              className={`${styles.toggleBtn} ${uploadMethod === 'multipart' ? styles.toggleBtnActive : ''}`}
+              title="Resumable S3 Multipart: Slices file into 5MB chunks with auto-retry and resume support for unstable/satellite connections (Recommended)"
             >
-              <Zap className="w-3.5 h-3.5" />
-              Direct PUT
+              <Layers className="w-3.5 h-3.5" />
+              Resumable (S3 Chunks)
             </button>
             <button
               type="button"
@@ -371,43 +859,136 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <Server className="w-3.5 h-3.5" />
               Server Route
             </button>
+            <button
+              type="button"
+              onClick={() => setUploadMethod('presigned')}
+              className={`${styles.toggleBtn} ${uploadMethod === 'presigned' ? styles.toggleBtnActive : ''}`}
+              title="Uploads directly from browser to MinIO using single S3 presigned PUT URL"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Direct PUT
+            </button>
           </div>
         </div>
 
-        {/* Successful Upload State */}
-        {uploadResult ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Destination Folder Configuration */}
+        <div className={styles.folderSection}>
+          <div className={styles.folderHeader}>
+            <div className={styles.folderLabel}>
+              <Folder className="w-4 h-4 text-[var(--interactive-orange)]" /> Destination Folder
+            </div>
+            <div className={styles.folderPathBadge} title={`Target prefix: ${activeDestinationFolder}`}>
+              /{activeDestinationFolder}
+            </div>
+          </div>
+
+          <div className={styles.folderControls}>
+            <select
+              value={folderPreset}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFolderPreset(val);
+                if (val !== 'custom') {
+                  setCustomFolder(val);
+                }
+              }}
+              disabled={isUploading}
+              className={styles.folderSelect}
+            >
+              {PRESET_FOLDERS.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+
+            <div className={styles.folderInputWrapper}>
+              <Folder className={`w-3.5 h-3.5 ${styles.folderInputIcon}`} />
+              <input
+                type="text"
+                value={customFolder}
+                onChange={(e) => {
+                  setCustomFolder(e.target.value);
+                  setFolderPreset('custom');
+                }}
+                disabled={isUploading}
+                placeholder="e.g. cubicon/models, media/2026/q1"
+                className={styles.folderInput}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Successful Batch Banner */}
+        {batchResults && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className={styles.successBanner}>
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <div>
-                <h4 className={styles.successTitle}>Upload Successful</h4>
-                <p className={styles.successText}>File is stored in MinIO and accessible via public URL.</p>
+                <h4 className={styles.successTitle}>Batch Upload Complete</h4>
+                <p className={styles.successText}>
+                  Successfully uploaded {batchResults.length} object{batchResults.length > 1 ? 's' : ''} to /{activeDestinationFolder}.
+                </p>
               </div>
             </div>
 
-            {/* Direct Rich Preview Component */}
-            <FilePreview
-              url={uploadResult.publicUrl}
-              fileName={uploadResult.fileName}
-              fileType={uploadResult.fileType}
-              fileSize={uploadResult.fileSize}
-            />
+            {/* If single file uploaded, display rich preview */}
+            {batchResults.length === 1 && (
+              <FilePreview
+                url={batchResults[0].publicUrl}
+                fileName={batchResults[0].fileName}
+                fileType={batchResults[0].fileType}
+                fileSize={batchResults[0].fileSize}
+              />
+            )}
+
+            {/* If multiple files, display summary items */}
+            {batchResults.length > 1 && (
+              <div className={styles.batchSummaryList}>
+                {batchResults.map((res, idx) => (
+                  <div key={idx} className={styles.batchSummaryItem}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <div style={{ overflow: 'hidden' }}>
+                        <div className={styles.batchSummaryName} title={res.fileName}>
+                          {res.fileName}
+                        </div>
+                        <div className={styles.batchSummaryKey}>
+                          {res.objectKey}
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={res.publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary text-xs"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.3rem 0.6rem' }}
+                    >
+                      <ExternalLink className="w-3 h-3" /> View
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
               <button
                 type="button"
-                onClick={handleReset}
+                onClick={handleClearQueue}
                 className="btn btn-secondary text-sm"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                <RefreshCw className="w-4 h-4" /> Upload Another File
+                <RefreshCw className="w-4 h-4" /> Upload More Files
               </button>
             </div>
           </div>
-        ) : (
-          /* Form & Dropzone State */
-          <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Drag and Drop Zone */}
+        )}
+
+        {/* Upload Dropzone & Queue Form */}
+        {!batchResults && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Dropzone */}
             <div
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -419,12 +1000,28 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                className="hidden"
+                multiple
+                style={{ display: 'none' }}
                 disabled={isUploading}
                 onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    handleFileChange(e.target.files[0]);
+                  if (e.target.files && e.target.files.length > 0) {
+                    addFilesToQueue(e.target.files);
                   }
+                  e.target.value = '';
+                }}
+              />
+              <input
+                ref={dirInputRef}
+                type="file"
+                multiple
+                {...({ webkitdirectory: '', directory: '' } as any)}
+                style={{ display: 'none' }}
+                disabled={isUploading}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    addFilesToQueue(e.target.files);
+                  }
+                  e.target.value = '';
                 }}
               />
 
@@ -434,150 +1031,244 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
               <div>
                 <p className={styles.dropzoneTitle}>
-                  {dragActive ? 'Drop your file here...' : 'Click to upload or drag & drop'}
+                  {dragActive ? 'Drop files or folders here...' : 'Drag & drop files or entire folders here'}
                 </p>
                 <p className={styles.dropzoneSubtitle}>
-                  Supports Images, Videos, Audio, PDFs & Documents (Max 100MB)
+                  Supports individual files, batch files, or entire folders with subdirectories
                 </p>
+              </div>
+
+              <div className={styles.dropzoneActions} onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={styles.browseBtn}
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  Choose Files
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dirInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={styles.browseBtn}
+                >
+                  <FolderTree className="w-4 h-4 text-[var(--interactive-orange)]" />
+                  Choose Folder
+                </button>
               </div>
             </div>
 
-            {/* Validation Error Message */}
-            {errors.file && (
+            {/* Global Error Banner */}
+            {globalError && (
               <div className={styles.errorBox}>
-                <AlertCircle className="w-4 h-4 shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0" style={{ marginTop: '0.15rem' }} />
                 <div>
-                  <div className={styles.errorTitle}>Validation Error</div>
-                  <div>{errors.file.message}</div>
+                  <p className={styles.errorTitle}>Validation Notice</p>
+                  <p>{globalError}</p>
                 </div>
               </div>
             )}
 
-            {/* Selected File Card */}
-            {selectedFile && !uploadResult && (
-              <div className={styles.fileCard}>
-                <div className={styles.fileCardInfo}>
-                  <div className={styles.fileIconWrapper}>
-                    <FileIcon className="w-4 h-4" />
+            {/* Batch File Queue Section */}
+            {fileQueue.length > 0 && (
+              <div className={styles.queueSection}>
+                <div className={styles.queueHeader}>
+                  <div className={styles.queueTitle}>
+                    <Layers className="w-4 h-4 text-[var(--interactive-blue)]" />
+                    Selected Files ({fileQueue.length})
                   </div>
-                  <div className={styles.fileDetails}>
-                    <p className={styles.fileName} title={selectedFile.name}>
-                      {selectedFile.name}
-                    </p>
-                    <p className={styles.fileSize}>
-                      {formatBytes(selectedFile.size)} • {selectedFile.type || 'Unknown MIME'}
-                    </p>
-                  </div>
+                  {!isUploading && (
+                    <div className={styles.queueActions}>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className={styles.queueBtnText}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Files
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => dirInputRef.current?.click()}
+                        className={styles.queueBtnText}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <FolderTree className="w-3.5 h-3.5 text-[var(--interactive-orange)]" /> Add Folder
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearQueue}
+                        className={styles.queueBtnText}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: '#EF4444' }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Clear all
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {!isUploading && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile();
-                    }}
-                    className={styles.removeBtn}
-                    title="Remove file"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                {/* Queue List */}
+                <div className={styles.queueList}>
+                  {fileQueue.map((item) => (
+                    <div key={item.id} className={styles.queueItem}>
+                      <div className={styles.queueItemContent}>
+                        <div className={styles.queueItemLeft}>
+                          <div className={styles.queueItemThumb}>
+                            {getMediaIcon(item.mediaType)}
+                          </div>
+                          <div className={styles.queueItemMeta}>
+                            <div className={styles.queueItemName} title={item.file.name}>
+                              {item.relativePath && item.relativePath.includes('/') && (
+                                <span className={styles.relativePathBadge}>
+                                  {item.relativePath.substring(0, item.relativePath.lastIndexOf('/') + 1)}
+                                </span>
+                              )}
+                              {item.file.name}
+                            </div>
+                            <div className={styles.queueItemDetails}>
+                              <span>{formatBytes(item.file.size)}</span>
+                              <span>•</span>
+                              <select
+                                value={item.mediaType}
+                                onChange={(e) =>
+                                  updateItem(item.id, { mediaType: e.target.value as any })
+                                }
+                                disabled={isUploading || item.status === 'success'}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  color: 'var(--text-muted)',
+                                  cursor: 'pointer',
+                                  padding: 0,
+                                }}
+                              >
+                                <option value="video">Video</option>
+                                <option value="image">Image</option>
+                                <option value="audio">Audio</option>
+                                <option value="pdf">PDF</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className={styles.queueItemRight}>
+                          {item.status === 'ready' && (
+                            <span className={`${styles.statusBadge} ${styles.statusBadgeReady}`}>
+                              Ready
+                            </span>
+                          )}
+                          {item.status === 'uploading' && (
+                            <span className={`${styles.statusBadge} ${styles.statusBadgeUploading}`}>
+                              {item.progress}%
+                            </span>
+                          )}
+                          {item.status === 'success' && (
+                            <span className={`${styles.statusBadge} ${styles.statusBadgeSuccess}`}>
+                              Uploaded
+                            </span>
+                          )}
+                          {item.status === 'error' && (
+                            <span
+                              className={`${styles.statusBadge} ${styles.statusBadgeError}`}
+                              title={item.error}
+                            >
+                              Failed
+                            </span>
+                          )}
+
+                          {!isUploading && item.status !== 'success' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFromQueue(item.id)}
+                              className={styles.removeBtn}
+                              title="Remove file"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Item progress bar */}
+                      {item.status === 'uploading' && (
+                        <div className={styles.itemProgressBarBg}>
+                          <div
+                            className={styles.itemProgressBarFill}
+                            style={{ width: `${item.progress}%` }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Error message */}
+                      {item.status === 'error' && item.error && (
+                        <div style={{ fontSize: '0.65rem', color: '#DC2626' }}>
+                          {item.error}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Media Type Override Selector */}
-            {selectedFile && !uploadResult && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-color)', letterSpacing: '0.05em' }}>
-                  Choose Media Category
-                </label>
-                <select
-                  value={selectedMediaType}
-                  onChange={(e) => setSelectedMediaType(e.target.value as any)}
-                  disabled={isUploading}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: '#FFFFFF',
-                    color: 'var(--text-color)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="video">🎞️ Video (MP4/WebM)</option>
-                  <option value="image">🖼️ Image (PNG/JPEG/SVG/WebP)</option>
-                  <option value="audio">🎵 Audio (MP3/WAV)</option>
-                  <option value="pdf">📄 PDF Document</option>
-                </select>
-              </div>
-            )}
-
-            {/* Upload Progress Bar */}
+            {/* Overall Progress */}
             {isUploading && (
               <div className={styles.progressContainer}>
                 <div className={styles.progressHeader}>
                   <span className={styles.progressIndicator}>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--interactive-orange)' }} />
-                    Uploading to MinIO...
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--interactive-orange)]" />
+                    Uploading batch ({totalUploaded}/{fileQueue.length} done)...
                   </span>
-                  <span>{uploadProgress}%</span>
+                  <span>{overallProgress}%</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div
                     className={styles.progressBarFill}
-                    style={{ width: `${uploadProgress}%` }}
+                    style={{ width: `${overallProgress}%` }}
                   />
                 </div>
               </div>
             )}
 
-            {/* General Error Display */}
-            {uploadError && (
-              <div className={styles.errorBox}>
-                <AlertCircle className="w-4 h-4 shrink-0" style={{ marginTop: '0.15rem' }} />
-                <div>
-                  <p className={styles.errorTitle}>Upload Failed</p>
-                  <p>{uploadError}</p>
-                </div>
+            {/* Upload Button */}
+            {fileQueue.length > 0 && (
+              <div style={{ paddingTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={handleUploadAll}
+                  disabled={isUploading || fileQueue.every((i) => i.status === 'success')}
+                  className="btn btn-primary"
+                  style={{
+                    width: 'fit-content',
+                    padding: '0.9rem 1.6rem',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {isUploading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Uploading Batch ({overallProgress}%)
+                    </>
+                  ) : (
+                    <>
+                      Upload {fileQueue.length} File{fileQueue.length > 1 ? 's' : ''} to /{activeDestinationFolder} <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
               </div>
             )}
-
-            {/* Submit Button */}
-            <div style={{ paddingTop: '0.5rem' }}>
-              <button
-                type="submit"
-                disabled={!selectedFile || isUploading}
-                className="btn btn-primary"
-                style={{
-                  width: '100%',
-                  padding: '0.9rem',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.85rem'
-                }}
-              >
-                {isUploading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Uploading ({uploadProgress}%)
-                  </>
-                ) : (
-                  <>
-                    Upload Media <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          </div>
         )}
       </div>
     </div>
   );
 };
+

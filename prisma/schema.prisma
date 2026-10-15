@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,14 +9,18 @@ datasource db {
   provider = "sqlite"
 }
 
+// 1. Core User Identity
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  passwordHash String?
+  role         String   @default("admin") // e.g. "admin", "user"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
-// 1. Contact Form (Main Page & Contact Us)
+// 2. Contact Form (Main Page & Contact Us)
 model ContactInquiry {
   id         String   @id @default(uuid())
   name       String
@@ -30,61 +32,34 @@ model ContactInquiry {
   createdAt  DateTime @default(now())
 }
 
-// 2. Coming Soon Notification Form
+// 2b. Email Verification Hold Queue (Section 9.1)
+model EmailVerification {
+  id             String    @id @default(uuid())
+  token          String    @unique
+  email          String
+  type           String    @default("contact") // e.g. "contact", "founding_client", "share"
+  payload        String    // JSON string containing submission details held pending verification
+  expiresAt      DateTime  // 24 hours from creation
+  verifiedAt     DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+// 3. Coming Soon Notification Form
 model NotificationSubscription {
   id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now())
 }
 
-// 3. Cubicon Founding Client Registration Form
-model CubiconRegistration {
-  id                  String   @id @default(uuid())
-  firstName           String
-  lastName            String
-  email               String
-  phone               String?
-  urgency             String   @default("Medium")
-  requestConfirmation Boolean  @default(true)
-  isEighteen          Boolean  @default(true)
-  priorityScore       Float    @default(0.0)
-  selectedAreas       String?  // JSON formatted text representation of selected contact areas
-  paymentStatus       String   @default("UNPAID") // UNPAID, COMPLETED, FAILED
-  paypalOrderId       String?
-  amountPaid          Float    @default(100.00)
-  paidAt              DateTime?
-  createdAt           DateTime @default(now())
-}
-
-// 4. Feedback Form (Cubicon App)
-model FeedbackSubmission {
-  id               String   @id @default(uuid())
-  positiveFeedback String
-  negativeFeedback String
-  rating           String   // e.g. "good", "moderate", "bad"
-  createdAt        DateTime @default(now())
-}
-
-// 5. Cubicon Admin Configuration Form
-model CubiconConfig {
-  id             String   @id @default(uuid())
-  title          String
-  description    String?
-  actionRequired String   @default("tap")
-  shape          String   @default("square")
-  pause          Int?
-  rotationType   String?
-  puzzleType     String?
-  threshold      Float?
-  welcomeMessage String?
-  selectedImage  String?
-  createdAt      DateTime @default(now())
-}
-// 6. Interactive Dashboard Buttons configuration
+// 4. Interactive Dashboard Buttons configuration
 model DashboardButton {
   id        String   @id @default(uuid())
   label     String
   mediaUrl  String
+  seeItUrl  String?  // Video link for SEE IT
+  hearItUrl String?  // Audio link for HEAR IT
+  readItUrl String?  // Document/PDF link for READ IT
   mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"
@@ -92,7 +67,7 @@ model DashboardButton {
   updatedAt DateTime @updatedAt
 }
 
-// 7. Uploaded Assets history log
+// 5. Uploaded Assets history log
 model MediaAsset {
   id         String   @id @default(uuid())
   publicUrl  String
@@ -102,21 +77,189 @@ model MediaAsset {
   uploadedAt DateTime @default(now())
 }
 
-// 8. Cubicon Puzzle Tasks
-model CubiconTask {
-  id               String   @id @default(uuid())
-  taskIndex        Int      @unique
-  heading          String
-  description      String
-  screen           String
-  image            String
-  rotation         String   @default("left")
-  rotationInterval Int      @default(10)
-  targetX          Float?
-  targetY          Float?
-  targetZ          Float?
-  targetPoints     String?  // JSON array of checkpoint coordinates [{x,y,z}, ...] (e.g. start, mid, end)
-  tolerance        Float    @default(0.5)
-  isFinal          Boolean  @default(false)
-  createdAt        DateTime @default(now())
+// 6. ResearchLib / Research Lib Embedded Survey Platform
+model ResearchLibSurvey {
+  id            Int      @id @default(autoincrement())
+  userId        String   @default("system_default")
+  heading       String
+  instruction   String
+  widget        String
+  story         String
+  combo         String
+  blanks        String   // JSON string of blanks and choices
+  durationInMin String?  @default("30")
+  pauseDuration String?  @default("3")
+  timeCounter   String?  @default("down")
+  isFollowup    Int?     @default(1)
+  createdAt     DateTime @default(now())
 }
+
+model ResearchLibResponse {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  surveyId  Int?
+  answers   String   // JSON string of answers
+  story     String?
+  createdAt DateTime @default(now())
+}
+
+model ResearchLibTimer {
+  id           Int      @id @default(autoincrement())
+  userId       String   @unique
+  sessionTimer String?  @default("{}")
+  pauseTimer   String?  @default("{}")
+  updatedAt    DateTime @default(now()) @updatedAt
+}
+
+model ResearchLibElement {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  state     String?  @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model ResearchLibAppState {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  state     String?  @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// 7. Cubicon 3D Interactive Survey & Verification Platform
+model CubiconSequence {
+  id                     Int              @id @default(autoincrement())
+  slug                   String           @unique
+  title                  String
+  description            String?          @default("")
+  passThreshold          Float?           @default(0.66)
+  rotationDirection      String?          @default("left")
+  defaultRotationInterval Int?            @default(15)
+  isActive               Boolean?         @default(true)
+  createdBy              String?          @default("system")
+  createdAt              DateTime?        @default(now())
+  updatedAt              DateTime?        @default(now()) @updatedAt
+  tasks                  CubiconTask[]
+  sessions               CubiconSession[]
+  attempts               CubiconAttempt[]
+}
+
+model CubiconTask {
+  id                 Int              @id @default(autoincrement())
+  sequenceId         Int?
+  sequence           CubiconSequence? @relation(fields: [sequenceId], references: [id])
+  taskIndex          Int              @default(0)
+  taskNumber         Int?
+  heading            String
+  description        String
+  screen             String?          @default("")
+  image              String
+  rotation           String?          @default("left")
+  rotationInterval   Int?             @default(15)
+  questionType       String?          @default("Selection")
+  correctCoordinates String?          @default("")
+  startPoint         String?          @default("")
+  midPoint           String?          @default("")
+  endPoint           String?          @default("")
+  tolerance          Float?           @default(0.5)
+  isFinal            Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+}
+
+model CubiconSession {
+  id                    Int              @id @default(autoincrement())
+  sessionId             String           @unique
+  sequenceId            Int?
+  sequence              CubiconSequence? @relation(fields: [sequenceId], references: [id])
+  taskIndex             Int              @default(0)
+  userEmail             String?          @default("")
+  passedPuzzles         Int              @default(0)
+  totalPuzzlesAttempted Int              @default(0)
+  previousResult        String?          @default("")
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @default(now()) @updatedAt
+}
+
+model CubiconAttempt {
+  id          Int              @id @default(autoincrement())
+  sessionId   String
+  sequenceId  Int?
+  sequence    CubiconSequence? @relation(fields: [sequenceId], references: [id])
+  taskIndex   Int
+  userEmail   String?
+  clicksData  String?          @default("{}")
+  startTime   String?
+  result      String
+  submittedAt DateTime         @default(now())
+}
+
+model CubiconRegistration {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String?
+  role      String?
+  interest  String?  @default("Founding Client")
+  notes     String?
+  isUsBased Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model CubiconShare {
+  id            Int       @id @default(autoincrement())
+  senderName    String?   @default("")
+  senderEmail   String?   @default("")
+  receiverName  String?   @default("")
+  receiverEmail String?   @default("")
+  sharePlatform String?   @default("email")
+  shareUrl      String?   @default("")
+  sessionId     String?   @default("")
+  status        String?   @default("invited")
+  createdAt     DateTime? @default(now())
+}
+
+model FeedbackSubmission {
+  id           Int       @id @default(autoincrement())
+  userId       String?   @default("")
+  userEmail    String?   @default("")
+  sessionId    String?   @default("")
+  feedbackText String
+  rating       Int?      @default(0)
+  createdAt    DateTime? @default(now())
+}
+
+enum ContentFormat {
+  ARTICLE
+  VIDEO
+  PDF
+  AUDIO
+}
+
+model VaultAsset {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  format       ContentFormat
+  sourceUrl    String?
+  embedCode    String?
+  topicId      String
+  topic        Topic         @relation(fields: [topicId], references: [id])
+  keywords     String        // Stored as JSON string or comma-separated string for SQLite compatibility
+  isPublished  Boolean       @default(true)
+  publishedAt  DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([format])
+  @@index([topicId])
+}
+
+model Topic {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  category    String
+  assets      VaultAsset[]
+  createdAt   DateTime     @default(now())
+}
+

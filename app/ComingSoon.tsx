@@ -90,22 +90,20 @@ export default function ComingSoon() {
             <sup style={{ fontSize: "0.55em", verticalAlign: "super" }}>®</sup>
           </span>
           <span className={styles.logoDivider} />
-          <span className={styles.logoSubtext}>Research Group</span>
         </div>
 
         {/* Eyebrow */}
         <div className={styles.eyebrow}>
           <span className={styles.eyebrowDot} />
-          The Early Recognition Company
+          BuyFacts, Inc.
           <span className={styles.eyebrowDot} />
         </div>
 
         {/* Headline */}
         <h1 className={styles.headline}>
-          Saving Time So You{" "}
-          <span className={styles.headlineAccent}>Have the Time</span>
+          The Early <span className={styles.headlineAccent}>Recognition</span> Company
         </h1>
-        <p className={styles.subHeadline}>Something exciting is on its way.</p>
+        <p className={styles.subHeadline}>Saving Time So You Have the Time</p>
 
         {/* Description */}
         <p className={styles.description}>

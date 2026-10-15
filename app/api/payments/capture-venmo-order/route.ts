@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { sendPaymentReceiptEmail } from "@/lib/resend";
 
 export async function POST(request: Request) {
@@ -26,7 +25,6 @@ export async function POST(request: Request) {
     let paymentSuccess = true;
 
     if (clientId && clientSecret && !clientId.startsWith("sb_your_") && !orderId.startsWith("MOCK_VENMO_")) {
-      // 1. Get OAuth token
       const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
       const tokenResponse = await fetch(`${baseApi}/v1/oauth2/token`, {
         method: "POST",
@@ -44,7 +42,6 @@ export async function POST(request: Request) {
       const tokenData = await tokenResponse.json();
       const accessToken = tokenData.access_token;
 
-      // 2. Capture PayPal/Venmo Order
       const captureResponse = await fetch(`${baseApi}/v2/checkout/orders/${orderId}/capture`, {
         method: "POST",
         headers: {
@@ -92,7 +89,6 @@ export async function POST(request: Request) {
         paymentSuccess = false;
       }
     } else {
-      // Sandbox fallback capture
       console.log(`[Venmo Capture API] Simulated successful capture for fallback order ${orderId}`);
       captureTransactionId = `TXN_${Date.now()}_VENMO`;
     }
@@ -105,28 +101,8 @@ export async function POST(request: Request) {
     }
 
     const paidTimestamp = new Date();
-
-    // 3. Update SQLite database record using Prisma
-    let updatedRegistration = null;
-    try {
-      updatedRegistration = await prisma.cubiconRegistration.update({
-        where: { id: registrationId },
-        data: {
-          paymentStatus: "COMPLETED",
-          paypalOrderId: captureTransactionId,
-          amountPaid: 100.00,
-          paidAt: paidTimestamp,
-        },
-      });
-    } catch (dbErr) {
-      console.warn("Could not update database record on capture:", dbErr);
-    }
-
-    // 4. Send Receipt Email via Resend
-    const recipientEmail = updatedRegistration?.email || body.email;
-    const recipientName = updatedRegistration 
-      ? `${updatedRegistration.firstName} ${updatedRegistration.lastName}` 
-      : body.name || "Founding Client";
+    const recipientEmail = body.email;
+    const recipientName = body.name || "Founding Client";
 
     if (recipientEmail) {
       sendPaymentReceiptEmail({

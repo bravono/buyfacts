@@ -1,9 +1,19 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import styles from "./BorderFrame.module.css";
+import { shouldHideBorderFrame } from "@/lib/admin/navigation";
+
+export { shouldHideBorderFrame };
 
 export default function BorderFrame() {
+  const pathname = usePathname();
+
+  if (shouldHideBorderFrame(pathname)) {
+    return null;
+  }
+
   return (
     <div className={styles.frameContainer}>
       {/* Top and Bottom Horizontal Borders */}

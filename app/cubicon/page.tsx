@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,8 +29,18 @@ import {
   ExternalLink,
   Box,
   ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  X,
+  LogOut,
+  BarChart3,
+  Video,
+  FastForward,
+  ArrowRight,
 } from "lucide-react";
 import styles from "./cubicon.module.css";
+import { isBusinessEmail } from "@/lib/validation/forms";
 
 // Interface definitions for the contact areas from the Excel spreadsheet
 interface OptionItem {
@@ -135,11 +146,126 @@ const WEIGHTING_MULTIPLES: Record<number, number> = {
   6: 0.3,
 };
 
+interface SlideItem {
+  heading: string;
+  image: string;
+  description: string;
+  details: string;
+}
+
+const SLIDES: SlideItem[] = [
+  {
+    heading: "One Minute Preview",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108409-kc35s8-ballon.webp",
+    description: "",
+    details:
+      "Cubicon verifies authentic participants through visual spatial tasks.",
+  },
+  {
+    heading: "Puzzle 1 of 3",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108439-mhsaac-Puzzle1_explainer.webp",
+    description: "Who gets concerned by howling?",
+    details:
+      "Identify the character concerned by howling. Click and draw a circle around the target area on the active puzzle to register your response.",
+  },
+  {
+    heading: "Puzzle 2 of 3",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110363-3aqy73-Puzzle2_explainer.webp",
+    description: "Who's in line for a change of shirt?",
+    details:
+      "Locate the person in line for a change of shirt. Click directly on the target character on the active puzzle.",
+  },
+  {
+    heading: "Puzzle 3 of 3",
+    image:
+      "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505111935-1nfl7g-Puzzle3_explainer.webp",
+    description: "Where does his next go?",
+    details:
+      "Complete the final validation test. Locate the place where she puts the drink.",
+  },
+];
+
+const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
+  0: "/cubicon-app/arts/ballon.webp",
+  1: "/cubicon-app/arts/Puzzle1_explainer.webp",
+  2: "/cubicon-app/arts/Puzzle2_explainer.webp",
+  3: "/cubicon-app/arts/Puzzle3_explainer.webp",
+};
+
+const CUBICON_VIDEO_CDN_URL =
+  "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
+const CUBICON_VIDEO_CDN_FALLBACK =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
 export default function CubiconPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"app" | "register">("app");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+
+  const [showLiveApp, setShowLiveApp] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isVideoStarted, setIsVideoStarted] = useState(false);
+  const [isVideoCompleted, setIsVideoCompleted] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideAnimationKey, setSlideAnimationKey] = useState(0);
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev === SLIDES.length - 1 ? 0 : prev + 1));
+    setSlideAnimationKey((prev) => prev + 1);
+  };
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? SLIDES.length - 1 : prev - 1));
+    setSlideAnimationKey((prev) => prev + 1);
+  };
+
+  const handleStartVideoClick = () => {
+    setShowVideo(true);
+    setIsVideoStarted(true);
+    setIsVideoCompleted(false);
+    setShowLiveApp(false);
+  };
+
+  const handleCancelVideo = () => {
+    setShowVideo(false);
+    setIsVideoStarted(false);
+    setIsVideoCompleted(false);
+  };
+
+  const handleSeeLiveClick = () => {
+    setShowVideo(false);
+    setIsVideoStarted(false);
+    setIsVideoCompleted(false);
+    setIsIframeLoaded(false);
+    setShowLiveApp(true);
+    setIsFullscreen(true);
+    notifyIframeFullscreen(true);
+
+    // Request native browser fullscreen if supported, with automatic fallback to CSS pseudo-fullscreen
+    setTimeout(() => {
+      if (appFrameWrapperRef.current) {
+        const elem = appFrameWrapperRef.current;
+        const requestMethod =
+          elem.requestFullscreen ||
+          (elem as any).webkitRequestFullscreen ||
+          (elem as any).msRequestFullscreen;
+        if (requestMethod) {
+          requestMethod.call(elem).catch(() => {
+            // Fullscreen request rejected or unsupported; pseudo-fullscreen remains active
+          });
+        }
+        elem.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 50);
+  };
 
   const [formState, setFormState] = useState({
     firstName: "",
@@ -150,6 +276,7 @@ export default function CubiconPage() {
     urgency: "Medium",
     requestConfirmation: true,
     isEighteen: false,
+    isUsBased: false,
   });
 
   const [selectedOptions, setSelectedOptions] = useState<
@@ -169,6 +296,147 @@ export default function CubiconPage() {
   }>({ type: null, message: "" });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStep, setFormStep] = useState(1);
+  const totalSteps = 3;
+  const [showForm, setShowForm] = useState(true);
+
+  // Cubicon Anti-Bot Human Verification State
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationSessionId, setVerificationSessionId] = useState<
+    string | null
+  >(null);
+  const [verificationStatus, setVerificationStatus] = useState<{
+    status: "idle" | "passed" | "failed";
+    message: string;
+  }>({ status: "idle", message: "" });
+  const [verificationKey, setVerificationKey] = useState(0);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+
+  // Ref to hold current registration submission executor to avoid stale closures
+  const submitRegistrationRef = useRef<(token: string) => Promise<void>>(
+    async () => {},
+  );
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== "object") return;
+      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+        const { sessionId, passed, heading, description } = event.data;
+        if (passed) {
+          setIsVerified(true);
+          setVerificationSessionId(sessionId);
+          setVerificationStatus({
+            status: "passed",
+            message:
+              heading || "Verification successful! You are verified as human.",
+          });
+          // Automatically submit form upon passing verification
+          submitRegistrationRef.current(sessionId);
+        } else {
+          setIsVerified(false);
+          setVerificationStatus({
+            status: "failed",
+            message:
+              description || "Verification unsuccessful. Please try again.",
+          });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  // Lock body scroll and listen for Escape key when modal is open
+  useEffect(() => {
+    if (isVerificationModalOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !isSubmitting) {
+          setIsVerificationModalOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isVerificationModalOpen, isSubmitting]);
+
+  const handleResetVerification = () => {
+    setIsVerified(false);
+    setVerificationSessionId(null);
+    setVerificationStatus({ status: "idle", message: "" });
+    setVerificationKey((prev) => prev + 1);
+  };
+
+  const nextStep = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (formStep === 1) {
+      if (
+        !formState.firstName.trim() ||
+        !formState.lastName.trim() ||
+        !formState.email.trim() ||
+        !formState.emailConfirm.trim()
+      ) {
+        setFormStatus({
+          type: "error",
+          message: "Please fill out all required fields.",
+        });
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formState.email.trim())) {
+        setFormStatus({
+          type: "error",
+          message: "Please enter a valid email address.",
+        });
+        return;
+      }
+      if (!isBusinessEmail(formState.email.trim())) {
+        setFormStatus({
+          type: "error",
+          message:
+            "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+        });
+        return;
+      }
+      if (
+        formState.email.trim().toLowerCase() !==
+        formState.emailConfirm.trim().toLowerCase()
+      ) {
+        setFormStatus({ type: "error", message: "Emails do not match." });
+        return;
+      }
+    } else if (formStep === 2) {
+      if (!formState.isEighteen) {
+        setFormStatus({
+          type: "error",
+          message: "You must certify that you are 18 or older.",
+        });
+        return;
+      }
+      if (!formState.isUsBased) {
+        setFormStatus({
+          type: "error",
+          message: "You must confirm that your organization is US based.",
+        });
+        return;
+      }
+    }
+    setFormStatus({ type: null, message: "" });
+    setFormStep((prev) => prev + 1);
+  };
+
+  const prevStep = () => {
+    setFormStatus({ type: null, message: "" });
+    setFormStep((prev) => prev - 1);
+  };
 
   // Toggle checkbox option in an area
   const toggleOption = (areaId: string, label: string) => {
@@ -214,7 +482,7 @@ export default function CubiconPage() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target;
     if (type === "checkbox") {
@@ -225,15 +493,18 @@ export default function CubiconPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formState.firstName.trim() || !formState.lastName.trim() || !formState.email.trim()) {
+  const validateForm = () => {
+    if (
+      !formState.firstName.trim() ||
+      !formState.lastName.trim() ||
+      !formState.email.trim()
+    ) {
       setFormStatus({
         type: "error",
-        message: "Please fill out all required personal fields (First Name, Last Name, Email).",
+        message:
+          "Please fill out all required personal fields (First Name, Last Name, Email).",
       });
-      return;
+      return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -242,7 +513,7 @@ export default function CubiconPage() {
         type: "error",
         message: "Please enter a valid email address.",
       });
-      return;
+      return false;
     }
 
     if (
@@ -253,17 +524,40 @@ export default function CubiconPage() {
         type: "error",
         message: "The entered email addresses do not match.",
       });
-      return;
+      return false;
+    }
+
+    if (!isBusinessEmail(formState.email.trim())) {
+      setFormStatus({
+        type: "error",
+        message:
+          "A business email address is required. Free email domains (e.g., gmail.com, yahoo.com) are not accepted for founding-client inquiries.",
+      });
+      return false;
     }
 
     if (!formState.isEighteen) {
       setFormStatus({
         type: "error",
-        message: "You must certify that you are 18 years of age or older to submit this form.",
+        message:
+          "You must certify that you are 18 years of age or older to submit this form.",
       });
-      return;
+      return false;
     }
 
+    if (!formState.isUsBased) {
+      setFormStatus({
+        type: "error",
+        message:
+          "You must confirm that your organization is US based to submit this form.",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const executeRegistrationSubmission = async (token: string) => {
     setIsSubmitting(true);
     setFormStatus({ type: null, message: "" });
 
@@ -275,6 +569,7 @@ export default function CubiconPage() {
           ...formState,
           selectedAreas: selectedOptions,
           priorityScore,
+          verificationSessionId: token,
         }),
       });
 
@@ -282,124 +577,533 @@ export default function CubiconPage() {
 
       if (response.ok && data.id) {
         const clientEmail = formState.email.trim();
-        const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
-        
-        setFormStatus({
-          type: "success",
-          message: "Registration successful! Redirecting to payment checkout...",
-        });
 
-        // Instant automatic redirect to dedicated payment page
-        const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
-        router.push(checkoutUrl);
+        if (data.verificationRequired) {
+          setFormStatus({
+            type: "success",
+            message:
+              data.message ||
+              `Registration received! Please check your inbox at ${clientEmail} to verify your business email address and complete your Founding Client registration.`,
+          });
+        } else {
+          const clientName = `${formState.firstName.trim()} ${formState.lastName.trim()}`;
+          setFormStatus({
+            type: "success",
+            message:
+              "Registration successful! Redirecting to payment checkout...",
+          });
+
+          // Instant automatic redirect to dedicated payment page
+          const checkoutUrl = `/payment?registrationId=${encodeURIComponent(data.id)}&email=${encodeURIComponent(clientEmail)}&name=${encodeURIComponent(clientName)}`;
+          router.push(checkoutUrl);
+        }
+        setIsVerificationModalOpen(false);
       } else {
         setFormStatus({
           type: "error",
           message: data.error || "Something went wrong. Please try again.",
         });
+        setIsVerificationModalOpen(false);
       }
     } catch (error) {
       setFormStatus({
         type: "error",
         message: "Network error. Please check your connection and try again.",
       });
+      setIsVerificationModalOpen(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  useEffect(() => {
+    submitRegistrationRef.current = executeRegistrationSubmission;
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formStep !== totalSteps) {
+      nextStep();
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!isVerified || !verificationSessionId) {
+      setFormStatus({ type: null, message: "" });
+      setVerificationStatus({ status: "idle", message: "" });
+      setIsVerificationModalOpen(true);
+      return;
+    }
+
+    await executeRegistrationSubmission(verificationSessionId);
+  };
+
   const appFrameWrapperRef = React.useRef<HTMLDivElement>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check whether current user is logged in as an admin
+  React.useEffect(() => {
+    const checkAdminAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (
+          data.success &&
+          data.authenticated &&
+          (data.user?.role?.toLowerCase() === "admin" || !data.user?.role)
+        ) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminAuth();
+  }, []);
+
+  const notifyIframeFullscreen = (fullscreenState: boolean) => {
+    try {
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: "CUBICON_SET_FULLSCREEN", isFullscreen: fullscreenState },
+        "*",
+      );
+    } catch {}
+  };
 
   const reloadApp = () => {
+    setIsIframeLoaded(false);
     setIframeKey((prev) => prev + 1);
   };
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
-      if (appFrameWrapperRef.current && appFrameWrapperRef.current.requestFullscreen) {
-        appFrameWrapperRef.current.requestFullscreen().catch(() => {
-          setIsFullscreen(true);
-        });
+      if (
+        appFrameWrapperRef.current &&
+        appFrameWrapperRef.current.requestFullscreen
+      ) {
+        appFrameWrapperRef.current
+          .requestFullscreen()
+          .then(() => {
+            setIsFullscreen(true);
+            notifyIframeFullscreen(true);
+          })
+          .catch(() => {
+            setIsFullscreen(true);
+            notifyIframeFullscreen(true);
+          });
       } else {
         setIsFullscreen(true);
+        notifyIframeFullscreen(true);
       }
     } else {
       if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {
-          setIsFullscreen(false);
-        });
+        document
+          .exitFullscreen()
+          .then(() => {
+            setIsFullscreen(false);
+            notifyIframeFullscreen(false);
+          })
+          .catch(() => {
+            setIsFullscreen(false);
+            notifyIframeFullscreen(false);
+          });
       } else {
         setIsFullscreen(false);
+        notifyIframeFullscreen(false);
       }
     }
   };
 
+  const handleExitLiveApp = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    setIsFullscreen(false);
+    notifyIframeFullscreen(false);
+    setShowLiveApp(false);
+
+    setTimeout(() => {
+      const benefitsSection = document.getElementById(
+        "founding-client-invitation",
+      );
+      if (benefitsSection) {
+        benefitsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  };
+
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      if (document.fullscreenElement) {
-        setIsFullscreen(true);
-      } else {
+      const isNowFullscreen = !!(
+        document.fullscreenElement || (document as any).webkitFullscreenElement
+      );
+      setIsFullscreen(isNowFullscreen);
+      notifyIframeFullscreen(isNowFullscreen);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isFullscreen) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
         setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+      }
+    };
+
+    const handleCubiconMessage = (event: MessageEvent) => {
+      if (
+        event.data?.type === "CUBICON_EXIT" ||
+        event.data === "CUBICON_EXIT"
+      ) {
+        handleExitLiveApp();
+      } else if (
+        event.data?.type === "CUBICON_CONTACT" ||
+        event.data === "CUBICON_CONTACT"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        router.push("/#contact");
+      } else if (
+        event.data?.type === "CUBICON_FEEDBACK" ||
+        event.data === "CUBICON_FEEDBACK"
+      ) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        const sessId = event.data?.sessionId || "";
+        const targetUrl = sessId
+          ? `/feedback?sessionId=${encodeURIComponent(sessId)}`
+          : "/feedback";
+        router.push(targetUrl);
       }
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("message", handleCubiconMessage);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("message", handleCubiconMessage);
+    };
+  }, [isFullscreen]);
+
+  React.useEffect(() => {
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (
+        hash === "#founding-client" ||
+        hash === "#founding-client-form" ||
+        hash === "#register-form" ||
+        hash === "#cubicon-registration-form"
+      ) {
+        setShowForm(true);
+        setTimeout(() => {
+          const target =
+            document.getElementById("cubicon-registration-form") ||
+            document.getElementById("founding-client") ||
+            document.getElementById("register-form");
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      } else if (
+        hash === "#live" ||
+        hash === "#cubicon-live" ||
+        hash === "#launch"
+      ) {
+        handleSeeLiveClick();
+      }
+    };
+
+    handleHashNavigation();
+    window.addEventListener("hashchange", handleHashNavigation);
+    return () => {
+      window.removeEventListener("hashchange", handleHashNavigation);
     };
   }, []);
 
   return (
     <div className={styles.main}>
-      <Navbar hideOnScroll={true} />
-
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.container}>
-          <div className={styles.heroContent}>
-            <div className={styles.heroBadge}>
-              <Sparkles size={16} /> Interactive 3D Validation Technology
-            </div>
-            <h1 className={styles.heroTitle}>
-              CUBICON 3D <span className={styles.heroHighlight}>VALIDATION APP</span>
-            </h1>
-            <p className={styles.heroSubtitle}>
-              Experience Cubicon&apos;s revolutionary 3D visual validation system. Designed to ensure
-              100% genuine human survey participation by deploying interactive 3D spatial tasks that automated bots are incapable of solving.
-            </p>
-
-            {/* View Switcher Tabs */}
-            <div className={styles.viewSwitcher}>
-              <button
-                className={`${styles.tabBtn} ${activeTab === "app" ? styles.activeTabBtn : ""}`}
-                onClick={() => setActiveTab("app")}
-              >
-                <Box size={18} /> Interactive 3D App
-              </button>
-              <button
-                className={`${styles.tabBtn} ${activeTab === "register" ? styles.activeTabBtn : ""}`}
-                onClick={() => setActiveTab("register")}
-              >
-                <ClipboardList size={18} /> Founding Client Invitation
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {!showVideo && !showLiveApp && <Navbar hideOnScroll={true} />}
 
       {/* Interactive App Viewport Section */}
-      {activeTab === "app" && (
-        <section className={styles.appViewportSection}>
-          <div className={styles.container}>
-            <div className={styles.appFrameWrapper} ref={appFrameWrapperRef}>
+      <section
+        className={styles.appViewportSection}
+        style={{
+          paddingTop: showVideo || showLiveApp ? "1.5rem" : "6rem",
+          paddingBottom: showVideo || showLiveApp ? "2rem" : "4rem",
+        }}
+      >
+        <div className={styles.container}>
+          {!showLiveApp && !showVideo ? (
+            <div className={styles.slideshowWrapper}>
+              <div
+                key={slideAnimationKey}
+                className={`${styles.slideshowContent} ${styles.slideFadeIn}`}
+              >
+                <div className={styles.slideImageContainer}>
+                  <img
+                    src={SLIDES[currentSlide].image}
+                    alt={SLIDES[currentSlide].heading || "Cubicon Preview"}
+                    className={styles.slideImage}
+                    onError={(e) => {
+                      const fallback =
+                        SLIDE_FALLBACK_IMAGES[currentSlide] ||
+                        "/cubicon-app/arts/ballon.webp";
+                      if (e.currentTarget.src !== fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
+                  />
+                  {currentSlide === 0 && (
+                    <p>
+                      Bots enter surveys to steal incentives, corrupt data,
+                      waste time and reduce decision confidence. In less than a
+                      minute, see how Cubitron verifies that human respondents
+                      will populate your surveys.
+                    </p>
+                  )}
+                </div>
+                <div className={styles.slideDetailsContainer}>
+                  <div>
+                    <h3 className={styles.slideTitle}>
+                      {SLIDES[currentSlide].heading}
+                    </h3>
+                    <h4 className={styles.slideSubtitle}>
+                      {SLIDES[currentSlide].description}
+                    </h4>
+                    <p className={styles.slideText}>
+                      {SLIDES[currentSlide].details}
+                    </p>
+                  </div>
+
+                  {currentSlide === 0 ? (
+                    <div className={styles.seeLiveCallout}>
+                      <button
+                        className={styles.seeLiveBtn}
+                        onClick={handleStartVideoClick}
+                        title="Watch Cubicon Self-Running 1-Minute Video Preview"
+                      >
+                        <Play size={18} fill="#ffffff" /> START
+                      </button>
+                    </div>
+                  ) : currentSlide === SLIDES.length - 1 ? (
+                    <div
+                      className={styles.seeLiveCallout}
+                      style={{ marginTop: "1.5rem" }}
+                    >
+                      <span className={styles.seeLiveTitle}>
+                        Ready to Try Cubicon?
+                      </span>
+                      <button
+                        className={styles.seeLiveBtn}
+                        onClick={handleSeeLiveClick}
+                        title="Launch Interactive 3D Solver"
+                      >
+                        <Sparkles size={18} fill="#ffffff" /> TRY CUBICON LIVE!
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div className={styles.slideNavControls}>
+                    <button
+                      className={styles.slideArrowBtn}
+                      onClick={handlePrevSlide}
+                      title="Previous Puzzle"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+
+                    <div className={styles.slideDots}>
+                      {SLIDES.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`${styles.slideDot} ${
+                            currentSlide === index ? styles.activeSlideDot : ""
+                          }`}
+                          onClick={() => {
+                            setCurrentSlide(index);
+                            setSlideAnimationKey((prev) => prev + 1);
+                          }}
+                          title={`Go to slide ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      className={styles.slideArrowBtn}
+                      onClick={handleNextSlide}
+                      title="Next Puzzle"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : showVideo && !showLiveApp ? (
+            <div className={styles.videoWrapper}>
+              <div className={styles.videoHeader}>
+                <div className={styles.videoTitleGroup}>
+                  <span
+                    className={`${styles.videoBadge} ${
+                      isVideoCompleted ? styles.videoCompletedBadge : ""
+                    }`}
+                  >
+                    <Video size={14} />{" "}
+                    {isVideoCompleted ? "PREVIEW COMPLETE" : "VIDEO DEMO"}
+                  </span>
+                  <span className={styles.videoTitle}>
+                    Cubicon Self-Running Demonstration
+                  </span>
+                </div>
+                <div className={styles.appControls}>
+                  {!isVideoCompleted && (
+                    <button
+                      className={styles.skipBtn}
+                      onClick={() => setIsVideoCompleted(true)}
+                      title="Skip video and view instructions"
+                    >
+                      <FastForward size={14} /> Skip Video
+                    </button>
+                  )}
+                  <button
+                    className={styles.controlBtn}
+                    onClick={() => {
+                      setVideoSrc((prev) =>
+                        prev === CUBICON_VIDEO_CDN_URL
+                          ? CUBICON_VIDEO_CDN_FALLBACK
+                          : CUBICON_VIDEO_CDN_URL,
+                      );
+                      setIsVideoCompleted(false);
+                      setIsVideoStarted(true);
+                    }}
+                    title="Reload Video Stream"
+                  >
+                    <RotateCcw size={14} /> Reload Video
+                  </button>
+                  <button
+                    className={styles.exitBtn}
+                    onClick={handleCancelVideo}
+                    title="Return to Preview"
+                  >
+                    <LogOut size={14} /> Back to Preview
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.videoBodyContainer}>
+                {!isVideoCompleted && (
+                  <button
+                    className={styles.floatingSkipBtn}
+                    onClick={() => setIsVideoCompleted(true)}
+                    title="Skip video preview"
+                  >
+                    <FastForward size={14} /> Skip Video
+                  </button>
+                )}
+
+                <video
+                  key={videoSrc}
+                  className={styles.videoElement}
+                  controls
+                  autoPlay
+                  playsInline
+                  src={videoSrc}
+                  onEnded={() => setIsVideoCompleted(true)}
+                  onError={() => {
+                    if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
+                      setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
+                    }
+                  }}
+                />
+
+                {isVideoCompleted && (
+                  <div className={styles.videoCompletionOverlay}>
+                    <span
+                      className={styles.videoBadge}
+                      style={{ marginBottom: "0.2rem" }}
+                    >
+                      <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
+                    </span>
+                    <div className={styles.videoCompletionTitle}>
+                      Automated Video Demonstration Complete
+                    </div>
+                    <div className={styles.videoCompletionText}>
+                      You have finished watching the self-running preview of
+                      Cubicon. Click the button below to launch the full
+                      interactive 3D spatial solver and validate your response
+                      yourself.
+                    </div>
+                    <button
+                      className={styles.tryItYourselfBtn}
+                      onClick={handleSeeLiveClick}
+                      title="Launch Interactive 3D Solver"
+                    >
+                      <Sparkles size={20} /> TRY IT YOURSELF NOW
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`${styles.appFrameWrapper} ${
+                isFullscreen ? styles.appFrameWrapperPseudoFullscreen : ""
+              }`}
+              ref={appFrameWrapperRef}
+            >
               {isFullscreen && (
-                <button
-                  className={styles.exitFullscreenFloatingBtn}
-                  onClick={toggleFullscreen}
-                  title="Exit Fullscreen Mode"
+                <div
+                  style={{
+                    position: "fixed",
+                    top: "20px",
+                    right: "20px",
+                    zIndex: 10000,
+                    display: "flex",
+                    gap: "10px",
+                  }}
                 >
-                  <Minimize2 size={16} /> Exit Fullscreen
-                </button>
+                  <button
+                    className={styles.exitFullscreenFloatingBtn}
+                    style={{ position: "static" }}
+                    onClick={toggleFullscreen}
+                    title="Exit Fullscreen Mode"
+                  >
+                    <Minimize2 size={16} /> Exit Fullscreen
+                  </button>
+                  <button
+                    className={styles.exitFullscreenFloatingBtn}
+                    style={{
+                      position: "static",
+                      background: "rgba(234, 66, 95, 0.9)",
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                    }}
+                    onClick={handleExitLiveApp}
+                    title="Exit Live Demo and view benefits"
+                  >
+                    <LogOut size={16} /> Exit Demo
+                  </button>
+                </div>
               )}
 
               <div className={styles.appFrameHeader}>
@@ -407,42 +1111,211 @@ export default function CubiconPage() {
                   <span className={styles.liveIndicator}>
                     <span className={styles.pulseDot}></span> LIVE 3D ENGINE
                   </span>
-                  <span style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: 500 }}>
-                    Cubicon Interactive Spatial Solver v1.0
-                  </span>
+                  
                 </div>
                 <div className={styles.appControls}>
-                  <button className={styles.controlBtn} onClick={reloadApp} title="Reload 3D App">
-                    <RotateCcw size={14} /> Restart Scene
+                  <button
+                    className={styles.controlBtn}
+                    onClick={reloadApp}
+                    title="Reload 3D App"
+                  >
+                    <RotateCcw size={14} /> Restart
                   </button>
-                  <button className={styles.controlBtn} onClick={toggleFullscreen} title="Toggle Fullscreen">
-                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                  <button
+                    className={styles.fullscreenProminentBtn}
+                    onClick={toggleFullscreen}
+                    title={
+                      isFullscreen
+                        ? "Exit Fullscreen Mode"
+                        : "Expand to Fullscreen"
+                    }
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 size={15} />
+                    ) : (
+                      <Maximize2 size={15} />
+                    )}
                     {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </button>
-                  <a
-                    href="/cubicon-app/index.html"
-                    target="_blank"
-                    rel="noreferrer"
+                  
+                  <Link
+                    href="/feedback"
                     className={styles.controlBtn}
-                    title="Open in new window"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.15)",
+                      borderColor: "rgba(245, 158, 11, 0.4)",
+                      color: "#fbbf24",
+                    }}
+                    title="Provide Feedback & Review"
                   >
-                    <ExternalLink size={14} /> Launch Standalone
-                  </a>
+                    <Star size={14} /> Comment
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/cubicon/analytics"
+                      className={styles.controlBtn}
+                      style={{
+                        background: "rgba(14, 165, 233, 0.25)",
+                        borderColor: "rgba(14, 165, 233, 0.5)",
+                        color: "#38bdf8",
+                      }}
+                      title="View Executive Analytics Dashboard (Admin Only)"
+                    >
+                      <BarChart3 size={14} /> Analytics
+                    </Link>
+                  )}
+                  <button
+                    className={styles.exitBtn}
+                    onClick={handleExitLiveApp}
+                    title="Exit Live Demo and view benefits"
+                  >
+                    <LogOut size={14} /> Exit
+                  </button>
                 </div>
               </div>
 
+              {/* Host-Side Smooth Preloader Overlay while iframe initializes */}
+              {!isIframeLoaded && (
+                <div className={styles.iframeHostLoader}>
+                  <div className={styles.loaderCube}></div>
+                  <div className={styles.loaderText}>
+                    Initializing 3D Cubicon Engine...
+                  </div>
+                </div>
+              )}
+
               {/* Embedded Deployed Cubicon App */}
               <iframe
+                ref={iframeRef}
                 key={iframeKey}
                 src="/cubicon-app/index.html"
                 title="Cubicon 3D Interactive App"
                 className={`${styles.appIframe} ${isFullscreen ? styles.appIframeFullscreen : ""}`}
+                style={{
+                  backgroundColor: "#0f141c",
+                  colorScheme: "dark",
+                  opacity: isIframeLoaded ? 1 : 0,
+                  transition: "opacity 0.25s ease-in-out",
+                }}
+                onLoad={() => {
+                  setIsIframeLoaded(true);
+                  notifyIframeFullscreen(isFullscreen);
+                  setTimeout(() => {
+                    notifyIframeFullscreen(isFullscreen);
+                  }, 150);
+                }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               />
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* CUBICON FOUNDING CLIENT INVITATION */}
+      <section
+        className="section-brand-bg"
+        id="founding-client-invitation"
+        style={{ padding: "6rem 0" }}
+      >
+        <div className={styles.container}>
+          <div className={styles.sectionHeader} style={{ marginBottom: "0" }}>
+            <span className={styles.sectionTag}>EXCLUSIVE INVITATION</span>
+            <h2 className={styles.sectionTitle}>
+              Cubicon Founding Client Invitation
+            </h2>
+            <p
+              style={{
+                fontSize: "1.3rem",
+                fontWeight: 600,
+                color: "var(--interactive-blue)",
+                marginTop: "1.25rem",
+                marginBottom: "1.25rem",
+                lineHeight: "1.5",
+              }}
+            >
+              Become a Founding client and experience the future of survey participant validation.
+            </p>
+            <p
+              className={styles.sectionDesc}
+              style={{
+                maxWidth: "850px",
+                margin: "0 auto",
+                fontSize: "1.1rem",
+                lineHeight: "1.7",
+              }}
+            >
+              BuyFacts is inviting qualified organizations to become the first
+              users of Cubriton&apos;s revolutionary validation method, designed
+              to insure genuine human survey participation prior to pending
+              commercial launch.
+            </p>
+            <div
+              style={{
+                marginTop: "2.5rem",
+                display: "flex",
+                gap: "1.25rem",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <a
+                href="#founding-client"
+                className="btn btn-primary"
+                id="invitation-apply-now-btn"
+                onClick={() => {
+                  setShowForm(true);
+                  const target =
+                    document.getElementById("cubicon-registration-form") ||
+                    document.getElementById("founding-client") ||
+                    document.getElementById("register-form");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                style={{
+                  padding: "1rem 2.5rem",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  boxShadow: "0 8px 24px rgba(255, 153, 0, 0.35)",
+                }}
+              >
+                Apply Now <ArrowRight size={18} />
+              </a>
+              <a
+                href="#founding-client-benefits"
+                className="btn btn-secondary"
+                id="invitation-benefits-btn"
+                onClick={() => {
+                  const target = document.getElementById(
+                    "founding-client-benefits",
+                  );
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                style={{
+                  padding: "1rem 2.5rem",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  background: "#ffffff",
+                  borderColor: "var(--border-color)",
+                  color: "var(--interactive-blue)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                Founding Client Benefits <Gift size={18} />
+              </a>
+            </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* WHY WE CREATED CUBICON */}
       <section className="section-light" style={{ padding: "6rem 0" }}>
@@ -451,7 +1324,10 @@ export default function CubiconPage() {
             <span className={styles.sectionTag}>RATIONALE &amp; MISSION</span>
             <h2 className={styles.sectionTitle}>Why We Created Cubicon</h2>
             <p className={styles.sectionDesc}>
-              Organizations are placing increasing reliance on online research. Before organizations can place confidence in what people say, there must be confidence that people, rather than automated bots, are the participants.
+              Organizations are placing increasing reliance on online research.
+              Before people can place confidence in what people say, there must
+              be confidence that people, rather than automated bots are the
+              participants.
             </p>
           </div>
 
@@ -459,39 +1335,55 @@ export default function CubiconPage() {
             <div className={styles.whyCard}>
               <div
                 className={styles.cardIconCircle}
-                style={{ background: "rgba(234, 66, 95, 0.1)", color: "#ea425f" }}
+                style={{
+                  background: "rgba(234, 66, 95, 0.1)",
+                  color: "#ea425f",
+                }}
               >
                 <Bot size={28} />
               </div>
               <h3 className={styles.cardTitle}>Eliminate Automated Bots</h3>
               <p className={styles.cardText}>
-                Automated bots skew survey datasets and destroy research integrity. Traditional CAPTCHA tests are failing to stop modern scripted bots from polluting commercial panels.
+                Automated bots skew survey datasets and destroy research
+                integrity. Traditional CAPTCHA tests are failing to stop modern
+                scripted bots from polluting commercial panels. Cubicon is
+                designed to resist automated script attacks while ensuring
+                authentic participant verification.
               </p>
             </div>
 
             <div className={styles.whyCard}>
               <div
                 className={styles.cardIconCircle}
-                style={{ background: "rgba(20, 163, 139, 0.1)", color: "#14a38b" }}
+                style={{
+                  background: "rgba(20, 163, 139, 0.1)",
+                  color: "#14a38b",
+                }}
               >
                 <UserCheck size={28} />
               </div>
               <h3 className={styles.cardTitle}>Visual Validation Methods</h3>
               <p className={styles.cardText}>
-                Cubicon improves human survey participation through visual validation methods that automated bots are incapable of evaluating.
+                Cubicon improves human survey participation though visual
+                validation methods that automated bots are incapable evaluating.
               </p>
             </div>
 
             <div className={styles.whyCard}>
               <div
                 className={styles.cardIconCircle}
-                style={{ background: "rgba(255, 153, 0, 0.1)", color: "var(--interactive-orange)" }}
+                style={{
+                  background: "rgba(255, 153, 0, 0.1)",
+                  color: "var(--interactive-orange)",
+                }}
               >
                 <Award size={28} />
               </div>
               <h3 className={styles.cardTitle}>Real Data from Real People</h3>
               <p className={styles.cardText}>
-                Ensure 100% confidence in your strategic decisions by basing them on validated, high-fidelity responses from genuine human participants.
+                Real data from real people. Achieve high statistical confidence
+                in your strategic decisions by basing them on validated,
+                high-fidelity responses from genuine human participants.
               </p>
             </div>
           </div>
@@ -499,13 +1391,18 @@ export default function CubiconPage() {
       </section>
 
       {/* FOUNDING CLIENT BENEFITS */}
-      <section className="section-brand-bg" style={{ padding: "6rem 0" }}>
+      <section
+        className="section-brand-bg"
+        id="founding-client-benefits"
+        style={{ padding: "6rem 0" }}
+      >
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>EXCLUSIVE PRIVILEGES</span>
             <h2 className={styles.sectionTitle}>Founding Client Benefits</h2>
             <p className={styles.sectionDesc}>
-              As an early founding partner, your organization will receive lifetime preferential rate locks and custom evaluation tools.
+              As an early founding partner, your organization will receive
+              lifetime preferential rate locks and custom evaluation tools.
             </p>
           </div>
 
@@ -515,9 +1412,12 @@ export default function CubiconPage() {
               <div className={styles.benefitIcon}>
                 <Zap size={32} />
               </div>
-              <h3 className={styles.benefitTitle}>30% Permanent Wholesale Price</h3>
+              <h3 className={styles.benefitTitle}>
+                Permanent Wholesale Pricing
+              </h3>
               <p className={styles.benefitDesc}>
-                Lock in permanent wholesale pricing 30% below current and future Cubicon commercial list prices.
+                Permanent wholesale pricing 30% below current and future Cubicon
+                prices
               </p>
             </div>
 
@@ -526,9 +1426,11 @@ export default function CubiconPage() {
               <div className={styles.benefitIcon}>
                 <Gift size={32} />
               </div>
-              <h3 className={styles.benefitTitle}>Real-World Taste Test</h3>
+              <h3 className={styles.benefitTitle}>Taste Test Evaluation</h3>
               <p className={styles.benefitDesc}>
-                A taste test including one use with an upcoming survey or online activity, allowing you to evaluate Cubicon under real-world conditions using your own project.
+                A taste test including one use with an upcoming survey or online
+                activity allowing you to evaluate Cubicon under real world
+                conditions using your own project
               </p>
             </div>
 
@@ -537,9 +1439,12 @@ export default function CubiconPage() {
               <div className={styles.benefitIcon}>
                 <Star size={32} />
               </div>
-              <h3 className={styles.benefitTitle}>Free Additional Survey Test</h3>
+              <h3 className={styles.benefitTitle}>
+                Free Additional Survey Test
+              </h3>
               <p className={styles.benefitDesc}>
-                One additional free survey validation test for introducing a new corporate client to Cubicon after a paid survey validation.
+                One additional free survey validation test for introducing a new
+                corporate client to Cubicon after a paid survey validation.
               </p>
             </div>
 
@@ -550,7 +1455,8 @@ export default function CubiconPage() {
               </div>
               <h3 className={styles.benefitTitle}>Priority Access</h3>
               <p className={styles.benefitDesc}>
-                Priority access to future Cubicon enhancements and other BuyFacts innovations before general market release.
+                Priority access to future Cubicon enhancements and other
+                BuyFacts innovations
               </p>
             </div>
           </div>
@@ -562,26 +1468,36 @@ export default function CubiconPage() {
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>QUALIFICATION CRITERIA</span>
-            <h2 className={styles.sectionTitle}>Founding Client Requirements</h2>
+            <h2 className={styles.sectionTitle}>
+              Foundation Client Requirements
+            </h2>
             <p className={styles.sectionDesc}>
-              We are accepting a limited cohort of founding clients based on the following criteria:
+              We are accepting a limited cohort of founding clients based on the
+              following criteria:
             </p>
           </div>
 
           <div className={styles.requirementsGrid}>
             <div className={styles.reqCard}>
               <div className={styles.reqNumber}>01</div>
-              <h3 className={styles.reqTitle}>US Headquartered B2B Organization</h3>
+              <h3 className={styles.reqTitle}>
+                US Headquarter B-2-B Organization
+              </h3>
               <p className={styles.reqDesc}>
-                Registration is open to US headquartered B2B organizations looking to protect survey data validity.
+                Registration to US headquarter B-2-B organization
               </p>
             </div>
 
             <div className={styles.reqCard}>
               <div className={styles.reqNumber}>02</div>
-              <h3 className={styles.reqTitle}>$100 Trial Taste Test Investment</h3>
+              <h3 className={styles.reqTitle}>
+                $100 Trial Taste Test Investment
+              </h3>
               <p className={styles.reqDesc}>
-                $100 investment to complete the trial test taste survey. <strong>The $100 fee is fully refundable on request if Cubicon does not uncover at least 10% automated bots</strong> among your survey participants. (In tests to date, bot participation often exceeded 30%).
+                $100 investment to complete the trial test taste survey. The
+                $100 fee is fully refundable on request if Cubicon does not
+                uncover at 10% automated bots among the survey participants. In
+                tests to date, bot participation often exceeded 30%.
               </p>
             </div>
 
@@ -589,7 +1505,7 @@ export default function CubiconPage() {
               <div className={styles.reqNumber}>03</div>
               <h3 className={styles.reqTitle}>60-Day Start Requirement</h3>
               <p className={styles.reqDesc}>
-                Survey or online research project must begin within 60 days of registration to qualify for the founding client benefits.
+                Survey or online must begin within 60 days of registration
               </p>
             </div>
           </div>
@@ -597,241 +1513,492 @@ export default function CubiconPage() {
       </section>
 
       {/* REGISTRATION FORM SECTION */}
-      <section className="section-brand-bg" id="register-form" style={{ padding: "6rem 0" }}>
+      <section
+        className="section-brand-bg"
+        id="founding-client"
+        style={{ padding: "6rem 0" }}
+      >
+        <div id="register-form" />
+        <div id="founding-client-form" />
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>APPLY NOW</span>
-            <h2 className={styles.sectionTitle}>Founding Client Registration</h2>
+            <h2 className={styles.sectionTitle}>
+              Founding Client Registration
+            </h2>
             <p className={styles.sectionDesc}>
-              Please complete your contact information and select your contact areas below to calculate your respondent priority score and register for the Cubicon Founding Client invitation.
+              Please complete your contact information and select your contact
+              areas below to register for the Cubicon Founding Client
+              invitation.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "2.5rem", alignItems: "start" }}>
-            {/* Main Form */}
-            <div className={styles.formContainer}>
-              <form noValidate onSubmit={handleSubmit} id="cubicon-registration-form">
-                {/* Personal Information */}
-                <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", marginBottom: "1.5rem" }}>
-                  1. Contact Information
-                </h3>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="firstName" className={styles.label}>
-                      First Name <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      value={formState.firstName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. John"
-                      className={styles.input}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label htmlFor="lastName" className={styles.label}>
-                      Last Name <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      value={formState.lastName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Smith"
-                      className={styles.input}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="email" className={styles.label}>
-                      Email Address <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formState.email}
-                      onChange={handleInputChange}
-                      placeholder="john@company.com"
-                      className={styles.input}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label htmlFor="emailConfirm" className={styles.label}>
-                      Re-enter Email <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="emailConfirm"
-                      name="emailConfirm"
-                      value={formState.emailConfirm}
-                      onChange={handleInputChange}
-                      placeholder="Re-enter your email"
-                      className={styles.input}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="phone" className={styles.label}>
-                      Phone Number (optional)
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formState.phone}
-                      onChange={handleInputChange}
-                      placeholder="(555) 000-0000"
-                      className={styles.input}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label htmlFor="urgency" className={styles.label}>
-                      Urgency
-                    </label>
-                    <select
-                      id="urgency"
-                      name="urgency"
-                      value={formState.urgency}
-                      onChange={handleInputChange}
-                      className={styles.select}
-                    >
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ margin: "1.5rem 0", display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      name="requestConfirmation"
-                      checked={formState.requestConfirmation}
-                      onChange={handleInputChange}
-                      className={styles.checkbox}
-                    />
-                    <span>Request confirmation of receipt via email</span>
-                  </label>
-
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      name="isEighteen"
-                      checked={formState.isEighteen}
-                      onChange={handleInputChange}
-                      className={styles.checkbox}
-                      required
-                    />
-                    <span>
-                      I certify that I am eighteen (18) years old or older <span style={{ color: "var(--primary-color)" }}>*</span>
-                    </span>
-                  </label>
-                </div>
-
-                <hr style={{ margin: "2.5rem 0", borderColor: "var(--border-color)" }} />
-
-                {/* Contact Areas (Excel Grid) */}
-                <h3 style={{ fontSize: "1.25rem", color: "var(--interactive-blue)", marginBottom: "0.5rem" }}>
-                  2. Contact Areas &amp; Priorities
-                </h3>
-                <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", marginBottom: "1.5rem" }}>
-                  Check all elements that apply to your organization. Multiple selections adjust factors automatically according to the BuyFacts weighting model.
-                </p>
-
-                {CONTACT_AREAS.map((area) => (
-                  <div key={area.id} className={styles.areaSection}>
-                    <div className={styles.areaHeader}>
-                      <span className={styles.areaTitle}>{area.name}</span>
-                      <span className={styles.areaWeightBadge}>Area Weight: {area.weight}</span>
-                    </div>
-
-                    <div className={styles.optionsGrid}>
-                      {area.options.map((opt) => {
-                        const isChecked = (selectedOptions[area.id] || []).includes(opt.label);
-                        return (
-                          <label key={opt.label} className={styles.optionItem}>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => toggleOption(area.id, opt.label)}
-                              className={styles.checkbox}
-                            />
-                            <span>{opt.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn btn-primary"
-                  style={{ width: "100%", padding: "1.1rem", fontSize: "1.1rem", marginTop: "1rem" }}
-                  id="submit-cubicon-form"
-                >
-                  {isSubmitting ? "Submitting Registration..." : "REGISTER AS FOUNDING CLIENT"}{" "}
-                  <Send size={18} />
-                </button>
-
-                {formStatus.type && (
-                  <div
-                    className={
-                      formStatus.type === "success"
-                        ? styles.formStatusSuccess
-                        : styles.formStatusError
-                    }
-                  >
-                    {formStatus.message}
-                  </div>
-                )}
-              </form>
+          {!showForm ? (
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: "1rem",
+                marginBottom: "4rem",
+              }}
+            >
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn btn-primary"
+                style={{ padding: "1.2rem 2.5rem", fontSize: "1.1rem" }}
+              >
+                Begin Application (Takes ~1 minute)
+              </button>
             </div>
+          ) : (
+            <div
+              style={{
+                maxWidth: "800px",
+                margin: "0 auto",
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: "2.5rem",
+                alignItems: "start",
+              }}
+            >
+              {/* Main Form */}
+              <div className={styles.formContainer}>
+                <form
+                  noValidate
+                  onSubmit={handleSubmit}
+                  id="cubicon-registration-form"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: "1.25rem",
+                        color: "var(--interactive-blue)",
+                        margin: 0,
+                      }}
+                    >
+                      {formStep === 1 && "Contact Information"}
+                      {formStep === 2 && "Details & Verification"}
+                      {formStep === 3 && "Contact Areas & Priorities"}
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                        fontWeight: 600,
+                        background: "rgba(255,255,255,0.05)",
+                        padding: "0.3rem 0.8rem",
+                        borderRadius: "20px",
+                      }}
+                    >
+                      Part {formStep} of {totalSteps}
+                    </span>
+                  </div>
 
-            {/* Priority Score Sidebar Card */}
-            <div>
-              <div className={styles.scoreStickyCard}>
-                <Calculator size={36} style={{ color: "var(--interactive-orange)", margin: "0 auto" }} />
-                <div className={styles.scoreLabel}>RESPONDENT PRIORITY SCORE</div>
-                <div className={styles.scoreValue}>{priorityScore}</div>
-                <p style={{ fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.75)", lineHeight: "1.5" }}>
-                  Calculated in real-time from your selected contact areas using the BuyFacts model.
-                </p>
+                  {formStep === 1 && (
+                    <>
+                      <div className={styles.formGrid}>
+                        <div className={styles.formGroup}>
+                          <label htmlFor="firstName" className={styles.label}>
+                            First Name{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={formState.firstName}
+                            onChange={handleInputChange}
+                            placeholder="e.g. John"
+                            className={styles.input}
+                            required
+                          />
+                        </div>
 
-                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.15)", textAlign: "left", fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.85)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> 100% Refundable Guarantee
+                        <div className={styles.formGroup}>
+                          <label htmlFor="lastName" className={styles.label}>
+                            Last Name{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={formState.lastName}
+                            onChange={handleInputChange}
+                            placeholder="e.g. Smith"
+                            className={styles.input}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className={styles.formGrid}>
+                        <div className={styles.formGroup}>
+                          <label htmlFor="email" className={styles.label}>
+                            Email Address{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </label>
+                          <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={formState.email}
+                            onChange={handleInputChange}
+                            placeholder="john@company.com"
+                            className={styles.input}
+                            required
+                          />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label
+                            htmlFor="emailConfirm"
+                            className={styles.label}
+                          >
+                            Re-enter Email{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </label>
+                          <input
+                            type="email"
+                            id="emailConfirm"
+                            name="emailConfirm"
+                            value={formState.emailConfirm}
+                            onChange={handleInputChange}
+                            placeholder="Re-enter your email"
+                            className={styles.input}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {formStep === 2 && (
+                    <>
+                      <div className={styles.formGrid}>
+                        <div className={styles.formGroup}>
+                          <label htmlFor="phone" className={styles.label}>
+                            Phone Number (optional)
+                          </label>
+                          <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            value={formState.phone}
+                            onChange={handleInputChange}
+                            placeholder="(555) 000-0000"
+                            className={styles.input}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          margin: "1.5rem 0",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.8rem",
+                        }}
+                      >
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            name="requestConfirmation"
+                            checked={formState.requestConfirmation}
+                            onChange={handleInputChange}
+                            className={styles.checkbox}
+                          />
+                          <span>Request confirmation of receipt via email</span>
+                        </label>
+
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            name="isEighteen"
+                            checked={formState.isEighteen}
+                            onChange={handleInputChange}
+                            className={styles.checkbox}
+                            required
+                          />
+                          <span>
+                            I certify that I am eighteen (18) years old or older{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </span>
+                        </label>
+
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            name="isUsBased"
+                            checked={formState.isUsBased}
+                            onChange={handleInputChange}
+                            className={styles.checkbox}
+                            required
+                          />
+                          <span>
+                            I confirm that my organization is US based{" "}
+                            <span style={{ color: "var(--primary-color)" }}>
+                              *
+                            </span>
+                          </span>
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  {formStep === 3 && (
+                    <>
+                      <p
+                        style={{
+                          fontSize: "0.95rem",
+                          color: "var(--text-muted)",
+                          marginBottom: "1.5rem",
+                        }}
+                      >
+                        Check all elements that apply to your organization.
+                        Multiple selections adjust factors automatically
+                        according to the BuyFacts weighting model.
+                      </p>
+
+                      {CONTACT_AREAS.map((area) => (
+                        <div key={area.id} className={styles.areaSection}>
+                          <div className={styles.areaHeader}>
+                            <span className={styles.areaTitle}>
+                              {area.name}
+                            </span>
+                            <span className={styles.areaWeightBadge}>
+                              Area Weight: {area.weight}
+                            </span>
+                          </div>
+
+                          <div className={styles.optionsGrid}>
+                            {area.options.map((opt) => {
+                              const isChecked = (
+                                selectedOptions[area.id] || []
+                              ).includes(opt.label);
+                              return (
+                                <label
+                                  key={opt.label}
+                                  className={styles.optionItem}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() =>
+                                      toggleOption(area.id, opt.label)
+                                    }
+                                    className={styles.checkbox}
+                                  />
+                                  <span>{opt.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "1rem",
+                      marginTop: "2rem",
+                      alignItems: "center",
+                    }}
+                  >
+                    {formStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        style={{
+                          padding: "0.85rem 1.8rem",
+                          fontSize: "1rem",
+                          width: "fit-content",
+                          background: "transparent",
+                          border: "1px solid var(--interactive-blue)",
+                          color: "var(--interactive-blue)",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Back
+                      </button>
+                    )}
+                    {formStep < totalSteps ? (
+                      <button
+                        key="continue-btn"
+                        type="button"
+                        onClick={nextStep}
+                        className="btn btn-primary"
+                        style={{
+                          padding: "0.85rem 2.2rem",
+                          fontSize: "1.05rem",
+                          width: "fit-content",
+                        }}
+                      >
+                        Continue
+                      </button>
+                    ) : (
+                      <button
+                        key="submit-btn"
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`btn btn-primary ${isSubmitting ? styles.submitBtnDisabled : ""}`}
+                        style={{
+                          padding: "0.85rem 2.2rem",
+                          fontSize: "1.05rem",
+                          width: "fit-content",
+                        }}
+                        id="submit-cubicon-form"
+                      >
+                        {isSubmitting
+                          ? "Submitting Registration..."
+                          : isVerified
+                            ? "REGISTER AS FOUNDING CLIENT"
+                            : "COMPLETE PUZZLE TO REGISTER"}{" "}
+                        {isVerified ? (
+                          <Send size={18} />
+                        ) : (
+                          <ShieldCheck size={18} />
+                        )}
+                      </button>
+                    )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.6rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> US B2B Headquartered
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--interactive-orange)" }} /> 60-Day Start Window
-                  </div>
-                </div>
+
+                  <p className={styles.verificationHint}>
+                    <ShieldCheck size={15} /> Clicking register will open a
+                    full-screen 3D verification puzzle to confirm you are human.
+                  </p>
+
+                  {formStatus.type && (
+                    <div
+                      className={
+                        formStatus.type === "success"
+                          ? styles.formStatusSuccess
+                          : styles.formStatusError
+                      }
+                    >
+                      {formStatus.message}
+                    </div>
+                  )}
+                </form>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
+
+      {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
+      {isVerificationModalOpen && (
+        <div
+          className={styles.fullscreenModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cubicon-reg-modal-title"
+        >
+          <div className={styles.modalHeader}>
+            <div className={styles.modalHeaderInfo}>
+              <ShieldCheck size={24} className={styles.modalHeaderIcon} />
+              <div>
+                <h3 id="cubicon-reg-modal-title" className={styles.modalTitle}>
+                  Human Verification
+                </h3>
+                <p className={styles.modalSubtitle}>
+                  Solve the 3D Cubicon spatial puzzle to verify you are human
+                  and complete your Founding Client registration.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isSubmitting) {
+                  setIsVerificationModalOpen(false);
+                  setVerificationStatus({ status: "idle", message: "" });
+                }
+              }}
+              className={styles.modalCloseBtn}
+              title="Cancel and return to form"
+              disabled={isSubmitting}
+            >
+              <X size={16} /> Cancel Verification
+            </button>
+          </div>
+
+          {verificationStatus.status === "failed" && (
+            <div className={styles.modalFailureBar}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <AlertCircle size={18} />
+                <span>
+                  {verificationStatus.message ||
+                    "Verification unsuccessful. Please try again."}
+                </span>
+              </div>
+              <div className={styles.modalFailureActions}>
+                <button
+                  type="button"
+                  onClick={handleResetVerification}
+                  className={styles.modalRetryBtn}
+                >
+                  <RotateCcw size={14} /> Retry Puzzle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerificationModalOpen(false);
+                    setVerificationStatus({ status: "idle", message: "" });
+                  }}
+                  className={styles.modalReturnBtn}
+                >
+                  Return to Form
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.modalIframeContainer}>
+            <iframe
+              key={verificationKey}
+              src="/cubicon-app/index.html?sequence=contact_form"
+              title="Cubicon Registration Verification Puzzle"
+              className={styles.modalIframe}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+
+            {isSubmitting && (
+              <div className={styles.modalSubmittingOverlay}>
+                <div className={styles.modalSpinner}></div>
+                <div style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+                  Verification Passed! Submitting Registration...
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                  Please wait while we confirm your registration.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

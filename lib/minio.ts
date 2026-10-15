@@ -1,4 +1,20 @@
-import { S3Client, HeadBucketCommand, CreateBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  HeadBucketCommand,
+  CreateBucketCommand,
+  PutBucketPolicyCommand,
+  PutBucketCorsCommand,
+  ListObjectsV2Command,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+  ListPartsCommand,
+  CompletedPart,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * MinIO Configuration from Environment Variables
@@ -11,6 +27,19 @@ export const MINIO_CONFIG = {
   publicUrlPrefix: process.env.MINIO_PUBLIC_URL || process.env.MINIO_ENDPOINT || 'http://localhost:9000',
   region: process.env.MINIO_REGION || 'us-east-1',
 };
+
+/**
+ * System Storage Folders
+ */
+export const STORAGE_FOLDERS = [
+  { value: 'products-services', label: 'Products & Services' },
+  { value: 'research-imperatives', label: 'Research Imperatives' },
+  { value: 'cubicon', label: 'Cubicon' },
+  { value: 'research-lib', label: 'Research Lib' },
+  { value: 'triad', label: 'Triad' },
+  { value: 'rule-of-three', label: 'Rule of Three' },
+  { value: 'uploads', label: 'Uploads' },
+] as const;
 
 // Singleton S3Client instance for MinIO
 let s3ClientInstance: S3Client | null = null;
@@ -48,11 +77,40 @@ export function getMinioBucket(): string {
 }
 
 /**
- * Verifies if the target bucket exists, and creates it with public read policy if not.
+ * Applies a permissive CORS policy to the MinIO bucket to allow direct browser PUT uploads.
+ */
+export async function applyBucketCorsPolicy(s3Client: S3Client, bucketName: string) {
+  try {
+    await s3Client.send(
+      new PutBucketCorsCommand({
+        Bucket: bucketName,
+        CORSConfiguration: {
+          CORSRules: [
+            {
+              AllowedHeaders: ['*'],
+              AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'],
+              AllowedOrigins: ['*'],
+              ExposeHeaders: ['ETag', 'Content-Type', 'Content-Length'],
+              MaxAgeSeconds: 3600,
+            },
+          ],
+        },
+      })
+    );
+    console.log(`Bucket "${bucketName}" CORS policy applied successfully.`);
+  } catch (corsErr: any) {
+    console.warn(`Warning applying CORS policy to bucket "${bucketName}":`, corsErr?.message || corsErr);
+  }
+}
+
+/**
+ * Verifies if the target bucket exists, and creates it with public read policy and CORS if not.
  */
 export async function ensureBucketExists(s3Client: S3Client, bucketName: string) {
   try {
     await s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
+    // Ensure CORS policy is up to date for existing buckets
+    await applyBucketCorsPolicy(s3Client, bucketName);
   } catch (error: any) {
     // If bucket doesn't exist, create it
     if (error.name === 'NoSuchBucket' || error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
@@ -81,6 +139,9 @@ export async function ensureBucketExists(s3Client: S3Client, bucketName: string)
           })
         );
         console.log(`Bucket "${bucketName}" created and public read policy applied successfully.`);
+
+        // Apply CORS policy to the new bucket
+        await applyBucketCorsPolicy(s3Client, bucketName);
       } catch (createErr: any) {
         console.error(`Error auto-creating bucket:`, createErr);
         throw new Error(`Bucket "${bucketName}" does not exist, and automatic creation failed: ${createErr.message}`);
@@ -89,6 +150,55 @@ export async function ensureBucketExists(s3Client: S3Client, bucketName: string)
       throw error;
     }
   }
+}
+
+/**
+ * Sanitizes and normalizes a folder prefix path (e.g. "media/subfolder", "cubicon/models")
+ * Prevents path traversal and removes illegal characters.
+ */
+export function sanitizeFolderPrefix(prefix?: string): string {
+  if (!prefix || typeof prefix !== 'string' || !prefix.trim()) {
+    return 'uploads';
+  }
+
+  const normalized = prefix
+    .replace(/\\/g, '/')
+    .replace(/\.{2,}/g, '') // remove parent directory traversal
+    .replace(/\/+/g, '/')
+    .replace(/^\/+|\/+$/g, '')
+    .trim();
+
+  if (!normalized) {
+    return 'uploads';
+  }
+
+  // Sanitize individual directory segments
+  const segments = normalized.split('/').map((seg) =>
+    seg.replace(/[^a-zA-Z0-9_\-\.]/g, '_').replace(/^_+|_+$/g, '')
+  ).filter(Boolean);
+
+  return segments.length > 0 ? segments.join('/') : 'uploads';
+}
+
+/**
+ * Extracts folder prefix from an object key
+ */
+export function extractFolderFromKey(objectKey: string): string {
+  const parts = objectKey.split('/');
+  if (parts.length > 1) {
+    return parts.slice(0, -1).join('/');
+  }
+  return 'uploads';
+}
+
+/**
+ * Extracts filename component from an object key
+ */
+export function extractFilenameFromKey(objectKey: string): string {
+  const raw = objectKey.split('/').pop() || objectKey;
+  // If key follows timestamp-random-filename pattern, extract friendly name
+  const match = raw.match(/^\d+-[a-z0-9]+-(.+)$/);
+  return match ? match[1] : raw;
 }
 
 /**
@@ -101,8 +211,8 @@ export function generateObjectKey(originalFilename: string, prefix = 'uploads'):
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 8);
 
-  const cleanPrefix = prefix ? `${prefix.replace(/^\/+|\/+$/g, '')}/` : '';
-  return `${cleanPrefix}${timestamp}-${randomSuffix}-${sanitize}`;
+  const cleanPrefix = sanitizeFolderPrefix(prefix);
+  return `${cleanPrefix}/${timestamp}-${randomSuffix}-${sanitize}`;
 }
 
 /**
@@ -116,3 +226,278 @@ export function getPublicUrl(objectKey: string): string {
 
   return `${cleanEndpoint}/${bucket}/${objectKey}`;
 }
+
+export interface MinioObjectItem {
+  objectKey: string;
+  publicUrl: string;
+  fileName: string;
+  folder: string;
+  size: number;
+  lastModified: string;
+}
+
+/**
+ * Lists objects from MinIO bucket
+ */
+export async function listMinioObjects(prefix?: string): Promise<MinioObjectItem[]> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  try {
+    await ensureBucketExists(s3Client, bucket);
+  } catch (err) {
+    console.warn('Bucket existence check failed during listing:', err);
+  }
+
+  const cleanPrefix = prefix && prefix !== 'all' ? sanitizeFolderPrefix(prefix) : '';
+  const command = new ListObjectsV2Command({
+    Bucket: bucket,
+    Prefix: cleanPrefix ? `${cleanPrefix}/` : undefined,
+  });
+
+  const response = await s3Client.send(command);
+  const contents = response.Contents || [];
+
+  return contents
+    .filter((item) => item.Key && !item.Key.endsWith('/'))
+    .map((item) => {
+      const objectKey = item.Key!;
+      return {
+        objectKey,
+        publicUrl: getPublicUrl(objectKey),
+        fileName: extractFilenameFromKey(objectKey),
+        folder: extractFolderFromKey(objectKey),
+        size: item.Size || 0,
+        lastModified: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+      };
+    })
+    .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+}
+
+/**
+ * Moves an object from its current location to a new destination folder in MinIO
+ */
+export async function moveMinioObject(
+  sourceKey: string,
+  targetFolder: string
+): Promise<{ newObjectKey: string; newPublicUrl: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const cleanTargetFolder = sanitizeFolderPrefix(targetFolder);
+  const rawFilename = sourceKey.split('/').pop() || sourceKey;
+  const newObjectKey = `${cleanTargetFolder}/${rawFilename}`;
+
+  if (sourceKey === newObjectKey) {
+    return {
+      newObjectKey,
+      newPublicUrl: getPublicUrl(newObjectKey),
+    };
+  }
+
+  // Copy object to new key
+  await s3Client.send(
+    new CopyObjectCommand({
+      Bucket: bucket,
+      CopySource: encodeURIComponent(`${bucket}/${sourceKey}`),
+      Key: newObjectKey,
+    })
+  );
+
+  // Delete old object
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: sourceKey,
+    })
+  );
+
+  return {
+    newObjectKey,
+    newPublicUrl: getPublicUrl(newObjectKey),
+  };
+}
+
+/**
+ * Deletes an object from MinIO
+ */
+export async function deleteMinioObject(objectKey: string): Promise<void> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: objectKey,
+    })
+  );
+}
+
+/**
+ * Initiates an S3 Multipart Upload session
+ */
+export async function initiateMultipartUpload(
+  filename: string,
+  prefix = 'uploads',
+  contentType = 'application/octet-stream'
+): Promise<{ uploadId: string; objectKey: string; publicUrl: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+  await ensureBucketExists(s3Client, bucket);
+
+  const objectKey = generateObjectKey(filename, prefix);
+
+  const command = new CreateMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    ContentType: contentType,
+    ContentDisposition: 'inline',
+  });
+
+  const response = await s3Client.send(command);
+  if (!response.UploadId) {
+    throw new Error('Failed to initiate multipart upload: Missing UploadId in S3 response');
+  }
+
+  return {
+    uploadId: response.UploadId,
+    objectKey,
+    publicUrl: getPublicUrl(objectKey),
+  };
+}
+
+/**
+ * Generates a presigned PUT URL for a specific part in a multipart upload
+ */
+export async function getPresignedPartUrl(
+  objectKey: string,
+  uploadId: string,
+  partNumber: number,
+  expiresIn = 900
+): Promise<string> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+
+  return getSignedUrl(s3Client, command, { expiresIn });
+}
+
+/**
+ * Directly uploads a single part buffer on the server
+ */
+export async function uploadPartDirect(
+  objectKey: string,
+  uploadId: string,
+  partNumber: number,
+  body: Buffer | Uint8Array
+): Promise<{ partNumber: number; etag: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+    Body: body,
+  });
+
+  const response = await s3Client.send(command);
+  const rawEtag = response.ETag || '';
+  const cleanEtag = rawEtag.replace(/^"+|"+$/g, '');
+
+  return {
+    partNumber,
+    etag: cleanEtag,
+  };
+}
+
+/**
+ * Completes a multipart upload by assembling all parts
+ */
+export async function completeMultipartUpload(
+  objectKey: string,
+  uploadId: string,
+  parts: CompletedPart[]
+): Promise<{ objectKey: string; publicUrl: string }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  // Parts must be sorted ascending by PartNumber per S3 spec
+  const sortedParts = [...parts].sort((a, b) => (a.PartNumber || 0) - (b.PartNumber || 0));
+
+  const command = new CompleteMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+    MultipartUpload: {
+      Parts: sortedParts.map((p) => ({
+        PartNumber: p.PartNumber,
+        ETag: p.ETag ? (p.ETag.startsWith('"') ? p.ETag : `"${p.ETag}"`) : undefined,
+      })),
+    },
+  });
+
+  await s3Client.send(command);
+
+  return {
+    objectKey,
+    publicUrl: getPublicUrl(objectKey),
+  };
+}
+
+/**
+ * Aborts an in-progress multipart upload and discards uploaded parts
+ */
+export async function abortMultipartUpload(objectKey: string, uploadId: string): Promise<void> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new AbortMultipartUploadCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+  });
+
+  await s3Client.send(command);
+}
+
+/**
+ * Lists already uploaded parts for an in-progress multipart upload (useful for resumption)
+ */
+export async function listUploadedParts(
+  objectKey: string,
+  uploadId: string
+): Promise<{ partNumber: number; etag: string; size: number }[]> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  const command = new ListPartsCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    UploadId: uploadId,
+  });
+
+  try {
+    const response = await s3Client.send(command);
+    if (!response.Parts) return [];
+
+    return response.Parts.map((p) => ({
+      partNumber: p.PartNumber || 0,
+      etag: (p.ETag || '').replace(/^"+|"+$/g, ''),
+      size: p.Size || 0,
+    }));
+  } catch (err: any) {
+    if (err.name === 'NoSuchUpload' || err.$metadata?.httpStatusCode === 404) {
+      return [];
+    }
+    throw err;
+  }
+}
+

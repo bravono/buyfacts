@@ -1,0 +1,225 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import DashboardAnimation from "@/components/DashboardAnimation";
+import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
+import MockMediaPlayer from "@/components/MockMediaPlayer";
+import Link from "next/link";
+import styles from "./page.module.css";
+
+interface ButtonData {
+  label: string;
+  tagline: string;
+  description: string;
+  color: string;
+  textColor: string;
+  hoverShadow: string;
+  mediaType: "video" | "image" | "audio" | "pdf" | "docx";
+  mediaUrl: string;
+}
+
+const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
+  {
+    label: "Research Planning",
+    tagline: "Inclusive Research Definition",
+    description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
+    color: "var(--color-orange-5)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
+    mediaType: "video",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+  },
+  {
+    label: "Survey Design",
+    tagline: "Make Each Question Actionable",
+    description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
+    color: "var(--color-accent-crimson)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
+    mediaType: "audio",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  },
+  {
+    label: "Story-Based Surveys",
+    tagline: "Execute a Dual-Based Survey Model",
+    description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
+    color: "var(--color-orange-1)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Improve Surveys",
+    tagline: "Increase the Return on Research",
+    description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
+    color: "var(--color-blue-3)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
+    mediaType: "pdf",
+    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+  },
+  {
+    label: "Participant Validation",
+    tagline: "Play Cubicon Puzzle Games",
+    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
+    color: "var(--color-orange-2)",
+    textColor: "var(--color-blue-5)",
+    hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
+    mediaType: "audio",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  },
+  {
+    label: "Survey Fieldwork",
+    tagline: "Quality-Centric Survey Execution",
+    description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
+    color: "var(--color-accent-green-lime)",
+    textColor: "var(--color-blue-5)",
+    hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
+    mediaType: "image",
+    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    label: "Content Value",
+    tagline: "Maximize the Return on Content",
+    description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
+    color: "var(--color-accent-green-mint)",
+    textColor: "var(--color-blue-5)",
+    hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
+    mediaType: "video",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+  },
+  {
+    label: "Pattern Insights",
+    tagline: "Active Pattern Analytics",
+    description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
+    color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)",
+    textColor: "white",
+    hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
+    mediaType: "video",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+  },
+  {
+    label: "Audience Validation",
+    tagline: "Opportunity Validation",
+    description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
+    color: "var(--color-accent-plum)",
+    textColor: "white",
+    hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
+    mediaType: "pdf",
+    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+  },
+];
+
+const PRESET_COLORS = [
+  { color: "var(--color-orange-5)", textColor: "white", hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)" },
+  { color: "var(--color-accent-crimson)", textColor: "white", hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)" },
+  { color: "var(--color-orange-1)", textColor: "white", hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)" },
+  { color: "var(--color-blue-3)", textColor: "white", hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)" },
+  { color: "var(--color-orange-2)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)" },
+  { color: "var(--color-accent-green-lime)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)" },
+  { color: "var(--color-accent-green-mint)", textColor: "var(--color-blue-5)", hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)" },
+  { color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)", textColor: "white", hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)" },
+  { color: "var(--color-accent-plum)", textColor: "white", hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)" },
+];
+
+export default function ServicesPage() {
+  const [selectedButtonIndex, setSelectedButtonIndex] = useState<number | null>(null);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
+  const [customButtons, setCustomButtons] = useState<ButtonData[]>(DEFAULT_SERVICES_BUTTONS);
+
+  useEffect(() => {
+    const fetchButtons = async () => {
+      try {
+        const res = await fetch("/api/buttons");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.buttons)) {
+          const apiServices = data.buttons
+            .filter((btn: any) => btn.category === "Products & Services")
+            .map((btn: any, idx: number) => {
+              const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
+              const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
+              return {
+                label: btn.label || defaultFallback.label,
+                tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
+                description: btn.description || defaultFallback.description,
+                color: presets.color,
+                textColor: presets.textColor,
+                hoverShadow: presets.hoverShadow,
+                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
+                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
+              };
+            });
+
+          if (apiServices.length > 0) {
+            setCustomButtons(apiServices);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load services buttons from database:", err);
+      }
+    };
+
+    fetchButtons();
+  }, []);
+
+  const currentMedia =
+    selectedButtonIndex !== null
+      ? (customButtons[selectedButtonIndex] || customButtons[0])
+      : customButtons[0];
+
+  return (
+    <div className={styles.main}>
+      {/* Background blobs for premium glow */}
+      <div className="glow-blob blob-green"></div>
+      <div className="glow-blob blob-blue"></div>
+
+      <Navbar />
+
+      {/* Two-Column layout block - Dark Theme matching research-imperatives */}
+      <section className={styles.dashboardSection} id="innovations">
+        <div className={styles.pageGrid}>
+          {/* Left Column: interactive service / tool areas graphic */}
+          <div className={styles.columnLeft}>
+            <DashboardAnimation
+              className={styles.dashboardAnimation}
+              buttons={customButtons}
+              title="INNOVATIONS THAT SAVE TIME"
+              selectedButtonIndex={selectedButtonIndex ?? undefined}
+              onSelectButton={(index) => {
+                setSelectedButtonIndex(index);
+                setShowWelcome(false);
+              }}
+            />
+          </div>
+
+          {/* Right Column: MockMediaPlayer component */}
+          <div className={styles.columnRight}>
+            <div className={styles.stickyWrapper}>
+              <MockMediaPlayer
+                title={showWelcome ? "Getting Started" : currentMedia.label}
+                tagline={showWelcome ? "Welcome to your Marketers tool workspace!" : currentMedia.tagline}
+                description={showWelcome ? undefined : currentMedia.description}
+                mediaType={currentMedia.mediaType}
+                mediaUrl={currentMedia.mediaUrl}
+                pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
+                pdfLabel="A Deeper Preview"
+                showWelcome={showWelcome}
+                onShowWelcome={() => setShowWelcome(true)}
+                onDismissWelcome={() => setShowWelcome(false)}
+                onNextMedia={() => {
+                  setShowWelcome(false);
+                  setSelectedButtonIndex((prev) => ((prev ?? -1) + 1) % customButtons.length);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}

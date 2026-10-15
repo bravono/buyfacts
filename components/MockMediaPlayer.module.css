@@ -1,11 +1,11 @@
 .playerCard {
   width: 100%;
-  max-width: 900px;
+  max-width: 860px;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--card-border, #e2e8f0);
-  border-radius: var(--radius-lg, 18px);
+  border-radius: var(--radius-lg, 16px);
   padding: 1rem 1.15rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
 }
@@ -13,55 +13,57 @@
 /* 1. Top Header Banner Box */
 .headerBanner {
   background: linear-gradient(135deg, #edf4fc 0%, #e3effa 100%);
-  border-radius: var(--radius-md, 10px);
-  padding: 0.75rem 1.1rem;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.65rem 1rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.85rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
   border: 1px solid rgba(0, 80, 123, 0.08);
 }
 
 .headerLeft {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
   text-align: left;
 }
 
 .headerTitle {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-blue-1, #00507b);
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .headerSubtitle {
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-blue-3, #006398);
+  line-height: 1.2;
 }
 
 .headerRight {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .headerRightTitle {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--color-blue-1, #00507b);
 }
 
 .headerRightSubtitle {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 400;
   color: var(--text-muted, #55687d);
 }
@@ -69,7 +71,9 @@
 .screenFrame {
   position: relative;
   width: 100%;
-  border-radius: var(--radius-md, 10px);
+  aspect-ratio: 16 / 9;
+  max-height: 480px;
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -80,16 +84,16 @@
   transition: all 0.35s ease-in-out;
 }
 
-/* Audio & Document Layout: Compact, proportional height */
+/* Audio Layout: Unified with video frame dimensions */
 .audioScreenFrame {
   aspect-ratio: 16 / 9;
-  max-height: clamp(190px, 28vh, 300px);
+  max-height: 480px;
 }
 
-/* Video Layout: Expands to full 16:9 aspect ratio (~52% taller viewing area) */
+/* Video Layout: Proportional limit that expands on tall screens but scales down on short screens */
 .videoScreenFrame {
   aspect-ratio: 16 / 9;
-  max-height: none;
+  max-height: 480px;
 }
 
 .videoBackground {
@@ -139,8 +143,8 @@
 .playButton {
   position: relative;
   z-index: 10;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--color-blue-1, #00507b);
   border: 1.5px solid rgba(255, 255, 255, 0.3);
@@ -169,14 +173,26 @@
   border-color: var(--primary-color, #ff9900);
 }
 
+.videoPlaying {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.screenFrame:hover .videoPlaying,
+.videoPlaying:focus-visible {
+  opacity: 0.9;
+  pointer-events: auto;
+}
+
 /* Right Translucent Navigation Arrow Circle Button */
 .nextMediaButton {
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(6px);
@@ -201,12 +217,12 @@
 /* Oscilloscope Bars Visualizer */
 .barsVisualizer {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: 0.75rem;
+  right: 0.75rem;
   display: flex;
   gap: 3px;
   align-items: flex-end;
-  height: 20px;
+  height: 18px;
   z-index: 10;
 }
 
@@ -232,16 +248,16 @@
 
 /* Seek Controls Panel */
 .controlPanel {
-  padding-top: 0.65rem;
+  padding-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
 }
 
 .sliderWrapper {
   position: relative;
   width: 100%;
-  height: 16px;
+  height: 14px;
   display: flex;
   align-items: center;
 }
@@ -274,8 +290,8 @@
 .seekBar::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: var(--interactive-blue, #00507b);
   border: 2px solid white;
@@ -302,7 +318,7 @@
   align-items: center;
   gap: 4px;
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted, #6d6d6d);
 }
 
@@ -312,7 +328,7 @@
 
 .utilityBtns {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .utilBtn {
@@ -323,7 +339,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.2rem;
+  padding: 0.15rem;
   border-radius: 4px;
   transition: var(--transition-smooth);
 }
@@ -343,6 +359,7 @@
   object-fit: cover;
   z-index: 3;
   background-color: #000;
+  cursor: pointer;
 }
 
 /* Image Viewer layout */
@@ -383,66 +400,84 @@
   justify-content: center;
   background: linear-gradient(135deg, #101c26 0%, #060a0f 100%);
   z-index: 3;
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .pdfCard {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md, 10px);
-  padding: 1.2rem;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 280px;
+  max-width: 250px;
   width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
 }
 
 .pdfIcon {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   color: var(--color-accent-crimson, #ea425f);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .pdfName {
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 0.2rem;
-  line-height: 1.3;
+  margin-bottom: 0.15rem;
+  line-height: 1.25;
 }
 
 .pdfTag {
   font-family: var(--font-sans);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-dim, #9f9e9e);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.pdfLink {
+  display: inline-block;
+  background: var(--color-blue-1, #00507b);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.pdfLink:hover {
+  background: var(--primary-color, #ff9900);
+  transform: translateY(-1px);
 }
 
 /* PDF Download Banner below Player Screen */
 .pdfDownloadBanner {
-  margin-top: 0.85rem;
+  margin-top: 0.55rem;
   background: linear-gradient(135deg, rgba(0, 80, 123, 0.06) 0%, rgba(255, 153, 0, 0.08) 100%);
   border: 1px dashed rgba(0, 80, 123, 0.3);
-  border-radius: var(--radius-md, 10px);
-  padding: 0.85rem 1.2rem;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.55rem 0.9rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .pdfDownloadInfo {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.6rem;
 }
 
 .pdfDownloadIcon {
@@ -452,7 +487,7 @@
 
 .pdfDownloadTag {
   font-family: var(--font-sans);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--interactive-orange, #ff9900);
   text-transform: uppercase;
@@ -462,7 +497,7 @@
 
 .pdfDownloadTitle {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--interactive-blue, #00507b);
 }
@@ -470,42 +505,266 @@
 .pdfDownloadBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: var(--interactive-blue, #00507b);
   color: #ffffff;
   font-family: var(--font-sans);
-  font-size: clamp(0.95rem, 1.2vw, 1.1rem); /* Responsive, slightly larger text */
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 0.65rem 1.3rem;
+  padding: 0.45rem 0.9rem;
   border-radius: var(--radius-sm, 6px);
   text-decoration: none;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 80, 123, 0.2);
+  box-shadow: 0 3px 8px rgba(0, 80, 123, 0.15);
 }
 
 .pdfDownloadBtn:hover {
   background: var(--interactive-orange, #ff9900);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(255, 153, 0, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
 }
 
-.pdfLink {
+.pdfDownloadActionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.audioDownloadBtn {
+  background: var(--color-blue-2, #39789a);
+}
+
+.audioDownloadBtn:hover {
+  background: var(--interactive-orange, #ff9900);
+}
+
+/* Description Overlay inside Screen Frame (Disappears when playing) */
+.descriptionOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(
+    to top,
+    rgba(11, 21, 30, 0.95) 0%,
+    rgba(11, 21, 30, 0.78) 55%,
+    transparent 100%
+  );
+  padding: 1.5rem 1.15rem 0.85rem 1.15rem;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
+  text-align: left;
+}
+
+.descriptionOverlayHidden {
+  opacity: 0;
+  transform: translateY(12px);
+  visibility: hidden;
+}
+
+.descriptionOverlayText {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #f1f5f9 !important;
+  font-weight: 500;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Getting Started Welcome Overlay inside Screen Frame (Occupy entirety of media display area) */
+.welcomeOverlay {
+  position: absolute;
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(11, 21, 30, 0.96) 0%,
+    rgba(7, 14, 21, 0.97) 50%,
+    rgba(3, 7, 12, 0.98) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 2.25rem 2.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: auto;
+  overflow-y: auto;
+  z-index: 12;
+}
+
+.welcomeContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 680px;
+}
+
+.welcomeHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.welcomeBadge {
   display: inline-block;
-  background: var(--color-blue-1, #00507b);
-  color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 1.6rem; /* Doubled size */
-  font-weight: 600;
-  padding: 0.6rem 1.4rem;
-  border-radius: var(--radius-sm, 6px);
-  text-decoration: none;
-  transition: all 0.3s ease;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-orange-1, #ff9900) !important;
+  background: rgba(255, 153, 0, 0.15);
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
 }
 
-.pdfLink:hover {
-  background: var(--primary-color, #ff9900);
-  transform: translateY(-2px);
+.welcomeDismissBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 15;
+}
+
+.welcomeDismissBtn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.welcomeTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  margin: 0 0 0.22rem 0;
+  line-height: 1.25;
+}
+
+.welcomeIntro {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-accent-green-mint, #42ea86) !important;
+  margin: 0 0 1.1rem 0;
+  letter-spacing: -0.01em;
+}
+
+.welcomeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.welcomeList li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.45;
+  color: #f1f5f9 !important;
+}
+
+.welcomeList li span {
+  color: #f1f5f9 !important;
+}
+
+.bulletDot {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+/* Header Toggle Button for Getting Started */
+.gettingStartedToggleBtn {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-blue-1, #00507b) !important;
+  background: rgba(0, 80, 123, 0.08);
+  border: 1px solid rgba(0, 80, 123, 0.25);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.gettingStartedToggleBtn:hover,
+.gettingStartedToggleBtnActive {
+  background: var(--color-orange-1, #ff9900) !important;
+  color: #ffffff !important;
+  border-color: var(--color-orange-1, #ff9900) !important;
+  box-shadow: 0 2px 8px rgba(255, 153, 0, 0.35);
+}
+
+/* Legacy Rapid Reveal Description Panel (fallback) */
+.revealContainer {
+  margin-top: 0.55rem;
+  padding: 0.65rem 0.95rem;
+  background: linear-gradient(135deg, rgba(237, 244, 252, 0.85) 0%, rgba(227, 239, 250, 0.65) 100%);
+  border-left: 3.5px solid var(--primary-color, #ff9900);
+  border-radius: var(--radius-sm, 6px);
+  animation: rapidReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+  box-shadow: 0 2px 6px rgba(0, 80, 123, 0.04);
+}
+
+@keyframes rapidReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.96);
+    clip-path: inset(0 0 100% 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    clip-path: inset(0 0 0% 0);
+  }
+}
+
+.descriptionParagraph {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--color-blue-1, #00507b);
+  font-weight: 500;
+  margin: 0;
+}
+
+.descriptionHighlight {
+  color: var(--primary-color, #ff9900) !important;
+  font-weight: 700;
 }
 
 /* 3. Horizontal Separator Divider */
@@ -513,114 +772,799 @@
   border: none;
   height: 1px;
   background-color: var(--border-color, #e2e8f0);
-  margin: 0.85rem 0 0.75rem 0;
+  margin: 0.65rem 0;
   width: 100%;
 }
 
-/* 4. EXPLORE Section Grid */
-.exploreSection {
+/* 4. Action Buttons (3 Rounded Corner Buttons) */
+.actionSection {
   display: flex;
   flex-direction: column;
-  text-align: left;
+  align-items: center;
+  width: 100%;
 }
 
-.exploreTitle {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--color-blue-1, #00507b);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 0.15rem;
-}
-
-.exploreSubtitle {
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  color: var(--text-muted, #55687d);
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
-}
-
-/* Row 1: 3 Column Buttons */
-.buttonRow3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-
-/* Row 2: 2 Column Buttons */
-.buttonRow2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
-}
-
-/* Base styling for EXPLORE rectangular buttons */
-.exploreBtn {
+.actionButtonsRow {
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* Base styling for rounded action buttons with icons: uniform 120px x 36px with 12px gap */
+.roundedActionBtn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-sm, 8px);
-  border: none;
-  font-family: var(--font-sans);
-  font-size: clamp(0.98rem, 1.3vw, 1.15rem); /* Responsive, slightly larger text */
+  gap: 0.35rem;
+  width: 120px;
+  height: 36px;
+  min-width: 120px;
+  max-width: 120px;
+  min-height: 36px;
+  max-height: 36px;
+  flex: 0 0 120px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border-radius: 9999px; /* Strictly rounded corners */
+  border: 1.5px solid transparent;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.72rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   cursor: pointer;
   text-decoration: none;
   text-align: center;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+  user-select: none;
 }
 
-.exploreBtn:hover {
+.roundedActionBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  filter: brightness(0.96);
+  filter: brightness(0.97);
 }
 
-/* Color palettes for buttons matching reference image */
-.btnBlue {
+.btnIconImage {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.btnIconPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Button 1: SEE IT */
+.btnVideo {
+  background: linear-gradient(135deg, #ff9900 0%, #ff7700 100%);
+  color: #ffffff;
+  border-color: rgba(255, 153, 0, 0.3);
+}
+
+.btnVideo:hover {
+  background: linear-gradient(135deg, #ffaa1a 0%, #ff8800 100%);
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.35);
+}
+
+/* Button 2: HEAR IT */
+.btnAudio {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.btnAudio:hover {
+  background-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* Button 3: READ IT */
+.btnMoreDetail {
   background-color: #dbe7f7;
-  color: #1e3a60;
+  color: #00507b;
+  border-color: rgba(0, 80, 123, 0.25);
 }
 
-.btnGreen {
+.btnMoreDetail:hover {
+  background-color: #00507b;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 80, 123, 0.3);
+}
+
+/* Button 4: CONTACT US */
+.btnContact {
   background-color: #d9ebd9;
   color: #1b4d24;
+  border-color: rgba(27, 77, 36, 0.25);
 }
 
-.btnPurple {
-  background-color: #e2daf5;
-  color: #3b2861;
+.btnContact:hover {
+  background-color: #1b4d24;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(27, 77, 36, 0.3);
 }
 
-.btnPeach {
-  background-color: #f7d6bd;
-  color: #5a2e12;
-}
-
-.btnSoftBlue {
-  background-color: #c7daf3;
-  color: #16365c;
+/* Responsive constraints on shorter viewport heights (e.g. HP ZBook / laptop screen layouts) */
+@media (max-height: 820px) {
+  .playerCard {
+    padding: 0.6rem 0.95rem;
+  }
+  .headerBanner {
+    padding: 0.45rem 0.85rem;
+    margin-bottom: 0.45rem;
+  }
+  .headerTitle {
+    font-size: 1.15rem;
+  }
+  .headerSubtitle {
+    font-size: 0.8rem;
+  }
+  .screenFrame,
+  .videoScreenFrame,
+  .audioScreenFrame {
+    max-height: 340px;
+  }
+  .controlPanel {
+    padding-top: 0.35rem;
+  }
+  .descriptionOverlay {
+    padding: 1rem 0.85rem 0.55rem 0.85rem;
+  }
+  .descriptionOverlayText {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+  .welcomeOverlay {
+    padding: 1.25rem 1.5rem;
+  }
+  .welcomeTitle {
+    font-size: 0.96rem;
+  }
+  .welcomeIntro {
+    font-size: 1.05rem;
+    margin-bottom: 0.6rem;
+  }
+  .welcomeList {
+    gap: 0.38rem;
+  }
+  .welcomeList li {
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+  .revealContainer {
+    margin-top: 0.45rem;
+    padding: 0.5rem 0.8rem;
+  }
+  .descriptionParagraph {
+    font-size: 0.82rem;
+  }
+  .divider {
+    margin: 0.45rem 0;
+  }
 }
 
 @media (max-width: 640px) {
   .headerBanner {
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
   .headerRight {
     text-align: left;
   }
-  .buttonRow3 {
-    grid-template-columns: 1fr;
+  .descriptionOverlay {
+    padding: 0.85rem 0.75rem 0.45rem 0.75rem;
   }
-  .buttonRow2 {
-    grid-template-columns: 1fr;
+  .descriptionOverlayText {
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+  .welcomeOverlay {
+    padding: 1.25rem 1rem;
+  }
+  .welcomeTitle {
+    font-size: 0.92rem;
+  }
+  .welcomeIntro {
+    font-size: 1.02rem;
+    margin-bottom: 0.55rem;
+  }
+  .welcomeList {
+    gap: 0.35rem;
+  }
+  .welcomeList li {
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+  .revealContainer {
+    max-height: 120px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .actionButtonsRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
   }
 }
 
+/* Video Opening State Overlay (Section 6) */
+.videoOpeningCard {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 41, 63, 0.95) 0%, rgba(11, 21, 30, 0.98) 100%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  animation: fadeIn 0.25s ease-out;
+}
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.openingBadge {
+  background: rgba(255, 153, 0, 0.2);
+  color: var(--primary-color, #ff9900);
+  border: 1px solid rgba(255, 153, 0, 0.4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.openingTitle {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.4rem;
+}
+
+.openingTagline {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 460px;
+  line-height: 1.4;
+  margin-bottom: 1.25rem;
+}
+
+.openingButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btnStartVideo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary-color, #ff9900);
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.3rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(255, 153, 0, 0.4);
+}
+
+.btnStartVideo:hover {
+  background: #e68a00;
+  transform: translateY(-1px);
+}
+
+.btnCancelVideo {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancelVideo:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* In Depth Modal (Section 6 & 11) */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Hide site navigation when document reader modal is active */
+:global(body.document-reader-open) :global(header) {
+  transform: translateY(calc(-100% - 60px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.inDepthModal {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: min(92vw, 900px);
+  width: 100%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color, #e2e8f0);
+  position: relative;
+  z-index: 100000;
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #00507b 0%, #002d45 100%);
+  padding: 1.25rem 1.5rem;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.modalSubtitle {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modalCloseBtn:hover {
+  opacity: 1;
+}
+
+.modalBody {
+  padding: 1.25rem 1.5rem;
+  color: #334155;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modalDocCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modalFooter {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Download Confirmation Alert (Section 6) */
+.downloadSuccessBanner {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #065f46;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  margin: 0.6rem 0;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* Document In-Browser Rendering Elements */
+.inlineDocViewer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  z-index: 5;
+}
+
+.inlineDocHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
+  flex-shrink: 0;
+  z-index: 6;
+}
+
+.inlineDocBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00507b;
+}
+
+.inlineDocActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inlineDocActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.inlineDocActionBtn:hover {
+  background: #f8fafc;
+  color: #00507b;
+  border-color: #94a3b8;
+}
+
+.inlineDocBody {
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 32px);
+  position: relative;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.inlineDocIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+  display: block;
+}
+
+.inlineDocLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  background: #f8fafc;
+}
+
+.docSpinnerIcon {
+  animation: docSpin 1s linear infinite;
+  color: #00507b;
+}
+
+@keyframes docSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.inlineDocFallback {
+  width: 100%;
+  height: 100%;
+}
+
+.inlineDocxScroll {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  padding: 0.65rem 0.85rem;
+  background: #ffffff;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.inlineDocxContent {
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  line-height: 1.45;
+  font-size: 0.72rem;
+  color: #334155;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.inlineDocxContent * {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.inlineDocxContent h1 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #00507b;
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #002d45;
+  margin-top: 0.6rem;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent h3,
+.inlineDocxContent h4 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 0.45rem;
+  margin-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent p {
+  margin: 0.3rem 0;
+  font-size: 0.72rem;
+  color: #334155;
+  word-break: break-word;
+}
+
+.inlineDocxContent strong,
+.inlineDocxContent b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.inlineDocxContent ul,
+.inlineDocxContent ol {
+  margin: 0.35rem 0;
+  padding-left: 1.25rem;
+}
+
+.inlineDocxContent li {
+  margin-bottom: 0.2rem;
+  font-size: 0.72rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.66rem;
+  word-break: break-word;
+}
+
+.inlineDocxContent th,
+.inlineDocxContent td {
+  border: 1px solid #cbd5e1;
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.inlineDocxContent th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.inlineDocxContent img {
+  max-width: 100% !important;
+  height: auto;
+}
+
+.inlineDocxContent pre,
+.inlineDocxContent code {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Modal Document Viewer Enhancements */
+.modalDocMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.modalDocBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #00507b;
+  background: #e0f2fe;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+
+.modalDocPrompt {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.modalViewerContainer {
+  width: 100%;
+  max-width: 100%;
+  height: 60vh;
+  min-height: 380px;
+  max-height: 620px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow-x: hidden !important;
+  overflow-y: hidden;
+  box-sizing: border-box;
+}
+
+.modalDocIframe {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+  display: block;
+  overflow-x: hidden;
+}
+
+.modalDocxScroll {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.modalDocxScroll .inlineDocxContent {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.modalDocxScroll .inlineDocxContent h1 {
+  font-size: 1.35rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.modalDocxScroll .inlineDocxContent h2 {
+  font-size: 1.15rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.modalDocxScroll .inlineDocxContent h3,
+.modalDocxScroll .inlineDocxContent h4 {
+  font-size: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.modalDocxScroll .inlineDocxContent p {
+  font-size: 0.92rem;
+  margin: 0.5rem 0;
+}
+
+.modalDocxScroll .inlineDocxContent li {
+  font-size: 0.92rem;
+  margin-bottom: 0.25rem;
+}
+
+.modalDocxScroll .inlineDocxContent table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed;
+  font-size: 0.85rem;
+}
+
+.modalDocxScroll .inlineDocxContent th,
+.modalDocxScroll .inlineDocxContent td {
+  padding: 0.45rem 0.65rem;
+}
+
+.btnOpenExternal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #00507b;
+  background: #ffffff;
+  border: 1px solid #00507b;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnOpenExternal:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+}
