@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import styles from "./analytics.module.css";
+import CubiconCoordinatePicker, { CoordinatePickerApplyResult } from "@/components/CubiconCoordinatePicker";
+import { Crosshair, Plus, Trash2, ArrowRight } from "lucide-react";
 
 interface OverviewKPIs {
   totalTesters: number;
@@ -152,6 +154,32 @@ export default function CubiconAnalyticsPage() {
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
+  // Helper to generate default tasks for sequences
+  const generateDefaultTasks = (count: number, rotationDir = "left", rotationInterval = 15) => {
+    const screens = ["Active_front", "Active_side_r", "Active_back", "Active_side_l"];
+    const arts = ["/cubicon-app/arts/Puzzle1.webp", "/cubicon-app/arts/Puzzle2.webp", "/cubicon-app/arts/Puzzle3.webp"];
+    const tasks = [];
+    for (let i = 0; i < count; i++) {
+      tasks.push({
+        taskIndex: i,
+        taskNumber: i + 1,
+        heading: `Puzzle Task ${i + 1}`,
+        description: i === 2 ? "Trace the path across waypoints (Drag to solve)." : "Click the correct target on screen.",
+        screen: screens[i % screens.length],
+        image: arts[i % arts.length],
+        questionType: i === 2 ? "Anticipation" : "Selection",
+        correctCoordinates: "",
+        startPoint: "",
+        midPoint: "",
+        endPoint: "",
+        rotation: rotationDir,
+        rotationInterval: rotationInterval,
+        tolerance: 0.5,
+      });
+    }
+    return tasks;
+  };
+
   // Sequences Management State
   const [sequences, setSequences] = useState<SequenceItem[]>([]);
   const [isSeqLoading, setIsSeqLoading] = useState<boolean>(false);
@@ -166,7 +194,61 @@ export default function CubiconAnalyticsPage() {
     default_rotation_interval: 15,
     is_active: false,
     tasksCount: 3,
+    tasks: generateDefaultTasks(3),
   });
+
+  // Task Editing & Coordinate Picker State
+  const [editingSeq, setEditingSeq] = useState<any | null>(null);
+  const [editingTasks, setEditingTasks] = useState<any[]>([]);
+  const [isPickerOpen, setIsPickerOpen] = useState<boolean>(false);
+  const [pickerTarget, setPickerTarget] = useState<{
+    source: "create" | "edit";
+    taskIndex: number;
+  } | null>(null);
+
+  const currentPickerTask = useMemo(() => {
+    if (!pickerTarget) return null;
+    if (pickerTarget.source === "create") {
+      return newSeq.tasks?.[pickerTarget.taskIndex] || null;
+    }
+    return editingTasks?.[pickerTarget.taskIndex] || null;
+  }, [pickerTarget, newSeq.tasks, editingTasks]);
+
+  const handlePickerApply = (result: CoordinatePickerApplyResult) => {
+    if (!pickerTarget) return;
+
+    if (pickerTarget.source === "create") {
+      setNewSeq((prev) => {
+        const nextTasks = [...(prev.tasks || [])];
+        if (nextTasks[pickerTarget.taskIndex]) {
+          nextTasks[pickerTarget.taskIndex] = {
+            ...nextTasks[pickerTarget.taskIndex],
+            correctCoordinates: result.correctCoordinates,
+            startPoint: result.startPoint,
+            midPoint: result.midPoint,
+            endPoint: result.endPoint,
+          };
+        }
+        return { ...prev, tasks: nextTasks };
+      });
+    } else if (pickerTarget.source === "edit") {
+      setEditingTasks((prev) => {
+        const next = [...prev];
+        if (next[pickerTarget.taskIndex]) {
+          next[pickerTarget.taskIndex] = {
+            ...next[pickerTarget.taskIndex],
+            correctCoordinates: result.correctCoordinates,
+            startPoint: result.startPoint,
+            midPoint: result.midPoint,
+            endPoint: result.endPoint,
+          };
+        }
+        return next;
+      });
+    }
+    setIsPickerOpen(false);
+    setPickerTarget(null);
+  };
 
   const fetchSequences = async () => {
     try {
@@ -225,29 +307,15 @@ export default function CubiconAnalyticsPage() {
   const handleCreateSequence = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const tasks = [];
-      const screens = ["Active_front", "Active_side_r", "Active_back", "Active_side_l"];
-      for (let i = 0; i < newSeq.tasksCount; i++) {
-        tasks.push({
-          taskIndex: i,
-          heading: `Puzzle Task ${i + 1}`,
-          description: "Click or drag across the highlighted points to solve the challenge.",
-          screen: screens[i % screens.length],
-          image: `/cubicon-app/arts/task${(i % 3) + 1}.png`,
-          rotation: newSeq.rotation_direction,
-          rotationInterval: newSeq.default_rotation_interval,
-          question_type: "Selection",
-          tolerance: 0.5,
-        });
-      }
-
       const payload = {
-        ...newSeq,
+        title: newSeq.title,
+        slug: newSeq.slug,
+        description: newSeq.description,
         passThreshold: newSeq.pass_threshold,
         rotationDirection: newSeq.rotation_direction,
         defaultRotationInterval: newSeq.default_rotation_interval,
         isActive: newSeq.is_active,
-        tasks,
+        tasks: newSeq.tasks,
       };
 
       const res = await fetch("/api/admin/sequences", {
@@ -268,12 +336,52 @@ export default function CubiconAnalyticsPage() {
           default_rotation_interval: 15,
           is_active: false,
           tasksCount: 3,
+          tasks: generateDefaultTasks(3),
         });
         await fetchSequences();
         setTimeout(() => setSeqMessage(""), 4000);
       } else {
         const errJson = await res.json();
         setSeqMessage(`Create failed: ${errJson.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setSeqMessage(`Error: ${err.message}`);
+    }
+  };
+
+  const handleOpenEditTasks = (seq: any) => {
+    setEditingSeq(seq);
+    const existingTasks = Array.isArray(seq.tasks) && seq.tasks.length > 0
+      ? JSON.parse(JSON.stringify(seq.tasks))
+      : generateDefaultTasks(3, seq.rotationDirection || "left", seq.defaultRotationInterval || 15);
+    setEditingTasks(existingTasks);
+  };
+
+  const handleSaveEditedSequenceTasks = async () => {
+    if (!editingSeq) return;
+    try {
+      const res = await fetch(`/api/admin/sequences/${editingSeq.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editingSeq.title,
+          description: editingSeq.description,
+          passThreshold: editingSeq.passThreshold,
+          rotationDirection: editingSeq.rotationDirection,
+          defaultRotationInterval: editingSeq.defaultRotationInterval,
+          isActive: editingSeq.isActive !== undefined ? editingSeq.isActive : editingSeq.is_active,
+          tasks: editingTasks,
+        }),
+      });
+
+      if (res.ok) {
+        setSeqMessage(`Tasks for sequence "${editingSeq.title}" saved successfully.`);
+        setEditingSeq(null);
+        await fetchSequences();
+        setTimeout(() => setSeqMessage(""), 4000);
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        setSeqMessage(`Error saving tasks: ${errJson.error || "Unknown error"}`);
       }
     } catch (err: any) {
       setSeqMessage(`Error: ${err.message}`);
@@ -915,7 +1023,7 @@ export default function CubiconAnalyticsPage() {
                         {fb.userEmail || "Anonymous Tester"}
                       </div>
                       <div style={{ color: "#fbbf24", fontWeight: 700 }}>
-                        {"★".repeat(fb.rating || 5)}{"☆".repeat(Math.max(0, 5 - (fb.rating || 5)))}
+                        Rating: {fb.rating || 5} / 5
                       </div>
                     </div>
                     <p style={{ color: "#e2e8f0", fontSize: "0.9rem", margin: "0 0 8px 0", lineHeight: 1.5 }}>
@@ -1076,6 +1184,13 @@ export default function CubiconAnalyticsPage() {
                                 Activate
                               </button>
                             )}
+                            <button
+                              className={styles.btnSecondary}
+                              style={{ padding: "5px 10px", fontSize: "0.75rem", borderColor: "rgba(56, 189, 248, 0.4)", color: "#38bdf8" }}
+                              onClick={() => handleOpenEditTasks(seq)}
+                            >
+                              Edit Tasks ({seq.tasks?.length || 0})
+                            </button>
                             <a
                               href={`/cubicon?sequence=${seq.slug}`}
                               target="_blank"
@@ -1221,10 +1336,144 @@ export default function CubiconAnalyticsPage() {
                       min="1"
                       max="10"
                       value={newSeq.tasksCount}
-                      onChange={(e) => setNewSeq({ ...newSeq, tasksCount: parseInt(e.target.value, 10) || 3 })}
+                      onChange={(e) => {
+                        const count = parseInt(e.target.value, 10) || 1;
+                        const clamped = Math.max(1, Math.min(10, count));
+                        setNewSeq((prev) => {
+                          let tasks = [...(prev.tasks || [])];
+                          if (tasks.length < clamped) {
+                            const extra = generateDefaultTasks(clamped, prev.rotation_direction, prev.default_rotation_interval).slice(tasks.length);
+                            tasks = [...tasks, ...extra];
+                          } else if (tasks.length > clamped) {
+                            tasks = tasks.slice(0, clamped);
+                          }
+                          return { ...prev, tasksCount: clamped, tasks };
+                        });
+                      }}
                       className={styles.searchInput}
                       style={{ width: "100%" }}
                     />
+                  </div>
+                </div>
+
+                {/* Tasks Configuration List */}
+                <div style={{ marginTop: "4px", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <label style={{ fontSize: "0.9rem", fontWeight: 700, color: "#38bdf8" }}>
+                      Sequence Tasks ({newSeq.tasks?.length || 0})
+                    </label>
+                    <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      Configure face images and click "Pick Coordinates" to capture targets visually.
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "280px", overflowY: "auto", paddingRight: "4px" }}>
+                    {newSeq.tasks?.map((task, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          background: "rgba(15, 23, 42, 0.6)",
+                          border: "1px solid rgba(255, 255, 255, 0.08)",
+                          borderRadius: "8px",
+                          padding: "12px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <strong style={{ color: "#ffffff", fontSize: "0.85rem" }}>
+                            Task {idx + 1}: {task.heading}
+                          </strong>
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              background: task.correctCoordinates ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                              color: task.correctCoordinates ? "#34d399" : "#f87171",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {task.correctCoordinates ? "Coordinates Configured" : "No Coordinates"}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          <div>
+                            <label style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Screen Face</label>
+                            <select
+                              className={styles.select}
+                              style={{ width: "100%", padding: "4px 8px", fontSize: "0.8rem" }}
+                              value={task.screen}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setNewSeq((prev) => {
+                                  const t = [...prev.tasks];
+                                  t[idx] = { ...t[idx], screen: val };
+                                  return { ...prev, tasks: t };
+                                });
+                              }}
+                            >
+                              <option value="Active_front">Active_front</option>
+                              <option value="Active_side_r">Active_side_r</option>
+                              <option value="Active_back">Active_back</option>
+                              <option value="Active_side_l">Active_side_l</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Question Type</label>
+                            <select
+                              className={styles.select}
+                              style={{ width: "100%", padding: "4px 8px", fontSize: "0.8rem" }}
+                              value={task.questionType || "Selection"}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setNewSeq((prev) => {
+                                  const t = [...prev.tasks];
+                                  t[idx] = { ...t[idx], questionType: val };
+                                  return { ...prev, tasks: t };
+                                });
+                              }}
+                            >
+                              <option value="Selection">Selection (Click)</option>
+                              <option value="Anticipation">Anticipation (Drag)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "space-between" }}>
+                          <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={task.image}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewSeq((prev) => {
+                                const t = [...prev.tasks];
+                                t[idx] = { ...t[idx], image: val };
+                                return { ...prev, tasks: t };
+                              });
+                            }}
+                            className={styles.searchInput}
+                            style={{ flex: 1, padding: "4px 8px", fontSize: "0.8rem" }}
+                          />
+                          <button
+                            type="button"
+                            className={styles.btnPrimary}
+                            style={{ padding: "6px 12px", fontSize: "0.78rem", whiteSpace: "nowrap" }}
+                            onClick={() => {
+                              setPickerTarget({ source: "create", taskIndex: idx });
+                              setIsPickerOpen(true);
+                            }}
+                          >
+                            <Crosshair size={13} style={{ marginRight: 4 }} />
+                            Pick Coordinates Visually
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1333,6 +1582,229 @@ export default function CubiconAnalyticsPage() {
             </div>
           </div>
         )}
+
+        {/* Edit Sequence Tasks Modal */}
+        {editingSeq && (
+          <div className={styles.modalOverlay} onClick={() => setEditingSeq(null)}>
+            <div className={styles.modalContent} style={{ maxWidth: "720px", maxHeight: "88vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#38bdf8" }}>
+                    Configure Sequence Tasks: {editingSeq.title}
+                  </h3>
+                  <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>
+                    Slug: {editingSeq.slug} • Direction: {editingSeq.rotationDirection || editingSeq.rotation_direction || "left"}
+                  </div>
+                </div>
+                <button className={styles.modalClose} onClick={() => setEditingSeq(null)}>
+                  &times;
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label style={{ fontSize: "0.95rem", fontWeight: 700, color: "#ffffff" }}>
+                    Sequence Tasks ({editingTasks.length})
+                  </label>
+                  <button
+                    type="button"
+                    className={styles.btnSecondary}
+                    style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+                    onClick={() => {
+                      const newIdx = editingTasks.length;
+                      setEditingTasks([
+                        ...editingTasks,
+                        {
+                          taskIndex: newIdx,
+                          taskNumber: newIdx + 1,
+                          heading: `Task ${newIdx + 1}`,
+                          description: "Solve the challenge.",
+                          screen: "Active_front",
+                          image: "/cubicon-app/arts/Puzzle1.webp",
+                          questionType: "Selection",
+                          correctCoordinates: "",
+                          startPoint: "",
+                          midPoint: "",
+                          endPoint: "",
+                          rotation: editingSeq.rotationDirection || editingSeq.rotation_direction || "left",
+                          rotationInterval: editingSeq.defaultRotationInterval || editingSeq.default_rotation_interval || 15,
+                          tolerance: 0.5,
+                        },
+                      ]);
+                    }}
+                  >
+                    <Plus size={14} style={{ marginRight: 4 }} /> Add Task
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "380px", overflowY: "auto", paddingRight: "4px" }}>
+                  {editingTasks.map((task, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: "rgba(15, 23, 42, 0.6)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        borderRadius: "8px",
+                        padding: "14px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ background: "#0284c7", color: "#ffffff", padding: "2px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: 700 }}>
+                            #{idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            value={task.heading}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingTasks((prev) => {
+                                const next = [...prev];
+                                next[idx] = { ...next[idx], heading: val };
+                                return next;
+                              });
+                            }}
+                            className={styles.searchInput}
+                            style={{ fontWeight: 600, color: "#ffffff", padding: "4px 8px", fontSize: "0.85rem" }}
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              background: task.correctCoordinates ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                              color: task.correctCoordinates ? "#34d399" : "#f87171",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {task.correctCoordinates ? "Coordinates Configured" : "No Coordinates"}
+                          </span>
+
+                          {editingTasks.length > 1 && (
+                            <button
+                              type="button"
+                              className={styles.btnSecondary}
+                              style={{ padding: "4px 8px", color: "#f87171", borderColor: "rgba(239,68,68,0.3)" }}
+                              onClick={() => {
+                                setEditingTasks(editingTasks.filter((_, i) => i !== idx));
+                              }}
+                              title="Delete task"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Screen Face</label>
+                          <select
+                            className={styles.select}
+                            style={{ width: "100%", padding: "5px 8px", fontSize: "0.82rem" }}
+                            value={task.screen}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingTasks((prev) => {
+                                const next = [...prev];
+                                next[idx] = { ...next[idx], screen: val };
+                                return next;
+                              });
+                            }}
+                          >
+                            <option value="Active_front">Active_front</option>
+                            <option value="Active_side_r">Active_side_r</option>
+                            <option value="Active_back">Active_back</option>
+                            <option value="Active_side_l">Active_side_l</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Question Type</label>
+                          <select
+                            className={styles.select}
+                            style={{ width: "100%", padding: "5px 8px", fontSize: "0.82rem" }}
+                            value={task.questionType || task.question_type || "Selection"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingTasks((prev) => {
+                                const next = [...prev];
+                                next[idx] = { ...next[idx], questionType: val, question_type: val };
+                                return next;
+                              });
+                            }}
+                          >
+                            <option value="Selection">Selection (Click)</option>
+                            <option value="Anticipation">Anticipation (Drag)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center", justifyContent: "space-between" }}>
+                        <input
+                          type="text"
+                          placeholder="Image URL"
+                          value={task.image}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditingTasks((prev) => {
+                              const next = [...prev];
+                              next[idx] = { ...next[idx], image: val };
+                              return next;
+                            });
+                          }}
+                          className={styles.searchInput}
+                          style={{ flex: 1, padding: "5px 8px", fontSize: "0.82rem" }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.btnPrimary}
+                          style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                          onClick={() => {
+                            setPickerTarget({ source: "edit", taskIndex: idx });
+                            setIsPickerOpen(true);
+                          }}
+                        >
+                          <Crosshair size={13} style={{ marginRight: 4 }} />
+                          Pick Coordinates Visually
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+                  <button type="button" className={styles.btnSecondary} onClick={() => setEditingSeq(null)}>
+                    Cancel
+                  </button>
+                  <button type="button" className={styles.btnPrimary} onClick={handleSaveEditedSequenceTasks}>
+                    Save Sequence Tasks
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Global Cubicon Coordinate Picker Modal */}
+        <CubiconCoordinatePicker
+          isOpen={isPickerOpen}
+          onClose={() => {
+            setIsPickerOpen(false);
+            setPickerTarget(null);
+          }}
+          initialScreen={currentPickerTask?.screen || "Active_front"}
+          initialImage={currentPickerTask?.image || "/cubicon-app/arts/Puzzle1.webp"}
+          initialQuestionType={currentPickerTask?.questionType || currentPickerTask?.question_type || "Selection"}
+          initialCoordinates={currentPickerTask?.correctCoordinates || currentPickerTask?.correct_coordinates || ""}
+          onApply={handlePickerApply}
+        />
       </div>
     </div>
   );

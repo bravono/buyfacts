@@ -37,7 +37,9 @@ import {
   Check,
   Lock,
   Upload,
+  Crosshair,
 } from "lucide-react";
+import CubiconCoordinatePicker from "@/components/CubiconCoordinatePicker";
 
 interface UserSession {
   userId: string;
@@ -94,6 +96,7 @@ export default function AdminDatabaseDashboard() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   // Active Model Metadata
   const currentModelMeta: ModelMetadata | null = useMemo(() => {
@@ -755,7 +758,7 @@ export default function AdminDatabaseDashboard() {
                         <div className={styles.activityItemMain}>
                           <span>{fb?.userEmail || "Anonymous"}</span>
                           <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--interactive-orange)" }}>
-                            {fb?.rating != null ? `★ ${fb.rating}/5` : ""}
+                            {fb?.rating != null ? `Rating: ${fb.rating}/5` : ""}
                           </span>
                         </div>
                         <div className={styles.activityItemSub}>{fb?.feedbackText || ""}</div>
@@ -1139,12 +1142,26 @@ export default function AdminDatabaseDashboard() {
                           <option value="false">False</option>
                         </select>
                       ) : f.type === "json" ? (
-                        <textarea
-                          className={`${styles.formTextarea} ${styles.codeArea}`}
-                          placeholder="{}"
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                        />
+                        <div>
+                          {f.name === "correctCoordinates" && (
+                            <div style={{ marginBottom: "8px" }}>
+                              <button
+                                type="button"
+                                className={styles.createBtn}
+                                style={{ padding: "6px 12px", fontSize: "0.8rem", width: "auto" }}
+                                onClick={() => setIsPickerOpen(true)}
+                              >
+                                <Crosshair size={14} /> Pick Coordinates Visually (3D / Face)
+                              </button>
+                            </div>
+                          )}
+                          <textarea
+                            className={`${styles.formTextarea} ${styles.codeArea}`}
+                            placeholder="{}"
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                          />
+                        </div>
                       ) : f.type === "number" || f.type === "float" ? (
                         <input
                           type="number"
@@ -1238,11 +1255,25 @@ export default function AdminDatabaseDashboard() {
                           <option value="false">False</option>
                         </select>
                       ) : f.type === "json" ? (
-                        <textarea
-                          className={`${styles.formTextarea} ${styles.codeArea}`}
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                        />
+                        <div>
+                          {f.name === "correctCoordinates" && (
+                            <div style={{ marginBottom: "8px" }}>
+                              <button
+                                type="button"
+                                className={styles.createBtn}
+                                style={{ padding: "6px 12px", fontSize: "0.8rem", width: "auto" }}
+                                onClick={() => setIsPickerOpen(true)}
+                              >
+                                <Crosshair size={14} /> Pick Coordinates Visually (3D / Face)
+                              </button>
+                            </div>
+                          )}
+                          <textarea
+                            className={`${styles.formTextarea} ${styles.codeArea}`}
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                          />
+                        </div>
                       ) : f.type === "number" || f.type === "float" ? (
                         <input
                           type="number"
@@ -1337,6 +1368,25 @@ export default function AdminDatabaseDashboard() {
           </div>
         </div>
       )}
+
+      {/* MODAL 5: CUBICON COORDINATE PICKER */}
+      <CubiconCoordinatePicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        initialScreen={formData.screen || "Active_front"}
+        initialImage={formData.image || "/cubicon-app/arts/Puzzle1.webp"}
+        initialQuestionType={formData.questionType || "Selection"}
+        initialCoordinates={formData.correctCoordinates || ""}
+        onApply={(result) => {
+          setFormData((prev) => ({
+            ...prev,
+            correctCoordinates: result.correctCoordinates,
+            startPoint: result.startPoint,
+            midPoint: result.midPoint,
+            endPoint: result.endPoint,
+          }));
+        }}
+      />
     </div>
   );
 }
