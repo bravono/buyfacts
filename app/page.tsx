@@ -470,32 +470,7 @@ export default function Home() {
             {/* Reusable Vibrant Triplet Button Group with brief text below */}
             <TripletButtonGroup items={heroTripletButtons} />
 
-            {/* Content Vault Quick-Access Gateway Banner for Guests */}
-            <div className={styles.vaultHeroBanner} id="hero-vault-banner">
-              <div className={styles.vaultBannerBadge}>
-                <Sparkles size={14} />
-                <span>CONTENT VAULT ASSET HUB</span>
-              </div>
-              <div className={styles.vaultBannerBody}>
-                <div className={styles.vaultBannerTextWrapper}>
-                  <h2 className={styles.vaultBannerHeading}>
-                    Welcome Guest! Explore Our Multi-Format Resource Vault
-                  </h2>
-                  <p className={styles.vaultBannerSubtext}>
-                    Access articles, YouTube walkthroughs, ROE framework whitepapers, and audio briefings with AI keyword indexing across products and dashboard topics.
-                  </p>
-                </div>
-                <Link
-                  href="/vault"
-                  className={styles.vaultBannerCta}
-                  id="hero-vault-cta-btn"
-                  title="Guest, enter Content Vault"
-                >
-                  <span>Enter Content Vault</span>
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
+           
           </div>
         </div>
 
