@@ -51,7 +51,8 @@ const CUBICON_VIDEO_CDN = "";
 const RESEARCH_LIB_VIDEO_CDN =
   "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
 
-const TRIAD_VIDEO_CDN = "";
+const TRIAD_VIDEO_CDN =
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792160756094-3m50lb-Market_Changes_in_Real_Time_Triad.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
@@ -534,8 +535,6 @@ export default function Home() {
 
             {/* Reusable Vibrant Triplet Button Group with brief text below */}
             <TripletButtonGroup items={heroTripletButtons} />
-
-           
           </div>
         </div>
 
@@ -562,7 +561,8 @@ export default function Home() {
               Peer Benchmark Incentive Surveys
             </h2>
             <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Every participant.
+              Real-Time Peer Comparisons. Relevant Insight for Every
+              participant.
             </p>
 
             {/* Accent Badges matching Mockup image */}
