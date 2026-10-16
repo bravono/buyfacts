@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import styles from "./CubiconCoordinatePicker.module.css";
 import {
   Point3D,
@@ -11,7 +11,23 @@ import {
   project3DToScreenUV,
   extractWaypoints,
 } from "@/lib/cubicon/coordinateHelper";
-import { X, Copy, Check, RotateCcw, Trash2, Crosshair, Box, Layers, ArrowRight } from "lucide-react";
+import {
+  X,
+  Copy,
+  Check,
+  RotateCcw,
+  Trash2,
+  Crosshair,
+  Box,
+  Layers,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Search,
+  CheckCircle2,
+  RefreshCw,
+} from "lucide-react";
 
 export interface CoordinatePickerApplyResult {
   correctCoordinates: string;
@@ -19,6 +35,8 @@ export interface CoordinatePickerApplyResult {
   midPoint: string;
   endPoint: string;
   points: Point3D[];
+  image?: string;
+  screen?: string;
 }
 
 export interface CubiconCoordinatePickerProps {
@@ -29,6 +47,16 @@ export interface CubiconCoordinatePickerProps {
   initialQuestionType?: string;
   initialCoordinates?: string;
   onApply: (result: CoordinatePickerApplyResult) => void;
+}
+
+export interface CdnPuzzleItem {
+  id: string;
+  name: string;
+  fileName: string;
+  objectKey: string;
+  publicUrl: string;
+  format: string;
+  size?: number;
 }
 
 const PRESET_SCREENS = [
@@ -65,6 +93,14 @@ export default function CubiconCoordinatePicker({
   const [copied, setCopied] = useState(false);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
   const dragWaypointsRef = useRef<Point3D[]>([]);
+
+  // CDN Puzzle Images state
+  const [cdnImages, setCdnImages] = useState<CdnPuzzleItem[]>([]);
+  const [isLoadingCdn, setIsLoadingCdn] = useState<boolean>(false);
+  const [cdnSearch, setCdnSearch] = useState<string>("");
+  const [formatFilter, setFormatFilter] = useState<string>("all");
+  const [assignedNotice, setAssignedNotice] = useState<string>("");
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
 
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -207,6 +243,63 @@ export default function CubiconCoordinatePicker({
     }
   };
 
+  const fetchCdnImages = useCallback(async () => {
+    try {
+      setIsLoadingCdn(true);
+      const res = await fetch("/api/cubicon/puzzle-images");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.images)) {
+          setCdnImages(data.images);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch CDN puzzle images:", err);
+    } finally {
+      setIsLoadingCdn(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCdnImages();
+    }
+  }, [isOpen, fetchCdnImages]);
+
+  const handleAssignImage = (item: CdnPuzzleItem) => {
+    setImage(item.publicUrl);
+    setAssignedNotice(`Assigned "${item.name}" to ${screen}`);
+    setTimeout(() => setAssignedNotice(""), 3500);
+  };
+
+  const handleScrollLeft = () => {
+    if (scrollTrackRef.current) {
+      scrollTrackRef.current.scrollBy({ left: -260, behavior: "smooth" });
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (scrollTrackRef.current) {
+      scrollTrackRef.current.scrollBy({ left: 260, behavior: "smooth" });
+    }
+  };
+
+  const filteredCdnImages = useMemo(() => {
+    let list = cdnImages;
+    if (cdnSearch.trim()) {
+      const q = cdnSearch.toLowerCase().trim();
+      list = list.filter(
+        (img) =>
+          img.name.toLowerCase().includes(q) ||
+          img.fileName.toLowerCase().includes(q)
+      );
+    }
+    if (formatFilter !== "all") {
+      list = list.filter((img) => img.format.toLowerCase() === formatFilter);
+    }
+    return list;
+  }, [cdnImages, cdnSearch, formatFilter]);
+
   const handleApply = () => {
     const correctCoordinates = formatCoordinatesJson(points);
     const waypoints = extractWaypoints(points);
@@ -216,6 +309,8 @@ export default function CubiconCoordinatePicker({
       midPoint: waypoints.midPoint,
       endPoint: waypoints.endPoint,
       points,
+      image,
+      screen,
     });
     onClose();
   };
@@ -223,6 +318,7 @@ export default function CubiconCoordinatePicker({
   if (!isOpen) return null;
 
   const pointColors = ["#10b981", "#06b6d4", "#a855f7"];
+  const activeScreenLabel = PRESET_SCREENS.find((s) => s.value === screen)?.label || screen;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -266,14 +362,20 @@ export default function CubiconCoordinatePicker({
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
               >
+                {cdnImages.map((c) => (
+                  <option key={c.publicUrl} value={c.publicUrl}>
+                    {c.name} ({c.format.toUpperCase()})
+                  </option>
+                ))}
                 {PRESET_ARTS.map((a) => (
                   <option key={a.value} value={a.value}>
                     {a.label}
                   </option>
                 ))}
-                {!PRESET_ARTS.some((a) => a.value === image) && (
-                  <option value={image}>Custom: {image}</option>
-                )}
+                {!cdnImages.some((c) => c.publicUrl === image) &&
+                  !PRESET_ARTS.some((a) => a.value === image) && (
+                    <option value={image}>Custom: {image}</option>
+                  )}
               </select>
             </div>
 
@@ -312,6 +414,137 @@ export default function CubiconCoordinatePicker({
                   <Box size={14} /> Live 3D Cube
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* CDN Puzzle Images Side-Scrolling Thumbnail Gallery */}
+          <div className={styles.cdnGalleryCard}>
+            <div className={styles.cdnGalleryHeader}>
+              <div className={styles.cdnGalleryTitle}>
+                <ImageIcon size={16} />
+                <span>CDN Puzzle Images (cubicon/puzzle)</span>
+                <span className={styles.cdnBadgeCount}>
+                  {filteredCdnImages.length} Image{filteredCdnImages.length === 1 ? "" : "s"}
+                </span>
+                {assignedNotice && (
+                  <span className={styles.assignedPill}>
+                    <CheckCircle2 size={12} style={{ display: "inline", marginRight: 4 }} />
+                    {assignedNotice}
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.cdnFaceIndicator}>
+                <span>Target Face:</span>
+                <span className={styles.cdnFaceHighlight}>{activeScreenLabel}</span>
+              </div>
+
+              <div className={styles.cdnGalleryControls}>
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <Search size={12} style={{ position: "absolute", left: 8, color: "#64748b" }} />
+                  <input
+                    type="text"
+                    placeholder="Filter CDN arts..."
+                    value={cdnSearch}
+                    onChange={(e) => setCdnSearch(e.target.value)}
+                    className={styles.cdnSearchInput}
+                    style={{ paddingLeft: 24 }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {["all", "webp", "png"].map((fmt) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => setFormatFilter(fmt)}
+                      className={formatFilter === fmt ? styles.btnPrimary : styles.btnSecondary}
+                      style={{ padding: "4px 8px", fontSize: "0.7rem", height: "26px" }}
+                    >
+                      {fmt.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={fetchCdnImages}
+                  className={styles.btnSecondary}
+                  style={{ padding: "4px 8px", height: "26px" }}
+                  title="Reload CDN images from S3"
+                >
+                  <RefreshCw size={12} className={isLoadingCdn ? "spin" : ""} />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Track with Left/Right Nav Buttons */}
+            <div className={styles.scrollTrackWrapper}>
+              <button
+                type="button"
+                className={`${styles.scrollArrowBtn} ${styles.scrollArrowLeft}`}
+                onClick={handleScrollLeft}
+                aria-label="Scroll puzzle images left"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div ref={scrollTrackRef} className={styles.scrollTrack}>
+                {isLoadingCdn && cdnImages.length === 0 ? (
+                  <div style={{ padding: "16px", color: "#94a3b8", fontSize: "0.82rem" }}>
+                    Loading CDN puzzle images...
+                  </div>
+                ) : filteredCdnImages.length === 0 ? (
+                  <div style={{ padding: "16px", color: "#94a3b8", fontSize: "0.82rem" }}>
+                    No puzzle images matched your filter.
+                  </div>
+                ) : (
+                  filteredCdnImages.map((item) => {
+                    const isSelected = item.publicUrl === image;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`${styles.thumbnailCard} ${isSelected ? styles.thumbnailCardSelected : ""}`}
+                        onClick={() => handleAssignImage(item)}
+                        title={`Click to assign "${item.name}" to ${activeScreenLabel}`}
+                      >
+                        <div className={styles.thumbnailImgWrapper}>
+                          <img
+                            src={item.publicUrl}
+                            alt={item.name}
+                            loading="lazy"
+                            className={styles.thumbnailImg}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/cubicon-app/cubicon_logo.png";
+                            }}
+                          />
+                          {isSelected && (
+                            <div className={styles.selectedBadge} title="Currently assigned to selected face">
+                              <Check size={12} strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.thumbnailName} title={item.name}>
+                          {item.name}
+                        </div>
+                        <div className={styles.thumbnailSubtext}>
+                          <span className={styles.formatTag}>{item.format}</span>
+                          {isSelected && <span style={{ color: "#38bdf8", fontWeight: 600 }}>Active</span>}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <button
+                type="button"
+                className={`${styles.scrollArrowBtn} ${styles.scrollArrowRight}`}
+                onClick={handleScrollRight}
+                aria-label="Scroll puzzle images right"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
 

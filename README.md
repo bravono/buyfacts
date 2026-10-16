@@ -124,6 +124,24 @@ Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 - **Query Parameters**:
   - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). Defaults to the active sequence.
 
+#### `GET /api/cubicon/puzzle-images`
+Discovers and lists all puzzle artwork images hosted on the BuyFacts CDN (`https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/`).
+- **Query Parameters**:
+  - `q`: Optional case-insensitive text search filtering by image name or filename.
+  - `format`: Optional format filter (`all`, `webp`, `png`). Defaults to `all`.
+- **Response Structure**:
+  - `success`: Boolean indicator.
+  - `count`: Total number of matching puzzle images.
+  - `images`: Array of puzzle objects containing:
+    - `id`: Unique asset identifier.
+    - `name`: Clean human-readable artwork title.
+    - `fileName`: Storage filename.
+    - `objectKey`: S3 bucket object key prefix.
+    - `publicUrl`: Full CDN URL for direct embedding in textures and img elements.
+    - `format`: File extension (`webp`, `png`).
+    - `size`: Asset file size in bytes.
+- **Usage**: Powers the horizontal side-scrolling thumbnail gallery in the Visual Coordinate Picker (`CubiconCoordinatePicker`), enabling administrators to assign CDN puzzle images to specific Cubicon screen faces and record corresponding 3D target coordinates.
+
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
 - **Session Initialization (`task: "init"`)**:
