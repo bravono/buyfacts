@@ -124,6 +124,24 @@ Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 - **Query Parameters**:
   - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). Defaults to the active sequence.
 
+#### `GET /api/cubicon/puzzle-images`
+Discovers and lists all puzzle artwork images hosted on the BuyFacts CDN (`https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/`).
+- **Query Parameters**:
+  - `q`: Optional case-insensitive text search filtering by image name or filename.
+  - `format`: Optional format filter (`all`, `webp`, `png`). Defaults to `all`.
+- **Response Structure**:
+  - `success`: Boolean indicator.
+  - `count`: Total number of matching puzzle images.
+  - `images`: Array of puzzle objects containing:
+    - `id`: Unique asset identifier.
+    - `name`: Clean human-readable artwork title.
+    - `fileName`: Storage filename.
+    - `objectKey`: S3 bucket object key prefix.
+    - `publicUrl`: Full CDN URL for direct embedding in textures and img elements.
+    - `format`: File extension (`webp`, `png`).
+    - `size`: Asset file size in bytes.
+- **Usage**: Powers the horizontal side-scrolling thumbnail gallery in the Visual Coordinate Picker (`CubiconCoordinatePicker`), enabling administrators to assign CDN puzzle images to specific Cubicon screen faces and record corresponding 3D target coordinates.
+
 #### `POST /api/cubicon-data`
 Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
 - **Session Initialization (`task: "init"`)**:
@@ -281,7 +299,20 @@ npm run dev
 Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/analytics) in your browser to view the Executive Analytics Dashboard.
 
 ### Database Seeding & Replacement Behavior
-The database seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+
+### Production Seeding (User and DashboardButton Only)
+For staging or production environments where destructive table resets and placeholder media/vault assets are not desired, use the non-destructive production seed script:
+```bash
+npm run seed:prod
+# Or directly via tsx:
+npx tsx prisma/seed-prod.ts
+```
+This script executes upsert operations strictly on:
+1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback `AdminPass123!`.
+2. **DashboardButton table**: Upserts the 18 canonical dashboard buttons (9 Products & Services, 9 Research Imperatives).
+
+It performs no `deleteMany()` calls and does not insert dummy `MediaAsset` or `VaultAsset` records.
 
 
 ### Running Automated Tests
@@ -326,12 +357,23 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
 - **Interactive Playback Controls**: Includes a seek bar, real-time current time/duration display, mute/unmute toggle, playback reset, and full-screen controls.
 - **Hover-Aware Play Button**: The central play button transitions smoothly during playback, fading out during active video viewing and reappearing on hover or pause for quick access.
 - **Surface Interactivity**: Clicking directly on the video element or clicking the primary "Video" button at the bottom toggles play and pause immediately.
+- **In-Browser Document Rendering (PDF & DOCX)**:
+  - Users do not need to download `.pdf` or `.docx` files to inspect their contents.
+  - Selecting any document media item (`mediaType: "pdf"` or `mediaType: "docx"`, or URL ending in `.pdf` or `.docx`) immediately renders the readable content directly within the player window (`screenFrame`).
+  - **Fit-to-Width & No Horizontal Scrolling**: Both the inline media player preview and the expanded reader modal scale the document width so the entire width fits the parent container with zero horizontal scrolling. Vertical scrolling remains fully enabled for fluid reading.
+  - **PDF Rendering**: Native browser iframe embedding with `#view=FitH&toolbar=0&navpanes=0` for width-fitted inline viewing, plus an Expand action to open the full reader.
+  - **DOCX Rendering**: Client-side conversion to styled semantic HTML using `mammoth` (`convertToHtml({ arrayBuffer })`), scaling typography, headings, tables, lists, and images to fit container width without external dependencies or mandatory downloads.
+  - **Clean Inline Player Toolbar**: The inline document viewer toolbar features a format badge and a single clear **Expand** action, avoiding any ambiguous inline download triggers.
+  - **Dedicated `/document-viewer` Route for "Open in New Tab"**: Clicking **Open in New Tab** in the modal opens a dedicated full-screen reader page ([`app/document-viewer/page.tsx`](file:///c:/Users/USER/BuyFacts/app/document-viewer/page.tsx)) in a new browser tab without triggering a download. For users who specifically want a local file, the distinct **Download Copy** button performs the file download.
+  - **Navigation Bar Auto-Hiding**: When the document reader modal is opened, the top site navigation bar automatically hides (`document-reader-open` state) so it never gets in the way of reading. The navigation bar smoothly restores the moment the modal is closed.
+  - **Top-Level Portal Rendering**: The reader modal is mounted at the root of `document.body` via `createPortal` with `z-index: 99999`, preventing stacking context trapping by lower section wrappers.
+  - **File Upload & Asset Preview Integration**: Uploaded `.docx` and `.pdf` documents on `/file-upload` also leverage the document parser ([`lib/document-parser.ts`](file:///c:/Users/USER/BuyFacts/lib/document-parser.ts)) to render inline previews via [`components/FilePreview.tsx`](file:///c:/Users/USER/BuyFacts/components/FilePreview.tsx).
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
   1. **SEE IT**: User-initiated video presentation with direct play/pause toggling and Video icon.
   2. **HEAR IT**: Audio stream presentation and listen actions with Headphones icon.
-  3. **READ IT**: Executive documentation preview modal and technical reference download with FileText icon, preserving active dashboard selection upon completion.
+  3. **READ IT**: Executive documentation preview modal and technical reference reader with FileText icon, preserving active dashboard selection upon completion.
   4. **CONTACT US**: Direct navigation to `/#contact` with Mail icon.
 - **Responsive Layout & Dimensional Uniformity**:
   Action buttons maintain strictly uniform dimensions (120px width by 36px height) across desktop, tablet, and smartphone screens. The control row employs flex-wrap rearrangement into fewer columns on narrower viewports rather than stretching or shrinking buttons, ensuring a clean responsive flow. Other buttons (such as the contact inquiry submit button) are styled to fit their label with padding (`width: fit-content`) rather than expanding to the full container width.
@@ -566,7 +608,8 @@ All navigation links support dynamic active state indication via `usePathname()`
 - **Contact Triggered Collapse**: When the user clicks the "CONTACT" link (desktop button or mobile drawer link) or navigates to `/#contact`, the fixed navbar immediately collapses (`translateY(calc(-100% - 30px))`, `opacity: 0`, `pointer-events: none`). This removes the 70px-80px fixed header obstruction so the contact form achieves full viewport visibility on 1080p laptops (e.g. HP ZBook).
 - **Scroll-Up Restoration**: When the user starts scrolling back up (`currentScrollY < lastScrollY - 8`) or returns to the top of the page (`currentScrollY <= 20`), the navbar smoothly animates back into view (`transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease`).
 - **Smooth Scroll Grace Period**: Enforces a 1000ms grace window following the contact click to prevent programmatic downward smooth-scrolling from prematurely uncollapsing the header.
-- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
+- **Logo Tagline No-Wrap & Dynamic Font Size Scaling**: The monogram logo tagline ("Real Data - Real People") in `components/Navbar.tsx` is styled with strict `white-space: nowrap;` and `text-wrap: nowrap;` inside a non-shrinking flex container (`flex-shrink: 0;`). Instead of breaking or wrapping across multiple lines during viewport width changes or responsive resizing, the font size dynamically scales using CSS `clamp()` expressions across desktop, tablet (max-width: 768px), and mobile (max-width: 480px) breakpoints.
+- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
@@ -672,13 +715,17 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **Component API**:
+5. **CDN Video Playback Plumbing & Lightbox Modal**:
+   - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
+6. **Component API**:
    ```typescript
    export interface TripletButtonItem {
      id: string;
      title: string;
      tagline: string; // Brief text below the button
-     href: string;
+     href?: string;
      iconUrl?: string; // Optional CDN icon URL
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
@@ -686,10 +733,12 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      badge?: string;
      external?: boolean;
      actionHint?: string;
+     onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+     videoUrl?: string;
    }
    ```
-6. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` validating specs, CDN fallbacks, link security, and layout defaults.
+7. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
 
 ---
 
@@ -969,3 +1018,123 @@ Updates an existing record by ID in the specified table.
 #### `DELETE /api/admin/database`
 Permanently deletes a record by ID.
 - **Payload** (or query params): `{ "table": "mediaAsset", "id": "asset-uuid-001" }`
+
+### 8.4 Cubicon Visual Coordinate Picker System
+
+To streamline Cubicon task configuration and eliminate manual developer console copy-pasting of `{ x, y, z }` coordinates, the platform provides an interactive visual coordinate picker.
+
+#### Key Capabilities:
+- **Direct Visual Capture**:
+  - Displays the task's face texture mapped onto the selected screen face (`Active_front`, `Active_side_r`, `Active_back`, `Active_side_l`, `Active_top`, `Active_bottom`).
+  - Supports both **Surface View** (instant 2D face projection with crosshairs and measurement grid) and **Live 3D Cube Canvas** (embedded Three.js scene communicating in real-time via `postMessage`).
+- **Interaction Modes**:
+  - **Single-Click (`Selection`)**: Clicking anywhere on the screen drops a target pin (Pin 1) and captures normalized `{ x, y, z: 1.0 }` coordinates.
+  - **Multi-Point Drag (`Anticipation` / Drawing)**: Supports sequential clicking or mouse/touch drag gestures to capture up to 3 waypoints:
+    - Point 1 (Start Point, green marker)
+    - Point 2 (Mid Point, cyan marker)
+    - Point 3 (End Point, purple marker)
+    - Waypoints are connected by a dynamic dotted trajectory path line.
+- **Form Auto-Population**:
+  - Clicking "Apply to Task" automatically populates:
+    - `correctCoordinates`: JSON array string `[{"x": ..., "y": ..., "z": 1.0}, ...]`
+    - `startPoint`: JSON object string for Point 1
+    - `midPoint`: JSON object string for Point 2 (or empty)
+    - `endPoint`: JSON object string for Point 3 (or Point 2 if 2-point drag)
+- **Console Log Import Helper**:
+  - Includes a quick import bar to paste raw console logs (e.g. `x: -0.25, y: 0.30, z: 1.0` or raw JSON); the parser automatically parses coordinates and renders pins on the image.
+- **Integration Points**:
+  - **Sequence Engine (`/cubicon/analytics` Tab 5)**: Available directly inside both the Create Sequence modal and the Sequence Tasks editor.
+  - **Admin Database CRUD (`/admin`)**: Available alongside the `correctCoordinates` field when creating or editing `CubiconTask` records.
+
+### 8.5 Cubicon Rotation Mechanics and Standalone Coordinate Picker Testing
+
+#### 1. Rotation Snapping Prevention Architecture
+- **Continuous Phase Tracking**: Rather than clobbering `targetRotation.current` with static angles in `[0, 2PI]`, the model helper `getDirectionalRotationForScreen` advances rotation strictly in the designated direction (`left` -> -90 deg, `right` -> +90 deg).
+- **No Reverse Snapping**:
+  - When transitioning between tasks, if the target screen is already front-facing, no rotation delta is introduced.
+  - If a turn is needed, it steps forward by `(currentFaceIndex - targetFaceIndex + 4) % 4` intervals of 90 degrees in the configured direction.
+  - Epsilon snapping (`Math.abs(diff) < 0.0005`) in `useFrame` prevents micro-jitter and floating-point drift.
+  - Previous task textures are cleared during material transitions to prevent texture ghosting across faces.
+
+#### 2. Standalone Testing of Coordinate Picker in Cubicon
+The Cubicon 3D app (`c:\Users\USER\cubicon`) includes a dedicated standalone coordinate picker environment:
+- **How to Start Standalone Cubicon**:
+  ```bash
+  cd c:\Users\USER\cubicon
+  npm run dev
+  ```
+  Vite launches at `http://localhost:5173`.
+- **How to Test the Coordinate Picker**:
+  1. **Direct UI Switcher**: On the landing/welcome screen, click the **"Coordinate Picker Mode"** button.
+  2. **URL Query Parameter**: Navigate directly to:
+     `http://localhost:5173/?picker=true`
+     Optionally pass screen face and texture image:
+     `http://localhost:5173/?picker=true&screen=Active_side_l&image=arts/Puzzle2.webp`
+- **Standalone Picker Features**:
+  - **Screen Face Buttons**: Switch between `Front` (`Active_front`), `Left` (`Active_side_l`), `Back` (`Active_back`), and `Right` (`Active_side_r`) with instant 3D alignment.
+  - **Texture Presets**: Switch between `Puzzle 1`, `Puzzle 2`, `Puzzle 3`, and `Logo`.
+  - **Mode Toggle**: Switch between `Single Click` (1 point) and `Drag` (up to 3 waypoints).
+  - **Live Coordinates HUD**: Real-time display of Point 1 (Start), Point 2 (Mid), Point 3 (End) `{ x, y, z }`.
+  - **Copy JSON**: One-click clipboard copy of the formatted coordinates array with visual confirmation.
+
+---
+
+## 9. S3 Storage Explorer, Hierarchical Browsing & Resumable Upload
+
+The BuyFacts Media Console (`/file-upload`) provides enterprise-grade object storage management and batch ingestion for S3-compatible object stores (MinIO/AWS S3).
+
+### 9.1 S3 Multipart Chunked Resumable Upload Engine
+- **Chunk Slicing**: Slices files up to 1GB into 5MB byte chunks (`Blob.prototype.slice`) with unique ETags.
+- **Resilience & Auto-Retry**: Automatically retries failed chunks with exponential backoff up to 3 times before failing.
+- **Local State Recovery**: Persists upload session IDs and progress in `localStorage` to resume interrupted or stalled uploads across network drops.
+- **Directory Crawler**: Recursively extracts nested folder trees from drag-and-drop actions or the folder picker (`webkitdirectory`), preserving subfolder structure under the chosen destination prefix.
+
+### 9.2 Dynamic Nested Folder Discovery & Hierarchical Storage Explorer
+- **Dynamic Tree Discovery**: Discovers all ancestor folder prefixes across the entire bucket on the fly without relying on static preset lists.
+- **Explicit Folder Markers**: Supports creating empty subfolders via zero-byte directory markers (`.keep`), discovering them immediately prior to file placement.
+- **Interactive Breadcrumb Navigation**: Clickable breadcrumb trail (`Root / [parent] / [subfolder]`) with instant level jumping and one-click "Up" navigation.
+- **Subfolder Cards**: Immediate subfolders are displayed as navigable cards with item counts and shortcut actions ("Upload here" and "Delete folder").
+- **View Mode Switching**:
+  - **Tree View**: Folders first, direct files only; click into folders to drill down.
+  - **Flat View**: Shows all files recursively matching the current prefix.
+- **Upload Destination Synchronization**: Clicking "Upload to this folder" in the explorer instantly targets that subfolder in the uploader component.
+
+### 9.3 Storage API Reference
+
+#### `GET /api/storage/files`
+Lists storage objects with hierarchical directory tree metadata.
+- **Query Parameters**:
+  - `folder`: Folder prefix path (e.g. `cubicon`, `cubicon/models`, or empty for root).
+  - `view`: `hierarchical` (default) or `flat`.
+- **Response Structure**:
+  ```json
+  {
+    "success": true,
+    "currentFolder": "cubicon/models",
+    "breadcrumbs": [
+      { "name": "Root", "path": "" },
+      { "name": "cubicon", "path": "cubicon" },
+      { "name": "models", "path": "cubicon/models" }
+    ],
+    "subfolders": [
+      { "name": "character", "path": "cubicon/models/character", "itemCount": 4 }
+    ],
+    "files": [
+      { "objectKey": "cubicon/models/scene.glb", "fileName": "scene.glb", "folder": "cubicon/models", "size": 1400230, "lastModified": "2026-10-16T12:00:00.000Z", "publicUrl": "..." }
+    ],
+    "allFolders": ["cubicon", "cubicon/models", "cubicon/models/character", "products-services", ...],
+    "totalCount": 1
+  }
+  ```
+
+#### `POST /api/storage/folders`
+Creates an explicit empty directory marker in MinIO.
+- **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
+- **Response**: `{ "success": true, "folderPath": "cubicon/models/scenarios", "message": "..." }`
+
+#### `DELETE /api/storage/folders`
+Recursively deletes a folder prefix and all objects inside it.
+- **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
+- **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
+
+
