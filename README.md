@@ -577,7 +577,8 @@ All navigation links support dynamic active state indication via `usePathname()`
 - **Contact Triggered Collapse**: When the user clicks the "CONTACT" link (desktop button or mobile drawer link) or navigates to `/#contact`, the fixed navbar immediately collapses (`translateY(calc(-100% - 30px))`, `opacity: 0`, `pointer-events: none`). This removes the 70px-80px fixed header obstruction so the contact form achieves full viewport visibility on 1080p laptops (e.g. HP ZBook).
 - **Scroll-Up Restoration**: When the user starts scrolling back up (`currentScrollY < lastScrollY - 8`) or returns to the top of the page (`currentScrollY <= 20`), the navbar smoothly animates back into view (`transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease`).
 - **Smooth Scroll Grace Period**: Enforces a 1000ms grace window following the contact click to prevent programmatic downward smooth-scrolling from prematurely uncollapsing the header.
-- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
+- **Logo Tagline No-Wrap & Dynamic Font Size Scaling**: The monogram logo tagline ("Real Data - Real People") in `components/Navbar.tsx` is styled with strict `white-space: nowrap;` and `text-wrap: nowrap;` inside a non-shrinking flex container (`flex-shrink: 0;`). Instead of breaking or wrapping across multiple lines during viewport width changes or responsive resizing, the font size dynamically scales using CSS `clamp()` expressions across desktop, tablet (max-width: 768px), and mobile (max-width: 480px) breakpoints.
+- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
@@ -683,13 +684,17 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **Component API**:
+5. **CDN Video Playback Plumbing & Lightbox Modal**:
+   - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
+6. **Component API**:
    ```typescript
    export interface TripletButtonItem {
      id: string;
      title: string;
      tagline: string; // Brief text below the button
-     href: string;
+     href?: string;
      iconUrl?: string; // Optional CDN icon URL
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
@@ -697,10 +702,12 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      badge?: string;
      external?: boolean;
      actionHint?: string;
+     onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+     videoUrl?: string;
    }
    ```
-6. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` validating specs, CDN fallbacks, link security, and layout defaults.
+7. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
 
 ---
 
@@ -980,3 +987,62 @@ Updates an existing record by ID in the specified table.
 #### `DELETE /api/admin/database`
 Permanently deletes a record by ID.
 - **Payload** (or query params): `{ "table": "mediaAsset", "id": "asset-uuid-001" }`
+
+### 8.4 Cubicon Visual Coordinate Picker System
+
+To streamline Cubicon task configuration and eliminate manual developer console copy-pasting of `{ x, y, z }` coordinates, the platform provides an interactive visual coordinate picker.
+
+#### Key Capabilities:
+- **Direct Visual Capture**:
+  - Displays the task's face texture mapped onto the selected screen face (`Active_front`, `Active_side_r`, `Active_back`, `Active_side_l`, `Active_top`, `Active_bottom`).
+  - Supports both **Surface View** (instant 2D face projection with crosshairs and measurement grid) and **Live 3D Cube Canvas** (embedded Three.js scene communicating in real-time via `postMessage`).
+- **Interaction Modes**:
+  - **Single-Click (`Selection`)**: Clicking anywhere on the screen drops a target pin (Pin 1) and captures normalized `{ x, y, z: 1.0 }` coordinates.
+  - **Multi-Point Drag (`Anticipation` / Drawing)**: Supports sequential clicking or mouse/touch drag gestures to capture up to 3 waypoints:
+    - Point 1 (Start Point, green marker)
+    - Point 2 (Mid Point, cyan marker)
+    - Point 3 (End Point, purple marker)
+    - Waypoints are connected by a dynamic dotted trajectory path line.
+- **Form Auto-Population**:
+  - Clicking "Apply to Task" automatically populates:
+    - `correctCoordinates`: JSON array string `[{"x": ..., "y": ..., "z": 1.0}, ...]`
+    - `startPoint`: JSON object string for Point 1
+    - `midPoint`: JSON object string for Point 2 (or empty)
+    - `endPoint`: JSON object string for Point 3 (or Point 2 if 2-point drag)
+- **Console Log Import Helper**:
+  - Includes a quick import bar to paste raw console logs (e.g. `x: -0.25, y: 0.30, z: 1.0` or raw JSON); the parser automatically parses coordinates and renders pins on the image.
+- **Integration Points**:
+  - **Sequence Engine (`/cubicon/analytics` Tab 5)**: Available directly inside both the Create Sequence modal and the Sequence Tasks editor.
+  - **Admin Database CRUD (`/admin`)**: Available alongside the `correctCoordinates` field when creating or editing `CubiconTask` records.
+
+### 8.5 Cubicon Rotation Mechanics and Standalone Coordinate Picker Testing
+
+#### 1. Rotation Snapping Prevention Architecture
+- **Continuous Phase Tracking**: Rather than clobbering `targetRotation.current` with static angles in `[0, 2PI]`, the model helper `getDirectionalRotationForScreen` advances rotation strictly in the designated direction (`left` -> -90 deg, `right` -> +90 deg).
+- **No Reverse Snapping**:
+  - When transitioning between tasks, if the target screen is already front-facing, no rotation delta is introduced.
+  - If a turn is needed, it steps forward by `(currentFaceIndex - targetFaceIndex + 4) % 4` intervals of 90 degrees in the configured direction.
+  - Epsilon snapping (`Math.abs(diff) < 0.0005`) in `useFrame` prevents micro-jitter and floating-point drift.
+  - Previous task textures are cleared during material transitions to prevent texture ghosting across faces.
+
+#### 2. Standalone Testing of Coordinate Picker in Cubicon
+The Cubicon 3D app (`c:\Users\USER\cubicon`) includes a dedicated standalone coordinate picker environment:
+- **How to Start Standalone Cubicon**:
+  ```bash
+  cd c:\Users\USER\cubicon
+  npm run dev
+  ```
+  Vite launches at `http://localhost:5173`.
+- **How to Test the Coordinate Picker**:
+  1. **Direct UI Switcher**: On the landing/welcome screen, click the **"Coordinate Picker Mode"** button.
+  2. **URL Query Parameter**: Navigate directly to:
+     `http://localhost:5173/?picker=true`
+     Optionally pass screen face and texture image:
+     `http://localhost:5173/?picker=true&screen=Active_side_l&image=arts/Puzzle2.webp`
+- **Standalone Picker Features**:
+  - **Screen Face Buttons**: Switch between `Front` (`Active_front`), `Left` (`Active_side_l`), `Back` (`Active_back`), and `Right` (`Active_side_r`) with instant 3D alignment.
+  - **Texture Presets**: Switch between `Puzzle 1`, `Puzzle 2`, `Puzzle 3`, and `Logo`.
+  - **Mode Toggle**: Switch between `Single Click` (1 point) and `Drag` (up to 3 waypoints).
+  - **Live Coordinates HUD**: Real-time display of Point 1 (Start), Point 2 (Mid), Point 3 (End) `{ x, y, z }`.
+  - **Copy JSON**: One-click clipboard copy of the formatted coordinates array with visual confirmation.
+

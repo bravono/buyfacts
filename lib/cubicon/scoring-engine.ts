@@ -285,9 +285,13 @@ export function sanitizePublicPayload(data: {
   redirectUrl?: string;
   question_type?: string;
   questionType?: string;
+  isDev?: boolean;
 }): Record<string, any> {
   const isComplete = Boolean(data.completed);
   const isPassed = Boolean(data.passed);
+  const isDev = data.isDev !== undefined
+    ? Boolean(data.isDev)
+    : process.env.NODE_ENV === "development";
 
   return {
     sessionId: data.sessionId,
@@ -308,6 +312,7 @@ export function sanitizePublicPayload(data: {
     fireworks: isComplete && isPassed,
     score: data.score ?? (isPassed ? 1 : 0),
     result: data.result ?? null,
+    isDev,
     redirectUrl: data.redirectUrl || "",
     ...(data.questionType || data.question_type ? {
       questionType: data.questionType || data.question_type,

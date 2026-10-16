@@ -329,6 +329,42 @@ export async function POST(request: Request) {
     }
 
     const cleanedData = await cleanInputData(meta, data, false);
+
+    // Auto-increment sequenceId on the backend for models with a sequenceId field
+    const hasSequenceId = meta.fields.some((f) => f.name === "sequenceId");
+    if (hasSequenceId) {
+      const [latestInTable, latestSequence] = await Promise.all([
+        delegate.findFirst({
+          where: { sequenceId: { not: null } },
+          orderBy: { sequenceId: "desc" },
+          select: { sequenceId: true },
+        }),
+        prisma.cubiconSequence.findFirst({
+          orderBy: { id: "desc" },
+          select: { id: true },
+        }),
+      ]);
+
+      const maxTableSeqId = Number(latestInTable?.sequenceId ?? 0);
+      const maxSeqId = Number(latestSequence?.id ?? 0);
+      const nextSequenceId = Math.max(maxTableSeqId, maxSeqId) + 1;
+
+      await prisma.cubiconSequence.upsert({
+        where: { id: nextSequenceId },
+        update: {},
+        create: {
+          id: nextSequenceId,
+          slug: `sequence-${nextSequenceId}-${Date.now()}`,
+          title: data.heading ? String(data.heading) : `Sequence ${nextSequenceId}`,
+          description: data.description ? String(data.description) : "Auto-generated sequence",
+          isActive: false,
+          createdBy: auth.user?.email || "system",
+        },
+      });
+
+      cleanedData.sequenceId = nextSequenceId;
+    }
+
     const created = await delegate.create({ data: cleanedData });
     const sanitized = sanitizeRecord(table, created);
 

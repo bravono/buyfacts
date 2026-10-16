@@ -265,7 +265,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     searchableFields: ["heading", "description", "screen", "questionType"],
     fields: [
       { name: "id", label: "ID", type: "number", readOnly: true },
-      { name: "sequenceId", label: "Sequence ID", type: "number" },
+      { name: "sequenceId", label: "Sequence ID", type: "number", readOnly: true },
       { name: "taskIndex", label: "Task Index", type: "number", defaultValue: 0 },
       { name: "taskNumber", label: "Task Number", type: "number", defaultValue: 1 },
       { name: "heading", label: "Task Heading", type: "string", required: true },
@@ -297,7 +297,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     fields: [
       { name: "id", label: "ID", type: "number", readOnly: true },
       { name: "sessionId", label: "Session ID", type: "string", required: true },
-      { name: "sequenceId", label: "Sequence ID", type: "number" },
+      { name: "sequenceId", label: "Sequence ID", type: "number", readOnly: true },
       { name: "taskIndex", label: "Current Task Index", type: "number", defaultValue: 0 },
       { name: "userEmail", label: "User Email", type: "string" },
       { name: "passedPuzzles", label: "Passed Puzzles", type: "number", defaultValue: 0 },
@@ -320,7 +320,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     fields: [
       { name: "id", label: "ID", type: "number", readOnly: true },
       { name: "sessionId", label: "Session ID", type: "string", required: true },
-      { name: "sequenceId", label: "Sequence ID", type: "number" },
+      { name: "sequenceId", label: "Sequence ID", type: "number", readOnly: true },
       { name: "taskIndex", label: "Task Index", type: "number", required: true },
       { name: "userEmail", label: "User Email", type: "string" },
       { name: "result", label: "Attempt Result", type: "string", required: true, options: ["passed", "failed", "timeout", "skipped"] },
