@@ -957,4 +957,225 @@
   box-shadow: 0 0 0 2px rgba(0, 80, 123, 0.1);
 }
 
+/* Breadcrumbs Bar */
+.breadcrumbsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-alt, #F8F8F8);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.breadcrumbTrail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.breadcrumbCrumb {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: var(--transition-smooth);
+}
+
+.breadcrumbCrumb:hover {
+  color: var(--text-color);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.breadcrumbCrumbActive {
+  font-weight: 700;
+  color: var(--interactive-blue);
+  background: rgba(0, 80, 123, 0.08);
+}
+
+.breadcrumbSeparator {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+.explorerToolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.explorerActionBtn {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: var(--transition-smooth);
+}
+
+.explorerActionBtn:hover {
+  border-color: var(--interactive-orange);
+  color: var(--interactive-orange);
+}
+
+.explorerActionBtnPrimary {
+  background: rgba(255, 153, 0, 0.1);
+  border-color: rgba(255, 153, 0, 0.3);
+  color: var(--interactive-orange);
+}
+
+.explorerActionBtnPrimary:hover {
+  background: var(--interactive-orange);
+  color: #FFFFFF;
+}
+
+.explorerSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.folderCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.folderCard {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.folderCard:hover {
+  border-color: var(--interactive-orange);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+.folderCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  flex: 1;
+}
+
+.folderCardIcon {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 6px;
+  background: rgba(255, 153, 0, 0.1);
+  color: var(--interactive-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.folderCardMeta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.folderCardName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folderCardCount {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.folderCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.folderCardIconBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.folderCardIconBtn:hover {
+  color: var(--interactive-orange);
+  background: rgba(255, 153, 0, 0.1);
+}
+
+.inlineFolderCreator {
+  background: var(--bg-alt, #F8F8F8);
+  border: 1px dashed var(--interactive-orange);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.inlineFolderInput {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  color: var(--text-color);
+}
+
+.inlineFolderInput:focus {
+  border-color: var(--interactive-orange);
+}
+
+
 

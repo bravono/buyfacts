@@ -5,7 +5,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FileUploader, UploadSuccessResult } from "@/components/FileUploader";
 import { FilePreview } from "@/components/FilePreview";
-import { STORAGE_FOLDERS, MinioObjectItem, sanitizeFolderPrefix } from "@/lib/minio";
+import {
+  STORAGE_FOLDERS,
+  MinioObjectItem,
+  MinioFolderItem,
+  MinioBreadcrumbItem,
+  sanitizeFolderPrefix,
+} from "@/lib/minio";
 import styles from "./page.module.css";
 import {
   Database,
@@ -26,8 +32,10 @@ import {
   Loader2,
   LogOut,
   Folder,
+  FolderPlus,
   FolderTree,
   ArrowRightLeft,
+  ArrowUp,
   Trash2,
   Search,
   RefreshCw,
@@ -36,6 +44,8 @@ import {
   Layers,
   Video,
   Headphones,
+  ChevronRight,
+  UploadCloud,
 } from "lucide-react";
 
 interface SavedRecord {
@@ -69,10 +79,25 @@ export default function FileUploadDemoPage() {
 
   // Storage Explorer State
   const [storageFiles, setStorageFiles] = useState<MinioObjectItem[]>([]);
+  const [storageSubfolders, setStorageSubfolders] = useState<MinioFolderItem[]>([]);
+  const [storageBreadcrumbs, setStorageBreadcrumbs] = useState<MinioBreadcrumbItem[]>([
+    { name: "Root", path: "" },
+  ]);
+  const [allDiscoveredFolders, setAllDiscoveredFolders] = useState<string[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"hierarchical" | "flat">("hierarchical");
   const [isLoadingStorage, setIsLoadingStorage] = useState<boolean>(false);
   const [selectedFolderFilter, setSelectedFolderFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // New Folder Creation State
+  const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
+  const [newFolderName, setNewFolderName] = useState<string>("");
+  const [folderCreateError, setFolderCreateError] = useState<string>("");
+
+  // Target Upload Folder synchronizer
+  const [activeUploadFolder, setActiveUploadFolder] = useState<string>("products-services");
 
   // Move File Modal State
   const [movingFile, setMovingFile] = useState<MinioObjectItem | null>(null);
@@ -206,18 +231,92 @@ export default function FileUploadDemoPage() {
     }
   };
 
-  const fetchStorageFiles = async (folder = "all") => {
+  const fetchStorageFiles = async (folder = currentFolder, mode = viewMode) => {
     setIsLoadingStorage(true);
     try {
-      const res = await fetch(`/api/storage/files?folder=${encodeURIComponent(folder)}`);
+      const res = await fetch(
+        `/api/storage/files?folder=${encodeURIComponent(folder)}&view=${encodeURIComponent(mode)}`
+      );
       const data = await res.json();
       if (data.success) {
-        setStorageFiles(data.files);
+        setStorageFiles(data.files || []);
+        setStorageSubfolders(data.subfolders || []);
+        setStorageBreadcrumbs(data.breadcrumbs || [{ name: "Root", path: "" }]);
+        setAllDiscoveredFolders(data.allFolders || []);
+        setCurrentFolder(data.currentFolder || "");
       }
     } catch (err) {
       console.error("Error fetching storage files:", err);
     } finally {
       setIsLoadingStorage(false);
+    }
+  };
+
+  const handleNavigateToFolder = (folderPath: string) => {
+    setSelectedFolderFilter(folderPath || "all");
+    setCurrentFolder(folderPath);
+    fetchStorageFiles(folderPath, viewMode);
+  };
+
+  const handleNavigateUp = () => {
+    if (!currentFolder) return;
+    const parts = currentFolder.split("/").filter(Boolean);
+    const parent = parts.length > 1 ? parts.slice(0, -1).join("/") : "";
+    handleNavigateToFolder(parent);
+  };
+
+  const handleSetUploadDestination = (folderPath: string) => {
+    const target = folderPath || "uploads";
+    setActiveUploadFolder(target);
+    const uploaderEl = document.getElementById("file-uploader-card");
+    if (uploaderEl) {
+      uploaderEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+    setFolderCreateError("");
+    try {
+      const trimmed = newFolderName.trim();
+      const fullPath = currentFolder ? `${currentFolder}/${trimmed}` : trimmed;
+      const res = await fetch("/api/storage/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderPath: fullPath }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewFolderName("");
+        setIsCreatingFolder(false);
+        fetchStorageFiles(currentFolder, viewMode);
+      } else {
+        setFolderCreateError(data.error || "Failed to create folder");
+      }
+    } catch (err: any) {
+      setFolderCreateError(err.message || "Network error creating folder");
+    }
+  };
+
+  const handleDeleteFolder = async (folderPath: string) => {
+    if (!confirm(`Are you sure you want to delete folder "${folderPath}" and all files inside it?`)) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/storage/folders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderPath }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchStorageFiles(currentFolder, viewMode);
+      } else {
+        alert(data.error || "Failed to delete folder");
+      }
+    } catch (err: any) {
+      alert(err.message || "Network error deleting folder");
     }
   };
 
@@ -617,11 +716,16 @@ export default function FileUploadDemoPage() {
               <Upload className="w-5 h-5 text-[var(--interactive-orange)]" />
               1. Upload Assets (Single or Batch)
             </h2>
-            <FileUploader
-              onUploadSuccess={handleUploadSuccess}
-              onBatchUploadSuccess={handleBatchUploadSuccess}
-              folderPrefix="products-services"
-            />
+            <div id="file-uploader-card">
+              <FileUploader
+                onUploadSuccess={handleUploadSuccess}
+                onBatchUploadSuccess={handleBatchUploadSuccess}
+                folderPrefix="products-services"
+                destinationFolder={activeUploadFolder}
+                onFolderChange={(folder) => setActiveUploadFolder(folder)}
+                availableFolders={allDiscoveredFolders}
+              />
+            </div>
           </div>
         </div>
 
@@ -952,12 +1056,11 @@ export default function FileUploadDemoPage() {
           >
             <div className={styles.stagerTitle}>
               <FolderTree className="w-4 h-4 text-[var(--interactive-orange)]" />
-              4. Storage Explorer & File Manager ({filteredStorageFiles.length} file
-              {filteredStorageFiles.length === 1 ? "" : "s"})
+              4. Storage Explorer & Hierarchical File Manager
             </div>
             <button
               type="button"
-              onClick={() => fetchStorageFiles(selectedFolderFilter)}
+              onClick={() => fetchStorageFiles(currentFolder, viewMode)}
               className={styles.clearBtn}
               style={{ color: "var(--interactive-blue)", display: "flex", alignItems: "center", gap: "0.25rem" }}
             >
@@ -965,7 +1068,7 @@ export default function FileUploadDemoPage() {
             </button>
           </div>
 
-          {/* Search & Folder Filters */}
+          {/* Search & Top-level Quick Filters */}
           <div className={styles.storageToolbar}>
             <div className={styles.searchWrapper}>
               <Search className={styles.searchIcon} />
@@ -973,7 +1076,7 @@ export default function FileUploadDemoPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search storage files by filename or path..."
+                placeholder="Search storage by filename, folder, or key..."
                 className={styles.searchInput}
               />
             </div>
@@ -981,20 +1084,23 @@ export default function FileUploadDemoPage() {
             <div className={styles.folderFilterBar}>
               <button
                 type="button"
-                onClick={() => setSelectedFolderFilter("all")}
+                onClick={() => handleNavigateToFolder("")}
                 className={`${styles.folderTab} ${
-                  selectedFolderFilter === "all" ? styles.folderTabActive : ""
+                  currentFolder === "" ? styles.folderTabActive : ""
                 }`}
+                title="Browse root directory"
               >
-                <Layers className="w-3 h-3" /> All Folders
+                <Layers className="w-3 h-3" /> Root Storage
               </button>
               {STORAGE_FOLDERS.map((f) => (
                 <button
                   key={f.value}
                   type="button"
-                  onClick={() => setSelectedFolderFilter(f.value)}
+                  onClick={() => handleNavigateToFolder(f.value)}
                   className={`${styles.folderTab} ${
-                    selectedFolderFilter === f.value ? styles.folderTabActive : ""
+                    currentFolder === f.value || currentFolder.startsWith(`${f.value}/`)
+                      ? styles.folderTabActive
+                      : ""
                   }`}
                 >
                   <Folder className="w-3 h-3" /> {f.label}
@@ -1003,15 +1109,182 @@ export default function FileUploadDemoPage() {
             </div>
           </div>
 
+          {/* Interactive Breadcrumb Trail & Toolbar Actions */}
+          <div className={styles.breadcrumbsBar}>
+            <div className={styles.breadcrumbTrail}>
+              {storageBreadcrumbs.map((crumb, idx) => {
+                const isLast = idx === storageBreadcrumbs.length - 1;
+                return (
+                  <React.Fragment key={crumb.path || "root"}>
+                    <button
+                      type="button"
+                      onClick={() => handleNavigateToFolder(crumb.path)}
+                      className={`${styles.breadcrumbCrumb} ${
+                        isLast ? styles.breadcrumbCrumbActive : ""
+                      }`}
+                      title={`Navigate to /${crumb.path || "root"}`}
+                    >
+                      {idx === 0 ? <Layers className="w-3.5 h-3.5" /> : <Folder className="w-3 h-3" />}
+                      <span>{crumb.name}</span>
+                    </button>
+                    {!isLast && <ChevronRight className={styles.breadcrumbSeparator} />}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            <div className={styles.explorerToolbarActions}>
+              {currentFolder !== "" && (
+                <button
+                  type="button"
+                  onClick={handleNavigateUp}
+                  className={styles.explorerActionBtn}
+                  title="Navigate up one level"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" /> Up
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleSetUploadDestination(currentFolder)}
+                className={`${styles.explorerActionBtn} ${styles.explorerActionBtnPrimary}`}
+                title={`Set target destination in uploader to /${currentFolder || "uploads"}`}
+              >
+                <UploadCloud className="w-3.5 h-3.5" /> Upload to this folder
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCreatingFolder((prev) => !prev)}
+                className={styles.explorerActionBtn}
+                title="Create a new nested subfolder in this directory"
+              >
+                <FolderPlus className="w-3.5 h-3.5" /> New Folder
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const newMode = viewMode === "hierarchical" ? "flat" : "hierarchical";
+                  setViewMode(newMode);
+                  fetchStorageFiles(currentFolder, newMode);
+                }}
+                className={styles.explorerActionBtn}
+                title="Toggle between Tree Folder view and Flat Recursive view"
+              >
+                <Grid className="w-3.5 h-3.5" />
+                {viewMode === "hierarchical" ? "Tree View" : "Flat View"}
+              </button>
+            </div>
+          </div>
+
+          {/* Inline Folder Creation Form */}
+          {isCreatingFolder && (
+            <form onSubmit={handleCreateFolder} className={styles.inlineFolderCreator}>
+              <FolderPlus className="w-4 h-4 text-[var(--interactive-orange)]" />
+              <input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder={`Name of new subfolder in /${currentFolder || "root"} (e.g. models, textures, v2)...`}
+                className={styles.inlineFolderInput}
+                autoFocus
+              />
+              <button type="submit" className="btn btn-primary text-xs py-1 px-3">
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreatingFolder(false);
+                  setNewFolderName("");
+                  setFolderCreateError("");
+                }}
+                className="btn btn-secondary text-xs py-1 px-3"
+              >
+                Cancel
+              </button>
+              {folderCreateError && (
+                <span className="text-xs text-red-500 font-semibold">{folderCreateError}</span>
+              )}
+            </form>
+          )}
+
+          {/* Subfolders Section (in hierarchical mode) */}
+          {viewMode === "hierarchical" && storageSubfolders.length > 0 && (
+            <div>
+              <div className={styles.explorerSectionHeader}>
+                <span>Subfolders ({storageSubfolders.length})</span>
+                <span style={{ fontSize: "0.65rem", fontWeight: 400, textTransform: "none" }}>
+                  Click a folder to navigate inside
+                </span>
+              </div>
+              <div className={styles.folderCardsGrid}>
+                {storageSubfolders.map((subfolder) => (
+                  <div
+                    key={subfolder.path}
+                    className={styles.folderCard}
+                    onClick={() => handleNavigateToFolder(subfolder.path)}
+                    title={`Open ${subfolder.path} (${subfolder.itemCount} items)`}
+                  >
+                    <div className={styles.folderCardLeft}>
+                      <div className={styles.folderCardIcon}>
+                        <Folder className="w-4 h-4" />
+                      </div>
+                      <div className={styles.folderCardMeta}>
+                        <div className={styles.folderCardName}>{subfolder.name}</div>
+                        <div className={styles.folderCardCount}>
+                          {subfolder.itemCount} {subfolder.itemCount === 1 ? "file" : "files"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.folderCardActions} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => handleSetUploadDestination(subfolder.path)}
+                        className={styles.folderCardIconBtn}
+                        title={`Upload into /${subfolder.path}`}
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFolder(subfolder.path)}
+                        className={styles.folderCardIconBtn}
+                        title={`Delete folder /${subfolder.path}`}
+                        style={{ color: "#EF4444" }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Files List Header */}
+          <div className={styles.explorerSectionHeader}>
+            <span>Files ({filteredStorageFiles.length})</span>
+            {currentFolder && (
+              <span style={{ fontSize: "0.65rem", fontWeight: 400, textTransform: "none" }}>
+                Location: /{currentFolder}
+              </span>
+            )}
+          </div>
+
           {/* Storage Files List */}
           {isLoadingStorage ? (
             <div className={styles.placeholderText} style={{ justifyContent: "center", padding: "2rem 0" }}>
               <Loader2 className="w-5 h-5 animate-spin text-[var(--interactive-orange)]" />
-              Loading MinIO storage files...
+              Loading MinIO storage items...
             </div>
           ) : filteredStorageFiles.length === 0 ? (
             <div className={styles.placeholderText} style={{ justifyContent: "center", padding: "2rem 0" }}>
-              No files found in &quot;{selectedFolderFilter === "all" ? "storage" : selectedFolderFilter}&quot;.
+              {storageSubfolders.length > 0
+                ? "No direct files in this directory. Browse subfolders above or click 'Upload to this folder'."
+                : `No files found in "${currentFolder || "root"}". Click 'Upload to this folder' or create a subfolder.`}
             </div>
           ) : (
             <div className={styles.storageGrid}>
@@ -1180,17 +1453,46 @@ export default function FileUploadDemoPage() {
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>Select Destination Folder</label>
                 <select
-                  value={moveTargetFolder}
-                  onChange={(e) => setMoveTargetFolder(e.target.value)}
+                  value={
+                    STORAGE_FOLDERS.some((f) => f.value === moveTargetFolder)
+                      ? moveTargetFolder
+                      : allDiscoveredFolders.includes(moveTargetFolder)
+                      ? moveTargetFolder
+                      : "custom"
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setMoveTargetFolder(val);
+                    if (val !== "custom") {
+                      setCustomMoveFolder(val);
+                    }
+                  }}
                   className={styles.inputField}
                   style={{ cursor: "pointer" }}
                 >
-                  {STORAGE_FOLDERS.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.label} ({f.value}/)
-                    </option>
-                  ))}
-                  <option value="custom">Custom subfolder...</option>
+                  <optgroup label="System Presets">
+                    {STORAGE_FOLDERS.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.label} ({f.value}/)
+                      </option>
+                    ))}
+                  </optgroup>
+                  {allDiscoveredFolders.filter(
+                    (f) => !STORAGE_FOLDERS.some((s) => s.value === f) && f.trim() !== ""
+                  ).length > 0 && (
+                    <optgroup label="Discovered Nested Folders">
+                      {allDiscoveredFolders
+                        .filter(
+                          (f) => !STORAGE_FOLDERS.some((s) => s.value === f) && f.trim() !== ""
+                        )
+                        .map((f) => (
+                          <option key={f} value={f}>
+                            {f}/
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                  <option value="custom">Custom subfolder / New path...</option>
                 </select>
               </div>
 

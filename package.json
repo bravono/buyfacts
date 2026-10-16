@@ -12,7 +12,8 @@
     "embed-cubicon": "node scripts/bundle-cubicon.js",
     "embed-research-lib": "node scripts/bundle-narrative.js",
     "embed-tools": "npm run embed-cubicon && npm run embed-research-lib",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts",
+    "seed:prod": "npx tsx prisma/seed-prod.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
