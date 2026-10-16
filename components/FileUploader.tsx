@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   UploadCloud,
   File as FileIcon,
@@ -66,6 +66,12 @@ interface FileUploaderProps {
   onBatchUploadSuccess?: (results: UploadSuccessResult[]) => void;
   /** Initial subfolder prefix inside MinIO bucket (default: 'uploads') */
   folderPrefix?: string;
+  /** Controlled destination folder path (e.g. from Storage Explorer) */
+  destinationFolder?: string;
+  /** Callback when user changes target folder */
+  onFolderChange?: (folder: string) => void;
+  /** Dynamically discovered nested folders from MinIO */
+  availableFolders?: string[];
   /** Custom container class */
   className?: string;
 }
@@ -85,14 +91,54 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   onUploadSuccess,
   onBatchUploadSuccess,
   folderPrefix = 'uploads',
+  destinationFolder,
+  onFolderChange,
+  availableFolders,
   className = '',
 }) => {
   // Folder destination state
+  const initialFolder = destinationFolder || folderPrefix;
   const [folderPreset, setFolderPreset] = useState<string>(() => {
-    const matched = PRESET_FOLDERS.find((p) => p.value === folderPrefix);
+    const matched = PRESET_FOLDERS.find((p) => p.value === initialFolder);
     return matched ? matched.value : 'custom';
   });
-  const [customFolder, setCustomFolder] = useState<string>(folderPrefix);
+  const [customFolder, setCustomFolder] = useState<string>(initialFolder);
+  const [dynamicFolders, setDynamicFolders] = useState<string[]>([]);
+
+  // Synchronize when destinationFolder prop changes from parent
+  useEffect(() => {
+    if (destinationFolder !== undefined) {
+      const matched = PRESET_FOLDERS.find((p) => p.value === destinationFolder);
+      if (matched) {
+        setFolderPreset(matched.value);
+        setCustomFolder(matched.value);
+      } else {
+        setFolderPreset('custom');
+        setCustomFolder(destinationFolder);
+      }
+    }
+  }, [destinationFolder]);
+
+  // Fetch all discovered folders if not provided via props
+  useEffect(() => {
+    if (availableFolders && availableFolders.length > 0) {
+      setDynamicFolders(availableFolders);
+    } else {
+      fetch('/api/storage/files')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.allFolders)) {
+            setDynamicFolders(data.allFolders);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [availableFolders]);
+
+  const allDiscovered = availableFolders && availableFolders.length > 0 ? availableFolders : dynamicFolders;
+  const nestedFolders = allDiscovered.filter(
+    (f) => !PRESET_FOLDERS.some((p) => p.value === f) && f.trim() !== ''
+  );
 
   // Computed destination folder
   const activeDestinationFolder = folderPreset === 'custom'
@@ -878,28 +924,55 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <Folder className="w-4 h-4 text-[var(--interactive-orange)]" /> Destination Folder
             </div>
             <div className={styles.folderPathBadge} title={`Target prefix: ${activeDestinationFolder}`}>
+              <span style={{ opacity: 0.7, fontWeight: 500 }}>Target: </span>
               /{activeDestinationFolder}
             </div>
           </div>
 
           <div className={styles.folderControls}>
             <select
-              value={folderPreset}
+              value={
+                PRESET_FOLDERS.some((p) => p.value === folderPreset && p.value !== 'custom')
+                  ? folderPreset
+                  : nestedFolders.includes(customFolder)
+                  ? customFolder
+                  : 'custom'
+              }
               onChange={(e) => {
                 const val = e.target.value;
-                setFolderPreset(val);
-                if (val !== 'custom') {
+                if (val === 'custom') {
+                  setFolderPreset('custom');
+                } else if (PRESET_FOLDERS.some((p) => p.value === val && p.value !== 'custom')) {
+                  setFolderPreset(val);
                   setCustomFolder(val);
+                  onFolderChange?.(val);
+                } else {
+                  // Selected a discovered nested folder
+                  setFolderPreset('custom');
+                  setCustomFolder(val);
+                  onFolderChange?.(val);
                 }
               }}
               disabled={isUploading}
               className={styles.folderSelect}
             >
-              {PRESET_FOLDERS.map((preset) => (
-                <option key={preset.value} value={preset.value}>
-                  {preset.label}
-                </option>
-              ))}
+              <optgroup label="System Presets">
+                {PRESET_FOLDERS.filter((p) => p.value !== 'custom').map((preset) => (
+                  <option key={preset.value} value={preset.value}>
+                    {preset.label}
+                  </option>
+                ))}
+              </optgroup>
+              {nestedFolders.length > 0 && (
+                <optgroup label="Discovered Nested Folders">
+                  {nestedFolders.map((nested) => (
+                    <option key={nested} value={nested}>
+                      {nested}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              <option value="custom">Custom folder / New subfolder...</option>
             </select>
 
             <div className={styles.folderInputWrapper}>
@@ -908,8 +981,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 type="text"
                 value={customFolder}
                 onChange={(e) => {
-                  setCustomFolder(e.target.value);
+                  const val = e.target.value;
+                  setCustomFolder(val);
                   setFolderPreset('custom');
+                  onFolderChange?.(val);
                 }}
                 disabled={isUploading}
                 placeholder="e.g. cubicon/models, media/2026/q1"

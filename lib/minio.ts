@@ -13,6 +13,8 @@ import {
   AbortMultipartUploadCommand,
   ListPartsCommand,
   CompletedPart,
+  PutObjectCommand,
+  ListObjectsV2CommandOutput,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -236,6 +238,26 @@ export interface MinioObjectItem {
   lastModified: string;
 }
 
+export interface MinioFolderItem {
+  name: string;
+  path: string;
+  itemCount: number;
+}
+
+export interface MinioBreadcrumbItem {
+  name: string;
+  path: string;
+}
+
+export interface MinioListingResult {
+  currentFolder: string;
+  breadcrumbs: MinioBreadcrumbItem[];
+  folders: MinioFolderItem[];
+  files: MinioObjectItem[];
+  allFolders: string[];
+  totalCount: number;
+}
+
 /**
  * Lists objects from MinIO bucket
  */
@@ -259,7 +281,13 @@ export async function listMinioObjects(prefix?: string): Promise<MinioObjectItem
   const contents = response.Contents || [];
 
   return contents
-    .filter((item) => item.Key && !item.Key.endsWith('/'))
+    .filter(
+      (item) =>
+        item.Key &&
+        !item.Key.endsWith('/') &&
+        !item.Key.endsWith('/.keep') &&
+        item.Key !== '.keep'
+    )
     .map((item) => {
       const objectKey = item.Key!;
       return {
@@ -272,6 +300,236 @@ export async function listMinioObjects(prefix?: string): Promise<MinioObjectItem
       };
     })
     .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+}
+
+/**
+ * Lists a hierarchical tree of folders and files from MinIO,
+ * discovering all nested directories and subfolders dynamically.
+ */
+export async function listMinioTree(
+  prefix = '',
+  viewMode: 'hierarchical' | 'flat' = 'hierarchical'
+): Promise<MinioListingResult> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+
+  try {
+    await ensureBucketExists(s3Client, bucket);
+  } catch (err) {
+    console.warn('Bucket existence check failed during tree listing:', err);
+  }
+
+  // Fetch all objects in bucket to build dynamic directory tree
+  let allContents: Array<{ Key?: string; Size?: number; LastModified?: Date }> = [];
+  let continuationToken: string | undefined = undefined;
+
+  do {
+    const listCmd: ListObjectsV2Command = new ListObjectsV2Command({
+      Bucket: bucket,
+      ContinuationToken: continuationToken,
+    });
+    const listRes: ListObjectsV2CommandOutput = await s3Client.send(listCmd);
+    if (listRes.Contents) {
+      allContents = allContents.concat(listRes.Contents);
+    }
+    continuationToken = listRes.NextContinuationToken;
+  } while (continuationToken);
+
+  // Discover all unique folder paths across the entire bucket
+  const discoveredFolderSet = new Set<string>();
+
+  // Add system preset folders
+  for (const preset of STORAGE_FOLDERS) {
+    discoveredFolderSet.add(preset.value);
+  }
+
+  // Discover all parent directories from object keys
+  for (const item of allContents) {
+    if (!item.Key) continue;
+    const parts = item.Key.split('/').filter(Boolean);
+    if (parts.length > 1) {
+      const isMarker = item.Key.endsWith('/.keep') || item.Key.endsWith('/');
+      const folderParts = isMarker ? parts.slice(0, item.Key.endsWith('/.keep') ? -1 : parts.length) : parts.slice(0, -1);
+      
+      let cumulative = '';
+      for (const part of folderParts) {
+        cumulative = cumulative ? `${cumulative}/${part}` : part;
+        discoveredFolderSet.add(cumulative);
+      }
+    }
+  }
+
+  const allFolders = Array.from(discoveredFolderSet).sort((a, b) => a.localeCompare(b));
+
+  // Determine normalized current prefix
+  const isRoot = !prefix || prefix === 'all' || prefix === 'root';
+  const cleanPrefix = isRoot ? '' : sanitizeFolderPrefix(prefix);
+
+  // Generate breadcrumbs trail
+  const breadcrumbs: MinioBreadcrumbItem[] = [{ name: 'Root', path: '' }];
+  if (cleanPrefix) {
+    const parts = cleanPrefix.split('/').filter(Boolean);
+    let cumulative = '';
+    for (const part of parts) {
+      cumulative = cumulative ? `${cumulative}/${part}` : part;
+      breadcrumbs.push({ name: part, path: cumulative });
+    }
+  }
+
+  // Valid files (excluding directory markers)
+  const validFiles = allContents.filter(
+    (item) =>
+      item.Key &&
+      !item.Key.endsWith('/') &&
+      !item.Key.endsWith('/.keep') &&
+      item.Key !== '.keep'
+  );
+
+  let directFiles: MinioObjectItem[] = [];
+  let directFolders: MinioFolderItem[] = [];
+
+  if (viewMode === 'flat') {
+    // Flat view: return all files matching the prefix recursively
+    directFiles = validFiles
+      .filter((item) => {
+        if (!cleanPrefix) return true;
+        return item.Key!.startsWith(`${cleanPrefix}/`);
+      })
+      .map((item) => {
+        const objectKey = item.Key!;
+        return {
+          objectKey,
+          publicUrl: getPublicUrl(objectKey),
+          fileName: extractFilenameFromKey(objectKey),
+          folder: extractFolderFromKey(objectKey),
+          size: item.Size || 0,
+          lastModified: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+  } else {
+    // Hierarchical view:
+    // 1. Files located directly in current folder
+    directFiles = validFiles
+      .filter((item) => {
+        const folder = extractFolderFromKey(item.Key!);
+        if (!cleanPrefix) {
+          // In root: show files without folder or whose folder is 'uploads' without nesting
+          return !item.Key!.includes('/') || folder === 'uploads';
+        }
+        return folder === cleanPrefix;
+      })
+      .map((item) => {
+        const objectKey = item.Key!;
+        return {
+          objectKey,
+          publicUrl: getPublicUrl(objectKey),
+          fileName: extractFilenameFromKey(objectKey),
+          folder: extractFolderFromKey(objectKey),
+          size: item.Size || 0,
+          lastModified: item.LastModified ? item.LastModified.toISOString() : new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+
+    // 2. Immediate subfolders under current folder
+    const subfolderMap = new Map<string, { path: string; count: number }>();
+
+    for (const folderPath of allFolders) {
+      if (!cleanPrefix) {
+        // Direct top-level folders
+        if (!folderPath.includes('/')) {
+          subfolderMap.set(folderPath, { path: folderPath, count: 0 });
+        }
+      } else {
+        // Direct subfolders under cleanPrefix
+        if (folderPath.startsWith(`${cleanPrefix}/`)) {
+          const remaining = folderPath.slice(cleanPrefix.length + 1);
+          const firstSegment = remaining.split('/')[0];
+          const directSubPath = `${cleanPrefix}/${firstSegment}`;
+          if (!subfolderMap.has(directSubPath)) {
+            subfolderMap.set(directSubPath, { path: directSubPath, count: 0 });
+          }
+        }
+      }
+    }
+
+    // Calculate item counts for each subfolder
+    for (const [subPath, val] of subfolderMap.entries()) {
+      const count = validFiles.filter((item) => item.Key!.startsWith(`${subPath}/`)).length;
+      val.count = count;
+    }
+
+    directFolders = Array.from(subfolderMap.entries())
+      .map(([subPath, data]) => ({
+        name: subPath.split('/').pop() || subPath,
+        path: subPath,
+        itemCount: data.count,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  return {
+    currentFolder: cleanPrefix,
+    breadcrumbs,
+    folders: directFolders,
+    files: directFiles,
+    allFolders,
+    totalCount: directFiles.length,
+  };
+}
+
+/**
+ * Creates an explicit folder marker in MinIO
+ */
+export async function createMinioFolder(folderPath: string): Promise<string> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+  await ensureBucketExists(s3Client, bucket);
+
+  const cleanPath = sanitizeFolderPrefix(folderPath);
+  const markerKey = `${cleanPath}/.keep`;
+
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: markerKey,
+      Body: '',
+      ContentType: 'application/x-directory',
+    })
+  );
+
+  return cleanPath;
+}
+
+/**
+ * Deletes an entire folder and all its contents in MinIO
+ */
+export async function deleteMinioFolder(folderPath: string): Promise<{ deletedCount: number }> {
+  const s3Client = getMinioClient();
+  const bucket = getMinioBucket();
+  const cleanPath = sanitizeFolderPrefix(folderPath);
+
+  const command = new ListObjectsV2Command({
+    Bucket: bucket,
+    Prefix: `${cleanPath}/`,
+  });
+
+  const response = await s3Client.send(command);
+  const contents = response.Contents || [];
+
+  for (const item of contents) {
+    if (item.Key) {
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: item.Key,
+        })
+      );
+    }
+  }
+
+  return { deletedCount: contents.length };
 }
 
 /**

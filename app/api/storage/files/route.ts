@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateApiAuth } from '@/lib/auth/middleware';
 import {
   listMinioObjects,
+  listMinioTree,
   deleteMinioObject,
   STORAGE_FOLDERS,
   getPublicUrl,
@@ -10,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * GET: Lists all files in MinIO storage, optionally filtered by folder prefix
+ * Supports hierarchical tree navigation, dynamic subfolder discovery, and breadcrumbs.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -23,14 +25,19 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const folder = searchParams.get('folder') || 'all';
+    const view = (searchParams.get('view') as 'hierarchical' | 'flat') || 'hierarchical';
 
-    const files = await listMinioObjects(folder);
+    const tree = await listMinioTree(folder, view);
 
     return NextResponse.json({
       success: true,
-      files,
+      currentFolder: tree.currentFolder,
+      breadcrumbs: tree.breadcrumbs,
+      subfolders: tree.folders,
+      files: tree.files,
+      allFolders: tree.allFolders,
       folders: STORAGE_FOLDERS,
-      totalCount: files.length,
+      totalCount: tree.totalCount,
     });
   } catch (error: any) {
     console.error('Failed to list storage files:', error);

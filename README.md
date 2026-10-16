@@ -281,7 +281,20 @@ npm run dev
 Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/analytics) in your browser to view the Executive Analytics Dashboard.
 
 ### Database Seeding & Replacement Behavior
-The database seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+
+### Production Seeding (User and DashboardButton Only)
+For staging or production environments where destructive table resets and placeholder media/vault assets are not desired, use the non-destructive production seed script:
+```bash
+npm run seed:prod
+# Or directly via tsx:
+npx tsx prisma/seed-prod.ts
+```
+This script executes upsert operations strictly on:
+1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback `AdminPass123!`.
+2. **DashboardButton table**: Upserts the 18 canonical dashboard buttons (9 Products & Services, 9 Research Imperatives).
+
+It performs no `deleteMany()` calls and does not insert dummy `MediaAsset` or `VaultAsset` records.
 
 
 ### Running Automated Tests
@@ -1045,4 +1058,65 @@ The Cubicon 3D app (`c:\Users\USER\cubicon`) includes a dedicated standalone coo
   - **Mode Toggle**: Switch between `Single Click` (1 point) and `Drag` (up to 3 waypoints).
   - **Live Coordinates HUD**: Real-time display of Point 1 (Start), Point 2 (Mid), Point 3 (End) `{ x, y, z }`.
   - **Copy JSON**: One-click clipboard copy of the formatted coordinates array with visual confirmation.
+
+---
+
+## 9. S3 Storage Explorer, Hierarchical Browsing & Resumable Upload
+
+The BuyFacts Media Console (`/file-upload`) provides enterprise-grade object storage management and batch ingestion for S3-compatible object stores (MinIO/AWS S3).
+
+### 9.1 S3 Multipart Chunked Resumable Upload Engine
+- **Chunk Slicing**: Slices files up to 1GB into 5MB byte chunks (`Blob.prototype.slice`) with unique ETags.
+- **Resilience & Auto-Retry**: Automatically retries failed chunks with exponential backoff up to 3 times before failing.
+- **Local State Recovery**: Persists upload session IDs and progress in `localStorage` to resume interrupted or stalled uploads across network drops.
+- **Directory Crawler**: Recursively extracts nested folder trees from drag-and-drop actions or the folder picker (`webkitdirectory`), preserving subfolder structure under the chosen destination prefix.
+
+### 9.2 Dynamic Nested Folder Discovery & Hierarchical Storage Explorer
+- **Dynamic Tree Discovery**: Discovers all ancestor folder prefixes across the entire bucket on the fly without relying on static preset lists.
+- **Explicit Folder Markers**: Supports creating empty subfolders via zero-byte directory markers (`.keep`), discovering them immediately prior to file placement.
+- **Interactive Breadcrumb Navigation**: Clickable breadcrumb trail (`Root / [parent] / [subfolder]`) with instant level jumping and one-click "Up" navigation.
+- **Subfolder Cards**: Immediate subfolders are displayed as navigable cards with item counts and shortcut actions ("Upload here" and "Delete folder").
+- **View Mode Switching**:
+  - **Tree View**: Folders first, direct files only; click into folders to drill down.
+  - **Flat View**: Shows all files recursively matching the current prefix.
+- **Upload Destination Synchronization**: Clicking "Upload to this folder" in the explorer instantly targets that subfolder in the uploader component.
+
+### 9.3 Storage API Reference
+
+#### `GET /api/storage/files`
+Lists storage objects with hierarchical directory tree metadata.
+- **Query Parameters**:
+  - `folder`: Folder prefix path (e.g. `cubicon`, `cubicon/models`, or empty for root).
+  - `view`: `hierarchical` (default) or `flat`.
+- **Response Structure**:
+  ```json
+  {
+    "success": true,
+    "currentFolder": "cubicon/models",
+    "breadcrumbs": [
+      { "name": "Root", "path": "" },
+      { "name": "cubicon", "path": "cubicon" },
+      { "name": "models", "path": "cubicon/models" }
+    ],
+    "subfolders": [
+      { "name": "character", "path": "cubicon/models/character", "itemCount": 4 }
+    ],
+    "files": [
+      { "objectKey": "cubicon/models/scene.glb", "fileName": "scene.glb", "folder": "cubicon/models", "size": 1400230, "lastModified": "2026-10-16T12:00:00.000Z", "publicUrl": "..." }
+    ],
+    "allFolders": ["cubicon", "cubicon/models", "cubicon/models/character", "products-services", ...],
+    "totalCount": 1
+  }
+  ```
+
+#### `POST /api/storage/folders`
+Creates an explicit empty directory marker in MinIO.
+- **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
+- **Response**: `{ "success": true, "folderPath": "cubicon/models/scenarios", "message": "..." }`
+
+#### `DELETE /api/storage/folders`
+Recursively deletes a folder prefix and all objects inside it.
+- **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
+- **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
+
 
