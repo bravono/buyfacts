@@ -42,6 +42,8 @@
   align-items: center;
   gap: 0.75rem;
   z-index: 1001;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .logoSvg {
@@ -57,10 +59,11 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: 800;
   color: var(--interactive-blue); /* Brand Blue (#00507b) */
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .logoHighlight {
@@ -205,6 +208,27 @@
   white-space: nowrap;
 }
 
+/* Monogram Logo Subtitle */
+.logoTextWrapper {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.logoSubtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(0.48rem, 1.8vw, 0.65rem);
+  font-weight: 500;
+  color: var(--interactive-orange); /* Brand Orange (#ff9900) */
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
 @media (max-width: 768px) {
   .navDesktop {
     display: none;
@@ -213,23 +237,10 @@
   .hamburger {
     display: block;
   }
-}
 
-/* Monogram Logo Subtitle */
-.logoTextWrapper {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-.logoSubtitle {
-  font-family: var(--font-sans);
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--interactive-orange); /* Brand Orange (#ff9900) */
-  letter-spacing: 0.08em;
-  margin-top: 1px;
-  text-transform: uppercase;
+  .logoSubtitle {
+    font-size: clamp(0.44rem, 2.2vw, 0.62rem);
+  }
 }
 
 /* Dropdown styling */
@@ -297,5 +308,9 @@
 @media (max-width: 480px) {
   .header {
     top: 10px;
+  }
+
+  .logoSubtitle {
+    font-size: clamp(0.38rem, 2.8vw, 0.52rem);
   }
 }

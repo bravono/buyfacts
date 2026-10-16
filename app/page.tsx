@@ -44,6 +44,15 @@ const APART_VIDEO_2_CDN =
 const APART_VIDEO_2_FALLBACK =
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
 
+// CDN Video URLs for Hero Triplet Buttons
+// Provide a CDN URL string to launch the video modal on button press; leave empty ("") to navigate directly to the pathway page.
+const CUBICON_VIDEO_CDN = "";
+
+const RESEARCH_LIB_VIDEO_CDN =
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+
+const TRIAD_VIDEO_CDN = "";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
 // Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
@@ -99,6 +108,16 @@ export default function Home() {
   const [apartVideo1Src, setApartVideo1Src] = useState(APART_VIDEO_1_CDN);
   const [apartVideo2Src, setApartVideo2Src] = useState(APART_VIDEO_2_CDN);
 
+  // Video Modal State for Hero Pathway Demonstrations
+  const [activeVideoModal, setActiveVideoModal] = useState<{
+    isOpen: boolean;
+    videoUrl: string;
+    title: string;
+    tagline: string;
+    destinationHref?: string;
+    destinationLabel?: string;
+  } | null>(null);
+
   // Hero Triplet Button Pathways
   const heroTripletButtons: TripletButtonItem[] = [
     {
@@ -111,6 +130,19 @@ export default function Home() {
       fallbackIcon: <TrendingUp size={20} />,
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791280079550-qgczbj-Microphone_Loop_Cubicon_Icon.svg", // Ready for CDN icon URL
+      videoUrl: CUBICON_VIDEO_CDN,
+      onClick: () => {
+        if (!CUBICON_VIDEO_CDN.trim()) return;
+        setActiveVideoModal({
+          isOpen: true,
+          videoUrl: CUBICON_VIDEO_CDN,
+          title: "Validate Survey Participants With Cubicon",
+          tagline:
+            "Cubicon uses puzzle games people enjoy but AI bots hate and fail to solve to validate human survey participants.",
+          destinationHref: "/cubicon",
+          destinationLabel: "Explore Cubicon",
+        });
+      },
     },
     {
       id: "faster-digital-asset-creation",
@@ -122,6 +154,19 @@ export default function Home() {
       fallbackIcon: <FileText size={20} />,
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791280144243-6hokjs-Research_Libs_Logo.svg", // Ready for CDN icon URL
+      videoUrl: RESEARCH_LIB_VIDEO_CDN,
+      onClick: () => {
+        if (!RESEARCH_LIB_VIDEO_CDN.trim()) return;
+        setActiveVideoModal({
+          isOpen: true,
+          videoUrl: RESEARCH_LIB_VIDEO_CDN,
+          title: "Faster Digital Asset Creation With ResearchLib",
+          tagline:
+            "Research Libs turns survey participants into storytellers, supporting message recall and speeding content creation.",
+          destinationHref: "/research-lib",
+          destinationLabel: "Explore Research Libs",
+        });
+      },
     },
     {
       id: "market-changes-in-real-time",
@@ -133,6 +178,19 @@ export default function Home() {
       fallbackIcon: <Compass size={20} />,
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791280144275-6m25ys-Triad_Logo_with_Name_1_.png", // Ready for CDN icon URL
+      videoUrl: TRIAD_VIDEO_CDN,
+      onClick: () => {
+        if (!TRIAD_VIDEO_CDN.trim()) return;
+        setActiveVideoModal({
+          isOpen: true,
+          videoUrl: TRIAD_VIDEO_CDN,
+          title: "Market Changes in Real Time With TRIAD",
+          tagline:
+            "TRIAD brings earlier recognition of market changes to help marketers stay ahead of competitors and expand their competitive playbook.",
+          destinationHref: "/triad",
+          destinationLabel: "Explore TRIAD",
+        });
+      },
     },
   ];
 
@@ -185,13 +243,20 @@ export default function Home() {
     };
   }, []);
 
-  // Lock body scroll and listen for Escape key when modal is open
+  // Lock body scroll and listen for Escape key when any modal is open
   useEffect(() => {
-    if (isVerificationModalOpen) {
+    const isAnyModalOpen =
+      isVerificationModalOpen || Boolean(activeVideoModal?.isOpen);
+
+    if (isAnyModalOpen) {
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape" && !isSubmitting) {
-          setIsVerificationModalOpen(false);
+        if (e.key === "Escape") {
+          if (activeVideoModal?.isOpen) {
+            setActiveVideoModal(null);
+          } else if (isVerificationModalOpen && !isSubmitting) {
+            setIsVerificationModalOpen(false);
+          }
         }
       };
       window.addEventListener("keydown", handleKeyDown);
@@ -202,7 +267,7 @@ export default function Home() {
     } else {
       document.body.style.overflow = "";
     }
-  }, [isVerificationModalOpen, isSubmitting]);
+  }, [isVerificationModalOpen, isSubmitting, activeVideoModal]);
 
   const handleResetVerification = () => {
     setIsVerified(false);
@@ -1549,6 +1614,82 @@ export default function Home() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Video Modal Lightbox for Hero Pathway Demonstrations */}
+      {activeVideoModal && activeVideoModal.isOpen && (
+        <div
+          className={styles.videoModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="video-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setActiveVideoModal(null);
+            }
+          }}
+        >
+          <div className={styles.videoModalDialog}>
+            <div className={styles.videoModalHeader}>
+              <div className={styles.videoModalHeaderInfo}>
+                <Video size={22} className={styles.videoModalIcon} />
+                <div>
+                  <h3 id="video-modal-title" className={styles.videoModalTitle}>
+                    {activeVideoModal.title}
+                  </h3>
+                  <p className={styles.videoModalSubtitle}>
+                    {activeVideoModal.tagline}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveVideoModal(null)}
+                className={styles.videoModalCloseBtn}
+                aria-label="Close video player"
+                id="close-video-modal-btn"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.videoModalBody}>
+              <video
+                key={activeVideoModal.videoUrl}
+                src={activeVideoModal.videoUrl}
+                controls
+                autoPlay
+                playsInline
+                preload="auto"
+                className={styles.videoModalPlayer}
+                aria-label={activeVideoModal.title}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            <div className={styles.videoModalFooter}>
+              {activeVideoModal.destinationHref && (
+                <Link
+                  href={activeVideoModal.destinationHref}
+                  className={styles.videoModalDestinationBtn}
+                  id="video-modal-destination-link"
+                  onClick={() => setActiveVideoModal(null)}
+                >
+                  {activeVideoModal.destinationLabel || "Explore Further"}{" "}
+                  <ArrowRight size={16} />
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => setActiveVideoModal(null)}
+                className={styles.videoModalDismissBtn}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

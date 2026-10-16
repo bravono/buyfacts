@@ -11,7 +11,7 @@ export interface TripletButtonItem {
   id: string;
   title: string;
   tagline: string;
-  href: string;
+  href?: string;
   iconUrl?: string;
   fallbackIcon?: React.ReactNode;
   iconAlt?: string;
@@ -19,6 +19,8 @@ export interface TripletButtonItem {
   badge?: string;
   external?: boolean;
   actionHint?: string;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+  videoUrl?: string;
 }
 
 export interface TripletButtonProps {
@@ -49,7 +51,10 @@ export function TripletButton({ item, className = "" }: TripletButtonProps) {
     }
   })();
 
-  const isExternal = item.external || item.href.startsWith("http://") || item.href.startsWith("https://");
+  const isExternal = Boolean(
+    item.external ||
+    (item.href && (item.href.startsWith("http://") || item.href.startsWith("https://")))
+  );
   const linkProps = isExternal
     ? { target: "_blank", rel: "noopener noreferrer" }
     : {};
@@ -79,26 +84,58 @@ export function TripletButton({ item, className = "" }: TripletButtonProps) {
     </>
   );
 
+  const hasActiveVideo = item.videoUrl === undefined || item.videoUrl.trim().length > 0;
+
+  const handleActionClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (item.onClick && hasActiveVideo) {
+      e.preventDefault();
+      item.onClick(e);
+    }
+  };
+
+  const handleActionKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (item.onClick && hasActiveVideo && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      item.onClick(e as unknown as React.MouseEvent<HTMLElement>);
+    }
+  };
+
   return (
     <div className={`${styles.tripletItem} ${className}`} id={`triplet-item-${item.id}`}>
       {item.badge && <span className={styles.itemBadge}>{item.badge}</span>}
 
-      {isExternal ? (
-        <a
-          href={item.href}
+      {item.onClick && !item.href ? (
+        <button
+          type="button"
+          onClick={item.onClick}
           className={`${styles.tripletBtn} ${themeClass}`}
           id={`triplet-btn-${item.id}`}
           aria-label={`${item.title}: ${item.tagline}`}
+        >
+          {buttonContent}
+        </button>
+      ) : isExternal ? (
+        <a
+          href={item.href || "#"}
+          className={`${styles.tripletBtn} ${themeClass}`}
+          id={`triplet-btn-${item.id}`}
+          aria-label={`${item.title}: ${item.tagline}`}
+          onClick={item.onClick ? handleActionClick : undefined}
+          onKeyDown={item.onClick ? handleActionKeyDown : undefined}
+          role={item.onClick ? "button" : undefined}
           {...linkProps}
         >
           {buttonContent}
         </a>
       ) : (
         <Link
-          href={item.href}
+          href={item.href || "#"}
           className={`${styles.tripletBtn} ${themeClass}`}
           id={`triplet-btn-${item.id}`}
           aria-label={`${item.title}: ${item.tagline}`}
+          onClick={item.onClick ? handleActionClick : undefined}
+          onKeyDown={item.onClick ? handleActionKeyDown : undefined}
+          role={item.onClick ? "button" : undefined}
         >
           {buttonContent}
         </Link>

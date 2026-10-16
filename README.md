@@ -577,7 +577,8 @@ All navigation links support dynamic active state indication via `usePathname()`
 - **Contact Triggered Collapse**: When the user clicks the "CONTACT" link (desktop button or mobile drawer link) or navigates to `/#contact`, the fixed navbar immediately collapses (`translateY(calc(-100% - 30px))`, `opacity: 0`, `pointer-events: none`). This removes the 70px-80px fixed header obstruction so the contact form achieves full viewport visibility on 1080p laptops (e.g. HP ZBook).
 - **Scroll-Up Restoration**: When the user starts scrolling back up (`currentScrollY < lastScrollY - 8`) or returns to the top of the page (`currentScrollY <= 20`), the navbar smoothly animates back into view (`transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease`).
 - **Smooth Scroll Grace Period**: Enforces a 1000ms grace window following the contact click to prevent programmatic downward smooth-scrolling from prematurely uncollapsing the header.
-- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
+- **Logo Tagline No-Wrap & Dynamic Font Size Scaling**: The monogram logo tagline ("Real Data - Real People") in `components/Navbar.tsx` is styled with strict `white-space: nowrap;` and `text-wrap: nowrap;` inside a non-shrinking flex container (`flex-shrink: 0;`). Instead of breaking or wrapping across multiple lines during viewport width changes or responsive resizing, the font size dynamically scales using CSS `clamp()` expressions across desktop, tablet (max-width: 768px), and mobile (max-width: 480px) breakpoints.
+- **Automated Verification**: Integration tests located in `tests/navbar-contact-collapse.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating lifecycle transitions, CSS rules, and zero emojis.
 
 ### Dashboard & Media Player Model
 The dashboard and media player provide three standardized action choices at the base of the player window:
@@ -683,13 +684,17 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **Component API**:
+5. **CDN Video Playback Plumbing & Lightbox Modal**:
+   - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
+6. **Component API**:
    ```typescript
    export interface TripletButtonItem {
      id: string;
      title: string;
      tagline: string; // Brief text below the button
-     href: string;
+     href?: string;
      iconUrl?: string; // Optional CDN icon URL
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
@@ -697,10 +702,12 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      badge?: string;
      external?: boolean;
      actionHint?: string;
+     onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+     videoUrl?: string;
    }
    ```
-6. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` validating specs, CDN fallbacks, link security, and layout defaults.
+7. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
 
 ---
 
