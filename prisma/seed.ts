@@ -1,18 +1,12 @@
-import { PrismaClient, ContentFormat } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-import path from 'path'
-import { hashPassword } from '../lib/auth/password'
+import "dotenv/config";
+import { PrismaClient, ContentFormat } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { hashPassword } from "../lib/auth/password";
 
-const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
-const rawPath = dbUrl.replace(/^file:/, "");
-const dbPath = path.isAbsolute(rawPath)
-  ? rawPath
-  : rawPath.startsWith("prisma") || rawPath.startsWith("./prisma")
-    ? path.join(process.cwd(), rawPath)
-    : path.join(process.cwd(), "prisma", rawPath);
-
-const adapter = new PrismaBetterSqlite3({ url: dbPath })
-const prisma = new PrismaClient({ adapter })
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Starting BuyFacts Core DB seed...\n");
@@ -41,8 +35,18 @@ async function main() {
   const defaultHash = await hashPassword(defaultPassword);
 
   const users = [
-    { email: "rmj@robertjohnson.com", name: "Robert Johnson", passwordHash: defaultHash, role: "admin" },
-    { email: "ahbideeny@gmail.com", name: "Ahbideen Yusuf", passwordHash: defaultHash, role: "admin" },
+    {
+      email: "rmj@robertjohnson.com",
+      name: "Robert Johnson",
+      passwordHash: defaultHash,
+      role: "admin",
+    },
+    {
+      email: "ahbideeny@gmail.com",
+      name: "Ahbideen Yusuf",
+      passwordHash: defaultHash,
+      role: "admin",
+    },
   ];
 
   for (const user of users) {
@@ -65,7 +69,8 @@ async function main() {
     {
       id: "btn-srv-001",
       label: "Research Planning",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
       mediaType: "docx",
       subtitle: "Inclusive Research Definition",
       category: "Products & Services",
@@ -74,7 +79,8 @@ async function main() {
     {
       id: "btn-srv-002",
       label: "Survey Design",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
       mediaType: "docx",
       subtitle: "Make Each Question Actionable",
       category: "Products & Services",
@@ -83,7 +89,8 @@ async function main() {
     {
       id: "btn-srv-003",
       label: "Story-Based Surveys",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
       mediaType: "docx",
       subtitle: "Execute a Dual-Based Survey Model",
       category: "Products & Services",
@@ -92,7 +99,8 @@ async function main() {
     {
       id: "btn-srv-004",
       label: "Improve Surveys",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
       mediaType: "pdf",
       subtitle: "Increase the Return on Research",
       category: "Products & Services",
@@ -101,7 +109,8 @@ async function main() {
     {
       id: "btn-srv-005",
       label: "Participant Validation",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
       mediaType: "docx",
       subtitle: "Play Cubicon Puzzle Games",
       category: "Products & Services",
@@ -110,7 +119,8 @@ async function main() {
     {
       id: "btn-srv-006",
       label: "Survey Fieldwork",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
       mediaType: "docx",
       subtitle: "Quality-Centric Survey Execution",
       category: "Products & Services",
@@ -119,7 +129,8 @@ async function main() {
     {
       id: "btn-srv-007",
       label: "Content Value",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
       mediaType: "docx",
       subtitle: "Maximize the Return on Content",
       category: "Products & Services",
@@ -128,7 +139,8 @@ async function main() {
     {
       id: "btn-srv-008",
       label: "Pattern Insights",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
       mediaType: "docx",
       subtitle: "Active Pattern Analytics",
       category: "Products & Services",
@@ -137,7 +149,8 @@ async function main() {
     {
       id: "btn-srv-009",
       label: "Audience Validation",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
       mediaType: "docx",
       subtitle: "Opportunity Validation",
       category: "Products & Services",
@@ -147,7 +160,8 @@ async function main() {
     {
       id: "btn-tl-001",
       label: "Research Methods",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
       mediaType: "docx",
       subtitle: "Exceed Stakeholder Wants and Needs",
       category: "Research Imperatives",
@@ -156,7 +170,8 @@ async function main() {
     {
       id: "btn-tl-002",
       label: "Cohort Research",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
       mediaType: "docx",
       subtitle: "Smaller Groups that Know the Topic",
       category: "Research Imperatives",
@@ -165,7 +180,8 @@ async function main() {
     {
       id: "btn-tl-003",
       label: "Survey Engagement",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
       mediaType: "docx",
       subtitle: "Optimize Question Value",
       category: "Research Imperatives",
@@ -174,7 +190,8 @@ async function main() {
     {
       id: "btn-tl-004",
       label: "Hybrid Marketing",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
       mediaType: "docx",
       subtitle: "Digital Reach and a Human Touch",
       category: "Research Imperatives",
@@ -183,7 +200,8 @@ async function main() {
     {
       id: "btn-tl-005",
       label: "Content Creation",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
       mediaType: "docx",
       subtitle: "Assets that Engage with Thought Leadership",
       category: "Research Imperatives",
@@ -192,7 +210,8 @@ async function main() {
     {
       id: "btn-tl-006",
       label: "Marketing Leadership",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
       mediaType: "docx",
       subtitle: "Best Practices by Marketing Area",
       category: "Research Imperatives",
@@ -201,7 +220,8 @@ async function main() {
     {
       id: "btn-tl-007",
       label: "Research Leadership",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
       mediaType: "docx",
       subtitle: "Return on Primary Research",
       category: "Research Imperatives",
@@ -210,7 +230,8 @@ async function main() {
     {
       id: "btn-tl-008",
       label: "Early Recognition",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
       mediaType: "docx",
       subtitle: "Earlier Recognition for Your Time Advantage",
       category: "Research Imperatives",
@@ -219,7 +240,8 @@ async function main() {
     {
       id: "btn-tl-009",
       label: "Wisdom Gap",
-      mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
+      mediaUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
       mediaType: "docx",
       subtitle: "Research Becomes Intellectual Currency",
       category: "Research Imperatives",
@@ -241,21 +263,24 @@ async function main() {
   const mediaAssets = [
     {
       id: "asset-uuid-001",
-      publicUrl: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
       fileName: "puzzle1_hd.png",
       fileType: "image/png",
       fileSize: 1048576,
     },
     {
       id: "asset-uuid-002",
-      publicUrl: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
       fileName: "intro_video.mp4",
       fileType: "video/mp4",
       fileSize: 5242880,
     },
     {
       id: "asset-uuid-003",
-      publicUrl: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
       fileName: "whitepaper.pdf",
       fileType: "application/pdf",
       fileSize: 2097152,
@@ -278,14 +303,14 @@ async function main() {
     where: { slug: "default" },
     update: {
       title: "Default Verification Challenge",
-      passThreshold: 0.66,
+      passThreshold: 0.01,
       isActive: true,
     },
     create: {
       slug: "default",
       title: "Default Verification Challenge",
       description: "Standard anti-bot human verification puzzle sequence",
-      passThreshold: 0.66,
+      passThreshold: 0.01,
       rotationDirection: "left",
       defaultRotationInterval: 15,
       isActive: true,
@@ -297,14 +322,14 @@ async function main() {
     where: { slug: "contact_form" },
     update: {
       title: "Contact Form Human Verification",
-      passThreshold: 0.6,
+      passThreshold: 0.01,
       isActive: true,
     },
     create: {
       slug: "contact_form",
       title: "Contact Form Human Verification",
       description: "Anti-bot spatial puzzle verification for contact inquiries",
-      passThreshold: 0.6,
+      passThreshold: 0.01,
       rotationDirection: "left",
       defaultRotationInterval: 15,
       isActive: true,
@@ -319,15 +344,44 @@ async function main() {
       heading: "Puzzle 1 of 3",
       description: "Who gets concerned by howling? (Draw a circle)",
       screen: "Active_front",
-      image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+      image:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
       rotation: "left",
       rotationInterval: 15,
-      questionType: "Selection",
-      correctCoordinates: JSON.stringify([{ x: 0.15, y: 0.45, z: 1.0 }]),
-      startPoint: JSON.stringify({ x: 0.15, y: 0.45, z: 1.0 }),
-      midPoint: "",
-      endPoint: "",
-      tolerance: 0.5,
+      questionType: "Anticipation",
+      correctCoordinates: JSON.stringify([
+        {
+          x: -0.042574127848625916,
+          y: 0.2093228930009854,
+          z: 0.5976997207441973,
+        },
+        {
+          x: -0.01300874877727363,
+          " y": 0.16201828672165688,
+          z: 0.5976997051073445,
+        },
+        {
+          x: -0.07213950692678825,
+          y: 0.15462694164718369,
+          z: 0.5976997226763686,
+        },
+      ]),
+      startPoint: JSON.stringify({
+        x: -0.042574127848625916,
+        y: 0.2093228930009854,
+        z: 0.5976997207441973,
+      }),
+      midPoint: JSON.stringify({
+        x: -0.01300874877727363,
+        y: 0.16201828672165688,
+        z: 0.5976997051073445,
+      }),
+      endPoint: JSON.stringify({
+        x: -0.07213950692678825,
+        y: 0.15462694164718369,
+        z: 0.5976997226763686,
+      }),
+      tolerance: 0.01,
       isFinal: false,
     },
     {
@@ -336,15 +390,16 @@ async function main() {
       heading: "Puzzle 2 of 3",
       description: "Who's in line for a change of shirt? (click to choose)",
       screen: "Active_side_l",
-      image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      image:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
       rotation: "left",
       rotationInterval: 15,
       questionType: "Selection",
-      correctCoordinates: JSON.stringify([{ x: -0.25, y: 0.30, z: 1.0 }]),
-      startPoint: JSON.stringify({ x: -0.25, y: 0.30, z: 1.0 }),
+      correctCoordinates: JSON.stringify([{"x": -0.18356622579331366, "y": -0.005166590317604896, "z": 0.33489561080932634}]),
+      startPoint: JSON.stringify({x: -0.18356622579331366, y: -0.005166590317604896, z: 0.33489561080932634}),
       midPoint: "",
       endPoint: "",
-      tolerance: 0.5,
+      tolerance: 0.01,
       isFinal: false,
     },
     {
@@ -353,19 +408,34 @@ async function main() {
       heading: "Puzzle 3 of 3",
       description: "Where does his next go? (click to choose)",
       screen: "Active_back",
-      image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
+      image:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
       rotation: "left",
       rotationInterval: 15,
       questionType: "Anticipation",
-      correctCoordinates: JSON.stringify({
-        start: { x: -0.60, y: 0.10, z: 1.0 },
-        mid: { x: 0.0, y: 0.35, z: 1.0 },
-        end: { x: 0.60, y: 0.10, z: 1.0 },
-      }),
-      startPoint: JSON.stringify({ x: -0.60, y: 0.10, z: 1.0 }),
-      midPoint: JSON.stringify({ x: 0.0, y: 0.35, z: 1.0 }),
-      endPoint: JSON.stringify({ x: 0.60, y: 0.10, z: 1.0 }),
-      tolerance: 0.5,
+      correctCoordinates: JSON.stringify([{"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}]),
+      startPoint: JSON.stringify({"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}),
+      midPoint: '',
+      endPoint: '',
+      tolerance: 0.01,
+      isFinal: true,
+    },
+    {
+      taskIndex: 3,
+      taskNumber: 4,
+      heading: "Bonus Puzzle",
+      description: "Can you see the 3rd life? (click to choose)",
+      screen: "Active_side_r",
+      image:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      rotation: "left",
+      rotationInterval: 15,
+      questionType: "Selection",
+      correctCoordinates: JSON.stringify([{"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}]),
+      startPoint: JSON.stringify({"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}),
+      midPoint: '',
+      endPoint: '',
+      tolerance: 0.01,
       isFinal: true,
     },
   ];
@@ -396,13 +466,37 @@ async function main() {
     { name: "Cubicon 3D", slug: "cubicon-3d", category: "Product" },
     { name: "ResearchLib", slug: "research-lib", category: "Product" },
     { name: "TRIAD Framework", slug: "triad-framework", category: "Product" },
-    { name: "Value Quantification", slug: "value-quantification", category: "Product" },
+    {
+      name: "Value Quantification",
+      slug: "value-quantification",
+      category: "Product",
+    },
     // Dashboard Topics
-    { name: "Research Planning", slug: "research-planning", category: "Dashboard Topic" },
-    { name: "Survey Design", slug: "survey-design", category: "Dashboard Topic" },
-    { name: "Story-Based Surveys", slug: "story-based-surveys", category: "Dashboard Topic" },
-    { name: "Participant Validation", slug: "participant-validation", category: "Dashboard Topic" },
-    { name: "Pattern Insights", slug: "pattern-insights", category: "Dashboard Topic" },
+    {
+      name: "Research Planning",
+      slug: "research-planning",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Survey Design",
+      slug: "survey-design",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Story-Based Surveys",
+      slug: "story-based-surveys",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Participant Validation",
+      slug: "participant-validation",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Pattern Insights",
+      slug: "pattern-insights",
+      category: "Dashboard Topic",
+    },
   ];
 
   const createdTopics: Record<string, string> = {};
@@ -412,7 +506,9 @@ async function main() {
     });
     createdTopics[t.slug] = topicRecord.id;
   }
-  console.log(`   Seeded ${vaultTopics.length} Topics (Products and Dashboard Topics)`);
+  console.log(
+    `   Seeded ${vaultTopics.length} Topics (Products and Dashboard Topics)`,
+  );
 
   const vaultAssets: Array<{
     title: string;
@@ -427,83 +523,146 @@ async function main() {
   }> = [
     {
       title: "The Rule of Three in B2B Customer Discovery",
-      description: "How triangulating qualitative responses through three distinct validation layers reduces market uncertainty before full-scale investments.",
+      description:
+        "How triangulating qualitative responses through three distinct validation layers reduces market uncertainty before full-scale investments.",
       format: ContentFormat.ARTICLE,
-      sourceUrl: "https://www.linkedin.com/pulse/rule-of-three-b2b-customer-discovery-buyfacts",
+      sourceUrl:
+        "https://www.linkedin.com/pulse/rule-of-three-b2b-customer-discovery-buyfacts",
       topicId: createdTopics["triad-framework"],
-      keywords: JSON.stringify(["rule of three", "customer discovery", "b2b research", "validation layers", "market uncertainty", "decision making"]),
+      keywords: JSON.stringify([
+        "rule of three",
+        "customer discovery",
+        "b2b research",
+        "validation layers",
+        "market uncertainty",
+        "decision making",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-09-15T10:00:00Z"),
     },
     {
       title: "Cubicon 3D Spatial Survey Architecture Walkthrough",
-      description: "Complete guided walkthrough of spatial 3D puzzle validation and drag-and-drop coordinate evaluation.",
+      description:
+        "Complete guided walkthrough of spatial 3D puzzle validation and drag-and-drop coordinate evaluation.",
       format: ContentFormat.VIDEO,
       sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      embedCode: '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Cubicon 3D Spatial Survey Architecture Walkthrough" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+      embedCode:
+        '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Cubicon 3D Spatial Survey Architecture Walkthrough" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
       topicId: createdTopics["cubicon-3d"],
-      keywords: JSON.stringify(["cubicon 3d", "spatial survey", "puzzle validation", "interactive coordinate", "participant engagement"]),
+      keywords: JSON.stringify([
+        "cubicon 3d",
+        "spatial survey",
+        "puzzle validation",
+        "interactive coordinate",
+        "participant engagement",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-09-20T14:30:00Z"),
     },
     {
       title: "Return on Effort (ROE) Framework Whitepaper",
-      description: "Comprehensive architectural whitepaper detailing mathematical models for maximizing researcher yield per fieldwork hour.",
+      description:
+        "Comprehensive architectural whitepaper detailing mathematical models for maximizing researcher yield per fieldwork hour.",
       format: ContentFormat.PDF,
       sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
       topicId: createdTopics["value-quantification"],
-      keywords: JSON.stringify(["return on effort", "roe framework", "research yield", "fieldwork economics", "b2b metrics"]),
+      keywords: JSON.stringify([
+        "return on effort",
+        "roe framework",
+        "research yield",
+        "fieldwork economics",
+        "b2b metrics",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-09-28T09:00:00Z"),
     },
     {
       title: "Early Market Movement Recognition Audio Briefing",
-      description: "Executive audio briefing on detecting subtle behavioral shifts in enterprise buyer panels before quarterly churn signals appear.",
+      description:
+        "Executive audio briefing on detecting subtle behavioral shifts in enterprise buyer panels before quarterly churn signals appear.",
       format: ContentFormat.AUDIO,
-      sourceUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      sourceUrl:
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
       topicId: createdTopics["pattern-insights"],
-      keywords: JSON.stringify(["early signals", "market movement", "buyer patterns", "executive briefing", "b2b intelligence"]),
+      keywords: JSON.stringify([
+        "early signals",
+        "market movement",
+        "buyer patterns",
+        "executive briefing",
+        "b2b intelligence",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-10-02T16:00:00Z"),
     },
     {
       title: "Survey Design Imperatives: Eliminating Acquiescence Bias",
-      description: "Empirical strategies for framing dual-choice prompts and story-based exercises that force deliberate cognitive engagement.",
+      description:
+        "Empirical strategies for framing dual-choice prompts and story-based exercises that force deliberate cognitive engagement.",
       format: ContentFormat.ARTICLE,
       sourceUrl: "https://buyfacts.com/research-imperatives",
       topicId: createdTopics["survey-design"],
-      keywords: JSON.stringify(["survey design", "bias elimination", "story-based surveys", "cognitive engagement", "question framing"]),
+      keywords: JSON.stringify([
+        "survey design",
+        "bias elimination",
+        "story-based surveys",
+        "cognitive engagement",
+        "question framing",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-10-08T11:15:00Z"),
     },
     {
       title: "ResearchLib Narrative Survey Demo",
-      description: "Demonstration of dynamic fill-in-the-blank narrative survey interfaces that dramatically improve completion fidelity.",
+      description:
+        "Demonstration of dynamic fill-in-the-blank narrative survey interfaces that dramatically improve completion fidelity.",
       format: ContentFormat.VIDEO,
-      sourceUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      embedCode: '<video controls preload="metadata" style="width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4"></video>',
+      sourceUrl:
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      embedCode:
+        '<video controls preload="metadata" style="width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4"></video>',
       topicId: createdTopics["research-lib"],
-      keywords: JSON.stringify(["researchlib", "narrative survey", "fill in the blanks", "completion fidelity", "storytelling"]),
+      keywords: JSON.stringify([
+        "researchlib",
+        "narrative survey",
+        "fill in the blanks",
+        "completion fidelity",
+        "storytelling",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-10-12T13:45:00Z"),
     },
     {
       title: "Participant Validation Protocol Reference",
-      description: "Standard operating procedures for establishing verified identity and domain authority during high-stakes survey intake.",
+      description:
+        "Standard operating procedures for establishing verified identity and domain authority during high-stakes survey intake.",
       format: ContentFormat.PDF,
       sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
       topicId: createdTopics["participant-validation"],
-      keywords: JSON.stringify(["participant validation", "identity verification", "high stakes research", "data fidelity", "panel management"]),
+      keywords: JSON.stringify([
+        "participant validation",
+        "identity verification",
+        "high stakes research",
+        "data fidelity",
+        "panel management",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-10-13T10:00:00Z"),
     },
     {
       title: "Story-Based Survey Methodology Deep Dive",
-      description: "In-depth audio masterclass on turning standard survey friction into engaging narrative exploration.",
+      description:
+        "In-depth audio masterclass on turning standard survey friction into engaging narrative exploration.",
       format: ContentFormat.AUDIO,
-      sourceUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      sourceUrl:
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
       topicId: createdTopics["story-based-surveys"],
-      keywords: JSON.stringify(["story based surveys", "narrative friction", "audio masterclass", "qualitative depth", "engagement"]),
+      keywords: JSON.stringify([
+        "story based surveys",
+        "narrative friction",
+        "audio masterclass",
+        "qualitative depth",
+        "engagement",
+      ]),
       isPublished: true,
       publishedAt: new Date("2026-10-14T08:30:00Z"),
     },
@@ -514,18 +673,19 @@ async function main() {
       data: a,
     });
   }
-  console.log(`   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`);
+  console.log(
+    `   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`,
+  );
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }
 
-
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error("Error during seeding:", e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error("Error during seeding:", e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
