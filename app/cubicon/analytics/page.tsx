@@ -227,6 +227,8 @@ export default function CubiconAnalyticsPage() {
             startPoint: result.startPoint,
             midPoint: result.midPoint,
             endPoint: result.endPoint,
+            ...(result.image ? { image: result.image } : {}),
+            ...(result.screen ? { screen: result.screen } : {}),
           };
         }
         return { ...prev, tasks: nextTasks };
@@ -241,6 +243,8 @@ export default function CubiconAnalyticsPage() {
             startPoint: result.startPoint,
             midPoint: result.midPoint,
             endPoint: result.endPoint,
+            ...(result.image ? { image: result.image } : {}),
+            ...(result.screen ? { screen: result.screen } : {}),
           };
         }
         return next;

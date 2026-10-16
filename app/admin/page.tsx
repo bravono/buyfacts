@@ -1180,13 +1180,27 @@ export default function AdminDatabaseDashboard() {
                           onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
                         />
                       ) : (
-                        <input
-                          type="text"
-                          className={styles.formInput}
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                          required={f.required}
-                        />
+                        <div>
+                          {f.name === "image" && activeTab === "cubiconTask" && (
+                            <div style={{ marginBottom: "6px" }}>
+                              <button
+                                type="button"
+                                className={styles.btnSecondary}
+                                style={{ padding: "4px 10px", fontSize: "0.78rem", width: "auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                onClick={() => setIsPickerOpen(true)}
+                              >
+                                <Crosshair size={14} /> Assign CDN Puzzle Image & Pick Coordinates
+                              </button>
+                            </div>
+                          )}
+                          <input
+                            type="text"
+                            className={styles.formInput}
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                            required={f.required}
+                          />
+                        </div>
                       )}
                     </div>
                   ))}
@@ -1295,13 +1309,27 @@ export default function AdminDatabaseDashboard() {
                           <span className={styles.formHelper}>Leave blank if you do not want to change password.</span>
                         </div>
                       ) : (
-                        <input
-                          type="text"
-                          className={styles.formInput}
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                          required={f.required}
-                        />
+                        <div>
+                          {f.name === "image" && activeTab === "cubiconTask" && (
+                            <div style={{ marginBottom: "6px" }}>
+                              <button
+                                type="button"
+                                className={styles.btnSecondary}
+                                style={{ padding: "4px 10px", fontSize: "0.78rem", width: "auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                onClick={() => setIsPickerOpen(true)}
+                              >
+                                <Crosshair size={14} /> Assign CDN Puzzle Image & Pick Coordinates
+                              </button>
+                            </div>
+                          )}
+                          <input
+                            type="text"
+                            className={styles.formInput}
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                            required={f.required}
+                          />
+                        </div>
                       )}
                     </div>
                   ))}
@@ -1384,6 +1412,8 @@ export default function AdminDatabaseDashboard() {
             startPoint: result.startPoint,
             midPoint: result.midPoint,
             endPoint: result.endPoint,
+            ...(result.image ? { image: result.image } : {}),
+            ...(result.screen ? { screen: result.screen } : {}),
           }));
         }}
       />
