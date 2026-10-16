@@ -905,7 +905,7 @@ export default function AdminDatabaseDashboard() {
                               </th>
                             );
                           })}
-                        <th className={styles.tableTh} style={{ textAlign: "right" }}>
+                        <th className={`${styles.tableTh} ${styles.stickyActionTh}`} style={{ textAlign: "right" }}>
                           Actions
                         </th>
                       </tr>
@@ -984,7 +984,7 @@ export default function AdminDatabaseDashboard() {
                                 })}
 
                               {/* Row Actions */}
-                              <td className={styles.tableTd} style={{ textAlign: "right" }}>
+                              <td className={`${styles.tableTd} ${styles.stickyActionTd}`} style={{ textAlign: "right" }}>
                                 <div className={styles.rowActions} style={{ justifyContent: "flex-end" }}>
                                   <button
                                     onClick={() => setInspectRecord(row)}
@@ -1108,7 +1108,7 @@ export default function AdminDatabaseDashboard() {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleCreateSubmit}>
+            <form onSubmit={handleCreateSubmit} className={styles.modalForm}>
               <div className={styles.modalBody}>
                 {formError && <div className={styles.errorBanner}>{formError}</div>}
 
@@ -1221,7 +1221,7 @@ export default function AdminDatabaseDashboard() {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleEditSubmit}>
+            <form onSubmit={handleEditSubmit} className={styles.modalForm}>
               <div className={styles.modalBody}>
                 {formError && <div className={styles.errorBanner}>{formError}</div>}
 
