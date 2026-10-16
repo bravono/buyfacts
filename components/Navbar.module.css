@@ -4,11 +4,11 @@
   left: 0;
   width: 100%;
   height: 80px;
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   align-items: center;
   border-bottom: 1px solid transparent;
-  transition: var(--transition-smooth);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, height var(--transition-smooth), background var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 
 .scrolled {
@@ -20,17 +20,18 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
-.hidden {
-  transform: translateY(-100%);
+.hidden,
+.collapsed {
+  transform: translateY(calc(-100% - 30px));
   opacity: 0;
   pointer-events: none;
 }
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1.25rem, 3vw, 2.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,7 +41,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  z-index: 101;
+  z-index: 1001;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .logoSvg {
@@ -56,10 +59,11 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
   font-weight: 800;
   color: var(--interactive-blue); /* Brand Blue (#00507b) */
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .logoHighlight {
@@ -76,15 +80,16 @@
 .navDesktop {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1vw, 1rem);
 }
 
 .navLink {
-  font-size: 0.8rem;
+  font-size: clamp(0.72rem, 0.82vw, 0.8rem);
   font-weight: 500;
   color: var(--text-muted);
   position: relative;
   padding: 0.5rem 0;
+  white-space: nowrap;
 }
 
 .navLink::after {
@@ -106,9 +111,19 @@
   width: 100%;
 }
 
+.navLinkActive {
+  color: var(--interactive-blue);
+  font-weight: 700;
+}
+
+.navLinkActive::after {
+  width: 100%;
+}
+
 .btnNav {
-  padding: 0.6rem 1.3rem;
-  font-size: 0.9rem;
+  padding: 0.55rem clamp(0.9rem, 1.2vw, 1.3rem);
+  font-size: clamp(0.8rem, 0.88vw, 0.9rem);
+  white-space: nowrap;
 }
 
 .hamburger {
@@ -138,8 +153,10 @@
   z-index: 99;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 100px clamp(1.25rem, 3vw, 2.5rem) 2.5rem;
+  overflow-y: auto;
   transition: var(--transition-smooth);
 }
 
@@ -150,27 +167,66 @@
 .navMobile {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  width: 80%;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 480px;
 }
 
 .mobileNavLink {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.35rem 0;
+  text-align: left;
+  letter-spacing: 0.02em;
+  transition: var(--transition-smooth);
 }
 
 .mobileNavLink:hover {
   color: var(--primary-color);
 }
 
+.mobileNavLinkActive {
+  color: var(--interactive-blue);
+  font-weight: 700;
+}
+
 .mobileBtnNav {
-  margin-top: 1rem;
-  width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: auto;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+/* Monogram Logo Subtitle */
+.logoTextWrapper {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.logoSubtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(0.48rem, 1.8vw, 0.65rem);
+  font-weight: 500;
+  color: var(--interactive-orange); /* Brand Orange (#ff9900) */
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-wrap: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -181,23 +237,10 @@
   .hamburger {
     display: block;
   }
-}
 
-/* Monogram Logo Subtitle */
-.logoTextWrapper {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-.logoSubtitle {
-  font-family: var(--font-sans);
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--interactive-orange); /* Brand Orange (#ff9900) */
-  letter-spacing: 0.08em;
-  margin-top: 1px;
-  text-transform: uppercase;
+  .logoSubtitle {
+    font-size: clamp(0.44rem, 2.2vw, 0.62rem);
+  }
 }
 
 /* Dropdown styling */
@@ -265,5 +308,9 @@
 @media (max-width: 480px) {
   .header {
     top: 10px;
+  }
+
+  .logoSubtitle {
+    font-size: clamp(0.38rem, 2.8vw, 0.52rem);
   }
 }

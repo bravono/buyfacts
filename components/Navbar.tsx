@@ -1,23 +1,124 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
-export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolean }) {
+export default function Navbar({
+  hideOnScroll = false,
+}: {
+  hideOnScroll?: boolean;
+}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isContactCollapsed, setIsContactCollapsed] = useState(false);
+  const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
+  const pathname = usePathname() || "/";
 
+  const lastScrollYRef = useRef(0);
+  const ignoreScrollUntilRef = useRef(0);
+
+  // Scroll detection: handle background glass state and scroll-up restoration
   useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      if (isContactCollapsed) {
+        const isPastGracePeriod = Date.now() > ignoreScrollUntilRef.current;
+        const scrolledUp = currentScrollY < lastScrollYRef.current - 8;
+        const reachedTop = currentScrollY <= 20;
+
+        // Bring navbar back when scrolling up or returning to top
+        if (isPastGracePeriod && (scrolledUp || reachedTop)) {
+          setIsContactCollapsed(false);
+        }
+      }
+
+      lastScrollYRef.current = currentScrollY;
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, [isContactCollapsed]);
+
+  // Collapse handler for Contact link click
+  const handleContactClick = () => {
+    setIsContactCollapsed(true);
+    setIsMobileMenuOpen(false);
+    // Ignore scroll events for 1000ms while smooth scrolling down to #contact
+    ignoreScrollUntilRef.current = Date.now() + 1000;
+
+    if (pathname === "/") {
+      const contactElem = document.getElementById("contact");
+      if (contactElem) {
+        contactElem.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
+  // Listen for hash changes or document-wide contact links
+  useEffect(() => {
+    const handleDocClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("a");
+      if (target) {
+        const href = target.getAttribute("href");
+        if (href === "/#contact" || href === "#contact") {
+          setIsContactCollapsed(true);
+          setIsMobileMenuOpen(false);
+          ignoreScrollUntilRef.current = Date.now() + 1000;
+        }
+      }
+    };
+
+    const handleHashChange = () => {
+      if (window.location.hash === "#contact") {
+        setIsContactCollapsed(true);
+        ignoreScrollUntilRef.current = Date.now() + 1000;
+      }
+    };
+
+    if (typeof window !== "undefined" && window.location.hash === "#contact") {
+      setIsContactCollapsed(true);
+    }
+
+    document.addEventListener("click", handleDocClick, { capture: true });
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      document.removeEventListener("click", handleDocClick, { capture: true });
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  // Reset collapse when navigating to another route
+  useEffect(() => {
+    setIsContactCollapsed(false);
+  }, [pathname]);
+
+  // Listen for document reader modal state to get out of the way
+  useEffect(() => {
+    const handleReaderState = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen?: boolean }>;
+      if (customEvent.detail && typeof customEvent.detail.isOpen === "boolean") {
+        setIsReaderModalOpen(customEvent.detail.isOpen);
+      } else {
+        setIsReaderModalOpen(document.body.classList.contains("document-reader-open"));
+      }
+    };
+
+    window.addEventListener("document-reader-toggle", handleReaderState);
+    return () => {
+      window.removeEventListener("document-reader-toggle", handleReaderState);
+    };
   }, []);
 
   const toggleMobileMenu = () => {
@@ -28,53 +129,105 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
     setIsMobileMenuOpen(false);
   };
 
+  const isHomeActive = pathname === "/";
+  const isInnovationsActive = pathname === "/products-services";
+  const isResearchActive = pathname === "/research-imperatives";
+  const isCubiconActive = pathname.startsWith("/cubicon");
+  const isVaultActive = pathname.startsWith("/vault");
+
+  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed || isReaderModalOpen;
+
   return (
-    <header className={`${styles.header} ${isScrolled ? (hideOnScroll ? styles.hidden : styles.scrolled) : ""}`}>
+    <header
+      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${isHidden ? styles.hidden : ""} ${isContactCollapsed ? styles.collapsed : ""}`}
+    >
       <div className={styles.container}>
-        <a href="#hero" className={styles.logo} id="nav-logo-link">
+        <Link href="/" className={styles.logo} id="nav-logo-link">
           <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "50px" }} />
           <div className={styles.logoTextWrapper}>
             <span className={styles.logoText}>
               Buy<span className={styles.logoHighlight}>Facts</span>
               <span className={styles.trademark}>®</span>
             </span>
-            <span className={styles.logoSubtitle}>Insights that Inspire</span>
+            <span className={styles.logoSubtitle}>
+              Real Data - Real People
+            </span>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className={styles.navDesktop}>
-          <a href="/" className={styles.navLink} id="nav-link-time-savings">
-            HOME
-          </a>
-
-          <a href="/services" className={styles.navLink} id="nav-link-services">
-            PRODUCTS / SERVICES
-          </a>
-          <a
-            href="/thought-leadership"
-            className={styles.navLink}
-            id="nav-link-thought-leadership"
+          <Link
+            href="/"
+            className={`${styles.navLink} ${isHomeActive ? styles.navLinkActive : ""}`}
+            id="nav-link-home"
+            onClick={() => setIsContactCollapsed(false)}
           >
-            THOUGHT LEADERSHIP / BEST PRACTICES
-          </a>
+            HOME
+          </Link>
 
-          <a href="/cubicon" className={styles.navLink} id="nav-link-cubicon">
-            FOUNDING INVITATION
-          </a>
-          <a href="/#about" className={styles.navLink} id="nav-link-about">
+          <Link
+            href="/products-services"
+            className={`${styles.navLink} ${isInnovationsActive ? styles.navLinkActive : ""}`}
+            id="nav-link-innovations"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            INNOVATIONS THAT SAVE TIME
+          </Link>
+
+          <Link
+            href="/research-imperatives"
+            className={`${styles.navLink} ${isResearchActive ? styles.navLinkActive : ""}`}
+            id="nav-link-research-imperatives"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            RESEARCH IMPERATIVES
+          </Link>
+
+          <Link
+            href="/cubicon"
+            className={`${styles.navLink} ${isCubiconActive ? styles.navLinkActive : ""}`}
+            id="nav-link-cubicon"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            CUBICON
+          </Link>
+
+          <Link
+            href="/vault"
+            className={`${styles.navLink} ${isVaultActive ? styles.navLinkActive : ""}`}
+            id="nav-link-vault"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            CONTENT VAULT
+          </Link>
+
+          <Link
+            href="/#about"
+            className={styles.navLink}
+            id="nav-link-about"
+            onClick={() => setIsContactCollapsed(false)}
+          >
             ABOUT
-          </a>
+          </Link>
 
-          {/* Dropdown Portfolio Link */}
+          <Link
+            href="/#what-sets-us-apart"
+            className={styles.navLink}
+            id="nav-link-what-sets-us-apart"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            WHAT SETS US APART
+          </Link>
 
-          <a
+          <Link
             href="/#contact"
             className={`${styles.btnNav} btn btn-primary`}
             id="nav-link-contact"
+            onClick={handleContactClick}
           >
             CONTACT <ArrowUpRight size={14} />
-          </a>
+          </Link>
         </nav>
 
         {/* Mobile Hamburger Toggle */}
@@ -93,46 +246,94 @@ export default function Navbar({ hideOnScroll = false }: { hideOnScroll?: boolea
         className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.open : ""}`}
       >
         <nav className={styles.navMobile}>
-          <a
+          <Link
             href="/"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isHomeActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-home"
           >
             HOME
-          </a>
-          <a
-            href="/services"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
-            id="mob-link-services"
+          </Link>
+          <Link
+            href="/products-services"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isInnovationsActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-innovations"
           >
-            SERVICES
-          </a>
-          <a
+            INNOVATIONS THAT SAVE TIME
+          </Link>
+          <Link
+            href="/research-imperatives"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isResearchActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-research-imperatives"
+          >
+            RESEARCH IMPERATIVES
+          </Link>
+          <Link
             href="/cubicon"
-            onClick={closeMobileMenu}
-            className={styles.mobileNavLink}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isCubiconActive ? styles.mobileNavLinkActive : ""}`}
             id="mob-link-cubicon"
           >
-            FOUNDING INVITATION
-          </a>
-          <a
+            CUBICON
+          </Link>
+          <Link
+            href="/vault"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isVaultActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-vault"
+          >
+            CONTENT VAULT
+          </Link>
+          <Link
             href="/#about"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
             className={styles.mobileNavLink}
             id="mob-link-about"
           >
             ABOUT
-          </a>
-          <a
+          </Link>
+          <Link
+            href="/#what-sets-us-apart"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={styles.mobileNavLink}
+            id="mob-link-what-sets-us-apart"
+          >
+            WHAT SETS US APART
+          </Link>
+          <Link
             href="/#contact"
-            onClick={closeMobileMenu}
+            onClick={() => {
+              closeMobileMenu();
+              handleContactClick();
+            }}
             className={`${styles.mobileBtnNav} btn btn-primary`}
             id="mob-link-contact"
           >
-            CONTACT <ArrowUpRight size={18} />
-          </a>
+            CONTACT <ArrowUpRight size={14} />
+          </Link>
         </nav>
       </div>
     </header>

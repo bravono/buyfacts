@@ -64,6 +64,35 @@
   --color-accent-magenta: #ed40ed;
   --color-accent-crimson: #ea425f;
   --color-accent-plum: #532254;
+
+  /* Vibrant Color System */
+  --vibrant-orange: #ff6a00;
+  --vibrant-orange-bright: #ff9100;
+  --vibrant-orange-glow: rgba(255, 106, 0, 0.35);
+  --vibrant-orange-gradient: linear-gradient(135deg, #ff8500 0%, #ff5500 100%);
+  --vibrant-orange-surface: rgba(255, 106, 0, 0.06);
+  --vibrant-orange-border: rgba(255, 106, 0, 0.3);
+
+  --vibrant-blue: #0084d6;
+  --vibrant-blue-bright: #00b4d8;
+  --vibrant-blue-glow: rgba(0, 180, 216, 0.35);
+  --vibrant-blue-gradient: linear-gradient(135deg, #00507b 0%, #00a8cc 100%);
+  --vibrant-blue-surface: rgba(0, 137, 210, 0.06);
+  --vibrant-blue-border: rgba(0, 137, 210, 0.3);
+
+  --vibrant-purple: #8b5cf6;
+  --vibrant-purple-bright: #a855f7;
+  --vibrant-purple-glow: rgba(168, 85, 247, 0.35);
+  --vibrant-purple-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --vibrant-purple-surface: rgba(139, 92, 246, 0.06);
+  --vibrant-purple-border: rgba(139, 92, 246, 0.3);
+
+  --vibrant-teal: #00c49f;
+  --vibrant-teal-bright: #10b981;
+  --vibrant-teal-glow: rgba(0, 196, 159, 0.35);
+  --vibrant-teal-gradient: linear-gradient(135deg, #0d9488 0%, #10b981 100%);
+  --vibrant-teal-surface: rgba(0, 196, 159, 0.06);
+  --vibrant-teal-border: rgba(0, 196, 159, 0.3);
 }
 
 /* Product Specific Color Registries */
@@ -122,13 +151,14 @@ body {
 
 /* Base Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-color);
+  background: var(--bg-alt); /* Light gray track background */
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 80, 123, 0.25); /* Brand blue accent color with transparency */
+  border: 2px solid var(--bg-alt); /* Padding within the track */
   border-radius: var(--radius-sm);
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -265,10 +295,33 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 15px var(--primary-glow);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #e08800; /* Subtle hover state */
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 153, 0, 0.35);
+}
+
+.btn:disabled,
+.btn[disabled],
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background: #64748b !important;
+  color: #cbd5e1 !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  transform: none !important;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover,
+.btn-primary:disabled:hover,
+.btn-primary[disabled]:hover {
+  background: #64748b !important;
+  color: #cbd5e1 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .btn-secondary {
@@ -381,6 +434,11 @@ h1, h2, h3, h4, h5, h6 {
 .section-teal-bg p {
   color: var(--text-muted);
 }
+
+.hidden {
+  display: none !important;
+}
+
 
 
 
