@@ -318,6 +318,87 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.match(fileUploadCode, /contentType\.includes\("application\/json"\)/);
     assert.match(adminCode, /contentType\.includes\("application\/json"\)/);
   });
+
+  test("Modal Scrollability: Create and Edit modals must constrain form flex height so modalBody scrolls", async () => {
+    const fs = await import("fs/promises");
+    const adminCode = await fs.readFile("app/admin/page.tsx", "utf-8");
+    const adminCss = await fs.readFile("app/admin/admin.module.css", "utf-8");
+
+    // Both Create and Edit forms must apply styles.modalForm
+    assert.match(adminCode, /onSubmit=\{handleCreateSubmit\}\s+className=\{styles\.modalForm\}/);
+    assert.match(adminCode, /onSubmit=\{handleEditSubmit\}\s+className=\{styles\.modalForm\}/);
+
+    // CSS must define .modalForm with flex: 1 and min-height: 0 and .modalBody with overflow-y: auto
+    assert.match(adminCss, /\.modalForm[\s\S]*?display:\s*flex[\s\S]*?flex-direction:\s*column[\s\S]*?flex:\s*1[\s\S]*?min-height:\s*0/);
+    assert.match(adminCss, /\.modalBody\s*\{[\s\S]*?overflow-y:\s*auto[\s\S]*?flex:\s*1[\s\S]*?min-height:\s*0/);
+  });
+
+  test("Incremental Sequence ID: sequenceId is readOnly in UI and auto-incremented by backend on creation", async () => {
+    for (const modelKey of ["cubiconTask", "cubiconSession", "cubiconAttempt"]) {
+      const seqField = ADMIN_MODEL_REGISTRY[modelKey].fields.find((f) => f.name === "sequenceId");
+      assert.ok(seqField, `${modelKey} must define sequenceId field`);
+      assert.equal(seqField.readOnly, true, `${modelKey}.sequenceId must be readOnly so user does not set it manually`);
+    }
+
+    const headers = await createAdminAuthHeader();
+
+    const createReq1 = new Request("http://localhost/api/admin/database", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        table: "cubiconTask",
+        data: {
+          heading: "Incremental Seq Test 1",
+          description: "Testing backend incremental sequenceId 1",
+          image: "/cubicon-app/arts/Puzzle1.webp",
+        },
+      }),
+    });
+    const res1 = await POST(createReq1);
+    assert.equal(res1.status, 200);
+    const body1 = await res1.json();
+    assert.equal(body1.success, true);
+    assert.equal(typeof body1.record.sequenceId, "number");
+
+    const createReq2 = new Request("http://localhost/api/admin/database", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        table: "cubiconTask",
+        data: {
+          heading: "Incremental Seq Test 2",
+          description: "Testing backend incremental sequenceId 2",
+          image: "/cubicon-app/arts/Puzzle2.webp",
+        },
+      }),
+    });
+    const res2 = await POST(createReq2);
+    assert.equal(res2.status, 200);
+    const body2 = await res2.json();
+    assert.equal(body2.success, true);
+    assert.equal(body2.record.sequenceId, body1.record.sequenceId + 1);
+
+    // Clean up created tasks and sequences
+    await prisma.cubiconTask.deleteMany({
+      where: { id: { in: [body1.record.id, body2.record.id] } },
+    });
+    await prisma.cubiconSequence.deleteMany({
+      where: { id: { in: [body1.record.sequenceId, body2.record.sequenceId] } },
+    });
+  });
+
+  test("Sticky Table Actions Column: Actions header and row cells remain pinned to the right edge", async () => {
+    const fs = await import("fs/promises");
+    const adminCode = await fs.readFile("app/admin/page.tsx", "utf-8");
+    const adminCss = await fs.readFile("app/admin/admin.module.css", "utf-8");
+
+    // Admin table must apply stickyActionTh and stickyActionTd
+    assert.match(adminCode, /styles\.stickyActionTh/);
+    assert.match(adminCode, /styles\.stickyActionTd/);
+
+    // CSS must define position: sticky and right: 0 for both header and cell
+    assert.match(adminCss, /\.stickyActionTh\s*\{[\s\S]*?position:\s*sticky[\s\S]*?right:\s*0/);
+    assert.match(adminCss, /\.stickyActionTd\s*\{[\s\S]*?position:\s*sticky[\s\S]*?right:\s*0/);
+    assert.match(adminCss, /\.content\s*\{[\s\S]*?min-width:\s*0/);
+  });
 });
-
-

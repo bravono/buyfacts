@@ -266,6 +266,7 @@
 /* Content Area */
 .content {
   flex: 1;
+  min-width: 0;
   padding: 2rem;
   overflow-x: hidden;
 }
@@ -633,6 +634,30 @@
   background-color: rgba(0, 0, 0, 0.015);
 }
 
+.stickyActionTh {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background-color: var(--bg-alt, #f8f8f8);
+  text-align: right;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  border-left: 1px solid var(--border-color, #e6e6e6);
+}
+
+.stickyActionTd {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background-color: #ffffff;
+  text-align: right;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  border-left: 1px solid var(--border-color, #e6e6e6);
+}
+
+.tableTr:hover .stickyActionTd {
+  background-color: #fafafa;
+}
+
 .rowActions {
   display: flex;
   align-items: center;
@@ -779,6 +804,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -797,9 +823,20 @@
   justify-content: center;
 }
 
+.modalForm,
+.modalContent > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .modalBody {
   padding: 1.5rem;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -813,6 +850,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .formGroup {
