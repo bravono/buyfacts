@@ -116,13 +116,14 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     assert.equal(decision.publicHeading, CUBICON_MESSAGES.rejection.heading);
   });
 
-  await t.test("6. Mid-sequence progression continues without completing prematurely", () => {
+  await t.test("6. Mid-sequence progression continues without completing prematurely and keeps isFinalTask false on Task 3 when Task 4 exists", () => {
     // After task 1 (pass)
     const afterOnePass = [{ taskIndex: 0, result: "p" as const }];
     const res1 = evaluateScoringDecision(afterOnePass, 3, true);
     assert.equal(res1.decision, "continue");
     assert.equal(res1.isCompleted, false);
     assert.equal(res1.nextTaskIndex, 1);
+    assert.equal(res1.isFinalTask, false);
 
     // After task 1 (fail)
     const afterOneFail = [{ taskIndex: 0, result: "f" as const }];
@@ -130,8 +131,9 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     assert.equal(res2.decision, "continue");
     assert.equal(res2.isCompleted, false);
     assert.equal(res2.nextTaskIndex, 1);
+    assert.equal(res2.isFinalTask, false);
 
-    // After task 2 with 1 pass and 1 fail
+    // After task 2 with 1 pass and 1 fail -> advances to Task 3 (index 2)
     const afterOnePassOneFail = [
       { taskIndex: 0, result: "p" as const },
       { taskIndex: 1, result: "f" as const },
@@ -140,6 +142,13 @@ test("Cubicon Scoring Engine - Section 7.4 Test Suite", async (t) => {
     assert.equal(res3.decision, "continue");
     assert.equal(res3.isCompleted, false);
     assert.equal(res3.nextTaskIndex, 2);
+    assert.equal(res3.isFinalTask, false, "Task 3 must not be marked isFinalTask when a 4th bonus task exists");
+
+    // When hasFourthTask is false (3-task only sequence), Task 3 is the ceiling and has isFinalTask=true
+    const res3NoBonus = evaluateScoringDecision(afterOnePassOneFail, 3, false);
+    assert.equal(res3NoBonus.decision, "continue");
+    assert.equal(res3NoBonus.nextTaskIndex, 2);
+    assert.equal(res3NoBonus.isFinalTask, true, "Task 3 has isFinalTask=true only when no 4th task exists");
   });
 
   await t.test("7. Single-task sequence edge cases support backward compatibility", () => {
