@@ -97,6 +97,7 @@ export default function AdminDatabaseDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [availableSequences, setAvailableSequences] = useState<Array<{ id: number; title: string; slug: string }>>([]);
 
   // Active Model Metadata
   const currentModelMeta: ModelMetadata | null = useMemo(() => {
@@ -148,11 +149,31 @@ export default function AdminDatabaseDashboard() {
     }
   }, [session]);
 
+  // Fetch available sequences for Cubicon task assignment
+  const fetchSequences = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/database?action=table&table=cubiconSequence&limit=100");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.records)) {
+        setAvailableSequences(
+          data.records.map((r: any) => ({
+            id: Number(r.id),
+            title: String(r.title || `Sequence ${r.id}`),
+            slug: String(r.slug || ""),
+          }))
+        );
+      }
+    } catch {
+      // Graceful fallback
+    }
+  }, []);
+
   useEffect(() => {
     if (session) {
       fetchSummary();
+      fetchSequences();
     }
-  }, [session, fetchSummary]);
+  }, [session, fetchSummary, fetchSequences]);
 
   // Fetch table records
   const fetchTableData = useCallback(async () => {
@@ -279,6 +300,12 @@ export default function AdminDatabaseDashboard() {
         initial[f.name] = f.defaultValue !== undefined ? f.defaultValue : "";
       }
     }
+    if (activeTab === "cubiconTask") {
+      fetchSequences();
+      if (availableSequences.length > 0 && !initial.sequenceId) {
+        initial.sequenceId = availableSequences[0].id;
+      }
+    }
     setFormData(initial);
     setFormError("");
     setCreateModalOpen(true);
@@ -296,6 +323,9 @@ export default function AdminDatabaseDashboard() {
     // For User password, keep blank
     if (currentModelMeta.key === "user") {
       initial.password = "";
+    }
+    if (activeTab === "cubiconTask") {
+      fetchSequences();
     }
     setFormData(initial);
     setFormError("");
@@ -1163,14 +1193,63 @@ export default function AdminDatabaseDashboard() {
                           />
                         </div>
                       ) : f.type === "number" || f.type === "float" ? (
-                        <input
-                          type="number"
-                          step={f.type === "float" ? "0.01" : "1"}
-                          className={styles.formInput}
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                          required={f.required}
-                        />
+                        f.name === "sequenceId" && activeTab === "cubiconTask" ? (
+                          <div>
+                            {availableSequences.length > 0 ? (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <select
+                                  className={styles.formSelect}
+                                  value={formData.sequenceId ?? ""}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      sequenceId: e.target.value ? parseInt(e.target.value, 10) : "",
+                                    })
+                                  }
+                                  required
+                                >
+                                  <option value="">-- Select an Existing Sequence --</option>
+                                  {availableSequences.map((seq) => (
+                                    <option key={seq.id} value={seq.id}>
+                                      Sequence #{seq.id}: {seq.title} ({seq.slug})
+                                    </option>
+                                  ))}
+                                </select>
+                                <span className={styles.formHelper}>
+                                  Select an existing sequence ID. All tasks with this Sequence ID will belong to the same puzzle group.
+                                </span>
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  type="number"
+                                  className={styles.formInput}
+                                  placeholder="Enter Sequence ID (e.g. 1)"
+                                  value={formData.sequenceId ?? ""}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      sequenceId: e.target.value ? parseInt(e.target.value, 10) : "",
+                                    })
+                                  }
+                                  required
+                                />
+                                <span className={styles.formHelper} style={{ color: "var(--interactive-orange, #f59e0b)" }}>
+                                  Create a sequence first in 'Cubicon Sequences' to get an ID.
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <input
+                            type="number"
+                            step={f.type === "float" ? "0.01" : "1"}
+                            className={styles.formInput}
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                            required={f.required}
+                          />
+                        )
                       ) : f.type === "masked" ? (
                         <input
                           type="password"
@@ -1289,14 +1368,63 @@ export default function AdminDatabaseDashboard() {
                           />
                         </div>
                       ) : f.type === "number" || f.type === "float" ? (
-                        <input
-                          type="number"
-                          step={f.type === "float" ? "0.01" : "1"}
-                          className={styles.formInput}
-                          value={formData[f.name] ?? ""}
-                          onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
-                          required={f.required}
-                        />
+                        f.name === "sequenceId" && activeTab === "cubiconTask" ? (
+                          <div>
+                            {availableSequences.length > 0 ? (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <select
+                                  className={styles.formSelect}
+                                  value={formData.sequenceId ?? ""}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      sequenceId: e.target.value ? parseInt(e.target.value, 10) : "",
+                                    })
+                                  }
+                                  required
+                                >
+                                  <option value="">-- Select an Existing Sequence --</option>
+                                  {availableSequences.map((seq) => (
+                                    <option key={seq.id} value={seq.id}>
+                                      Sequence #{seq.id}: {seq.title} ({seq.slug})
+                                    </option>
+                                  ))}
+                                </select>
+                                <span className={styles.formHelper}>
+                                  Select an existing sequence ID. All tasks with this Sequence ID will belong to the same puzzle group.
+                                </span>
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  type="number"
+                                  className={styles.formInput}
+                                  placeholder="Enter Sequence ID (e.g. 1)"
+                                  value={formData.sequenceId ?? ""}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      sequenceId: e.target.value ? parseInt(e.target.value, 10) : "",
+                                    })
+                                  }
+                                  required
+                                />
+                                <span className={styles.formHelper} style={{ color: "var(--interactive-orange, #f59e0b)" }}>
+                                  Create a sequence first in 'Cubicon Sequences' to get an ID.
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <input
+                            type="number"
+                            step={f.type === "float" ? "0.01" : "1"}
+                            className={styles.formInput}
+                            value={formData[f.name] ?? ""}
+                            onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                            required={f.required}
+                          />
+                        )
                       ) : f.type === "masked" ? (
                         <div>
                           <input
