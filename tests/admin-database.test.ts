@@ -333,57 +333,120 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.match(adminCss, /\.modalBody\s*\{[\s\S]*?overflow-y:\s*auto[\s\S]*?flex:\s*1[\s\S]*?min-height:\s*0/);
   });
 
-  test("Incremental Sequence ID: sequenceId is readOnly in UI and auto-incremented by backend on creation", async () => {
-    for (const modelKey of ["cubiconTask", "cubiconSession", "cubiconAttempt"]) {
-      const seqField = ADMIN_MODEL_REGISTRY[modelKey].fields.find((f) => f.name === "sequenceId");
-      assert.ok(seqField, `${modelKey} must define sequenceId field`);
-      assert.equal(seqField.readOnly, true, `${modelKey}.sequenceId must be readOnly so user does not set it manually`);
-    }
+  test("Sequence Association: sequenceId is required for cubiconTask and links tasks to an existing sequence without auto-creating new sequences", async () => {
+    const seqField = ADMIN_MODEL_REGISTRY.cubiconTask.fields.find((f) => f.name === "sequenceId");
+    assert.ok(seqField, "cubiconTask must define sequenceId field");
+    assert.equal(seqField.required, true, "cubiconTask.sequenceId must be required");
+    assert.equal(Boolean(seqField.readOnly), false, "cubiconTask.sequenceId must NOT be readOnly so user specifies the sequence");
 
     const headers = await createAdminAuthHeader();
 
-    const createReq1 = new Request("http://localhost/api/admin/database", {
+    // 1. Missing sequenceId must be rejected with 400
+    const rejectReq = new Request("http://localhost/api/admin/database", {
       method: "POST",
       headers,
       body: JSON.stringify({
         table: "cubiconTask",
         data: {
-          heading: "Incremental Seq Test 1",
-          description: "Testing backend incremental sequenceId 1",
+          heading: "Missing Sequence Task",
+          description: "Testing rejection when sequenceId is missing",
           image: "/cubicon-app/arts/Puzzle1.webp",
         },
       }),
     });
-    const res1 = await POST(createReq1);
-    assert.equal(res1.status, 200);
-    const body1 = await res1.json();
-    assert.equal(body1.success, true);
-    assert.equal(typeof body1.record.sequenceId, "number");
+    const rejectRes = await POST(rejectReq);
+    assert.equal(rejectRes.status, 400);
+    const rejectBody = await rejectRes.json();
+    assert.match(rejectBody.error, /Sequence ID/);
 
-    const createReq2 = new Request("http://localhost/api/admin/database", {
+    // 2. Non-existent sequenceId must be rejected with 400
+    const invalidSeqReq = new Request("http://localhost/api/admin/database", {
       method: "POST",
       headers,
       body: JSON.stringify({
         table: "cubiconTask",
         data: {
-          heading: "Incremental Seq Test 2",
-          description: "Testing backend incremental sequenceId 2",
+          sequenceId: 9999999,
+          heading: "Invalid Sequence Task",
+          description: "Testing rejection when sequenceId does not exist",
+          image: "/cubicon-app/arts/Puzzle1.webp",
+        },
+      }),
+    });
+    const invalidSeqRes = await POST(invalidSeqReq);
+    assert.equal(invalidSeqRes.status, 400);
+    const invalidSeqBody = await invalidSeqRes.json();
+    assert.match(invalidSeqBody.error, /Sequence ID 9999999 does not exist/);
+
+    // 3. Create a sequence first to obtain an ID
+    const createSeqReq = new Request("http://localhost/api/admin/database", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        table: "cubiconSequence",
+        data: {
+          slug: `test-seq-group-${Date.now()}`,
+          title: "Test Sequence Group for Multi-Tasks",
+          description: "Testing multi-task assignment to a single sequence ID",
+        },
+      }),
+    });
+    const seqRes = await POST(createSeqReq);
+    assert.equal(seqRes.status, 200);
+    const seqBody = await seqRes.json();
+    const targetSequenceId = seqBody.record.id;
+    assert.ok(typeof targetSequenceId === "number" && targetSequenceId > 0);
+
+    const initialSeqCount = await prisma.cubiconSequence.count();
+
+    // 4. Create Task 1 assigned to targetSequenceId
+    const createTask1 = new Request("http://localhost/api/admin/database", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        table: "cubiconTask",
+        data: {
+          sequenceId: targetSequenceId,
+          heading: "Sequence Task 1 of 2",
+          description: "First task in sequence group",
+          image: "/cubicon-app/arts/Puzzle1.webp",
+        },
+      }),
+    });
+    const taskRes1 = await POST(createTask1);
+    assert.equal(taskRes1.status, 200);
+    const taskBody1 = await taskRes1.json();
+    assert.equal(taskBody1.record.sequenceId, targetSequenceId);
+
+    // 5. Create Task 2 assigned to the exact same targetSequenceId
+    const createTask2 = new Request("http://localhost/api/admin/database", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        table: "cubiconTask",
+        data: {
+          sequenceId: targetSequenceId,
+          heading: "Sequence Task 2 of 2",
+          description: "Second task in sequence group",
           image: "/cubicon-app/arts/Puzzle2.webp",
         },
       }),
     });
-    const res2 = await POST(createReq2);
-    assert.equal(res2.status, 200);
-    const body2 = await res2.json();
-    assert.equal(body2.success, true);
-    assert.equal(body2.record.sequenceId, body1.record.sequenceId + 1);
+    const taskRes2 = await POST(createTask2);
+    assert.equal(taskRes2.status, 200);
+    const taskBody2 = await taskRes2.json();
+    assert.equal(taskBody2.record.sequenceId, targetSequenceId);
 
-    // Clean up created tasks and sequences
+    // 6. Verify NO additional sequences were created
+    const finalSeqCount = await prisma.cubiconSequence.count();
+    assert.equal(finalSeqCount, initialSeqCount, "Creating tasks must NOT create new sequences");
+
+    // Clean up created tasks and sequence
     await prisma.cubiconTask.deleteMany({
-      where: { id: { in: [body1.record.id, body2.record.id] } },
+      where: { id: { in: [taskBody1.record.id, taskBody2.record.id] } },
     });
-    await prisma.cubiconSequence.deleteMany({
-      where: { id: { in: [body1.record.sequenceId, body2.record.sequenceId] } },
+    await prisma.cubiconSequence.delete({
+      where: { id: targetSequenceId },
     });
   });
 

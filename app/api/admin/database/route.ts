@@ -330,39 +330,41 @@ export async function POST(request: Request) {
 
     const cleanedData = await cleanInputData(meta, data, false);
 
-    // Auto-increment sequenceId on the backend for models with a sequenceId field
+    // Sequence ID verification and association:
+    // When creating tasks or sessions, associate them with an existing sequence instead of auto-creating new sequence IDs.
     const hasSequenceId = meta.fields.some((f) => f.name === "sequenceId");
     if (hasSequenceId) {
-      const [latestInTable, latestSequence] = await Promise.all([
-        delegate.findFirst({
-          where: { sequenceId: { not: null } },
-          orderBy: { sequenceId: "desc" },
-          select: { sequenceId: true },
-        }),
-        prisma.cubiconSequence.findFirst({
-          orderBy: { id: "desc" },
-          select: { id: true },
-        }),
-      ]);
+      const rawSeqId = data.sequenceId !== undefined && data.sequenceId !== null && data.sequenceId !== ""
+        ? parseInt(String(data.sequenceId), 10)
+        : null;
 
-      const maxTableSeqId = Number(latestInTable?.sequenceId ?? 0);
-      const maxSeqId = Number(latestSequence?.id ?? 0);
-      const nextSequenceId = Math.max(maxTableSeqId, maxSeqId) + 1;
+      if (rawSeqId !== null && !isNaN(rawSeqId) && rawSeqId > 0) {
+        // Verify that the specified sequence actually exists
+        const existingSequence = await prisma.cubiconSequence.findUnique({
+          where: { id: rawSeqId },
+          select: { id: true, title: true },
+        });
 
-      await prisma.cubiconSequence.upsert({
-        where: { id: nextSequenceId },
-        update: {},
-        create: {
-          id: nextSequenceId,
-          slug: `sequence-${nextSequenceId}-${Date.now()}`,
-          title: data.heading ? String(data.heading) : `Sequence ${nextSequenceId}`,
-          description: data.description ? String(data.description) : "Auto-generated sequence",
-          isActive: false,
-          createdBy: auth.user?.email || "system",
-        },
-      });
+        if (!existingSequence) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Sequence ID ${rawSeqId} does not exist. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then use that ID for new tasks.`,
+            },
+            { status: 400 }
+          );
+        }
 
-      cleanedData.sequenceId = nextSequenceId;
+        cleanedData.sequenceId = rawSeqId;
+      } else if (meta.key === "cubiconTask") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Sequence ID is required. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then assign tasks to that sequence.",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const created = await delegate.create({ data: cleanedData });
@@ -428,6 +430,22 @@ export async function PUT(request: Request) {
 
     const parsedId = meta.idType === "int" ? parseInt(String(id), 10) : String(id);
     const cleanedData = await cleanInputData(meta, data, true);
+
+    if (meta.fields.some((f) => f.name === "sequenceId") && cleanedData.sequenceId) {
+      const existingSequence = await prisma.cubiconSequence.findUnique({
+        where: { id: cleanedData.sequenceId },
+        select: { id: true },
+      });
+      if (!existingSequence) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Sequence ID ${cleanedData.sequenceId} does not exist. Please specify a valid Sequence ID.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     const updated = await delegate.update({
       where: { [meta.idField]: parsedId },
