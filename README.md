@@ -122,7 +122,7 @@ Receives and records contact inquiries. Requires completion of human verificatio
 #### `GET /api/cubicon-data`
 Retrieves sequence metadata and ordered tasks for the 3D Cubicon solver.
 - **Query Parameters**:
-  - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). Defaults to the active sequence.
+  - `sequenceId` or `sequence` (slug): Target sequence identifier (e.g. `default`, `contact_form`). When omitted on launch, randomly selects an active sequence from the `CubiconSequence` pool (`isActive: true`).
 
 #### `GET /api/cubicon/puzzle-images`
 Discovers and lists all puzzle artwork images hosted on the BuyFacts CDN (`https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/`).
@@ -143,17 +143,25 @@ Discovers and lists all puzzle artwork images hosted on the BuyFacts CDN (`https
 - **Usage**: Powers the horizontal side-scrolling thumbnail gallery in the Visual Coordinate Picker (`CubiconCoordinatePicker`), enabling administrators to assign CDN puzzle images to specific Cubicon screen faces and record corresponding 3D target coordinates.
 
 #### `POST /api/cubicon-data`
-Handles session initialization, spatial click attempt evaluations, state integrity, and Section 7.4 scoring rules.
-- **Session Initialization (`task: "init"`)**:
+Handles session initialization, random sequence assignment, spatial click attempt evaluations, state integrity, and Section 7.4 4-puzzle bonus scoring rules.
+- **Session Initialization (`task: "init"`) & Random Sequence Selection**:
   - Automatically initializes or resets the session at `taskIndex: 0`.
-  - Immediately serves Task 1 (the first puzzle in the sequence) with active rotation, task heading, description, and image URL so the solver begins seamlessly without displaying a placeholder welcome screen.
-- **Section 7.4 Deterministic Scoring Paths**:
-  - **Path 1**: Three correct out of three -> Immediate Pass (`fireworks: true`).
-  - **Path 2**: Two correct after three -> Presents a 4th fallback question.
-    - If 4th answer is correct -> Pass (`fireworks: true`).
-    - If 4th answer is incorrect -> Fail.
-  - **Path 3**: Two incorrect among the first three -> Immediate Fail (stops without presenting 4th question).
-  - **Path 4 (Retry)**: Unlimited retries via `{ action: "retry" }`, resetting session state cleanly back to task 1.
+  - When no explicit `sequenceId` or `sequence` slug is provided, randomly selects an active sequence (`isActive: true`) via `selectRandomActiveSequence()` and binds the `sequenceId` to `CubiconSession` for the duration of the session.
+  - Immediately serves Task 1 (the first puzzle in the selected sequence) with `ofTasks: 3`, `isFinal: false`, active rotation, task heading, description, and image URL.
+- **Section 7.4 Deterministic Scoring Paths & Bonus Puzzle Architecture**:
+  - Each sequence contains up to 4 puzzles: 3 standard puzzles (`taskIndex: 0..2`) and 1 optional 4th **Bonus Puzzle** (`taskIndex: 3`).
+  - **Path 1 (3/3 Pass)**: Three correct out of three -> Immediate Pass after Task 3 (`completed: true, passed: true, isFinal: true, fireworks: true`).
+  - **Path 2 (2/3 Bonus Puzzle Unlock)**: Failing 1 out of the first 3 puzzles (scoring 2/3) unlocks the 4th **Bonus Puzzle** (`task: 4, ofTasks: 4, isFinal: true, completed: false`).
+    - **Path 2a (3/4 Pass)**: Answering the 4th Bonus Puzzle correctly -> Pass (`completed: true, passed: true, isFinal: true, fireworks: true`).
+    - **Path 2b (2/4 Fail)**: Answering the 4th Bonus Puzzle incorrectly -> Fail (`completed: true, passed: false, isFinal: true, fireworks: false`).
+  - **Path 3 (Early/Standard Fail)**: Two incorrect among the first two (`0/2`) or first three (`1/3` or `0/3`) -> Immediate Fail (`completed: true, passed: false, isFinal: true`).
+  - **Path 4 (Retry)**: Unlimited retries via `{ action: "retry" }`, clearing prior session attempts and resetting session state cleanly back to Task 1.
+- **Two-Tier `isFinal` State Separation**:
+  - **Static Database Level (`CubiconTask.isFinal`)**: `isFinal = false` on Tasks 1, 2, and 3; `isFinal = true` only on the sequence ceiling (Task 4 in a 4-task sequence, or the last task if a sequence has fewer than 4 tasks).
+  - **Dynamic Runtime API Level (`response.isFinal` & `ofTasks`)**:
+    - Tasks 1, 2, and 3 emit `isFinal: false, ofTasks: 3` while the 4th Bonus Puzzle remains available.
+    - When the 4th Bonus Puzzle is triggered (after 2/3), the API emits `isFinal: true, completed: false, task: 4, ofTasks: 4`.
+    - Terminal completion payloads (3/3 pass, 3/4 pass, 0/2 fail, 1/3 fail, 2/4 fail) emit `isFinal: true, completed: true`.
 - **Integrity & Security Controls**:
   - **Terminal State Lockdown**: Prevents browser back, page refresh, or re-submissions from mutating completed pass or fail outcomes.
   - **Idempotency Guard**: Duplicate clicks on already evaluated tasks return active state without double-counting or skipping tasks.

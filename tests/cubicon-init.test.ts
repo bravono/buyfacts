@@ -208,16 +208,26 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
 
     assert.equal(initData.task, 1);
 
-    // Step 2: Submit clicks on task 1
-    // Default task 1 has correct_coordinates: [{ x: 0.15, y: 0.45, z: 1.0 }] with drag type
+    // Fetch the assigned task 1 coordinates from the database so this test works with any randomly selected sequence
+    const sessionRecord = await prisma.cubiconSession.findUnique({
+      where: { sessionId },
+      include: { sequence: { include: { tasks: { orderBy: { taskIndex: "asc" } } } } },
+    });
+    const task1 = sessionRecord?.sequence?.tasks[0];
+    const parsedTask1Coords = typeof task1?.correctCoordinates === "string"
+      ? JSON.parse(task1.correctCoordinates)
+      : task1?.correctCoordinates;
+    const coords = Array.isArray(parsedTask1Coords)
+      ? (parsedTask1Coords as Array<{ x: number; y: number; z: number }>)
+      : [{ x: 0.15, y: 0.45, z: 1.0 }];
+
+    // Step 2: Submit matching clicks on task 1
     const submitReq = new Request("http://localhost:3000/api/cubicon-data", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
-        clicks: [
-          { x: 0.15, y: 0.45, z: 1.0, t: 100 },
-        ],
+        clicks: coords.map((c, idx) => ({ x: Number(c.x), y: Number(c.y), z: Number(c.z), t: (idx + 1) * 100 })),
       }),
     });
 
@@ -235,5 +245,104 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     });
     assert.equal(sessionInDb?.taskIndex, 1, "Session taskIndex must advance to 1 in database");
     assert.equal(sessionInDb?.passedPuzzles, 1);
+  });
+
+  await t.test("8. Random sequence selection distributes across active sequences when no explicit sequence is requested", async () => {
+    const { selectRandomActiveSequence } = await import("../app/api/cubicon-data/route");
+    const activeSequences = await prisma.cubiconSequence.findMany({ where: { isActive: true } });
+    assert.ok(activeSequences.length >= 2, "At least 2 active sequences must exist in the pool");
+
+    const selectedSlugs = new Set<string>();
+    for (let i = 0; i < 25; i++) {
+      const seq = await selectRandomActiveSequence(false);
+      if (seq?.slug) {
+        selectedSlugs.add(seq.slug);
+      }
+    }
+    assert.ok(selectedSlugs.size >= 2, "Random selection across 25 draws must pick from multiple active sequences");
+  });
+
+  await t.test("9. 4-Puzzle Bonus Sequence Flow: Scoring 2/3 unlocks Bonus Puzzle 4 (Task 3 isFinal=false, Task 4 isFinal=true, 3/4 passes)", async () => {
+    const initReq = new Request("http://localhost:3000/api/cubicon-data?sequence=default", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ task: "init", sequence: "default" }),
+    });
+    const initRes = await POST(initReq);
+    const initData = await initRes.json();
+    const sessionId = initData.sessionId;
+    createdSessionIds.push(sessionId);
+
+    assert.equal(initData.task, 1);
+    assert.equal(initData.ofTasks, 3);
+    assert.equal(initData.isFinal, false);
+
+    const seq = await prisma.cubiconSequence.findUnique({
+      where: { slug: "default" },
+      include: { tasks: { orderBy: { taskIndex: "asc" } } },
+    });
+    assert.ok(seq && seq.tasks.length === 4, "Default sequence must have 4 tasks");
+
+    const getPassingClicks = (taskIdx: number) => {
+      const raw = seq.tasks[taskIdx].correctCoordinates;
+      const coords = (typeof raw === "string" ? JSON.parse(raw) : raw) as Array<{ x: number; y: number; z: number }>;
+      return coords.map((c, idx) => ({ x: Number(c.x), y: Number(c.y), z: Number(c.z), t: (idx + 1) * 100 }));
+    };
+
+    // Task 1: Pass (1/1) -> advances to Task 2
+    const res1 = await POST(
+      new Request("http://localhost:3000/api/cubicon-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, clicks: getPassingClicks(0) }),
+      })
+    );
+    const data1 = await res1.json();
+    assert.equal(data1.task, 2);
+    assert.equal(data1.ofTasks, 3);
+    assert.equal(data1.isFinal, false);
+    assert.equal(data1.completed, false);
+
+    // Task 2: Fail (1/2) -> advances to Task 3 with isFinal: false because Task 4 exists
+    const res2 = await POST(
+      new Request("http://localhost:3000/api/cubicon-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, clicks: [{ x: 99, y: 99, z: 99 }] }),
+      })
+    );
+    const data2 = await res2.json();
+    assert.equal(data2.task, 3);
+    assert.equal(data2.ofTasks, 3);
+    assert.equal(data2.isFinal, false, "Task 3 must have isFinal=false when a 4th bonus puzzle exists");
+    assert.equal(data2.completed, false);
+
+    // Task 3: Pass (2/3) -> triggers Bonus Puzzle 4 with ofTasks: 4 and isFinal: true
+    const res3 = await POST(
+      new Request("http://localhost:3000/api/cubicon-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, clicks: getPassingClicks(2) }),
+      })
+    );
+    const data3 = await res3.json();
+    assert.equal(data3.task, 4, "Must advance to Bonus Task 4 after scoring 2/3");
+    assert.equal(data3.ofTasks, 4, "ofTasks must expand to 4 on Bonus Puzzle");
+    assert.equal(data3.isFinal, true, "Bonus Task 4 must have isFinal=true");
+    assert.equal(data3.completed, false, "Session must not be completed before answering Bonus Task 4");
+
+    // Task 4 (Bonus): Pass (3/4) -> completes and passes the sequence
+    const res4 = await POST(
+      new Request("http://localhost:3000/api/cubicon-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, clicks: getPassingClicks(3) }),
+      })
+    );
+    const data4 = await res4.json();
+    assert.equal(data4.completed, true, "Must complete after Bonus Task 4");
+    assert.equal(data4.passed, true, "Scoring 3/4 must pass the sequence");
+    assert.equal(data4.isFinal, true);
+    assert.equal(data4.score, 3);
   });
 });

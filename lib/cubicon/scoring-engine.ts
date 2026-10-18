@@ -137,7 +137,7 @@ export function evaluateScoringDecision(
       passed: false,
       nextTaskIndex: 2,
       expectedTotalTasks: baseTaskCount,
-      isFinalTask: false,
+      isFinalTask: !hasFourthTask,
       fireworks: false,
       internalStage: "in_progress_task_2",
       publicHeading: "",
@@ -209,12 +209,12 @@ export function evaluateScoringDecision(
     };
   }
 
-  // Step 4: After Task 4 (Retest Question)
+  // Step 4: After Task 4 (Bonus Retest Question)
   if (attemptedCount >= 4) {
     const fourthResult = attempts[3]?.result;
 
-    // Rule: Pass if the fourth answer is correct.
-    if (fourthResult === "p") {
+    // Rule: Pass if the fourth answer is correct (3 out of 4 passed).
+    if (fourthResult === "p" && passedCount >= 3) {
       return {
         decision: "pass",
         isCompleted: true,

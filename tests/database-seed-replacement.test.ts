@@ -78,7 +78,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     assert.equal(totalButtons, 18, "Repeated seeding must retain exactly 18 buttons");
 
     const totalTasks = await prisma.cubiconTask.count();
-    assert.equal(totalTasks, 6, "Repeated seeding must retain exactly 6 cubicon tasks (3 per sequence)");
+    assert.equal(totalTasks, 8, "Repeated seeding must retain exactly 8 cubicon tasks (4 per sequence)");
 
     const totalSequences = await prisma.cubiconSequence.count();
     assert.equal(totalSequences, 2, "Repeated seeding must retain exactly 2 cubicon sequences");
@@ -122,17 +122,21 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
   await t.test("4. Cubicon tasks are correctly linked to sequences without orphan records", async () => {
     const defaultSeq = await prisma.cubiconSequence.findUnique({
       where: { slug: "default" },
-      include: { tasks: true },
+      include: { tasks: { orderBy: { taskIndex: "asc" } } },
     });
     const contactSeq = await prisma.cubiconSequence.findUnique({
       where: { slug: "contact_form" },
-      include: { tasks: true },
+      include: { tasks: { orderBy: { taskIndex: "asc" } } },
     });
 
     assert.ok(defaultSeq, "default sequence must exist");
-    assert.equal(defaultSeq.tasks.length, 3, "default sequence must have exactly 3 tasks");
+    assert.equal(defaultSeq.tasks.length, 4, "default sequence must have exactly 4 tasks (3 standard + 1 bonus)");
+    assert.equal(defaultSeq.tasks[2].isFinal, false, "Task 3 must have isFinal=false when Task 4 exists");
+    assert.equal(defaultSeq.tasks[3].isFinal, true, "Task 4 (Bonus Puzzle) must have isFinal=true");
 
     assert.ok(contactSeq, "contact_form sequence must exist");
-    assert.equal(contactSeq.tasks.length, 3, "contact_form sequence must have exactly 3 tasks");
+    assert.equal(contactSeq.tasks.length, 4, "contact_form sequence must have exactly 4 tasks (3 standard + 1 bonus)");
+    assert.equal(contactSeq.tasks[2].isFinal, false, "Task 3 must have isFinal=false when Task 4 exists");
+    assert.equal(contactSeq.tasks[3].isFinal, true, "Task 4 (Bonus Puzzle) must have isFinal=true");
   });
 });

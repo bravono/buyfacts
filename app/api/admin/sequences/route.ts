@@ -86,11 +86,6 @@ export async function POST(request: Request) {
     }
 
     const rawIsActive = isActive !== undefined ? isActive : is_active;
-    if (rawIsActive) {
-      await prisma.cubiconSequence.updateMany({
-        data: { isActive: false },
-      });
-    }
 
     const rawThreshold = passThreshold !== undefined ? passThreshold : pass_threshold;
     const parsedThreshold =
@@ -119,14 +114,15 @@ export async function POST(request: Request) {
         passThreshold: isNaN(parsedThreshold) ? 0.66 : parsedThreshold,
         rotationDirection: rotDir,
         defaultRotationInterval: isNaN(rotInterval) ? 15 : rotInterval,
-        isActive: Boolean(rawIsActive),
+        isActive: rawIsActive !== undefined ? Boolean(rawIsActive) : true,
         createdBy: auth.user?.email || auth.user?.userId || "admin",
       },
     });
 
     if (Array.isArray(tasks) && tasks.length > 0) {
-      for (let i = 0; i < tasks.length; i++) {
-        const t = tasks[i];
+      const cappedTasks = tasks.slice(0, 4);
+      for (let i = 0; i < cappedTasks.length; i++) {
+        const t = cappedTasks[i];
         const taskCoords = t.correctCoordinates !== undefined ? t.correctCoordinates : t.correct_coordinates;
         const taskStart = t.startPoint !== undefined ? t.startPoint : t.start_point;
         const taskMid = t.midPoint !== undefined ? t.midPoint : t.mid_point;
@@ -140,7 +136,7 @@ export async function POST(request: Request) {
             sequenceId: newSequence.id,
             taskIndex: i,
             taskNumber: taskNum,
-            heading: t.heading || `Task ${i + 1}`,
+            heading: t.heading || (i === 3 ? "Bonus Puzzle" : `Puzzle ${i + 1} of 3`),
             description: t.description || "Solve the puzzle",
             screen: t.screen || "Active_front",
             image: t.image || "",
@@ -167,7 +163,7 @@ export async function POST(request: Request) {
               t.tolerance !== undefined && t.tolerance !== null
                 ? parseFloat(t.tolerance)
                 : 0.5,
-            isFinal: i === tasks.length - 1,
+            isFinal: i === cappedTasks.length - 1,
           },
         });
       }

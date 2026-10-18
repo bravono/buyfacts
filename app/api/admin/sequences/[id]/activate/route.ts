@@ -34,21 +34,24 @@ export async function POST(
       );
     }
 
-    // Set all sequences isActive to false
-    await prisma.cubiconSequence.updateMany({
-      data: { isActive: false },
-    });
+    let targetActive = true;
+    try {
+      const body = await request.json();
+      if (typeof body.isActive === "boolean") {
+        targetActive = body.isActive;
+      }
+    } catch {}
 
-    // Activate selected sequence
+    // Activate or update selected sequence in the active pool
     const activated = await prisma.cubiconSequence.update({
       where: { id: seqId },
-      data: { isActive: true },
+      data: { isActive: targetActive },
       include: { tasks: { orderBy: { taskIndex: "asc" } } },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Sequence '${activated.title}' activated as default challenge.`,
+      message: `Sequence '${activated.title}' ${targetActive ? "activated" : "deactivated"} in random selection pool.`,
       sequence: activated,
     });
   } catch (err: any) {

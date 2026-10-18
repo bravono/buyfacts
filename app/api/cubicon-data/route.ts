@@ -97,8 +97,8 @@ const DEFAULT_TASKS = [
   {
     taskIndex: 3,
     taskNumber: 4,
-    heading: "Verification Challenge",
-    description: "Final verification task to complete validation (click to choose)",
+    heading: "Bonus Puzzle",
+    description: "Can you see the 3rd life? (click to choose)",
     screen: "Active_side_r",
     image: "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
     rotation: "left",
@@ -112,6 +112,29 @@ const DEFAULT_TASKS = [
     isFinal: true,
   },
 ];
+
+export async function selectRandomActiveSequence(includeTasks: boolean = false) {
+  const activeSequences = await prisma.cubiconSequence.findMany({
+    where: { isActive: true },
+    ...(includeTasks ? { include: { tasks: { orderBy: { taskIndex: "asc" } } } } : {}),
+  });
+
+  if (activeSequences.length > 0) {
+    const randomIndex = Math.floor(Math.random() * activeSequences.length);
+    return activeSequences[randomIndex];
+  }
+
+  const allSequences = await prisma.cubiconSequence.findMany({
+    ...(includeTasks ? { include: { tasks: { orderBy: { taskIndex: "asc" } } } } : {}),
+  });
+
+  if (allSequences.length > 0) {
+    const randomIndex = Math.floor(Math.random() * allSequences.length);
+    return allSequences[randomIndex];
+  }
+
+  return null;
+}
 
 export function parseCoordinate(coord: unknown): { x: number; y: number; z: number } | null {
   if (!coord) return null;
@@ -327,6 +350,13 @@ export async function ensureSeedTasks() {
       where: { sequenceId: null },
       data: { sequenceId: defaultSeq.id },
     });
+    // Ensure Task 3 has isFinal: false when a 4th bonus task exists
+    if (count >= 4) {
+      await prisma.cubiconTask.updateMany({
+        where: { sequenceId: defaultSeq.id, taskIndex: { lt: 3 }, isFinal: true },
+        data: { isFinal: false },
+      });
+    }
   }
 
   // 2. Ensure contact_form sequence exists
@@ -363,6 +393,11 @@ export async function ensureSeedTasks() {
         },
       });
     }
+  } else if (contactTasksCount >= 4) {
+    await prisma.cubiconTask.updateMany({
+      where: { sequenceId: contactSeq.id, taskIndex: { lt: 3 }, isFinal: true },
+      data: { isFinal: false },
+    });
   }
 }
 
@@ -402,7 +437,7 @@ export async function GET(request: Request) {
     const seqSlug = url.searchParams.get("sequence") || url.searchParams.get("seq");
     const seqIdParam = url.searchParams.get("sequenceId");
 
-    let sequence = null;
+    let sequence: any = null;
     if (seqIdParam) {
       sequence = await prisma.cubiconSequence.findUnique({
         where: { id: Number(seqIdParam) },
@@ -416,10 +451,7 @@ export async function GET(request: Request) {
     }
 
     if (!sequence) {
-      sequence = await prisma.cubiconSequence.findFirst({
-        where: { isActive: true },
-        include: { tasks: { orderBy: { taskIndex: "asc" } } },
-      });
+      sequence = await selectRandomActiveSequence(true);
     }
 
     const tasks = sequence?.tasks?.length
@@ -484,11 +516,13 @@ export async function POST(request: Request) {
       ? Number(parsed.sequenceId)
       : (querySeqId ? Number(querySeqId) : null);
 
-    // 1. Resolve requested or active default sequence
+    const isInit = parsed.task === "init" || !parsed.sessionId;
+
+    // 1. Resolve requested, session-assigned, or randomly selected active sequence
     let currentSequence = null;
 
-    // If an existing session exists, inherit its assigned sequence
-    if (parsed.sessionId) {
+    // If an existing session is in progress (not initializing), inherit its assigned sequence
+    if (!isInit && parsed.sessionId) {
       const existingSession = await prisma.cubiconSession.findUnique({
         where: { sessionId: String(parsed.sessionId) },
         include: { sequence: true },
@@ -508,14 +542,9 @@ export async function POST(request: Request) {
       });
     }
 
+    // When launching Cubicon without an explicit sequence override, always select a random active sequence
     if (!currentSequence) {
-      currentSequence = await prisma.cubiconSequence.findFirst({
-        where: { isActive: true },
-      });
-    }
-
-    if (!currentSequence) {
-      currentSequence = await prisma.cubiconSequence.findFirst();
+      currentSequence = await selectRandomActiveSequence(false);
     }
 
     const seqId = currentSequence?.id || null;
@@ -539,7 +568,6 @@ export async function POST(request: Request) {
     const fallbackTasks = sequenceTasks.length > 0 ? sequenceTasks : DEFAULT_TASKS;
     const totalTasks = fallbackTasks.length;
 
-    const isInit = parsed.task === "init" || !parsed.sessionId;
     const providedUserEmail = parsed.userEmail ? String(parsed.userEmail).trim() : "";
 
     if (isInit) {
@@ -552,6 +580,9 @@ export async function POST(request: Request) {
       });
 
       if (existingSession) {
+        await prisma.cubiconAttempt.deleteMany({
+          where: { sessionId: sessionId },
+        });
         await prisma.cubiconSession.update({
           where: { id: existingSession.id },
           data: {
@@ -610,6 +641,9 @@ export async function POST(request: Request) {
 
     // 1. Unlimited Retries Handler (Section 7.4)
     if (parsed.action === "retry" || parsed.task === "retry") {
+      await prisma.cubiconAttempt.deleteMany({
+        where: { sessionId: sessionId },
+      });
       if (session) {
         await prisma.cubiconSession.update({
           where: { id: session.id },
@@ -728,6 +762,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const hasFourth = fallbackTasks.length >= 4 || totalTasks >= 4;
+
     // 3. Duplicate click protection (idempotency guard)
     const submittedTaskIndex = typeof parsed.taskIndex === "number"
       ? parsed.taskIndex
@@ -745,7 +781,7 @@ export async function POST(request: Request) {
           sessionId,
           sequenceId: seqId,
           sequenceTitle: currentSequence?.title || "Cubicon Challenge",
-          ofTasks: Math.min(3, totalTasks),
+          ofTasks: session.taskIndex >= 3 ? 4 : Math.min(3, totalTasks),
           task: session.taskIndex + 1,
           heading: activePuzzle.heading,
           description: activePuzzle.description,
@@ -754,7 +790,7 @@ export async function POST(request: Request) {
           rotation: [0, 0, 0],
           rotationInterval: activePuzzle.rotationInterval || seqDefaultInterval,
           rotationDirection: mapRotationDirection(activePuzzle.rotation || seqRotationDir),
-          isFinal: session.taskIndex >= 2,
+          isFinal: hasFourth ? session.taskIndex >= 3 : session.taskIndex >= totalTasks - 1,
           completed: false,
           passed: false,
           score: session.passedPuzzles,
@@ -809,7 +845,6 @@ export async function POST(request: Request) {
       attemptRecords.push({ taskIndex: currentTaskIndex, result: attemptResult });
     }
 
-    const hasFourth = fallbackTasks.length >= 4 || totalTasks >= 4;
     const baseTaskCount = Math.min(3, totalTasks);
     const scoringDecision = evaluateScoringDecision(attemptRecords, baseTaskCount, hasFourth);
 
@@ -875,7 +910,7 @@ export async function POST(request: Request) {
         screen: nextPuzzle.screen || "Active_front",
         image: formatImageUrl(nextPuzzle.image),
         rotation: [0, 0, 0],
-        rotationInterval: scoringDecision.isFinalTask ? 0 : (nextPuzzle.rotationInterval || seqDefaultInterval),
+        rotationInterval: nextPuzzle.rotationInterval || seqDefaultInterval,
         rotationDirection: mapRotationDirection(nextPuzzle.rotation || seqRotationDir),
         isFinal: scoringDecision.isFinalTask,
         completed: false,

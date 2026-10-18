@@ -122,14 +122,8 @@ export async function PUT(
       if (!isNaN(parsed)) updateData.defaultRotationInterval = parsed;
     }
 
-    if (rawIsActive === true) {
-      await prisma.cubiconSequence.updateMany({
-        where: { id: { not: seqId } },
-        data: { isActive: false },
-      });
-      updateData.isActive = true;
-    } else if (rawIsActive === false) {
-      updateData.isActive = false;
+    if (rawIsActive !== undefined) {
+      updateData.isActive = Boolean(rawIsActive);
     }
 
     await prisma.cubiconSequence.update({
@@ -144,9 +138,10 @@ export async function PUT(
 
       const rotDir = updateData.rotationDirection || existing.rotationDirection || "left";
       const rotInterval = updateData.defaultRotationInterval || existing.defaultRotationInterval || 15;
+      const cappedTasks = tasks.slice(0, 4);
 
-      for (let i = 0; i < tasks.length; i++) {
-        const t = tasks[i];
+      for (let i = 0; i < cappedTasks.length; i++) {
+        const t = cappedTasks[i];
         const taskCoords = t.correctCoordinates !== undefined ? t.correctCoordinates : t.correct_coordinates;
         const taskStart = t.startPoint !== undefined ? t.startPoint : t.start_point;
         const taskMid = t.midPoint !== undefined ? t.midPoint : t.mid_point;
@@ -160,7 +155,7 @@ export async function PUT(
             sequenceId: seqId,
             taskIndex: i,
             taskNumber: taskNum,
-            heading: t.heading || `Task ${i + 1}`,
+            heading: t.heading || (i === 3 ? "Bonus Puzzle" : `Puzzle ${i + 1} of 3`),
             description: t.description || "Solve the puzzle",
             screen: t.screen || "Active_front",
             image: t.image || "",
@@ -187,7 +182,7 @@ export async function PUT(
               t.tolerance !== undefined && t.tolerance !== null
                 ? parseFloat(t.tolerance)
                 : 0.5,
-            isFinal: i === tasks.length - 1,
+            isFinal: i === cappedTasks.length - 1,
           },
         });
       }

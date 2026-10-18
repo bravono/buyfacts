@@ -357,7 +357,7 @@ async function main() {
         },
         {
           x: -0.01300874877727363,
-          " y": 0.16201828672165688,
+          y: 0.16201828672165688,
           z: 0.5976997051073445,
         },
         {
@@ -412,13 +412,13 @@ async function main() {
         "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
       rotation: "left",
       rotationInterval: 15,
-      questionType: "Anticipation",
+      questionType: "Selection",
       correctCoordinates: JSON.stringify([{"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}]),
       startPoint: JSON.stringify({"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}),
       midPoint: '',
       endPoint: '',
       tolerance: 0.01,
-      isFinal: true,
+      isFinal: false,
     },
     {
       taskIndex: 3,
