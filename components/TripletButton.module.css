@@ -1,11 +1,11 @@
-/* Triplet Button & Group Styles */
+/* Triplet Button Card & Group Styles */
 
 .tripletGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.75rem;
+  gap: 1.5rem;
   width: 100%;
-  margin: 1.5rem auto;
+  margin: 2rem auto 2.5rem auto;
 }
 
 .tripletGrid[data-columns="1"] {
@@ -22,28 +22,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  text-align: left;
   position: relative;
   width: 100%;
 }
 
-/* Tactile Vibrant Button Base */
+/* Tactile Vibrant Pill Card Base */
 .tripletBtn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  min-height: 64px;
-  padding: 0.85rem 1.4rem;
+  min-height: 112px;
+  padding: 0.9rem 1.45rem 0.9rem 1rem;
   border-radius: 999px;
   border: 1.5px solid transparent;
   text-decoration: none;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-size: 1.12rem;
+  font-weight: 500;
   letter-spacing: -0.01em;
   color: #ffffff;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -54,7 +54,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle top-light shimmer inside button for glossy 3D snap */
+/* Subtle top-light shimmer inside pill card */
 .tripletBtn::before {
   content: "";
   position: absolute;
@@ -62,7 +62,7 @@
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
   border-top-left-radius: 999px;
   border-top-right-radius: 999px;
   pointer-events: none;
@@ -79,72 +79,83 @@
   transition-duration: 0.08s;
 }
 
-/* Theme: Vibrant Orange (Early Recognition) */
+/* Theme: Vibrant Orange (Cubicon) */
 .themeOrange {
-  background: var(--vibrant-orange-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-orange-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #ffa019 0%, #ff5e00 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(255, 102, 0, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeOrange:hover {
-  box-shadow: 0 14px 30px -4px rgba(255, 106, 0, 0.55), 0 0 0 2px rgba(255, 145, 0, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(255, 102, 0, 0.55), 0 0 0 2px rgba(255, 145, 0, 0.35);
 }
 
-/* Theme: Vibrant Blue (Story-Based Research) */
+.themeOrange .iconWrapper {
+  background: #ffffff;
+}
+
+/* Theme: Vibrant Blue / Teal (Research Libs) */
 .themeBlue {
-  background: var(--vibrant-blue-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-blue-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #005587 0%, #00a2b8 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(0, 128, 170, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeBlue:hover {
-  box-shadow: 0 14px 30px -4px rgba(0, 180, 216, 0.55), 0 0 0 2px rgba(0, 180, 216, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(0, 162, 184, 0.55), 0 0 0 2px rgba(0, 180, 216, 0.35);
+}
+
+.themeBlue .iconWrapper {
+  background: #dff3fd;
 }
 
 /* Theme: Vibrant Purple (TRIAD) */
 .themePurple {
-  background: var(--vibrant-purple-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-purple-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 55%, #9333ea 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themePurple:hover {
-  box-shadow: 0 14px 30px -4px rgba(168, 85, 247, 0.55), 0 0 0 2px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(147, 51, 234, 0.55), 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+.themePurple .iconWrapper {
+  background: #f0e7ff;
 }
 
 /* Theme: Vibrant Teal */
 .themeTeal {
   background: var(--vibrant-teal-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-teal-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px var(--vibrant-teal-glow), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeTeal:hover {
-  box-shadow: 0 14px 30px -4px rgba(0, 196, 159, 0.55), 0 0 0 2px rgba(0, 196, 159, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(0, 196, 159, 0.55), 0 0 0 2px rgba(0, 196, 159, 0.35);
 }
 
-/* Icon Container inside the button */
+/* Icon Container inside the pill card */
 .iconWrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 5rem;
-  height: 5rem;
+  width: 5.25rem;
+  height: 5.25rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  margin-right: 0.75rem;
+  background: #ffffff;
   flex-shrink: 0;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tripletBtn:hover .iconWrapper {
-  transform: scale(1.12) rotate(4deg);
-  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.06);
 }
 
 .cdnIcon {
-  width: 90%;
+  width: 82%;
+  height: 82%;
   object-fit: contain;
   display: block;
 }
@@ -153,15 +164,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #00507b;
 }
 
-/* Label text inside button */
+/* Vertical Divider between Icon and Label */
+.btnDivider {
+  width: 1px;
+  height: 3.5rem;
+  background: rgba(255, 255, 255, 0.38);
+  margin: 0 1.05rem;
+  flex-shrink: 0;
+}
+
+/* Label text inside pill card */
 .btnLabel {
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 500;
+  line-height: 1.25;
   white-space: normal;
-  text-align: center;
+  text-align: left;
   flex: 1;
 }
 
@@ -172,11 +192,13 @@
   justify-content: center;
   margin-left: 0.6rem;
   flex-shrink: 0;
-  transition: transform 0.25s ease;
+  opacity: 0.92;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .tripletBtn:hover .arrowWrapper {
   transform: translateX(4px);
+  opacity: 1;
 }
 
 /* Optional Top-Edge Pill Badge */
@@ -197,13 +219,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Brief Caption Below the Button */
+/* Optional Caption Below the Button */
 .captionBox {
   margin-top: 0.85rem;
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .captionText {
@@ -236,22 +259,32 @@
 }
 
 /* Responsive Breakpoints */
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .tripletGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .tripletGrid {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1.15rem;
   }
 
   .tripletBtn {
-    min-height: 58px;
-    padding: 0.75rem 1.2rem;
-    font-size: 0.98rem;
+    min-height: 96px;
+    padding: 0.75rem 1.25rem 0.75rem 0.85rem;
+    font-size: 1.05rem;
+  }
+
+  .iconWrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .btnDivider {
+    height: 2.8rem;
+    margin: 0 0.85rem;
   }
 }

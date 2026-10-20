@@ -279,6 +279,75 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
       "Element must announce role='button' when onClick is specified"
     );
   });
+
+  it("should render triplet buttons as self-contained pill cards with vertical divider and left-aligned label", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("styles.btnDivider"),
+      "TripletButton must include vertical divider inside the pill card"
+    );
+    assert.ok(
+      componentContent.includes("showCaption = false"),
+      "TripletButton must default showCaption to false so card text is self-contained inside the card"
+    );
+    assert.ok(
+      cssContent.includes(".btnDivider"),
+      "TripletButton.module.css must define .btnDivider styles"
+    );
+  });
+
+  it("should render the new Hero section header, lead copy, and 3 bottom value pillars", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const pageCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      pageContent.includes("THE EARLY RECOGNITION COMPANY"),
+      "Hero section must display 'THE EARLY RECOGNITION COMPANY' eyebrow"
+    );
+    assert.ok(
+      pageContent.includes("BuyFacts Gives Marketers Earlier") &&
+        pageContent.includes("Recognition, Better Choices, and More Time."),
+      "Hero section must display the updated main heading"
+    );
+    assert.ok(
+      pageContent.includes("More information isn&apos;t the answer.") &&
+        pageContent.includes("helping marketers decide where to focus, what to do, and when to"),
+      "Hero section must display the directional buyer research lead paragraph"
+    );
+    assert.ok(
+      pageContent.includes("Recognize Earlier") &&
+        pageContent.includes("See meaningful changes before they become obvious."),
+      "Hero section must include the 'Recognize Earlier' value pillar"
+    );
+    assert.ok(
+      pageContent.includes("Understand Choices") &&
+        pageContent.includes("Gain time to consider possibilities and choose a direction."),
+      "Hero section must include the 'Understand Choices' value pillar"
+    );
+    assert.ok(
+      pageContent.includes("Act for Impact") &&
+        pageContent.includes("Turn informed decisions into meaningful results."),
+      "Hero section must include the 'Act for Impact' value pillar"
+    );
+    assert.ok(
+      pageCss.includes(".heroPillarsGrid") && pageCss.includes(".heroPillarItem"),
+      "page.module.css must define styles for the 3-column hero value pillars"
+    );
+  });
 });
 
 describe("Zero-Emoji Compliance Test Suite", () => {

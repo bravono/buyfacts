@@ -527,14 +527,131 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
+            <p className={styles.heroCompanyEyebrow}>
+              THE EARLY RECOGNITION COMPANY™
+            </p>
+
             <h1 className={styles.heroTitle}>
-              Marketers Need Earlier{" "}
-              <span className={styles.heroHighlight}>Recognition,</span> Better
-              Choices, and More Time
+              BuyFacts Gives Marketers Earlier
+              <br />
+              Recognition, Better Choices, and More Time.
             </h1>
 
-            {/* Reusable Vibrant Triplet Button Group with brief text below */}
+            <p className={styles.heroLead}>
+              More information isn&apos;t the answer. BuyFacts believes that
+              focused, directional buyer research repeated over time can reveal
+              emerging patterns in wants, needs, attitudes, and experiences,
+              helping marketers decide where to focus, what to do, and when to
+              act.
+            </p>
+
+            {/* Reusable Vibrant Triplet Pill Cards */}
             <TripletButtonGroup items={heroTripletButtons} />
+
+            {/* 3 Hero Value Pillars */}
+            <div
+              className={styles.heroPillarsGrid}
+              id="hero-value-pillars"
+              aria-label="Core value pillars"
+            >
+              <div className={styles.heroPillarItem} id="pillar-recognize-earlier">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="24" y1="6" x2="24" y2="11" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="16" y1="8" x2="18" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="32" y1="8" x2="30" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="9.5" y1="12.5" x2="12.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="38.5" y1="12.5" x2="35.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M6 27C10.5 19.5 16.8 16 24 16C31.2 16 37.5 19.5 42 27C37.5 34.5 31.2 38 24 38C16.8 38 10.5 34.5 6 27Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="24" cy="27" r="6.5" stroke="#00507b" strokeWidth="2" />
+                    <circle cx="24" cy="27" r="2.5" stroke="#00507b" strokeWidth="2" />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Recognize Earlier</h2>
+                <p className={styles.heroPillarDesc}>
+                  See meaningful changes before they become obvious.
+                </p>
+              </div>
+
+              <div className={styles.heroPillarItem} id="pillar-understand-choices">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="24" y1="7" x2="24" y2="41" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M24 10H38L34.5 15.5L38 21H24V10Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M24 22H10L13.5 27.5L10 33H24V22Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Understand Choices</h2>
+                <p className={styles.heroPillarDesc}>
+                  Gain time to consider possibilities and choose a direction.
+                </p>
+              </div>
+
+              <div className={styles.heroPillarItem} id="pillar-act-for-impact">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="8" y1="40" x2="40" y2="40" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <rect x="12" y="29" width="5.5" height="11" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="21.25" y="23" width="5.5" height="17" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="30.5" y="16" width="5.5" height="24" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <path
+                      d="M11 22L19 14L24 17.5L34 8"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M28 8H34V14"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Act for Impact</h2>
+                <p className={styles.heroPillarDesc}>
+                  Turn informed decisions into meaningful results.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

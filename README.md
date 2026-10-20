@@ -710,11 +710,16 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 The `TripletButtonGroup` and `TripletButton` components (`components/TripletButton.tsx`, `components/TripletButton.module.css`) provide high-vitality, tactile interactive pathways for key site destinations.
 
 ### Key Features
-1. **Clear Button Affordance**:
-   - Distinct rounded pill button container with subtle 3D top-shimmer, active click press response (`translateY(2px) scale(0.985)`), and directional action arrows.
-   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-rotation.
-2. **Brief Text Below**:
-   - Descriptive captions sit directly below each button, answering stakeholder usability requirements so visitors immediately understand both the destination purpose and interactive affordance.
+1. **Self-Contained Pill Card Affordance**:
+   - Distinct rounded pill card container (`border-radius: 999px`) featuring a circular logo badge on the left, a vertical divider line (`.btnDivider`), left-aligned pathway title text inside the card, and a directional action arrow on the right.
+   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-scaling.
+2. **Hero Section Architecture & 3 Core Value Pillars**:
+   - Displays the brand eyebrow (`THE EARLY RECOGNITION COMPANY™`), primary heading (`BuyFacts Gives Marketers Earlier Recognition, Better Choices, and More Time.`), and directional buyer research lead statement above the 3 triplet pill cards.
+   - Directly beneath the triplet pill cards sits a 3-column value pillar row separated by vertical dividers:
+     - **Recognize Earlier**: "See meaningful changes before they become obvious."
+     - **Understand Choices**: "Gain time to consider possibilities and choose a direction."
+     - **Act for Impact**: "Turn informed decisions into meaningful results."
+   - Optional external captions below each button remain supported via the `showCaption` prop (`default: false`).
 3. **CDN Icon Support & Fallbacks**:
    - Accepts direct CDN icon URLs (`iconUrl`) with automated image error fallback (`onError`) to high-resolution Lucide React vector icons.
 4. **Vibrant Color Tokens**:

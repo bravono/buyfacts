@@ -26,15 +26,21 @@ export interface TripletButtonItem {
 export interface TripletButtonProps {
   item: TripletButtonItem;
   className?: string;
+  showCaption?: boolean;
 }
 
 export interface TripletButtonGroupProps {
   items: TripletButtonItem[];
   columns?: 1 | 2 | 3;
   className?: string;
+  showCaption?: boolean;
 }
 
-export function TripletButton({ item, className = "" }: TripletButtonProps) {
+export function TripletButton({
+  item,
+  className = "",
+  showCaption = false,
+}: TripletButtonProps) {
   const [imageError, setImageError] = useState(false);
 
   const themeClass = (() => {
@@ -76,10 +82,12 @@ export function TripletButton({ item, className = "" }: TripletButtonProps) {
         )}
       </div>
 
+      <span className={styles.btnDivider} aria-hidden="true" />
+
       <span className={styles.btnLabel}>{item.title}</span>
 
       <span className={styles.arrowWrapper} aria-hidden="true">
-        <ArrowRight size={18} />
+        <ArrowRight size={20} />
       </span>
     </>
   );
@@ -141,13 +149,15 @@ export function TripletButton({ item, className = "" }: TripletButtonProps) {
         </Link>
       )}
 
-      {/* Brief text below the button */}
-      <div className={styles.captionBox}>
-        <p className={styles.captionText}>{item.tagline}</p>
-        {item.actionHint && (
-          <span className={styles.captionHint}>{item.actionHint}</span>
-        )}
-      </div>
+      {/* Optional brief text below the button when showCaption is enabled */}
+      {showCaption && (
+        <div className={styles.captionBox}>
+          <p className={styles.captionText}>{item.tagline}</p>
+          {item.actionHint && (
+            <span className={styles.captionHint}>{item.actionHint}</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -156,6 +166,7 @@ export default function TripletButtonGroup({
   items,
   columns = 3,
   className = "",
+  showCaption = false,
 }: TripletButtonGroupProps) {
   return (
     <div
@@ -165,7 +176,7 @@ export default function TripletButtonGroup({
       aria-label="Key pathways"
     >
       {items.map((item) => (
-        <TripletButton key={item.id} item={item} />
+        <TripletButton key={item.id} item={item} showCaption={showCaption} />
       ))}
     </div>
   );
