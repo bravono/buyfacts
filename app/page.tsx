@@ -49,7 +49,7 @@ const APART_VIDEO_2_FALLBACK =
 const CUBICON_VIDEO_CDN = "";
 
 const RESEARCH_LIB_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4";
 
 const TRIAD_VIDEO_CDN =
   "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
