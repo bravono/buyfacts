@@ -29,7 +29,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    mediaUrl: "",
   },
   {
     label: "Cohort Research",
@@ -39,7 +39,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    mediaUrl: "",
   },
   {
     label: "Survey Engagement",
@@ -49,7 +49,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    mediaUrl: "",
   },
   {
     label: "Hybrid Marketing",
@@ -59,7 +59,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    mediaUrl: "",
   },
   {
     label: "Content Creation",
@@ -69,7 +69,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.orimi.com/pdf-test.pdf",
+    mediaUrl: "",
   },
   {
     label: "Marketing Leadership",
@@ -79,7 +79,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    mediaUrl: "",
   },
   {
     label: "Research Leadership",
@@ -89,7 +89,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    mediaUrl: "",
   },
   {
     label: "Early Recognition",
@@ -99,7 +99,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    mediaUrl: "",
   },
   {
     label: "Wisdom Gap",
@@ -109,7 +109,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    mediaUrl: "",
   },
 ];
 
@@ -149,7 +149,7 @@ export default function PortfolioPage() {
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
+                mediaUrl: btn.mediaUrl || "",
               };
             });
 

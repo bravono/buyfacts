@@ -29,7 +29,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    mediaUrl: "",
   },
   {
     label: "Survey Design",
@@ -39,7 +39,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    mediaUrl: "",
   },
   {
     label: "Story-Based Surveys",
@@ -49,7 +49,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+    mediaUrl: "",
   },
   {
     label: "Improve Surveys",
@@ -59,7 +59,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    mediaUrl: "",
   },
   {
     label: "Participant Validation",
@@ -69,7 +69,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    mediaUrl: "",
   },
   {
     label: "Survey Fieldwork",
@@ -79,7 +79,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    mediaUrl: "",
   },
   {
     label: "Content Value",
@@ -89,7 +89,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    mediaUrl: "",
   },
   {
     label: "Pattern Insights",
@@ -99,7 +99,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
     mediaType: "video",
-    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    mediaUrl: "",
   },
   {
     label: "Audience Validation",
@@ -109,7 +109,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    mediaUrl: "",
   },
 ];
 
@@ -149,7 +149,7 @@ export default function ServicesPage() {
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
+                mediaUrl: btn.mediaUrl || "",
               };
             });
 

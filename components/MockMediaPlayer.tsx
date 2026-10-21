@@ -19,6 +19,7 @@ import {
   X,
   ExternalLink,
   Loader2,
+  FileQuestion,
 } from "lucide-react";
 import Link from "next/link";
 import styles from "./MockMediaPlayer.module.css";
@@ -555,6 +556,19 @@ export default function MockMediaPlayer({
                 Cancel
               </button>
             </div>
+          </div>
+        )}
+
+        {/* No Media Found State */}
+        {!mediaUrl && !isWelcomeActive && (
+          <div className={styles.noMediaContainer}>
+            <div className={styles.noMediaIconWrapper}>
+              <FileQuestion size={36} className={styles.noMediaIcon} />
+            </div>
+            <h4 className={styles.noMediaTitle}>No Media Found</h4>
+            <p className={styles.noMediaSubtitle}>
+              No media asset is currently linked to {displayTitle}.
+            </p>
           </div>
         )}
 

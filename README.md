@@ -376,6 +376,8 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
   - **Navigation Bar Auto-Hiding**: When the document reader modal is opened, the top site navigation bar automatically hides (`document-reader-open` state) so it never gets in the way of reading. The navigation bar smoothly restores the moment the modal is closed.
   - **Top-Level Portal Rendering**: The reader modal is mounted at the root of `document.body` via `createPortal` with `z-index: 99999`, preventing stacking context trapping by lower section wrappers.
   - **File Upload & Asset Preview Integration**: Uploaded `.docx` and `.pdf` documents on `/file-upload` also leverage the document parser ([`lib/document-parser.ts`](file:///c:/Users/USER/BuyFacts/lib/document-parser.ts)) to render inline previews via [`components/FilePreview.tsx`](file:///c:/Users/USER/BuyFacts/components/FilePreview.tsx).
+- **No Media Found State & Clean Fallbacks**: When a button has no associated mediaUrl in the database (or during initial load), the player window cleanly displays a "No Media Found" state with an icon and contextual item title instead of rendering broken media or random placeholder URLs. Default static button configurations maintain empty strings for mediaUrl, preventing unwanted third-party media leaks.
+- **Detailed Descriptions**: The `DashboardButton` schema model includes a `description` column storing detailed explanatory text for each button, surfaced within the media player description overlay and in-depth document reader.
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
@@ -981,7 +983,7 @@ The dashboard organizes all 17 Prisma database models into five primary domains:
    - `NotificationSubscription`: Newsletter and product launch subscribers.
    - `FeedbackSubmission`: Customer feedback, reviews, and star ratings.
 3. **Content & Media**:
-   - `DashboardButton`: Interactive media trigger buttons, categories, and URLs.
+   - `DashboardButton`: Interactive media trigger buttons, categories, asset URLs, and detailed descriptions (`description`).
    - `MediaAsset`: Storage upload logs for images, videos, audio, and documents.
 4. **Cubicon 3D Platform**:
    - `CubiconSequence`: Multi-step 3D validation puzzle sequences.

@@ -62,6 +62,7 @@ model DashboardButton {
   readItUrl String?  // Document/PDF link for READ IT
   mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
+  description String?  // Detailed button description for media player overlay and reader
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"
   color     String?  // Optional visual color configuration
   updatedAt DateTime @updatedAt
