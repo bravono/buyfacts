@@ -52,7 +52,7 @@ const RESEARCH_LIB_VIDEO_CDN =
   "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
 
 const TRIAD_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792160756094-3m50lb-Market_Changes_in_Real_Time_Triad.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
