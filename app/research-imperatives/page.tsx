@@ -137,10 +137,26 @@ export default function PortfolioPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiTL = data.buttons
-            .filter((btn: any) => btn.category === "Research Imperatives")
+            .filter(
+              (btn: any) =>
+                btn.category === "Research Imperatives" ||
+                btn.category === "Thought Leadership" ||
+                btn.id?.startsWith("btn-tl") ||
+                (typeof btn.category === "string" &&
+                  (btn.category.toLowerCase().includes("imperative") ||
+                    btn.category.toLowerCase().includes("thought") ||
+                    btn.category.toLowerCase().includes("leadership")))
+            )
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_TL_BUTTONS[idx] || DEFAULT_TL_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
+              const resolvedMediaUrl = (
+                btn.mediaUrl ||
+                btn.readItUrl ||
+                btn.seeItUrl ||
+                btn.hearItUrl ||
+                ""
+              ).trim();
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -149,12 +165,14 @@ export default function PortfolioPage() {
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || "",
+                mediaUrl: resolvedMediaUrl,
               };
             });
 
           if (apiTL.length > 0) {
             setThoughtLeadershipButtons(apiTL);
+          } else {
+            console.warn("No Research Imperatives buttons matched from /api/buttons response:", data.buttons);
           }
         }
       } catch (err) {

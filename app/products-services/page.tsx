@@ -137,10 +137,25 @@ export default function ServicesPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiServices = data.buttons
-            .filter((btn: any) => btn.category === "Products & Services")
+            .filter(
+              (btn: any) =>
+                btn.category === "Products & Services" ||
+                btn.category === "Services" ||
+                btn.id?.startsWith("btn-srv") ||
+                (typeof btn.category === "string" &&
+                  (btn.category.toLowerCase().includes("service") ||
+                    btn.category.toLowerCase().includes("product")))
+            )
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
+              const resolvedMediaUrl = (
+                btn.mediaUrl ||
+                btn.readItUrl ||
+                btn.seeItUrl ||
+                btn.hearItUrl ||
+                ""
+              ).trim();
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -149,12 +164,14 @@ export default function ServicesPage() {
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || "",
+                mediaUrl: resolvedMediaUrl,
               };
             });
 
           if (apiServices.length > 0) {
             setCustomButtons(apiServices);
+          } else {
+            console.warn("No Products & Services buttons matched from /api/buttons response:", data.buttons);
           }
         }
       } catch (err) {
