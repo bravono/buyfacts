@@ -712,36 +712,62 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 The `TripletButtonGroup` and `TripletButton` components (`components/TripletButton.tsx`, `components/TripletButton.module.css`) provide high-vitality, tactile interactive pathways for key site destinations.
 
 ### Key Features
-1. **Self-Contained Pill Card Affordance**:
+1. **Self-Contained Pill Card Affordance & Orphan Word Prevention**:
    - Distinct rounded pill card container (`border-radius: 999px`) featuring a circular logo badge on the left, a vertical divider line (`.btnDivider`), left-aligned pathway title text inside the card, and a directional action arrow on the right.
+   - **Orphan Word Elimination Across All Screen Sizes**: Combines typography and CSS techniques to guarantee that a single isolated word never appears alone on a line:
+     - `preventOrphanWords()` utility binds the trailing words together with a non-breaking space (`\u00A0`), ensuring the final words wrap together if the line breaks.
+     - Fluid responsive font sizing using CSS `clamp(0.92rem, 1.1vw, 1.05rem)` on `.btnLabel`.
+     - Modern CSS text balancing via `text-wrap: balance;` and `text-wrap: pretty;` across supporting browsers.
+     - Optimized button padding and divider margins to maximize available horizontal text width.
    - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-scaling.
-2. **Hero Section Architecture & 3 Core Value Pillars**:
+2. **Interactive Hover Card Overlays & Dedicated Tool Navigation**:
+   - Hovering over any triplet button reveals an information card positioned strictly above the button (`bottom: calc(100% + 14px)`), ensuring the pill button remains completely visible and eliminating page scrolling or parent container clipping issues.
+   - **Navbar Auto-Collapse on Hover**: Hovering over the triplet buttons automatically triggers a graceful upward slide of the fixed navbar (`transform: translateY(-100% - 30px); opacity: 0;`), providing unobstructed headroom for the cards. When the mouse leaves the triplet area, the navbar smoothly slides back down. Hover cards also utilize `z-index: 1100` to ensure smooth rendering during transitions.
+   - An invisible bridge (`.hoverCard::before`) spans the 14px gap at the bottom so moving the mouse into the hover card maintains active hover state without flickering.
+   - Each hover card includes:
+     - A downward-pointing triangle caret (`.hoverPointer`) pointing directly to the pill button below.
+     - Large bold pathway title (`Cubicon`, `Research Libs`, `TRIAD`) in the theme color.
+     - Detailed explanatory narrative.
+     - Bottom callout sub-card retaining the existing product logo in a circular badge, vertical divider line, and a bold "Try It ->" link that takes users to the dedicated tool pages:
+       - **Cubicon**: `/cubicon` (with automated `/cubion` rewrite in `next.config.ts`)
+       - **Research Libs**: `/research-lib`
+       - **TRIAD**: `/triad` (dedicated showcase page with video demo and methodology breakdown)
+3. **Hero Section Architecture & 3 Core Value Pillars**:
    - Displays the brand eyebrow (`THE EARLY RECOGNITION COMPANY™`), primary heading (`BuyFacts Gives Marketers Earlier Recognition, Better Choices, and More Time.`), and directional buyer research lead statement above the 3 triplet pill cards.
    - Directly beneath the triplet pill cards sits a 3-column value pillar row separated by vertical dividers:
      - **Recognize Earlier**: "See meaningful changes before they become obvious."
      - **Understand Choices**: "Gain time to consider possibilities and choose a direction."
      - **Act for Impact**: "Turn informed decisions into meaningful results."
    - Optional external captions below each button remain supported via the `showCaption` prop (`default: false`).
-3. **CDN Icon Support & Fallbacks**:
+4. **CDN Icon Support & Fallbacks**:
    - Accepts direct CDN icon URLs (`iconUrl`) with automated image error fallback (`onError`) to high-resolution Lucide React vector icons.
-4. **Vibrant Color Tokens**:
+5. **Vibrant Color Tokens**:
    - Expanded global CSS color system in `app/globals.css`:
      - `--vibrant-orange-gradient` and `--vibrant-orange-glow` (warm sunset amber for Early Recognition)
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **CDN Video Playback Plumbing & Lightbox Modal**:
+6. **CDN Video Playback Plumbing & Lightbox Modal**:
    - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
-   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`.
    - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
-6. **Component API**:
+7. **Component API**:
    ```typescript
+   export interface TripletHoverCardData {
+     title: string;
+     description: string;
+     prompt: string;
+     actionLabel?: string;
+     actionHref?: string;
+     onActionClick?: (e: React.MouseEvent<HTMLElement>) => void;
+   }
+
    export interface TripletButtonItem {
      id: string;
      title: string;
-     tagline: string; // Brief text below the button
+     tagline: string;
      href?: string;
-     iconUrl?: string; // Optional CDN icon URL
+     iconUrl?: string;
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
      theme?: "orange" | "blue" | "purple" | "teal";
@@ -750,10 +776,11 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      actionHint?: string;
      onClick?: (e: React.MouseEvent<HTMLElement>) => void;
      videoUrl?: string;
+     hoverCard?: TripletHoverCardData;
    }
    ```
-7. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
+8. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, hover card placement, orphan word prevention, and layout defaults.
 
 ---
 

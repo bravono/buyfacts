@@ -7,6 +7,32 @@ import styles from "./TripletButton.module.css";
 
 export type TripletButtonTheme = "orange" | "blue" | "purple" | "teal";
 
+/**
+ * Prevents orphan words by binding the final words together with a non-breaking space.
+ * This guarantees that a single trailing word will never appear isolated on its own line
+ * across any screen width.
+ */
+export function preventOrphanWords(text: string): string {
+  if (!text || typeof text !== "string") return "";
+  const trimmed = text.trim();
+  const lastSpaceIdx = trimmed.lastIndexOf(" ");
+  if (lastSpaceIdx === -1) return trimmed;
+  return (
+    trimmed.substring(0, lastSpaceIdx) +
+    "\u00A0" +
+    trimmed.substring(lastSpaceIdx + 1)
+  );
+}
+
+export interface TripletHoverCardData {
+  title: string;
+  description: string;
+  prompt: string;
+  actionLabel?: string;
+  actionHref?: string;
+  onActionClick?: (e: React.MouseEvent<HTMLElement>) => void;
+}
+
 export interface TripletButtonItem {
   id: string;
   title: string;
@@ -21,6 +47,7 @@ export interface TripletButtonItem {
   actionHint?: string;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   videoUrl?: string;
+  hoverCard?: TripletHoverCardData;
 }
 
 export interface TripletButtonProps {
@@ -34,6 +61,7 @@ export interface TripletButtonGroupProps {
   columns?: 1 | 2 | 3;
   className?: string;
   showCaption?: boolean;
+  onHoverChange?: (isHovered: boolean) => void;
 }
 
 export function TripletButton({
@@ -42,6 +70,7 @@ export function TripletButton({
   showCaption = false,
 }: TripletButtonProps) {
   const [imageError, setImageError] = useState(false);
+  const [hoverImageError, setHoverImageError] = useState(false);
 
   const themeClass = (() => {
     switch (item.theme) {
@@ -54,6 +83,20 @@ export function TripletButton({
       case "orange":
       default:
         return styles.themeOrange;
+    }
+  })();
+
+  const hoverThemeClass = (() => {
+    switch (item.theme) {
+      case "blue":
+        return styles.hoverThemeBlue;
+      case "purple":
+        return styles.hoverThemePurple;
+      case "teal":
+        return styles.hoverThemeTeal;
+      case "orange":
+      default:
+        return styles.hoverThemeOrange;
     }
   })();
 
@@ -84,7 +127,7 @@ export function TripletButton({
 
       <span className={styles.btnDivider} aria-hidden="true" />
 
-      <span className={styles.btnLabel}>{item.title}</span>
+      <span className={styles.btnLabel}>{preventOrphanWords(item.title)}</span>
 
       <span className={styles.arrowWrapper} aria-hidden="true">
         <ArrowRight size={20} />
@@ -112,6 +155,7 @@ export function TripletButton({
     <div className={`${styles.tripletItem} ${className}`} id={`triplet-item-${item.id}`}>
       {item.badge && <span className={styles.itemBadge}>{item.badge}</span>}
 
+      {/* Primary Pill Action Button */}
       {item.onClick && !item.href ? (
         <button
           type="button"
@@ -149,6 +193,64 @@ export function TripletButton({
         </Link>
       )}
 
+      {/* Hover Information Card */}
+      {item.hoverCard && (
+        <div
+          className={`${styles.hoverCard} ${hoverThemeClass}`}
+          id={`hover-card-${item.id}`}
+          role="region"
+          aria-label={`${item.hoverCard.title} overview`}
+        >
+          {/* Top Triangle Pointer Caret */}
+          <span className={styles.hoverPointer} aria-hidden="true" />
+
+          {/* Card Title */}
+          <h3 className={styles.hoverCardTitle}>{item.hoverCard.title}</h3>
+
+          {/* Description Paragraph */}
+          <p className={styles.hoverCardDesc}>{item.hoverCard.description}</p>
+
+          {/* Callout Box */}
+          <div className={styles.hoverCallout}>
+            <div className={styles.hoverCalloutIcon}>
+              {hasCdnIcon && !hoverImageError ? (
+                <img
+                  src={item.iconUrl}
+                  alt={item.iconAlt || item.hoverCard.title}
+                  className={styles.hoverIconImg}
+                  onError={() => setHoverImageError(true)}
+                />
+              ) : (
+                <span className={styles.hoverFallbackIcon}>
+                  {item.fallbackIcon}
+                </span>
+              )}
+            </div>
+
+            <span className={styles.hoverCalloutDivider} aria-hidden="true" />
+
+            <div className={styles.hoverCalloutContent}>
+              <p className={styles.hoverCalloutPrompt}>
+                {item.hoverCard.prompt}
+              </p>
+              <Link
+                href={item.hoverCard.actionHref || item.href || "#"}
+                className={styles.hoverCalloutAction}
+                onClick={item.hoverCard.onActionClick}
+                aria-label={`${item.hoverCard.actionLabel || "Try It"} ${item.hoverCard.title}`}
+              >
+                <span>{item.hoverCard.actionLabel || "Try It"}</span>
+                <ArrowRight
+                  size={15}
+                  className={styles.hoverActionArrow}
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Optional brief text below the button when showCaption is enabled */}
       {showCaption && (
         <div className={styles.captionBox}>
@@ -167,13 +269,29 @@ export default function TripletButtonGroup({
   columns = 3,
   className = "",
   showCaption = false,
+  onHoverChange,
 }: TripletButtonGroupProps) {
+  const notifyHover = (isHovered: boolean) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("buyfacts:navbar-collapse", {
+          detail: { collapsed: isHovered },
+        })
+      );
+    }
+    onHoverChange?.(isHovered);
+  };
+
   return (
     <div
       className={`${styles.tripletGrid} ${className}`}
       data-columns={columns}
       role="group"
       aria-label="Key pathways"
+      onMouseEnter={() => notifyHover(true)}
+      onMouseLeave={() => notifyHover(false)}
+      onFocusCapture={() => notifyHover(true)}
+      onBlurCapture={() => notifyHover(false)}
     >
       {items.map((item) => (
         <TripletButton key={item.id} item={item} showCaption={showCaption} />

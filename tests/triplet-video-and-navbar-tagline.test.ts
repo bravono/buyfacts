@@ -5,7 +5,7 @@ import path from "node:path";
 
 const BUYFACTS_ROOT = path.resolve(__dirname, "..");
 const EXPECTED_CDN_VIDEO_URL =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4";
 
 describe("Hero Triplet Button Middle Video Playback Test Suite", () => {
   it("should have RESEARCH_LIB_VIDEO_CDN constant defined with the exact CDN URL", () => {
@@ -348,6 +348,169 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
       "page.module.css must define styles for the 3-column hero value pillars"
     );
   });
+
+  it("should prevent orphan words on triplet buttons with non-breaking space and balanced wrap", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("preventOrphanWords"),
+      "TripletButton.tsx must define and use preventOrphanWords"
+    );
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.title)"),
+      "TripletButton.tsx must apply preventOrphanWords to item.title in .btnLabel"
+    );
+    assert.ok(
+      cssContent.includes("text-wrap: balance") && cssContent.includes("text-wrap: pretty"),
+      "TripletButton.module.css must specify text-wrap: balance and pretty on .btnLabel"
+    );
+    assert.ok(
+      cssContent.includes("clamp("),
+      "TripletButton.module.css must use fluid clamp for font-size"
+    );
+  });
+
+  it("should render hover cards strictly above the buttons without covering them", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+    const heroCssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("item.hoverCard") &&
+        componentContent.includes("styles.hoverCard"),
+      "TripletButton.tsx must conditionally render hoverCard"
+    );
+    assert.ok(
+      componentContent.includes("styles.hoverPointer"),
+      "TripletButton.tsx must render hover pointer caret"
+    );
+    assert.ok(
+      componentContent.includes("styles.hoverCallout"),
+      "TripletButton.tsx must render callout box in hoverCard"
+    );
+    assert.ok(
+      cssContent.includes("bottom: calc(100% + 14px)"),
+      "hoverCard must be positioned above the button so it never covers up the button and avoids scrolling truncation"
+    );
+    assert.ok(
+      heroCssContent.includes("overflow-y: visible"),
+      "page.module.css hero section must have overflow-y: visible to prevent card clipping"
+    );
+  });
+
+  it("should configure all three hero hover cards with exact mockup copy and dedicated tool links", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const nextConfigContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "next.config.ts"),
+      "utf-8"
+    );
+
+    // Cubicon
+    assert.ok(
+      pageContent.includes("Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots."),
+      "page.tsx must contain exact Cubicon hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience one of the puzzle challenges designed to distinguish humans from automated bots."),
+      "page.tsx must contain exact Cubicon callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/cubicon"'),
+      "Cubicon hover card must link to /cubicon"
+    );
+    assert.ok(
+      nextConfigContent.includes('source: "/cubion"') &&
+        nextConfigContent.includes('destination: "/cubicon"'),
+      "next.config.ts must rewrite /cubion to /cubicon"
+    );
+
+    // Research Libs
+    assert.ok(
+      pageContent.includes("Research Libs turns one survey into two valuable marketing resources:"),
+      "page.tsx must contain exact Research Libs hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience how survey answers can become engaging stories and useful marketing content."),
+      "page.tsx must contain exact Research Libs callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/research-lib"'),
+      "Research Libs hover card must link to /research-lib"
+    );
+
+    // TRIAD
+    assert.ok(
+      pageContent.includes("Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment"),
+      "page.tsx must contain exact TRIAD hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience how measuring practical and emotional drivers can help reveal emerging directional patterns."),
+      "page.tsx must contain exact TRIAD callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/triad"'),
+      "TRIAD hover card must link to /triad"
+    );
+  });
+
+  it("should coordinate navbar auto-collapse when hovering over triplet buttons", () => {
+    const navbarContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "Navbar.tsx"),
+      "utf-8"
+    );
+    const tripletContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const tripletCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      navbarContent.includes("isCollapsed") &&
+        navbarContent.includes("buyfacts:navbar-collapse"),
+      "Navbar.tsx must support isCollapsed prop and listen for buyfacts:navbar-collapse events"
+    );
+    assert.ok(
+      tripletContent.includes("buyfacts:navbar-collapse") &&
+        tripletContent.includes("onHoverChange"),
+      "TripletButton.tsx must dispatch buyfacts:navbar-collapse and notify onHoverChange"
+    );
+    assert.ok(
+      pageContent.includes("isNavHoverCollapsed") &&
+        pageContent.includes("isCollapsed={isNavHoverCollapsed}") &&
+        pageContent.includes("onHoverChange={setIsNavHoverCollapsed}"),
+      "page.tsx must wire isNavHoverCollapsed state between Navbar and TripletButtonGroup"
+    );
+    assert.ok(
+      tripletCss.includes("z-index: 1100"),
+      "TripletButton.module.css must elevate hoverCard z-index to 1100 during transitions"
+    );
+  });
 });
 
 describe("Zero-Emoji Compliance Test Suite", () => {
@@ -355,9 +518,12 @@ describe("Zero-Emoji Compliance Test Suite", () => {
     const targetFiles = [
       path.join(BUYFACTS_ROOT, "app", "page.tsx"),
       path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      path.join(BUYFACTS_ROOT, "app", "triad", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "triad", "triad.module.css"),
       path.join(BUYFACTS_ROOT, "components", "Navbar.tsx"),
       path.join(BUYFACTS_ROOT, "components", "Navbar.module.css"),
       path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
     ];
 
     const emojiRegex =

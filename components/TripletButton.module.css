@@ -34,7 +34,7 @@
   justify-content: flex-start;
   width: 100%;
   min-height: 112px;
-  padding: 0.9rem 1.45rem 0.9rem 1rem;
+  padding: 0.85rem 1.25rem 0.85rem 0.95rem;
   border-radius: 999px;
   border: 1.5px solid transparent;
   text-decoration: none;
@@ -42,7 +42,6 @@
   position: relative;
   overflow: hidden;
   font-family: var(--font-sans);
-  font-size: 1.12rem;
   font-weight: 500;
   letter-spacing: -0.01em;
   color: #ffffff;
@@ -172,17 +171,24 @@
   width: 1px;
   height: 3.5rem;
   background: rgba(255, 255, 255, 0.38);
-  margin: 0 1.05rem;
+  margin: 0 0.85rem;
   flex-shrink: 0;
 }
 
-/* Label text inside pill card */
+/* Label text inside pill card with orphan prevention & fluid balance */
 .btnLabel {
+  font-family: var(--font-sans);
+  font-size: clamp(0.92rem, 1.1vw, 1.05rem);
   font-weight: 500;
   line-height: 1.25;
   white-space: normal;
   text-align: left;
   flex: 1;
+  text-wrap: balance;
+  text-wrap: pretty;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 /* Action indicator arrow */
@@ -217,6 +223,240 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 5;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Hover Card Overlay - Positioned Strictly Above the Button (Never Covers Button) */
+.hoverCard {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  top: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.55rem 1.45rem 1.35rem 1.45rem;
+  box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.16), 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom-width: 5px;
+  border-bottom-style: solid;
+  border-bottom-color: #ff5e00;
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.22s ease;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Invisible Hover Bridge across the 14px gap at the bottom */
+.hoverCard::before {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  top: auto;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: transparent;
+}
+
+/* Show Card on Parent Hover or Focus Within */
+.tripletItem:hover .hoverCard,
+.tripletItem:focus-within .hoverCard {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Bottom Pointer Caret pointing downwards to the button */
+.hoverPointer {
+  position: absolute;
+  bottom: -13px;
+  top: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ff5e00;
+  border-bottom: none;
+  z-index: 3;
+}
+
+/* Hover Card Title */
+.hoverCardTitle {
+  font-family: var(--font-sans);
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.85rem 0;
+}
+
+/* Hover Card Description */
+.hoverCardDesc {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #374151;
+  font-weight: 400;
+  margin: 0 0 1.25rem 0;
+}
+
+/* Callout Box at Bottom of Hover Card */
+.hoverCallout {
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  margin-top: auto;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Circular Logo Badge inside Callout */
+.hoverCalloutIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hoverIconImg {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  display: block;
+}
+
+.hoverFallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Vertical divider between icon and text */
+.hoverCalloutDivider {
+  width: 1px;
+  height: 3.25rem;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 0 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Callout Content Area */
+.hoverCalloutContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.hoverCalloutPrompt {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.38;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 0 0 0.35rem 0;
+}
+
+/* Callout Action "Try It ->" Link */
+.hoverCalloutAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.96rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hoverActionArrow {
+  transition: transform 0.2s ease;
+}
+
+.hoverCalloutAction:hover .hoverActionArrow {
+  transform: translateX(3px);
+}
+
+/* Theme: Orange (Cubicon) */
+.hoverThemeOrange {
+  border-bottom-color: #ff5e00;
+}
+.hoverThemeOrange .hoverPointer {
+  border-top-color: #ff5e00;
+}
+.hoverThemeOrange .hoverCardTitle {
+  color: #ff5e00;
+}
+.hoverThemeOrange .hoverCallout {
+  background-color: #fff7ed;
+  border: 1px solid rgba(255, 94, 0, 0.12);
+}
+.hoverThemeOrange .hoverCalloutAction {
+  color: #ea580c;
+}
+.hoverThemeOrange .hoverCalloutAction:hover {
+  color: #c2410c;
+}
+
+/* Theme: Blue (Research Libs) */
+.hoverThemeBlue {
+  border-bottom-color: #0077b6;
+}
+.hoverThemeBlue .hoverPointer {
+  border-top-color: #0077b6;
+}
+.hoverThemeBlue .hoverCardTitle {
+  color: #0077b6;
+}
+.hoverThemeBlue .hoverCallout {
+  background-color: #f0f9ff;
+  border: 1px solid rgba(0, 119, 182, 0.12);
+}
+.hoverThemeBlue .hoverCalloutAction {
+  color: #0284c7;
+}
+.hoverThemeBlue .hoverCalloutAction:hover {
+  color: #0369a1;
+}
+
+/* Theme: Purple (TRIAD) */
+.hoverThemePurple {
+  border-bottom-color: #7c3aed;
+}
+.hoverThemePurple .hoverPointer {
+  border-top-color: #7c3aed;
+}
+.hoverThemePurple .hoverCardTitle {
+  color: #7c3aed;
+}
+.hoverThemePurple .hoverCallout {
+  background-color: #faf5ff;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+}
+.hoverThemePurple .hoverCalloutAction {
+  color: #7c3aed;
+}
+.hoverThemePurple .hoverCalloutAction:hover {
+  color: #6d28d9;
 }
 
 /* Optional Caption Below the Button */
@@ -274,8 +514,7 @@
 
   .tripletBtn {
     min-height: 96px;
-    padding: 0.75rem 1.25rem 0.75rem 0.85rem;
-    font-size: 1.05rem;
+    padding: 0.75rem 1.15rem 0.75rem 0.85rem;
   }
 
   .iconWrapper {

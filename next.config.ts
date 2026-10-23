@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
         source: "/arts/:path*",
         destination: "/cubicon-app/arts/:path*",
       },
+      {
+        source: "/cubion",
+        destination: "/cubicon",
+      },
     ];
   },
 };

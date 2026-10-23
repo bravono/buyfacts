@@ -18,7 +18,8 @@
   align-items: center;
   justify-content: center;
   padding: 7.5rem 0 4.5rem 0;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   background-color: var(--bg-color); /* Neutral canvas background */
 }
 

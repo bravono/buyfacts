@@ -144,6 +144,15 @@ export default function Home() {
           destinationLabel: "Explore Cubicon",
         });
       },
+      hoverCard: {
+        title: "Cubicon",
+        description:
+          "Research is only as reliable as the people providing the answers. Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots. It aims to reduce fraudulent participation and protect the quality of the data marketers depend on.",
+        prompt:
+          "Experience one of the puzzle challenges designed to distinguish humans from automated bots.",
+        actionLabel: "Try It",
+        actionHref: "/cubicon",
+      },
     },
     {
       id: "faster-digital-asset-creation",
@@ -167,6 +176,15 @@ export default function Home() {
           destinationHref: "/research-lib",
           destinationLabel: "Explore Research Libs",
         });
+      },
+      hoverCard: {
+        title: "Research Libs",
+        description:
+          "Research Libs turns one survey into two valuable marketing resources: research findings that guide decisions and authentic stories that people remember. By transforming survey participants into storytellers, Research Libs brings facts to life and gives marketers compelling material for digital content while reducing the time and effort required to create it.",
+        prompt:
+          "Experience how survey answers can become engaging stories and useful marketing content.",
+        actionLabel: "Try It",
+        actionHref: "/research-lib",
       },
     },
     {
@@ -192,8 +210,20 @@ export default function Home() {
           destinationLabel: "Explore TRIAD",
         });
       },
+      hoverCard: {
+        title: "TRIAD",
+        description:
+          "Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment through focused research repeated over time. By revealing emerging patterns and the practical and emotional drivers behind them, it can help marketers recognize change earlier and make better-informed decisions.",
+        prompt:
+          "Experience how measuring practical and emotional drivers can help reveal emerging directional patterns.",
+        actionLabel: "Try It",
+        actionHref: "/triad",
+      },
     },
   ];
+
+  // Navigation collapse state when hovering over hero triplet pathway cards
+  const [isNavHoverCollapsed, setIsNavHoverCollapsed] = useState(false);
 
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
@@ -518,7 +548,7 @@ export default function Home() {
       <div className="glow-blob blob-green"></div>
       <div className="glow-blob blob-blue"></div>
 
-      <Navbar />
+      <Navbar isCollapsed={isNavHoverCollapsed} />
 
       {/* SECTION 1: Hero Section */}
       <section className={styles.hero} id="hero">
@@ -545,8 +575,11 @@ export default function Home() {
               act.
             </p>
 
-            {/* Reusable Vibrant Triplet Pill Cards */}
-            <TripletButtonGroup items={heroTripletButtons} />
+            {/* Reusable Vibrant Triplet Pill Cards with Navbar Collapse Coordination */}
+            <TripletButtonGroup
+              items={heroTripletButtons}
+              onHoverChange={setIsNavHoverCollapsed}
+            />
 
             {/* 3 Hero Value Pillars */}
             <div

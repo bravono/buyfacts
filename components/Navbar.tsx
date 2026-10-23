@@ -6,15 +6,20 @@ import Link from "next/link";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
+export interface NavbarProps {
+  hideOnScroll?: boolean;
+  isCollapsed?: boolean;
+}
+
 export default function Navbar({
   hideOnScroll = false,
-}: {
-  hideOnScroll?: boolean;
-}) {
+  isCollapsed = false,
+}: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isContactCollapsed, setIsContactCollapsed] = useState(false);
   const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
+  const [isEventCollapsed, setIsEventCollapsed] = useState(false);
   const pathname = usePathname() || "/";
 
   const lastScrollYRef = useRef(0);
@@ -121,6 +126,25 @@ export default function Navbar({
     };
   }, []);
 
+  // Listen for triplet hover card collapse events
+  useEffect(() => {
+    const handleCollapseEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ collapsed?: boolean }>;
+      setIsEventCollapsed(Boolean(customEvent.detail?.collapsed));
+    };
+
+    window.addEventListener(
+      "buyfacts:navbar-collapse",
+      handleCollapseEvent
+    );
+    return () => {
+      window.removeEventListener(
+        "buyfacts:navbar-collapse",
+        handleCollapseEvent
+      );
+    };
+  }, []);
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -135,11 +159,18 @@ export default function Navbar({
   const isCubiconActive = pathname.startsWith("/cubicon");
   const isVaultActive = pathname.startsWith("/vault");
 
-  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed || isReaderModalOpen;
+  const isHidden =
+    (hideOnScroll && isScrolled) ||
+    isContactCollapsed ||
+    isReaderModalOpen ||
+    isCollapsed ||
+    isEventCollapsed;
 
   return (
     <header
-      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${isHidden ? styles.hidden : ""} ${isContactCollapsed ? styles.collapsed : ""}`}
+      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${
+        isHidden ? styles.collapsed : ""
+      }`}
     >
       <div className={styles.container}>
         <Link href="/" className={styles.logo} id="nav-logo-link">
