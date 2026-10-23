@@ -209,7 +209,7 @@ export function parseClicksList(clicks: unknown): Array<{ x: number; y: number; 
 export function normalizePuzzleType(type: unknown): "click" | "drag" | "double_click" {
   if (!type) return "click";
   const normalized = String(type).trim().toLowerCase();
-  if (["drag", "anticipation", "drawing", "sequence"].includes(normalized)) {
+  if (["drag", "anticipation", "drawing", "sequence", "multi-point", "multipoint"].includes(normalized)) {
     return "drag";
   }
   if (["double_click", "doubleclick", "double-click"].includes(normalized)) {

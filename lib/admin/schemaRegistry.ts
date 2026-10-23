@@ -274,7 +274,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
       { name: "image", label: "Face Texture URL", type: "string", required: true },
       { name: "rotation", label: "Rotation", type: "string", defaultValue: "left" },
       { name: "rotationInterval", label: "Rotation Interval", type: "number", defaultValue: 15 },
-      { name: "questionType", label: "Question Type", type: "string", defaultValue: "Selection", options: ["Selection", "Anticipation", "Multi-point"] },
+      { name: "questionType", label: "Question Type", type: "string", defaultValue: "Selection", options: ["Selection", "Anticipation"] },
       { name: "correctCoordinates", label: "Target Coordinates (JSON)", type: "json" },
       { name: "startPoint", label: "Start Point", type: "string" },
       { name: "midPoint", label: "Mid Point", type: "string" },

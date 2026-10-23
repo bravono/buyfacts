@@ -153,7 +153,37 @@ test("Cubicon Visual Coordinate Picker Integration Test Suite", async (t) => {
     assert.deepEqual(parsedMulti[2], { x: 0.6, y: 0.1, z: 1.0 });
   });
 
-  await t.test("5. Zero-Emoji Compliance across all Coordinate Picker Files", async () => {
+  await t.test("5. Question Type Bidirectional Sync Contract across Picker and Form Modals", async () => {
+    const pickerContent = fs.readFileSync(
+      path.resolve(__dirname, "../components/CubiconCoordinatePicker.tsx"),
+      "utf8"
+    );
+    const adminContent = fs.readFileSync(
+      path.resolve(__dirname, "../app/admin/page.tsx"),
+      "utf8"
+    );
+    const analyticsContent = fs.readFileSync(
+      path.resolve(__dirname, "../app/cubicon/analytics/page.tsx"),
+      "utf8"
+    );
+
+    // Picker includes questionType in CoordinatePickerApplyResult and handleApply
+    assert.ok(pickerContent.includes("questionType: CanonicalQuestionType"));
+    assert.ok(pickerContent.includes("questionType: normalizedType"));
+    assert.ok(pickerContent.includes("CUBICON_PICKER_MODE_CHANGED"));
+
+    // Both Admin and Analytics modals sync questionType via onQuestionTypeChange and onApply
+    assert.ok(adminContent.includes("onQuestionTypeChange"));
+    assert.ok(adminContent.includes("result.questionType"));
+    assert.ok(analyticsContent.includes("onQuestionTypeChange={handlePickerQuestionTypeChange}"));
+    assert.ok(analyticsContent.includes("result.questionType"));
+
+    // Picker uses a stable iframeSrc and postMessage instead of reloading iframe on config changes
+    assert.ok(pickerContent.includes("src={iframeSrc}"));
+    assert.ok(pickerContent.includes("onLoad={syncIframeConfig}"));
+  });
+
+  await t.test("6. Zero-Emoji Compliance across all Coordinate Picker Files", async () => {
     const filesToCheck = [
       path.resolve(__dirname, "../lib/cubicon/coordinateHelper.ts"),
       path.resolve(__dirname, "../components/CubiconCoordinatePicker.tsx"),

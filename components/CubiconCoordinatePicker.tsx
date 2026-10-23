@@ -10,6 +10,10 @@ import {
   projectScreenUVTo3D,
   project3DToScreenUV,
   extractWaypoints,
+  normalizeQuestionType,
+  questionTypeToInteractionMode,
+  interactionModeToQuestionType,
+  CanonicalQuestionType,
 } from "@/lib/cubicon/coordinateHelper";
 import {
   X,
@@ -37,6 +41,7 @@ export interface CoordinatePickerApplyResult {
   points: Point3D[];
   image?: string;
   screen?: string;
+  questionType: CanonicalQuestionType;
 }
 
 export interface CubiconCoordinatePickerProps {
@@ -46,6 +51,7 @@ export interface CubiconCoordinatePickerProps {
   initialImage?: string;
   initialQuestionType?: string;
   initialCoordinates?: string;
+  onQuestionTypeChange?: (questionType: CanonicalQuestionType) => void;
   onApply: (result: CoordinatePickerApplyResult) => void;
 }
 
@@ -82,11 +88,14 @@ export default function CubiconCoordinatePicker({
   initialImage = "/cubicon-app/arts/Puzzle1.webp",
   initialQuestionType = "Selection",
   initialCoordinates = "",
+  onQuestionTypeChange,
   onApply,
 }: CubiconCoordinatePickerProps) {
   const [screen, setScreen] = useState(initialScreen);
   const [image, setImage] = useState(initialImage);
-  const [questionType, setQuestionType] = useState(initialQuestionType);
+  const [questionType, setQuestionType] = useState<CanonicalQuestionType>(() =>
+    normalizeQuestionType(initialQuestionType)
+  );
   const [viewMode, setViewMode] = useState<"surface" | "3d">("surface");
   const [points, setPoints] = useState<Point3D[]>([]);
   const [consoleInput, setConsoleInput] = useState("");
@@ -100,16 +109,28 @@ export default function CubiconCoordinatePicker({
   const [cdnSearch, setCdnSearch] = useState<string>("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const [assignedNotice, setAssignedNotice] = useState<string>("");
+  const [isGalleryCollapsed, setIsGalleryCollapsed] = useState<boolean>(false);
+  const [iframeSrc, setIframeSrc] = useState<string>(
+    "/cubicon-app/index.html?picker=true&admin=true"
+  );
   const scrollTrackRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   // Initialize or re-sync when opened
   useEffect(() => {
     if (isOpen) {
-      setScreen(initialScreen || "Active_front");
-      setImage(initialImage || "/cubicon-app/arts/Puzzle1.webp");
-      setQuestionType(initialQuestionType || "Selection");
+      const initScreen = initialScreen || "Active_front";
+      const initImg = initialImage || "/cubicon-app/arts/Puzzle1.webp";
+      const initQt = normalizeQuestionType(initialQuestionType);
+      const initMode = questionTypeToInteractionMode(initQt);
+      setScreen(initScreen);
+      setImage(initImg);
+      setQuestionType(initQt);
+      setIframeSrc(
+        `/cubicon-app/index.html?picker=true&admin=true&screen=${encodeURIComponent(initScreen)}&image=${encodeURIComponent(initImg)}&interactionMode=${initMode}`
+      );
       if (initialCoordinates) {
         const parsed = parseCoordinateInput(initialCoordinates);
         setPoints(parsed);
@@ -119,12 +140,40 @@ export default function CubiconCoordinatePicker({
     }
   }, [isOpen, initialScreen, initialImage, initialQuestionType, initialCoordinates]);
 
-  const isDragTask = questionType === "Anticipation" || questionType === "drag" || questionType === "Drawing";
+  const isDragTask = questionTypeToInteractionMode(questionType) === "drag";
+
+  const syncIframeConfig = useCallback(() => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: "CUBICON_SET_PICKER_CONFIG",
+          screen,
+          image,
+          interactionMode: isDragTask ? "drag" : "click",
+        },
+        "*"
+      );
+    }
+  }, [screen, image, isDragTask]);
+
+  // Sync screen, image, and interactionMode to the embedded 3D iframe whenever they change
+  useEffect(() => {
+    if (viewMode === "3d") {
+      syncIframeConfig();
+    }
+  }, [viewMode, syncIframeConfig]);
 
   // Listen for postMessage from embedded 3D Cubicon iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!isOpen) return;
+
+      if (event.data?.type === "CUBICON_PICKER_MODE_CHANGED" && event.data.interactionMode) {
+        const syncedType = interactionModeToQuestionType(event.data.interactionMode);
+        setQuestionType(syncedType);
+        setPoints([]);
+        onQuestionTypeChange?.(syncedType);
+      }
 
       if (event.data?.type === "CUBICON_COORDINATE_PICKED" && event.data.point) {
         const pt = normalizePoint(event.data.point);
@@ -142,6 +191,11 @@ export default function CubiconCoordinatePicker({
       }
 
       if (event.data?.type === "CUBICON_APPLY_COORDINATES" && Array.isArray(event.data.coordinates)) {
+        if (event.data.interactionMode) {
+          const syncedType = interactionModeToQuestionType(event.data.interactionMode);
+          setQuestionType(syncedType);
+          onQuestionTypeChange?.(syncedType);
+        }
         const parsed = parseCoordinateInput(event.data.coordinates);
         if (parsed.length > 0) {
           setPoints(parsed);
@@ -151,7 +205,7 @@ export default function CubiconCoordinatePicker({
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [isOpen, isDragTask]);
+  }, [isOpen, isDragTask, onQuestionTypeChange]);
 
   // Click handler on the 2D surface
   const handleSurfacePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -223,6 +277,9 @@ export default function CubiconCoordinatePicker({
   const handleClear = () => {
     setPoints([]);
     dragWaypointsRef.current = [];
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: "CUBICON_CLEAR_COORDINATES" }, "*");
+    }
   };
 
   const handleCopyJson = () => {
@@ -303,6 +360,7 @@ export default function CubiconCoordinatePicker({
   const handleApply = () => {
     const correctCoordinates = formatCoordinatesJson(points);
     const waypoints = extractWaypoints(points);
+    const normalizedType = normalizeQuestionType(questionType);
     onApply({
       correctCoordinates,
       startPoint: waypoints.startPoint,
@@ -311,6 +369,7 @@ export default function CubiconCoordinatePicker({
       points,
       image,
       screen,
+      questionType: normalizedType,
     });
     onClose();
   };
@@ -385,8 +444,13 @@ export default function CubiconCoordinatePicker({
                 className={styles.select}
                 value={questionType}
                 onChange={(e) => {
-                  setQuestionType(e.target.value);
+                  const nextType = normalizeQuestionType(e.target.value);
+                  setQuestionType(nextType);
                   setPoints([]);
+                  onQuestionTypeChange?.(nextType);
+                  if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage({ type: "CUBICON_CLEAR_COORDINATES" }, "*");
+                  }
                 }}
               >
                 <option value="Selection">Single Click (Selection)</option>
@@ -475,10 +539,21 @@ export default function CubiconCoordinatePicker({
                 >
                   <RefreshCw size={12} className={isLoadingCdn ? "spin" : ""} />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryCollapsed((prev) => !prev)}
+                  className={styles.btnSecondary}
+                  style={{ padding: "4px 8px", height: "26px", fontSize: "0.7rem" }}
+                  title={isGalleryCollapsed ? "Expand CDN gallery" : "Collapse CDN gallery"}
+                >
+                  {isGalleryCollapsed ? "Expand" : "Collapse"}
+                </button>
               </div>
             </div>
 
             {/* Scrollable Track with Left/Right Nav Buttons */}
+            {!isGalleryCollapsed && (
             <div className={styles.scrollTrackWrapper}>
               <button
                 type="button"
@@ -546,6 +621,7 @@ export default function CubiconCoordinatePicker({
                 <ChevronRight size={16} />
               </button>
             </div>
+            )}
           </div>
 
           {/* Interactive Workspace Row */}
@@ -636,7 +712,9 @@ export default function CubiconCoordinatePicker({
               ) : (
                 /* Live 3D Cube Canvas iframe - strictly admin authorized */
                 <iframe
-                  src={`/cubicon-app/index.html?picker=true&admin=true&screen=${encodeURIComponent(screen)}&image=${encodeURIComponent(image)}`}
+                  ref={iframeRef}
+                  src={iframeSrc}
+                  onLoad={syncIframeConfig}
                   className={styles.iframeWrapper}
                   title="Cubicon 3D Interactive Canvas"
                 />

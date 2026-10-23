@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import styles from "./analytics.module.css";
 import CubiconCoordinatePicker, { CoordinatePickerApplyResult } from "@/components/CubiconCoordinatePicker";
+import { normalizeQuestionType, CanonicalQuestionType } from "@/lib/cubicon/coordinateHelper";
 import { Crosshair, Plus, Trash2, ArrowRight } from "lucide-react";
 
 interface OverviewKPIs {
@@ -214,6 +215,35 @@ export default function CubiconAnalyticsPage() {
     return editingTasks?.[pickerTarget.taskIndex] || null;
   }, [pickerTarget, newSeq.tasks, editingTasks]);
 
+  const handlePickerQuestionTypeChange = (nextType: CanonicalQuestionType) => {
+    if (!pickerTarget) return;
+    if (pickerTarget.source === "create") {
+      setNewSeq((prev) => {
+        const nextTasks = [...(prev.tasks || [])];
+        if (nextTasks[pickerTarget.taskIndex]) {
+          nextTasks[pickerTarget.taskIndex] = {
+            ...nextTasks[pickerTarget.taskIndex],
+            questionType: nextType,
+            question_type: nextType,
+          };
+        }
+        return { ...prev, tasks: nextTasks };
+      });
+    } else if (pickerTarget.source === "edit") {
+      setEditingTasks((prev) => {
+        const next = [...prev];
+        if (next[pickerTarget.taskIndex]) {
+          next[pickerTarget.taskIndex] = {
+            ...next[pickerTarget.taskIndex],
+            questionType: nextType,
+            question_type: nextType,
+          };
+        }
+        return next;
+      });
+    }
+  };
+
   const handlePickerApply = (result: CoordinatePickerApplyResult) => {
     if (!pickerTarget) return;
 
@@ -229,6 +259,7 @@ export default function CubiconAnalyticsPage() {
             endPoint: result.endPoint,
             ...(result.image ? { image: result.image } : {}),
             ...(result.screen ? { screen: result.screen } : {}),
+            ...(result.questionType ? { questionType: result.questionType, question_type: result.questionType } : {}),
           };
         }
         return { ...prev, tasks: nextTasks };
@@ -245,6 +276,7 @@ export default function CubiconAnalyticsPage() {
             endPoint: result.endPoint,
             ...(result.image ? { image: result.image } : {}),
             ...(result.screen ? { screen: result.screen } : {}),
+            ...(result.questionType ? { questionType: result.questionType, question_type: result.questionType } : {}),
           };
         }
         return next;
@@ -356,7 +388,10 @@ export default function CubiconAnalyticsPage() {
   const handleOpenEditTasks = (seq: any) => {
     setEditingSeq(seq);
     const existingTasks = Array.isArray(seq.tasks) && seq.tasks.length > 0
-      ? JSON.parse(JSON.stringify(seq.tasks))
+      ? JSON.parse(JSON.stringify(seq.tasks)).map((t: any) => {
+          const qt = normalizeQuestionType(t.questionType || t.question_type);
+          return { ...t, questionType: qt, question_type: qt };
+        })
       : generateDefaultTasks(3, seq.rotationDirection || "left", seq.defaultRotationInterval || 15);
     setEditingTasks(existingTasks);
   };
@@ -1431,9 +1466,9 @@ export default function CubiconAnalyticsPage() {
                             <select
                               className={styles.select}
                               style={{ width: "100%", padding: "4px 8px", fontSize: "0.8rem" }}
-                              value={task.questionType || "Selection"}
+                              value={normalizeQuestionType(task.questionType)}
                               onChange={(e) => {
-                                const val = e.target.value;
+                                const val = normalizeQuestionType(e.target.value);
                                 setNewSeq((prev) => {
                                   const t = [...prev.tasks];
                                   t[idx] = { ...t[idx], questionType: val };
@@ -1734,9 +1769,9 @@ export default function CubiconAnalyticsPage() {
                           <select
                             className={styles.select}
                             style={{ width: "100%", padding: "5px 8px", fontSize: "0.82rem" }}
-                            value={task.questionType || task.question_type || "Selection"}
+                            value={normalizeQuestionType(task.questionType || task.question_type)}
                             onChange={(e) => {
-                              const val = e.target.value;
+                              const val = normalizeQuestionType(e.target.value);
                               setEditingTasks((prev) => {
                                 const next = [...prev];
                                 next[idx] = { ...next[idx], questionType: val, question_type: val };
@@ -1805,8 +1840,9 @@ export default function CubiconAnalyticsPage() {
           }}
           initialScreen={currentPickerTask?.screen || "Active_front"}
           initialImage={currentPickerTask?.image || "/cubicon-app/arts/Puzzle1.webp"}
-          initialQuestionType={currentPickerTask?.questionType || currentPickerTask?.question_type || "Selection"}
+          initialQuestionType={normalizeQuestionType(currentPickerTask?.questionType || currentPickerTask?.question_type)}
           initialCoordinates={currentPickerTask?.correctCoordinates || currentPickerTask?.correct_coordinates || ""}
+          onQuestionTypeChange={handlePickerQuestionTypeChange}
           onApply={handlePickerApply}
         />
       </div>

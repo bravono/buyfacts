@@ -1180,3 +1180,11 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
 
 
+---
+
+## 10. Cubicon Visual Coordinate Picker & Question Type Synchronization
+
+- **Moveable & Collapsible 3D Picker HUD**: In 3D coordinate picker mode (`?picker=true&admin=true`), the overlay panel is draggable via its header bar (`:: PICKER`) and collapsible into a compact pill so it never blocks the 3D cube face.
+- **Bidirectional Question Type Synchronization**:
+  - Question types across form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon picker HUD are normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks).
+  - Changing the question type in the form modal, in the `CubiconCoordinatePicker` toolbar, or via the `Single Click` / `Drag (Waypoints)` toggle inside the 3D iframe (`CUBICON_PICKER_MODE_CHANGED` / `CUBICON_SET_PICKER_CONFIG`) immediately synchronizes the state across all layers and updates the parent form record on change and on apply.

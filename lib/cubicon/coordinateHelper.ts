@@ -226,3 +226,44 @@ export function extractWaypoints(points: Point3D[]): WaypointSet {
     endPoint: JSON.stringify(points[points.length - 1]),
   };
 }
+
+
+export type CanonicalQuestionType = "Selection" | "Anticipation";
+export type PickerInteractionMode = "click" | "drag";
+
+/**
+ * Normalize any questionType variant ("click", "Selection", "drag", "Anticipation",
+ * "Drawing", "Multi-point", "sequence") into canonical form ("Selection" | "Anticipation")
+ * used by the form modals and the Visual Coordinate Picker.
+ */
+export function normalizeQuestionType(type?: string | null): CanonicalQuestionType {
+  if (!type) return "Selection";
+  const normalized = String(type).trim().toLowerCase();
+  if (
+    [
+      "drag",
+      "anticipation",
+      "drawing",
+      "multi-point",
+      "multipoint",
+      "sequence",
+    ].includes(normalized)
+  ) {
+    return "Anticipation";
+  }
+  return "Selection";
+}
+
+/**
+ * Convert a questionType value into the 3D picker interactionMode ("click" | "drag").
+ */
+export function questionTypeToInteractionMode(type?: string | null): PickerInteractionMode {
+  return normalizeQuestionType(type) === "Anticipation" ? "drag" : "click";
+}
+
+/**
+ * Convert a 3D picker interactionMode ("click" | "drag") into canonical questionType.
+ */
+export function interactionModeToQuestionType(mode?: string | null): CanonicalQuestionType {
+  return String(mode || "").trim().toLowerCase() === "drag" ? "Anticipation" : "Selection";
+}
