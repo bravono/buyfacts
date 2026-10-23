@@ -307,7 +307,7 @@ npm run dev
 Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/analytics) in your browser to view the Executive Analytics Dashboard.
 
 ### Database Seeding & Replacement Behavior
-The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks (12 tasks across 3 sequences), the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
 
 ### Production Seeding (User and DashboardButton Only)
 For staging or production environments where destructive table resets and placeholder media/vault assets are not desired, use the non-destructive production seed script:

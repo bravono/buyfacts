@@ -75,9 +75,12 @@ export async function POST(request: Request) {
         );
       }
 
-      const totalTasks = await prisma.cubiconTask.count({
-        where: { sequenceId: session.sequenceId },
-      });
+      const totalTasks =
+        session.totalPuzzlesAttempted > 0
+          ? session.totalPuzzlesAttempted
+          : await prisma.cubiconTask.count({
+              where: { sequenceId: session.sequenceId, isFinal: false },
+            });
 
       const threshold = session.sequence?.passThreshold ?? 0.6;
       const passed = evaluateSequencePass(
