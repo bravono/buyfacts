@@ -1179,6 +1179,14 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
 - **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
 
+### 9.4 Client-Side Image Optimization & WebP Conversion
+- **In-Memory Conversion**: JPG, JPEG, PNG, and BMP image assets are automatically converted to modern WebP format directly in browser memory before network upload begins.
+- **Toggle Control**: Users can toggle auto-conversion on or off via the `Auto-WebP: ON (85% Quality)` control in `FileUploader.tsx`.
+- **Bandwidth & Storage Savings**: Cuts image byte sizes by up to 80% without noticeable visual fidelity degradation.
+- **Fidelity Preservation**: SVGs (vector graphics) and animated GIFs are automatically preserved in their native formats without canvas rasterization.
+- **Hierarchy Retention**: File extensions in relative paths (e.g. `assets/images/header.jpg` -> `assets/images/header.webp`) are automatically updated and tracked.
+- **Visual Feedback**: Queue items display clear savings metrics (e.g. `WebP (-68%)`) and tooltip comparisons with original file sizes.
+
 
 ---
 

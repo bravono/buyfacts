@@ -224,7 +224,6 @@ export default function CubiconAnalyticsPage() {
           nextTasks[pickerTarget.taskIndex] = {
             ...nextTasks[pickerTarget.taskIndex],
             questionType: nextType,
-            question_type: nextType,
           };
         }
         return { ...prev, tasks: nextTasks };
@@ -236,7 +235,6 @@ export default function CubiconAnalyticsPage() {
           next[pickerTarget.taskIndex] = {
             ...next[pickerTarget.taskIndex],
             questionType: nextType,
-            question_type: nextType,
           };
         }
         return next;
