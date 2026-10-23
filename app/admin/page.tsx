@@ -1535,6 +1535,18 @@ export default function AdminDatabaseDashboard() {
         initialImage={formData.image || "/cubicon-app/arts/Puzzle1.webp"}
         initialQuestionType={normalizeQuestionType(formData.questionType)}
         initialCoordinates={formData.correctCoordinates || ""}
+        onDataChange={(syncData) => {
+          setFormData((prev) => ({
+            ...prev,
+            ...(syncData.screen !== undefined ? { screen: syncData.screen } : {}),
+            ...(syncData.image !== undefined ? { image: syncData.image } : {}),
+            ...(syncData.questionType !== undefined ? { questionType: syncData.questionType } : {}),
+            ...(syncData.correctCoordinates !== undefined ? { correctCoordinates: syncData.correctCoordinates } : {}),
+            ...(syncData.startPoint !== undefined ? { startPoint: syncData.startPoint } : {}),
+            ...(syncData.midPoint !== undefined ? { midPoint: syncData.midPoint } : {}),
+            ...(syncData.endPoint !== undefined ? { endPoint: syncData.endPoint } : {}),
+          }));
+        }}
         onQuestionTypeChange={(qt) => {
           setFormData((prev) => ({
             ...prev,

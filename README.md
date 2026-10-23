@@ -1190,12 +1190,16 @@ Recursively deletes a folder prefix and all objects inside it.
 
 ---
 
-## 10. Cubicon Visual Coordinate Picker & Question Type Synchronization
+## 10. Cubicon Visual Coordinate Picker & Bidirectional Data Synchronization
 
 - **Moveable & Collapsible 3D Picker HUD**: In 3D coordinate picker mode (`?picker=true&admin=true`), the overlay panel is draggable via its header bar (`:: PICKER`) and collapsible into a compact pill so it never blocks the 3D cube face.
-- **Bidirectional Question Type Synchronization**:
-  - Question types across form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon picker HUD are normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks).
-  - Changing the question type in the form modal, in the `CubiconCoordinatePicker` toolbar, or via the `Single Click` / `Drag (Waypoints)` toggle inside the 3D iframe (`CUBICON_PICKER_MODE_CHANGED` / `CUBICON_SET_PICKER_CONFIG`) immediately synchronizes the state across all layers and updates the parent form record on change and on apply.
+- **Complete Bidirectional Task Data Synchronization**:
+  - Full two-way live data synchronization connects the form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon iframe across all task parameters:
+    1. **`questionType`**: Normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks). Changing the type in the form modal, the picker toolbar, or the 3D HUD immediately synchronizes across all layers and clears stale points.
+    2. **`screen`**: Changing the face in the form modal (`Active_front`, `Active_side_r`, `Active_back`, `Active_side_l`, `Active_top`, `Active_bottom`), the picker toolbar, or the 3D HUD buttons immediately updates the active face without reloading the iframe.
+    3. **`image`**: Selecting a texture from the CDN gallery, custom URL input, or 3D HUD buttons immediately updates the texture in the form record, picker surface, and 3D cube model.
+    4. **`correctCoordinates` and Waypoints**: Capturing clicks/drags in 2D or 3D live-updates `correctCoordinates`, `startPoint`, `midPoint`, and `endPoint` in the parent form data via `onDataChange`, with final persistence on `onApply`.
+  - Echo loops and state wiping on re-render are prevented by reference tracking (`wasOpenRef`, `prevInitial*Ref`), ensuring active coordinate plotting is never reset prematurely.
 
 - **Thumbnail Optimization & Fast Gallery Loading (`/api/cubicon/thumbnail`)**:
   - The Coordinate Picker thumbnail strip loads compact 160px WebP thumbnails via `/api/cubicon/thumbnail?url=...&w=160` instead of downloading multi-megabyte full-resolution assets (such as 71MB PNGs) for thumbnail cards.

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import styles from "./analytics.module.css";
-import CubiconCoordinatePicker, { CoordinatePickerApplyResult } from "@/components/CubiconCoordinatePicker";
+import CubiconCoordinatePicker, { CoordinatePickerApplyResult, CoordinateDataSync } from "@/components/CubiconCoordinatePicker";
 import { normalizeQuestionType, CanonicalQuestionType } from "@/lib/cubicon/coordinateHelper";
 import { Crosshair, Plus, Trash2, ArrowRight } from "lucide-react";
 
@@ -236,6 +236,43 @@ export default function CubiconAnalyticsPage() {
             ...next[pickerTarget.taskIndex],
             questionType: nextType,
           };
+        }
+        return next;
+      });
+    }
+  };
+
+  const handlePickerDataChange = (syncData: CoordinateDataSync) => {
+    if (!pickerTarget) return;
+
+    const updater = (task: any) => ({
+      ...task,
+      ...(syncData.screen !== undefined ? { screen: syncData.screen } : {}),
+      ...(syncData.image !== undefined ? { image: syncData.image } : {}),
+      ...(syncData.questionType !== undefined
+        ? { questionType: syncData.questionType, question_type: syncData.questionType }
+        : {}),
+      ...(syncData.correctCoordinates !== undefined
+        ? { correctCoordinates: syncData.correctCoordinates, correct_coordinates: syncData.correctCoordinates }
+        : {}),
+      ...(syncData.startPoint !== undefined ? { startPoint: syncData.startPoint } : {}),
+      ...(syncData.midPoint !== undefined ? { midPoint: syncData.midPoint } : {}),
+      ...(syncData.endPoint !== undefined ? { endPoint: syncData.endPoint } : {}),
+    });
+
+    if (pickerTarget.source === "create") {
+      setNewSeq((prev) => {
+        const nextTasks = [...(prev.tasks || [])];
+        if (nextTasks[pickerTarget.taskIndex]) {
+          nextTasks[pickerTarget.taskIndex] = updater(nextTasks[pickerTarget.taskIndex]);
+        }
+        return { ...prev, tasks: nextTasks };
+      });
+    } else if (pickerTarget.source === "edit") {
+      setEditingTasks((prev) => {
+        const next = [...prev];
+        if (next[pickerTarget.taskIndex]) {
+          next[pickerTarget.taskIndex] = updater(next[pickerTarget.taskIndex]);
         }
         return next;
       });
@@ -1456,6 +1493,8 @@ export default function CubiconAnalyticsPage() {
                               <option value="Active_side_r">Active_side_r</option>
                               <option value="Active_back">Active_back</option>
                               <option value="Active_side_l">Active_side_l</option>
+                              <option value="Active_top">Active_top</option>
+                              <option value="Active_bottom">Active_bottom</option>
                             </select>
                           </div>
 
@@ -1759,6 +1798,8 @@ export default function CubiconAnalyticsPage() {
                             <option value="Active_side_r">Active_side_r</option>
                             <option value="Active_back">Active_back</option>
                             <option value="Active_side_l">Active_side_l</option>
+                            <option value="Active_top">Active_top</option>
+                            <option value="Active_bottom">Active_bottom</option>
                           </select>
                         </div>
 
@@ -1840,6 +1881,7 @@ export default function CubiconAnalyticsPage() {
           initialImage={currentPickerTask?.image || "/cubicon-app/arts/Puzzle1.webp"}
           initialQuestionType={normalizeQuestionType(currentPickerTask?.questionType || currentPickerTask?.question_type)}
           initialCoordinates={currentPickerTask?.correctCoordinates || currentPickerTask?.correct_coordinates || ""}
+          onDataChange={handlePickerDataChange}
           onQuestionTypeChange={handlePickerQuestionTypeChange}
           onApply={handlePickerApply}
         />

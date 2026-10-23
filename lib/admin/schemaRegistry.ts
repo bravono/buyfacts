@@ -270,7 +270,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
       { name: "taskNumber", label: "Task Number", type: "number", defaultValue: 1 },
       { name: "heading", label: "Task Heading", type: "string", required: true },
       { name: "description", label: "Task Prompt", type: "string", required: true },
-      { name: "screen", label: "Screen Face", type: "string", defaultValue: "Active_front" },
+      { name: "screen", label: "Screen Face", type: "string", defaultValue: "Active_front", options: ["Active_front", "Active_side_r", "Active_back", "Active_side_l", "Active_top", "Active_bottom"] },
       { name: "image", label: "Face Texture URL", type: "string", required: true },
       { name: "rotation", label: "Rotation", type: "string", defaultValue: "left" },
       { name: "rotationInterval", label: "Rotation Interval", type: "number", defaultValue: 15 },
