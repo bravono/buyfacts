@@ -1196,3 +1196,8 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Bidirectional Question Type Synchronization**:
   - Question types across form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon picker HUD are normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks).
   - Changing the question type in the form modal, in the `CubiconCoordinatePicker` toolbar, or via the `Single Click` / `Drag (Waypoints)` toggle inside the 3D iframe (`CUBICON_PICKER_MODE_CHANGED` / `CUBICON_SET_PICKER_CONFIG`) immediately synchronizes the state across all layers and updates the parent form record on change and on apply.
+
+- **Thumbnail Optimization & Fast Gallery Loading (`/api/cubicon/thumbnail`)**:
+  - The Coordinate Picker thumbnail strip loads compact 160px WebP thumbnails via `/api/cubicon/thumbnail?url=...&w=160` instead of downloading multi-megabyte full-resolution assets (such as 71MB PNGs) for thumbnail cards.
+  - The thumbnail endpoint resizes images on the fly using `sharp`, validates host safety to prevent SSRF, and caches generated thumbnails on disk with long-term immutable cache headers (`Cache-Control: public, max-age=31536000, immutable`).
+  - Selecting an image continues to assign the full-resolution `publicUrl` to the 3D model screen texture and 2D target coordinate surface.

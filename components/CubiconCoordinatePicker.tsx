@@ -14,6 +14,7 @@ import {
   questionTypeToInteractionMode,
   interactionModeToQuestionType,
   CanonicalQuestionType,
+  getThumbnailUrl,
 } from "@/lib/cubicon/coordinateHelper";
 import {
   X,
@@ -61,9 +62,12 @@ export interface CdnPuzzleItem {
   fileName: string;
   objectKey: string;
   publicUrl: string;
+  thumbnailUrl?: string;
   format: string;
   size?: number;
 }
+
+export { getThumbnailUrl };
 
 const PRESET_SCREENS = [
   { value: "Active_front", label: "Front Screen (Active_front)" },
@@ -585,12 +589,21 @@ export default function CubiconCoordinatePicker({
                       >
                         <div className={styles.thumbnailImgWrapper}>
                           <img
-                            src={item.publicUrl}
+                            src={item.thumbnailUrl || getThumbnailUrl(item.publicUrl, 160)}
                             alt={item.name}
                             loading="lazy"
+                            decoding="async"
+                            width={72}
+                            height={72}
                             className={styles.thumbnailImg}
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/cubicon-app/cubicon_logo.png";
+                              const target = e.target as HTMLImageElement;
+                              if (!target.dataset.triedOriginal && item.publicUrl) {
+                                target.dataset.triedOriginal = "true";
+                                target.src = item.publicUrl;
+                              } else {
+                                target.src = "/cubicon-app/cubicon_logo.png";
+                              }
                             }}
                           />
                           {isSelected && (

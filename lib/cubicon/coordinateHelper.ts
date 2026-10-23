@@ -267,3 +267,13 @@ export function questionTypeToInteractionMode(type?: string | null): PickerInter
 export function interactionModeToQuestionType(mode?: string | null): CanonicalQuestionType {
   return String(mode || "").trim().toLowerCase() === "drag" ? "Anticipation" : "Selection";
 }
+
+/**
+ * Return a lightweight WebP thumbnail URL for a given image source URL.
+ */
+export function getThumbnailUrl(rawUrl: string, width = 160): string {
+  if (!rawUrl || typeof rawUrl !== "string") return "/cubicon-app/cubicon_logo.png";
+  if (rawUrl.startsWith("/api/cubicon/thumbnail")) return rawUrl;
+  return `/api/cubicon/thumbnail?url=${encodeURIComponent(rawUrl)}&w=${width}`;
+}
+
