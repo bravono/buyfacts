@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     if (fs.existsSync(cacheFilePath)) {
       try {
         const cachedBuffer = fs.readFileSync(cacheFilePath);
-        return new NextResponse(cachedBuffer, {
+        return new NextResponse(new Uint8Array(cachedBuffer), {
           status: 200,
           headers: {
             "Content-Type": "image/webp",
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       // Non-fatal if filesystem cache write fails
     }
 
-    return new NextResponse(thumbnailBuffer, {
+    return new NextResponse(new Uint8Array(thumbnailBuffer), {
       status: 200,
       headers: {
         "Content-Type": "image/webp",

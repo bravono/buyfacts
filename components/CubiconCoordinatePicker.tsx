@@ -151,7 +151,7 @@ export default function CubiconCoordinatePicker({
   const prevInitialScreenRef = useRef(initialScreen);
   const prevInitialImageRef = useRef(initialImage);
   const prevInitialQtRef = useRef(initialQuestionType);
-  const prevInitialCoordsRef = useRef(initialCoordinates);
+  const prevInitialCoordsRef = useRef<string | undefined>(initialCoordinates);
 
   const isDragTask = questionTypeToInteractionMode(questionType) === "drag";
 
@@ -917,7 +917,7 @@ export default function CubiconCoordinatePicker({
                 <iframe
                   ref={iframeRef}
                   src={iframeSrc}
-                  onLoad={syncIframeConfig}
+                  onLoad={() => syncIframeConfig()}
                   className={styles.iframeWrapper}
                   title="Cubicon 3D Interactive Canvas"
                 />

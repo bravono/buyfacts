@@ -194,7 +194,7 @@ test("Cubicon Visual Coordinate Picker Integration Test Suite", async (t) => {
 
     // Picker uses a stable iframeSrc and postMessage instead of reloading iframe on config changes
     assert.ok(pickerContent.includes("src={iframeSrc}"));
-    assert.ok(pickerContent.includes("onLoad={syncIframeConfig}"));
+    assert.ok(pickerContent.includes("syncIframeConfig()"));
   });
 
   await t.test("6. Zero-Emoji Compliance across all Coordinate Picker Files", async () => {
