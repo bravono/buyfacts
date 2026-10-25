@@ -18,6 +18,7 @@ interface ButtonData {
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
+  readItUrl?: string;
 }
 
 const DEFAULT_TL_BUTTONS: ButtonData[] = [
@@ -30,6 +31,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "video",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
   },
   {
     label: "Cohort Research",
@@ -40,6 +42,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
   },
   {
     label: "Survey Engagement",
@@ -50,6 +53,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "audio",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
   },
   {
     label: "Hybrid Marketing",
@@ -60,6 +64,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "video",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
   },
   {
     label: "Content Creation",
@@ -70,6 +75,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
   },
   {
     label: "Marketing Leadership",
@@ -80,6 +86,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "audio",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
   },
   {
     label: "Research Leadership",
@@ -90,6 +97,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "video",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
   },
   {
     label: "Early Recognition",
@@ -99,7 +107,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "video",
-    mediaUrl: "",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
   },
   {
     label: "Wisdom Gap",
@@ -110,6 +119,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "pdf",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
   },
 ];
 
@@ -150,13 +160,8 @@ export default function PortfolioPage() {
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_TL_BUTTONS[idx] || DEFAULT_TL_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
-              const resolvedMediaUrl = (
-                btn.mediaUrl ||
-                btn.readItUrl ||
-                btn.seeItUrl ||
-                btn.hearItUrl ||
-                ""
-              ).trim();
+              const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -166,6 +171,7 @@ export default function PortfolioPage() {
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
                 mediaUrl: resolvedMediaUrl,
+                readItUrl: resolvedReadItUrl,
               };
             });
 
@@ -225,6 +231,8 @@ export default function PortfolioPage() {
                 description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                moreDetailUrl={currentMedia.readItUrl}
+                readItUrl={currentMedia.readItUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}

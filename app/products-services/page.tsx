@@ -18,6 +18,7 @@ interface ButtonData {
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
+  readItUrl?: string;
 }
 
 const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
@@ -30,6 +31,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "video",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
   },
   {
     label: "Survey Design",
@@ -40,6 +42,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "audio",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
   },
   {
     label: "Story-Based Surveys",
@@ -50,6 +53,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "image",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
   },
   {
     label: "Improve Surveys",
@@ -60,6 +64,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "pdf",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
   },
   {
     label: "Participant Validation",
@@ -70,6 +75,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "audio",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
   },
   {
     label: "Survey Fieldwork",
@@ -80,6 +86,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "image",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
   },
   {
     label: "Content Value",
@@ -90,6 +97,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "video",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
   },
   {
     label: "Pattern Insights",
@@ -99,7 +107,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
     mediaType: "video",
-    mediaUrl: "",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
   },
   {
     label: "Audience Validation",
@@ -110,6 +119,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "pdf",
     mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
   },
 ];
 
@@ -149,13 +159,8 @@ export default function ServicesPage() {
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
-              const resolvedMediaUrl = (
-                btn.mediaUrl ||
-                btn.readItUrl ||
-                btn.seeItUrl ||
-                btn.hearItUrl ||
-                ""
-              ).trim();
+              const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -165,6 +170,7 @@ export default function ServicesPage() {
                 hoverShadow: presets.hoverShadow,
                 mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
                 mediaUrl: resolvedMediaUrl,
+                readItUrl: resolvedReadItUrl,
               };
             });
 
@@ -221,6 +227,8 @@ export default function ServicesPage() {
                 description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                moreDetailUrl={currentMedia.readItUrl}
+                readItUrl={currentMedia.readItUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}

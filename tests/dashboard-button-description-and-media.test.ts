@@ -15,10 +15,20 @@ test("Dashboard Button Description and Media Fallback Suite", async (t) => {
     for (const btn of buttons) {
       assert.ok(btn.description, `Button ${btn.id} (${btn.label}) must have a non-empty description`);
       assert.ok(btn.description.length > 20, `Button ${btn.id} description must have meaningful content`);
-      assert.ok(btn.mediaUrl, `Button ${btn.id} must have a mediaUrl defined in the database`);
+      assert.ok(btn.mediaUrl, `Button ${btn.id} must have a primary mediaUrl defined in the database`);
+      assert.ok(btn.readItUrl, `Button ${btn.id} must have an in-depth readItUrl defined in the database`);
       assert.ok(
-        btn.mediaUrl.startsWith("https://s3.buyfacts.com/"),
-        `Button ${btn.id} mediaUrl must point to S3 assets, got: ${btn.mediaUrl}`
+        btn.readItUrl.startsWith("https://s3.buyfacts.com/"),
+        `Button ${btn.id} readItUrl must point to S3 assets, got: ${btn.readItUrl}`
+      );
+      assert.ok(
+        btn.readItUrl.endsWith(".docx"),
+        `Button ${btn.id} readItUrl must point to a detailed DOCX asset, got: ${btn.readItUrl}`
+      );
+      assert.notEqual(
+        btn.mediaUrl,
+        btn.readItUrl,
+        `Button ${btn.id} primary mediaUrl must be different from in-depth readItUrl`
       );
     }
   });

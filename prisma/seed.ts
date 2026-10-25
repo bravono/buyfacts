@@ -65,207 +65,205 @@ async function main() {
   // 2. Dashboard Buttons
   console.log("2. Seeding Dashboard Buttons...");
   const dashboardButtons = [
-    // Products / Services
-    {
-      id: "btn-srv-001",
-      label: "Research Planning",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
-      mediaType: "docx",
-      subtitle: "Inclusive Research Definition",
-      description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
-      category: "Products & Services",
-      color: "#9b5d00",
-    },
-    {
-      id: "btn-srv-002",
-      label: "Survey Design",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
-      mediaType: "docx",
-      subtitle: "Make Each Question Actionable",
-      description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
-      category: "Products & Services",
-      color: "#ea425f",
-    },
-    {
-      id: "btn-srv-003",
-      label: "Story-Based Surveys",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
-      mediaType: "docx",
-      subtitle: "Execute a Dual-Based Survey Model",
-      description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
-      category: "Products & Services",
-      color: "#ff9900",
-    },
-    {
-      id: "btn-srv-004",
-      label: "Improve Surveys",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
-      mediaType: "pdf",
-      subtitle: "Increase the Return on Research",
-      description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
-      category: "Products & Services",
-      color: "#006398",
-    },
-    {
-      id: "btn-srv-005",
-      label: "Participant Validation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Play Cubicon Puzzle Games",
-      description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
-      category: "Products & Services",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-srv-006",
-      label: "Survey Fieldwork",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
-      mediaType: "docx",
-      subtitle: "Quality-Centric Survey Execution",
-      description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
-      category: "Products & Services",
-      color: "#b0e843",
-    },
-    {
-      id: "btn-srv-007",
-      label: "Content Value",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
-      mediaType: "docx",
-      subtitle: "Maximize the Return on Content",
-      description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
-      category: "Products & Services",
-      color: "#42ea86",
-    },
-    {
-      id: "btn-srv-008",
-      label: "Pattern Insights",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
-      mediaType: "docx",
-      subtitle: "Active Pattern Analytics",
-      description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
-      category: "Products & Services",
-      color: "#ed40ed",
-    },
-    {
-      id: "btn-srv-009",
-      label: "Audience Validation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Opportunity Validation",
-      description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
-      category: "Products & Services",
-      color: "#532254",
-    },
-    // Thought Leadership
-    {
-      id: "btn-tl-001",
-      label: "Research Methods",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
-      mediaType: "docx",
-      subtitle: "Exceed Stakeholder Wants and Needs",
-      description: "Rigorous multi-channel research protocols designed to consistently surpass stakeholder expectations with bulletproof empirical validation.",
-      category: "Research Imperatives",
-      color: "#006398",
-    },
-    {
-      id: "btn-tl-002",
-      label: "Cohort Research",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
-      mediaType: "docx",
-      subtitle: "Smaller Groups that Know the Topic",
-      description: "Targeted cohort intelligence focusing on niche practitioner panels and specialist groups who possess deep, authoritative domain expertise.",
-      category: "Research Imperatives",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-tl-003",
-      label: "Survey Engagement",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
-      mediaType: "docx",
-      subtitle: "Optimize Question Value",
-      description: "Structuring engaging, high-yield survey instruments that maximize participant completion rates while extracting deep, high-value data.",
-      category: "Research Imperatives",
-      color: "#42ea86",
-    },
-    {
-      id: "btn-tl-004",
-      label: "Hybrid Marketing",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
-      mediaType: "docx",
-      subtitle: "Digital Reach and a Human Touch",
-      description: "Harmonizing high-scale digital reach with consultative human engagement to cultivate authentic relationships and sustained audience loyalty.",
-      category: "Research Imperatives",
-      color: "#532254",
-    },
-    {
-      id: "btn-tl-005",
-      label: "Content Creation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Assets that Engage with Thought Leadership",
-      description: "Transforming empirical data points into compelling thought leadership whitepapers, interactive infographics, and high-impact digital narratives.",
-      category: "Research Imperatives",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-tl-006",
-      label: "Marketing Leadership",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
-      mediaType: "docx",
-      subtitle: "Best Practices by Marketing Area",
-      description: "Curated best practices across enterprise marketing divisions, aligning narrative precision with measurable campaign outcomes and growth metrics.",
-      category: "Research Imperatives",
-      color: "#b0e843",
-    },
-    {
-      id: "btn-tl-007",
-      label: "Research Leadership",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
-      mediaType: "docx",
-      subtitle: "Return on Primary Research",
-      description: "High-fidelity primary research methodologies delivering strategic insights, benchmark telemetry, and quantitative clarity to guide executive leadership.",
-      category: "Research Imperatives",
-      color: "#ff9900",
-    },
-    {
-      id: "btn-tl-008",
-      label: "Early Recognition",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
-      mediaType: "docx",
-      subtitle: "Earlier Recognition for Your Time Advantage",
-      description: "Detecting nascent market signals and emerging customer sentiment early to secure a definitive first-mover advantage.",
-      category: "Research Imperatives",
-      color: "#ea425f",
-    },
-    {
-      id: "btn-tl-009",
-      label: "Wisdom Gap",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
-      mediaType: "docx",
-      subtitle: "Research Becomes Intellectual Currency",
-      description: "Bridging the gap between raw data collection and actionable organizational wisdom, converting research findings into proprietary intellectual currency.",
-      category: "Research Imperatives",
-      color: "#9b5d00",
-    },
-  ];
+  {
+    id: "btn-srv-001",
+    label: "Research Planning",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+    mediaType: "video",
+    subtitle: "Inclusive Research Definition",
+    description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
+    category: "Products & Services",
+    color: "#9b5d00"
+  },
+  {
+    id: "btn-srv-002",
+    label: "Survey Design",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
+    mediaType: "audio",
+    subtitle: "Make Each Question Actionable",
+    description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
+    category: "Products & Services",
+    color: "#ea425f"
+  },
+  {
+    id: "btn-srv-003",
+    label: "Story-Based Surveys",
+    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
+    mediaType: "image",
+    subtitle: "Execute a Dual-Based Survey Model",
+    description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
+    category: "Products & Services",
+    color: "#ff9900"
+  },
+  {
+    id: "btn-srv-004",
+    label: "Improve Surveys",
+    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
+    mediaType: "pdf",
+    subtitle: "Increase the Return on Research",
+    description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
+    category: "Products & Services",
+    color: "#006398"
+  },
+  {
+    id: "btn-srv-005",
+    label: "Participant Validation",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
+    mediaType: "audio",
+    subtitle: "Play Cubicon Puzzle Games",
+    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
+    category: "Products & Services",
+    color: "#ffc164"
+  },
+  {
+    id: "btn-srv-006",
+    label: "Survey Fieldwork",
+    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
+    mediaType: "image",
+    subtitle: "Quality-Centric Survey Execution",
+    description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
+    category: "Products & Services",
+    color: "#b0e843"
+  },
+  {
+    id: "btn-srv-007",
+    label: "Content Value",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
+    mediaType: "video",
+    subtitle: "Maximize the Return on Content",
+    description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
+    category: "Products & Services",
+    color: "#42ea86"
+  },
+  {
+    id: "btn-srv-008",
+    label: "Pattern Insights",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
+    mediaType: "video",
+    subtitle: "Active Pattern Analytics",
+    description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
+    category: "Products & Services",
+    color: "#ed40ed"
+  },
+  {
+    id: "btn-srv-009",
+    label: "Audience Validation",
+    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
+    mediaType: "pdf",
+    subtitle: "Opportunity Validation",
+    description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
+    category: "Products & Services",
+    color: "#532254"
+  },
+  {
+    id: "btn-tl-001",
+    label: "Research Methods",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
+    mediaType: "video",
+    subtitle: "Exceed Stakeholder Wants and Needs",
+    description: "Rigorous multi-channel research protocols designed to consistently surpass stakeholder expectations with bulletproof empirical validation.",
+    category: "Research Imperatives",
+    color: "#006398"
+  },
+  {
+    id: "btn-tl-002",
+    label: "Cohort Research",
+    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
+    mediaType: "pdf",
+    subtitle: "Smaller Groups that Know the Topic",
+    description: "Targeted cohort intelligence focusing on niche practitioner panels and specialist groups who possess deep, authoritative domain expertise.",
+    category: "Research Imperatives",
+    color: "#ffc164"
+  },
+  {
+    id: "btn-tl-003",
+    label: "Survey Engagement",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
+    mediaType: "audio",
+    subtitle: "Optimize Question Value",
+    description: "Structuring engaging, high-yield survey instruments that maximize participant completion rates while extracting deep, high-value data.",
+    category: "Research Imperatives",
+    color: "#42ea86"
+  },
+  {
+    id: "btn-tl-004",
+    label: "Hybrid Marketing",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
+    mediaType: "video",
+    subtitle: "Digital Reach and a Human Touch",
+    description: "Harmonizing high-scale digital reach with consultative human engagement to cultivate authentic relationships and sustained audience loyalty.",
+    category: "Research Imperatives",
+    color: "#532254"
+  },
+  {
+    id: "btn-tl-005",
+    label: "Content Creation",
+    mediaUrl: "https://www.orimi.com/pdf-test.pdf",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
+    mediaType: "pdf",
+    subtitle: "Assets that Engage with Thought Leadership",
+    description: "Transforming empirical data points into compelling thought leadership whitepapers, interactive infographics, and high-impact digital narratives.",
+    category: "Research Imperatives",
+    color: "#ffc164"
+  },
+  {
+    id: "btn-tl-006",
+    label: "Marketing Leadership",
+    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
+    mediaType: "audio",
+    subtitle: "Best Practices by Marketing Area",
+    description: "Curated best practices across enterprise marketing divisions, aligning narrative precision with measurable campaign outcomes and growth metrics.",
+    category: "Research Imperatives",
+    color: "#b0e843"
+  },
+  {
+    id: "btn-tl-007",
+    label: "Research Leadership",
+    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
+    mediaType: "video",
+    subtitle: "Return on Primary Research",
+    description: "High-fidelity primary research methodologies delivering strategic insights, benchmark telemetry, and quantitative clarity to guide executive leadership.",
+    category: "Research Imperatives",
+    color: "#ff9900"
+  },
+  {
+    id: "btn-tl-008",
+    label: "Early Recognition",
+    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
+    mediaType: "video",
+    subtitle: "Earlier Recognition for Your Time Advantage",
+    description: "Detecting nascent market signals and emerging customer sentiment early to secure a definitive first-mover advantage.",
+    category: "Research Imperatives",
+    color: "#ea425f"
+  },
+  {
+    id: "btn-tl-009",
+    label: "Wisdom Gap",
+    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
+    mediaType: "pdf",
+    subtitle: "Research Becomes Intellectual Currency",
+    description: "Bridging the gap between raw data collection and actionable organizational wisdom, converting research findings into proprietary intellectual currency.",
+    category: "Research Imperatives",
+    color: "#9b5d00"
+  }
+];
 
   for (const btn of dashboardButtons) {
     await prisma.dashboardButton.upsert({
@@ -371,12 +369,12 @@ async function main() {
 
   const cubiconTasks = [
       {
-          "id": 17,
+          id: 17,
           "sequenceId": 5,
           "taskIndex": 0,
           "taskNumber": 1,
           "heading": "Puzzle 1 of 3  (Draw a circle)",
-          "description": "Who gets concerned by howling?",
+          description: "Who gets concerned by howling?",
           "screen": "Active_front",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
           "rotation": "left",
@@ -391,12 +389,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.360Z"
       },
       {
-          "id": 18,
+          id: 18,
           "sequenceId": 5,
           "taskIndex": 1,
           "taskNumber": 2,
           "heading": "Puzzle 2 of 3  (click to choose)",
-          "description": "Who's in line for a change of shirt?",
+          description: "Who's in line for a change of shirt?",
           "screen": "Active_side_l",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
           "rotation": "left",
@@ -411,12 +409,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.369Z"
       },
       {
-          "id": 19,
+          id: 19,
           "sequenceId": 5,
           "taskIndex": 2,
           "taskNumber": 3,
           "heading": "Puzzle 3 of 3 (click to choose)",
-          "description": "Where does his next go? ",
+          description: "Where does his next go? ",
           "screen": "Active_back",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
           "rotation": "left",
@@ -431,12 +429,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.379Z"
       },
       {
-          "id": 20,
+          id: 20,
           "sequenceId": 5,
           "taskIndex": 3,
           "taskNumber": 4,
           "heading": "Bonus Puzzle (enter multiple clicks)",
-          "description": "Who sat with time over their shoulders?",
+          description: "Who sat with time over their shoulders?",
           "screen": "Active_side_r",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082428358-lf20q4-WOW_Grand_Central_Station_Color_No_Text.webp",
           "rotation": "left",
@@ -451,12 +449,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.384Z"
       },
       {
-          "id": 21,
+          id: 21,
           "sequenceId": 6,
           "taskIndex": 0,
           "taskNumber": 1,
           "heading": "Puzzle 1 of 3 (click to choose)",
-          "description": "Who kissed the silent stone guardian?",
+          description: "Who kissed the silent stone guardian?",
           "screen": "Active_front",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082435451-y5oisv-WOW_Great_Pyramids_Illustration_Color.webp",
           "rotation": "left",
@@ -471,12 +469,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.389Z"
       },
       {
-          "id": 22,
+          id: 22,
           "sequenceId": 6,
           "taskIndex": 1,
           "taskNumber": 2,
           "heading": "Puzzle 2 of 3 (click to choose)",
-          "description": "Who stacked the pages high?",
+          description: "Who stacked the pages high?",
           "screen": "Active_side_l",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419479-0sm0h3-Benjamin_Franklin_Color.webp",
           "rotation": "left",
@@ -491,12 +489,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.396Z"
       },
       {
-          "id": 23,
+          id: 23,
           "sequenceId": 6,
           "taskIndex": 2,
           "taskNumber": 3,
           "heading": "Puzzle 3 of 3 (click to choose)",
-          "description": "Who deals in chances but takes a bite between turns? ",
+          description: "Who deals in chances but takes a bite between turns? ",
           "screen": "Active_back",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082472298-9m556g-WOW_Things_BermudaTriangle_Color.webp",
           "rotation": "left",
@@ -511,12 +509,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.402Z"
       },
       {
-          "id": 24,
+          id: 24,
           "sequenceId": 6,
           "taskIndex": 3,
           "taskNumber": 4,
           "heading": "Bonus Puzzle (Click to choose)",
-          "description": "Who took the shiny slide, not a step? ",
+          description: "Who took the shiny slide, not a step? ",
           "screen": "Active_side_r",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
           "rotation": "left",
@@ -531,12 +529,12 @@ async function main() {
           "createdAt": "2026-10-21T09:25:52.413Z"
       },
       {
-          "id": 25,
+          id: 25,
           "sequenceId": 7,
           "taskIndex": 1,
           "taskNumber": 2,
           "heading": "Puzzle 2 of 3 (Click to Choose)",
-          "description": "Who chose the high stone seat where heroes stand?",
+          description: "Who chose the high stone seat where heroes stand?",
           "screen": "Active_side_l",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792766115000-ob5kow-WOW_Festival_of_Colors_Color.webp",
           "rotation": "left",
@@ -551,12 +549,12 @@ async function main() {
           "createdAt": "2026-10-23T16:07:51.207Z"
       },
       {
-          "id": 26,
+          id: 26,
           "sequenceId": 7,
           "taskIndex": 0,
           "taskNumber": 1,
           "heading": "Puzzle 1 of 3 (Click to Choose)",
-          "description": "Who's perfecting the face while the road rolls on?",
+          description: "Who's perfecting the face while the road rolls on?",
           "screen": "Active_front",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082447166-7ujbit-WOW_People_Alice_Cooper_Color.webp",
           "rotation": "left",
@@ -571,12 +569,12 @@ async function main() {
           "createdAt": "2026-10-23T16:20:11.041Z"
       },
       {
-          "id": 27,
+          id: 27,
           "sequenceId": 7,
           "taskIndex": 2,
           "taskNumber": 3,
           "heading": "Puzzle 3 of 3 (Draw a Circle)",
-          "description": "Who came down the twisting path one step at a time?",
+          description: "Who came down the twisting path one step at a time?",
           "screen": "Active_back",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
           "rotation": "left",
@@ -591,12 +589,12 @@ async function main() {
           "createdAt": "2026-10-23T16:26:09.358Z"
       },
       {
-          "id": 28,
+          id: 28,
           "sequenceId": 7,
           "taskIndex": 3,
           "taskNumber": 4,
           "heading": "Bonus Puzzle (Draw a Circle)",
-          "description": "Who receives a royal treat without leaving his throne?",
+          description: "Who receives a royal treat without leaving his throne?",
           "screen": "Active_side_r",
           "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419103-hp8641-Alice_In_Wonderland_Colored.webp",
           "rotation": "left",

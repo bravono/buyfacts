@@ -42,6 +42,7 @@ export interface MockMediaPlayerProps {
   pdfUrl?: string;
   pdfLabel?: string;
   moreDetailUrl?: string;
+  readItUrl?: string;
   moreDetailIconUrl?: string;
   videoIconUrl?: string;
   audioIconUrl?: string;
@@ -92,6 +93,7 @@ export default function MockMediaPlayer({
   pdfUrl,
   pdfLabel,
   moreDetailUrl,
+  readItUrl,
   moreDetailIconUrl,
   videoIconUrl,
   audioIconUrl,
@@ -184,10 +186,11 @@ export default function MockMediaPlayer({
     (mediaType === "video" || mediaType === "audio") && mediaUrl && !isYouTube && !isDocument
   );
 
+  const effectiveInDepthUrl = moreDetailUrl || readItUrl;
   const targetDocUrl =
+    effectiveInDepthUrl ||
     (isDocument && mediaUrl ? mediaUrl : null) ||
     pdfUrl ||
-    moreDetailUrl ||
     "/sample-details.pdf";
 
   const isTargetDocx = isDocxUrl(targetDocUrl);
