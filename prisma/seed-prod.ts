@@ -1,41 +1,74 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ContentFormat } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { fileURLToPath } from "url";
 import { hashPassword } from "../lib/auth/password";
+import { DEFAULT_SURVEYS } from "../app/api/narrative-data/route";
 
-export interface SeedUserDefinition {
-  email: string;
-  name: string;
-  role: string;
-}
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
-export interface SeedDashboardButtonDefinition {
-  id: string;
-  label: string;
-  mediaUrl: string;
-  readItUrl?: string;
-  mediaType: string;
-  subtitle: string;
-  description?: string;
-  category: string;
-  color: string;
-}
+async function main() {
+  console.log("Starting BuyFacts Core DB seed...\n");
 
-export const PRODUCTION_USERS: SeedUserDefinition[] = [
-  {
-    email: "rmj@robertjohnson.com",
-    name: "Robert Johnson",
-    role: "admin",
-  },
-  {
-    email: "ahbideeny@gmail.com",
-    name: "Ahbideen Yusuf",
-    role: "admin",
-  },
-];
+  // 0. Reset existing database records so seed replaces existing state instead of appending
+  console.log("0. Cleaning existing records to replace database state...");
+  await prisma.cubiconAttempt.deleteMany();
+  await prisma.cubiconSession.deleteMany();
+  await prisma.cubiconTask.deleteMany();
+  await prisma.cubiconSequence.deleteMany();
+  await prisma.cubiconRegistration.deleteMany();
+  await prisma.cubiconShare.deleteMany();
+  await prisma.feedbackSubmission.deleteMany();
 
-export const PRODUCTION_DASHBOARD_BUTTONS: SeedDashboardButtonDefinition[] = [
+  await prisma.researchLibResponse.deleteMany();
+  await prisma.researchLibTask.deleteMany();
+  await prisma.researchLibSurvey.deleteMany();
+  await prisma.vaultAsset.deleteMany();
+  await prisma.topic.deleteMany();
+
+  await prisma.dashboardButton.deleteMany();
+  await prisma.mediaAsset.deleteMany();
+  await prisma.user.deleteMany();
+  console.log("   Cleared existing records successfully.\n");
+
+  // 1. Users
+  console.log("1. Seeding Users...");
+  const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "AdminPass123!";
+  const defaultHash = await hashPassword(defaultPassword);
+
+  const users = [
+    {
+      email: "rmj@robertjohnson.com",
+      name: "Robert Johnson",
+      passwordHash: defaultHash,
+      role: "admin",
+    },
+    {
+      email: "ahbideeny@gmail.com",
+      name: "Ahbideen Yusuf",
+      passwordHash: defaultHash,
+      role: "admin",
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        name: user.name,
+        passwordHash: user.passwordHash,
+        role: user.role,
+      },
+      create: user,
+    });
+  }
+  console.log(`   Seeded ${users.length} Users`);
+
+  // 2. Dashboard Buttons
+  console.log("2. Seeding Dashboard Buttons...");
+  const dashboardButtons = [
   {
     id: "btn-srv-001",
     label: "Research Planning",
@@ -236,95 +269,635 @@ export const PRODUCTION_DASHBOARD_BUTTONS: SeedDashboardButtonDefinition[] = [
   }
 ];
 
-export interface SeedProdClient {
-  user: {
-    upsert: (args: {
-      where: { email: string };
-      update: { name: string; passwordHash: string; role: string };
-      create: { email: string; name: string; passwordHash: string; role: string };
-    }) => Promise<unknown>;
-  };
-  dashboardButton: {
-    upsert: (args: {
-      where: { id: string };
-      update: SeedDashboardButtonDefinition;
-      create: SeedDashboardButtonDefinition;
-    }) => Promise<unknown>;
-  };
-}
-
-/**
- * Non-destructively seeds only the User and DashboardButton tables using upsert.
- * Does not call deleteMany() on any table and does not insert sample media or vault records.
- */
-export async function seedProductionDatabase(
-  client: SeedProdClient,
-  adminPassword?: string
-): Promise<{ usersSeeded: number; buttonsSeeded: number }> {
-  const resolvedPassword =
-    adminPassword && adminPassword.trim().length > 0
-      ? adminPassword
-      : process.env.DEFAULT_ADMIN_PASSWORD || "AdminPass123!";
-
-  const defaultHash = await hashPassword(resolvedPassword);
-
-  for (const user of PRODUCTION_USERS) {
-    await client.user.upsert({
-      where: { email: user.email },
-      update: {
-        name: user.name,
-        passwordHash: defaultHash,
-        role: user.role,
-      },
-      create: {
-        email: user.email,
-        name: user.name,
-        passwordHash: defaultHash,
-        role: user.role,
-      },
-    });
-  }
-
-  for (const btn of PRODUCTION_DASHBOARD_BUTTONS) {
-    await client.dashboardButton.upsert({
+  for (const btn of dashboardButtons) {
+    await prisma.dashboardButton.upsert({
       where: { id: btn.id },
       update: btn,
       create: btn,
     });
   }
+  console.log(`   Seeded ${dashboardButtons.length} Dashboard Buttons`);
 
-  return {
-    usersSeeded: PRODUCTION_USERS.length,
-    buttonsSeeded: PRODUCTION_DASHBOARD_BUTTONS.length,
-  };
-}
+  // 3. Media Assets
+  console.log("3. Seeding Media Assets...");
+  const mediaAssets = [
+    {
+      id: "asset-uuid-001",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+      fileName: "puzzle1_hd.png",
+      fileType: "image/png",
+      fileSize: 1048576,
+    },
+    {
+      id: "asset-uuid-002",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      fileName: "intro_video.mp4",
+      fileType: "video/mp4",
+      fileSize: 5242880,
+    },
+    {
+      id: "asset-uuid-003",
+      publicUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
+      fileName: "whitepaper.pdf",
+      fileType: "application/pdf",
+      fileSize: 2097152,
+    },
+  ];
 
-async function main() {
-  console.log("Starting BuyFacts Production DB seed (User & DashboardButton only)...\n");
+  for (const asset of mediaAssets) {
+    await prisma.mediaAsset.upsert({
+      where: { id: asset.id },
+      update: asset,
+      create: asset,
+    });
+  }
+  console.log(`   Seeded ${mediaAssets.length} Media Assets`);
 
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
-  });
-  const prisma = new PrismaClient({ adapter });
+  // 4. Cubicon 3D Sequences and Tasks
+  console.log("4. Seeding Cubicon 3D Sequences and Tasks...");
+
+  const sequences = [
+    {
+      id: 5,
+      slug: "default",
+      title: "Default Verification Challenge",
+      description: "Standard anti-bot human verification puzzle sequence",
+      passThreshold: 0.01,
+      rotationDirection: "left",
+      defaultRotationInterval: 15,
+      isActive: true,
+      createdBy: "system",
+    },
+    {
+      id: 6,
+      slug: "contact_form",
+      title: "Contact Form Human Verification",
+      description: "Anti-bot spatial puzzle verification for contact inquiries",
+      passThreshold: 0.6,
+      rotationDirection: "left",
+      defaultRotationInterval: 15,
+      isActive: true,
+      createdBy: "system",
+    },
+    {
+      id: 7,
+      slug: "challenge_sequence_3",
+      title: "Challenge Sequence 3",
+      description: "Dynamic human verification puzzle sequence 3",
+      passThreshold: 0.66,
+      rotationDirection: "left",
+      defaultRotationInterval: 15,
+      isActive: true,
+      createdBy: "system",
+    },
+  ];
+
+  for (const seq of sequences) {
+    await prisma.cubiconSequence.upsert({
+      where: { id: seq.id },
+      update: seq,
+      create: seq,
+    });
+  }
 
   try {
-    const result = await seedProductionDatabase(prisma);
-    console.log(`   Upserted ${result.usersSeeded} Admin Users`);
-    console.log(`   Upserted ${result.buttonsSeeded} Dashboard Buttons`);
-    console.log("\nBuyFacts Production DB seeding completed successfully!");
-  } finally {
-    await prisma.$disconnect();
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"CubiconSequence"', 'id'), coalesce((SELECT max(id) FROM "CubiconSequence"), 1));`
+    );
+  } catch {
+    // Non-fatal if sequence sync is not supported in the active environment
   }
+
+  const cubiconTasks = [
+      {
+          id: 17,
+          "sequenceId": 5,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3  (Draw a circle)",
+          description: "Who gets concerned by howling?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":-0.042574127848625916,\"y\":0.2093228930009854,\"z\":0.5976997207441973},{\"x\":-0.01300874877727363,\"y\":0.16201828672165688,\"z\":0.5976997051073445},{\"x\":-0.07213950692678825,\"y\":0.15462694164718369,\"z\":0.5976997226763686}]",
+          "startPoint": "{\"x\":-0.042574127848625916,\"y\":0.2093228930009854,\"z\":0.5976997207441973}",
+          "midPoint": "{\"x\":-0.01300874877727363,\"y\":0.16201828672165688,\"z\":0.5976997051073445}",
+          "endPoint": "{\"x\":-0.07213950692678825,\"y\":0.15462694164718369,\"z\":0.5976997226763686}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.360Z"
+      },
+      {
+          id: 18,
+          "sequenceId": 5,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3  (click to choose)",
+          description: "Who's in line for a change of shirt?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.18356622579331366,\"y\":-0.005166590317604896,\"z\":0.33489561080932634}]",
+          "startPoint": "{\"x\":-0.18356622579331366,\"y\":-0.005166590317604896,\"z\":0.33489561080932634}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.369Z"
+      },
+      {
+          id: 19,
+          "sequenceId": 5,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (click to choose)",
+          description: "Where does his next go? ",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.17082880041376822,\"y\":-0.05078693590343407,\"z\":0.5976999693622778}]",
+          "startPoint": "{\"x\":0.17082880041376822,\"y\":-0.05078693590343407,\"z\":0.5976999693622778}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.379Z"
+      },
+      {
+          id: 20,
+          "sequenceId": 5,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (enter multiple clicks)",
+          description: "Who sat with time over their shoulders?",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082428358-lf20q4-WOW_Grand_Central_Station_Color_No_Text.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.496,\"y\":0.187,\"z\":0.502},{\"x\":0.678,\"y\":0.187,\"z\":0.502}]",
+          "startPoint": "{\"x\":0.496,\"y\":0.187,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": "{\"x\":0.678,\"y\":0.187,\"z\":0.502}",
+          "tolerance": 0.5,
+          "isFinal": true,
+          "createdAt": "2026-10-21T09:25:52.384Z"
+      },
+      {
+          id: 21,
+          "sequenceId": 6,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3 (click to choose)",
+          description: "Who kissed the silent stone guardian?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082435451-y5oisv-WOW_Great_Pyramids_Illustration_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.412,\"y\":0.323,\"z\":0.897}]",
+          "startPoint": "{\"x\":0.412,\"y\":0.323,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.389Z"
+      },
+      {
+          id: 22,
+          "sequenceId": 6,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3 (click to choose)",
+          description: "Who stacked the pages high?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419479-0sm0h3-Benjamin_Franklin_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.192,\"y\":-0.112,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.192,\"y\":-0.112,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.396Z"
+      },
+      {
+          id: 23,
+          "sequenceId": 6,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (click to choose)",
+          description: "Who deals in chances but takes a bite between turns? ",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082472298-9m556g-WOW_Things_BermudaTriangle_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.394,\"y\":-0.081,\"z\":0.897}]",
+          "startPoint": "{\"x\":-0.394,\"y\":-0.081,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.402Z"
+      },
+      {
+          id: 24,
+          "sequenceId": 6,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (Click to choose)",
+          description: "Who took the shiny slide, not a step? ",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.262,\"y\":0.234,\"z\":0.502}]",
+          "startPoint": "{\"x\":0.262,\"y\":0.234,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": true,
+          "createdAt": "2026-10-21T09:25:52.413Z"
+      },
+      {
+          id: 25,
+          "sequenceId": 7,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3 (Click to Choose)",
+          description: "Who chose the high stone seat where heroes stand?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792766115000-ob5kow-WOW_Festival_of_Colors_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.351,\"y\":0.08,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.351,\"y\":0.08,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:07:51.207Z"
+      },
+      {
+          id: 26,
+          "sequenceId": 7,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3 (Click to Choose)",
+          description: "Who's perfecting the face while the road rolls on?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082447166-7ujbit-WOW_People_Alice_Cooper_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.14,\"y\":0.019,\"z\":0.897}]",
+          "startPoint": "{\"x\":-0.14,\"y\":0.019,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:20:11.041Z"
+      },
+      {
+          id: 27,
+          "sequenceId": 7,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (Draw a Circle)",
+          description: "Who came down the twisting path one step at a time?",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":0.366,\"y\":0.14,\"z\":0.897},{\"x\":0.362,\"y\":0.14,\"z\":0.897},{\"x\":0.375,\"y\":0.171,\"z\":0.897}]",
+          "startPoint": "{\"x\":0.366,\"y\":0.14,\"z\":0.897}",
+          "midPoint": "{\"x\":0.362,\"y\":0.14,\"z\":0.897}",
+          "endPoint": "{\"x\":0.375,\"y\":0.171,\"z\":0.897}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:26:09.358Z"
+      },
+      {
+          id: 28,
+          "sequenceId": 7,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (Draw a Circle)",
+          description: "Who receives a royal treat without leaving his throne?",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419103-hp8641-Alice_In_Wonderland_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":-0.048,\"y\":0.178,\"z\":0.502},{\"x\":-0.038,\"y\":0.183,\"z\":0.502},{\"x\":-0.071,\"y\":0.15,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.048,\"y\":0.178,\"z\":0.502}",
+          "midPoint": "{\"x\":-0.038,\"y\":0.183,\"z\":0.502}",
+          "endPoint": "{\"x\":-0.071,\"y\":0.15,\"z\":0.502}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:30:55.311Z"
+      }
+  ];
+
+  for (const t of cubiconTasks) {
+    await prisma.cubiconTask.upsert({
+      where: { id: t.id },
+      update: {
+        ...t,
+        createdAt: new Date(t.createdAt),
+      },
+      create: {
+        ...t,
+        createdAt: new Date(t.createdAt),
+      },
+    });
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"CubiconTask"', 'id'), coalesce((SELECT max(id) FROM "CubiconTask"), 1));`
+    );
+  } catch {
+    // Non-fatal if sequence sync is not supported in the active environment
+  }
+
+  console.log(`   Seeded ${cubiconTasks.length} Cubicon Tasks across ${sequences.length} Sequences`);
+
+
+  // 8. Content Vault Topics and Multi-Format Assets
+  console.log("8. Seeding Content Vault Topics and Assets for Guests...");
+
+  const vaultTopics = [
+    // Products
+    { name: "Cubicon 3D", slug: "cubicon-3d", category: "Product" },
+    { name: "ResearchLib", slug: "research-lib", category: "Product" },
+    { name: "TRIAD Framework", slug: "triad-framework", category: "Product" },
+    {
+      name: "Value Quantification",
+      slug: "value-quantification",
+      category: "Product",
+    },
+    // Dashboard Topics
+    {
+      name: "Research Planning",
+      slug: "research-planning",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Survey Design",
+      slug: "survey-design",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Story-Based Surveys",
+      slug: "story-based-surveys",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Participant Validation",
+      slug: "participant-validation",
+      category: "Dashboard Topic",
+    },
+    {
+      name: "Pattern Insights",
+      slug: "pattern-insights",
+      category: "Dashboard Topic",
+    },
+  ];
+
+  const createdTopics: Record<string, string> = {};
+  for (const t of vaultTopics) {
+    const topicRecord = await prisma.topic.create({
+      data: t,
+    });
+    createdTopics[t.slug] = topicRecord.id;
+  }
+  console.log(
+    `   Seeded ${vaultTopics.length} Topics (Products and Dashboard Topics)`,
+  );
+
+  const vaultAssets: Array<{
+    title: string;
+    description: string;
+    format: ContentFormat;
+    sourceUrl: string;
+    embedCode?: string;
+    topicId: string;
+    keywords: string;
+    isPublished: boolean;
+    publishedAt: Date;
+  }> = [
+    {
+      title: "The Rule of Three in B2B Customer Discovery",
+      description:
+        "How triangulating qualitative responses through three distinct validation layers reduces market uncertainty before full-scale investments.",
+      format: ContentFormat.ARTICLE,
+      sourceUrl:
+        "https://www.linkedin.com/pulse/rule-of-three-b2b-customer-discovery-buyfacts",
+      topicId: createdTopics["triad-framework"],
+      keywords: JSON.stringify([
+        "rule of three",
+        "customer discovery",
+        "b2b research",
+        "validation layers",
+        "market uncertainty",
+        "decision making",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-15T10:00:00Z"),
+    },
+    {
+      title: "Cubicon 3D Spatial Survey Architecture Walkthrough",
+      description:
+        "Complete guided walkthrough of spatial 3D puzzle validation and drag-and-drop coordinate evaluation.",
+      format: ContentFormat.VIDEO,
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      embedCode:
+        '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Cubicon 3D Spatial Survey Architecture Walkthrough" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+      topicId: createdTopics["cubicon-3d"],
+      keywords: JSON.stringify([
+        "cubicon 3d",
+        "spatial survey",
+        "puzzle validation",
+        "interactive coordinate",
+        "participant engagement",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-20T14:30:00Z"),
+    },
+    {
+      title: "Return on Effort (ROE) Framework Whitepaper",
+      description:
+        "Comprehensive architectural whitepaper detailing mathematical models for maximizing researcher yield per fieldwork hour.",
+      format: ContentFormat.PDF,
+      sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
+      topicId: createdTopics["value-quantification"],
+      keywords: JSON.stringify([
+        "return on effort",
+        "roe framework",
+        "research yield",
+        "fieldwork economics",
+        "b2b metrics",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-09-28T09:00:00Z"),
+    },
+    {
+      title: "Early Market Movement Recognition Audio Briefing",
+      description:
+        "Executive audio briefing on detecting subtle behavioral shifts in enterprise buyer panels before quarterly churn signals appear.",
+      format: ContentFormat.AUDIO,
+      sourceUrl:
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      topicId: createdTopics["pattern-insights"],
+      keywords: JSON.stringify([
+        "early signals",
+        "market movement",
+        "buyer patterns",
+        "executive briefing",
+        "b2b intelligence",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-02T16:00:00Z"),
+    },
+    {
+      title: "Survey Design Imperatives: Eliminating Acquiescence Bias",
+      description:
+        "Empirical strategies for framing dual-choice prompts and story-based exercises that force deliberate cognitive engagement.",
+      format: ContentFormat.ARTICLE,
+      sourceUrl: "https://buyfacts.com/research-imperatives",
+      topicId: createdTopics["survey-design"],
+      keywords: JSON.stringify([
+        "survey design",
+        "bias elimination",
+        "story-based surveys",
+        "cognitive engagement",
+        "question framing",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-08T11:15:00Z"),
+    },
+    {
+      title: "ResearchLib Narrative Survey Demo",
+      description:
+        "Demonstration of dynamic fill-in-the-blank narrative survey interfaces that dramatically improve completion fidelity.",
+      format: ContentFormat.VIDEO,
+      sourceUrl:
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      embedCode:
+        '<video controls preload="metadata" style="width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4"></video>',
+      topicId: createdTopics["research-lib"],
+      keywords: JSON.stringify([
+        "researchlib",
+        "narrative survey",
+        "fill in the blanks",
+        "completion fidelity",
+        "storytelling",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-12T13:45:00Z"),
+    },
+    {
+      title: "Participant Validation Protocol Reference",
+      description:
+        "Standard operating procedures for establishing verified identity and domain authority during high-stakes survey intake.",
+      format: ContentFormat.PDF,
+      sourceUrl: "https://pdfobject.com/pdf/sample.pdf",
+      topicId: createdTopics["participant-validation"],
+      keywords: JSON.stringify([
+        "participant validation",
+        "identity verification",
+        "high stakes research",
+        "data fidelity",
+        "panel management",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-13T10:00:00Z"),
+    },
+    {
+      title: "Story-Based Survey Methodology Deep Dive",
+      description:
+        "In-depth audio masterclass on turning standard survey friction into engaging narrative exploration.",
+      format: ContentFormat.AUDIO,
+      sourceUrl:
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      topicId: createdTopics["story-based-surveys"],
+      keywords: JSON.stringify([
+        "story based surveys",
+        "narrative friction",
+        "audio masterclass",
+        "qualitative depth",
+        "engagement",
+      ]),
+      isPublished: true,
+      publishedAt: new Date("2026-10-14T08:30:00Z"),
+    },
+  ];
+
+  for (const a of vaultAssets) {
+    await prisma.vaultAsset.create({
+      data: a,
+    });
+  }
+  console.log(
+    `   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`,
+  );
+
+  console.log("6. Seeding ResearchLib Narrative Surveys & Tasks...");
+  const topSurvey = await prisma.researchLibSurvey.create({
+    data: {
+      userId: "system_default",
+      title: "AI Marketing Directional Measurement",
+      timeCounter: "down",
+      pauseDuration: "3",
+      durationInMin: "30",
+      combo: "narWid",
+    },
+  });
+
+  for (let idx = 0; idx < DEFAULT_SURVEYS.length; idx++) {
+    const task = DEFAULT_SURVEYS[idx];
+    const isFinal = idx === DEFAULT_SURVEYS.length - 1;
+    await prisma.researchLibTask.create({
+      data: {
+        surveyId: topSurvey.id,
+        taskIndex: idx,
+        heading: task.heading,
+        instruction: task.instruction,
+        widget: task.widget,
+        question: task.story,
+        story: task.story,
+        blanks: task.blanks,
+        isFollowup: isFinal ? 0 : 1,
+      },
+    });
+  }
+  console.log(`   Seeded 1 top-level Survey and ${DEFAULT_SURVEYS.length} ResearchLib Tasks\n`);
+
+  console.log("\nBuyFacts Core DB seeding completed successfully!");
 }
 
-const isMainModule =
-  typeof process !== "undefined" &&
-  process.argv[1] &&
-  fileURLToPath(import.meta.url) === process.argv[1];
-
-if (isMainModule) {
-  main().catch((e) => {
-    console.error("Error during production seeding:", e);
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error("Error during seeding:", e);
+    await prisma.$disconnect();
     process.exit(1);
   });
-}
