@@ -80,19 +80,30 @@ model MediaAsset {
 
 // 6. ResearchLib / Research Lib Embedded Survey Platform
 model ResearchLibSurvey {
-  id            Int      @id @default(autoincrement())
-  userId        String   @default("system_default")
-  heading       String
-  instruction   String
-  widget        String
-  story         String
-  combo         String
-  blanks        String   // JSON string of blanks and choices
-  durationInMin String?  @default("30")
-  pauseDuration String?  @default("3")
-  timeCounter   String?  @default("down")
-  isFollowup    Int?     @default(1)
-  createdAt     DateTime @default(now())
+  id            Int                 @id @default(autoincrement())
+  userId        String              @default("system_default")
+  title         String?             @default("AI Marketing Directional Measurement")
+  timeCounter   String?             @default("down") // time direction: "down" | "up"
+  pauseDuration String?             @default("3")    // pause duration (minutes)
+  durationInMin String?             @default("30")   // total duration (minutes)
+  combo         String              @default("narWid") // combination rule: narWid, tradWid, narList, tradList
+  createdAt     DateTime            @default(now())
+  tasks         ResearchLibTask[]
+}
+
+model ResearchLibTask {
+  id          Int               @id @default(autoincrement())
+  surveyId    Int
+  survey      ResearchLibSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  taskIndex   Int               @default(0)
+  heading     String
+  instruction String
+  widget      String            // triad, bar, ring, barrel
+  question    String            // chunk of the story
+  story       String?           // chunk of the story
+  blanks      String            // JSON string of blanks and choices with questionType
+  isFollowup  Int               @default(1) // 1 for intermediate, 0 for final task (follow up set to false)
+  createdAt   DateTime          @default(now())
 }
 
 model ResearchLibResponse {

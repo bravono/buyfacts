@@ -268,8 +268,44 @@ The database schema is standardized on PascalCase table names (matching Prisma m
 - **`CubiconRegistration`**: Founding client registration submissions (`id`, `firstName`, `lastName`, `email`, `phone`, `company`, `role`, `interest`, `notes`, `isUsBased`, `status`, `createdAt`, `updatedAt`).
 - **`CubiconShare`**: Invitation records (`id`, `senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `shareUrl`, `sessionId`, `status`, `createdAt`).
 - **`FeedbackSubmission`**: User star ratings and feedback commentary (`id`, `userId`, `userEmail`, `sessionId`, `feedbackText`, `rating`, `createdAt`).
-- **`ResearchLibSurvey`**: Research library survey definitions linked to `userId` (`id`, `userId`, `title`, `description`, `category`, `status`, `createdAt`, `updatedAt`).
-- **`ResearchLibResponse`**: Research survey responses linked to `surveyId` and `userId` (`id`, `surveyId`, `userId`, `answers`, `completed`, `submittedAt`).
+- **`ResearchLibSurvey`**: Research library narrative survey top-level configuration (`id`, `userId`, `title`, `timeCounter`, `pauseDuration`, `durationInMin`, `combo`, `tasks`, `createdAt`). Configured with the canonical 6-task AI Marketing Directional Measurement survey.
+- **`ResearchLibTask`**: Research library individual survey task items linked to `ResearchLibSurvey` (`id`, `surveyId`, `taskIndex`, `heading`, `instruction`, `widget`, `question`, `story`, `blanks`, `isFollowup`, `createdAt`). Intermediate tasks have `isFollowup = 1` (`true`); the final task has `isFollowup = 0` (`false`).
+- **`ResearchLibResponse`**: Participant narrative survey responses and choices (`id`, `userId`, `surveyId`, `answers`, `story`, `createdAt`).
+- **`ResearchLibTimer`**: Session and pause timer state per user.
+- **`ResearchLibElement`**: Interactive UI element positions and state.
+- **`ResearchLibAppState`**: Application runtime recording and participant state.
+
+### ResearchLib & Narrative Survey Platform
+
+The embedded Narrative app (`/research-lib` iframe wrapper pointing to `/narrative-app/index.html`) and the standalone repository (`../narrative`) use a unified survey and task architecture:
+
+- **Top-Level Survey Elements**:
+  - **Time Direction** (`timeCounter`): `down`, `up`
+  - **Pause Duration** (`pauseDuration`): default `3` minutes
+  - **Duration** (`durationInMin`): default `30` minutes
+  - **Combination Rule** (`combo`): Approved modes include `narWid`, `tradWid`, `narList`, `tradList`
+
+- **Task-Level Elements**:
+  - **Heading** & **Instruction**: Task-specific headers and directions
+  - **Widget Type** (`widget`): Approved widgets include `triad`, `bar`, `ring`, `barrel`
+  - **Question / Story Chunk** (`story` / `question`): Segment of the progressive story containing fill-in-the-blank markers
+  - **Blanks & Choices** (`blanks`): JSON array of choices with approved **QuestionType** values:
+    `scale`, `multipleChoice`, `checkbox`, `rank`, `singleChoice`, `radio`, `number`, `text`, `ring`, `rate`, `slider`, `triad`
+  - **Follow-up Rule** (`isFollowup`): intermediate tasks have `isFollowup = 1` (`true`), while the **final task** has `isFollowup = 0` (`false`) to trigger completion.
+
+The canonical 6-part sequential survey:
+
+1. **Question 1 (Blank a)**: *Organizational Function* - Triad with choices `Marketing`, `Sales`, `Operations`.
+2. **Question 2 (Blank b)**: *AI Adoption Rate* - Triad with choices `Slow`, `Moderate`, `Rapid`.
+3. **Question 3 (Blank c)**: *AI Momentum* - Triad with choices `Hidden Momentum (Internal Work and Programs)`, `Visible Momentum (With Other Functions/Customers)`, `Network Momentum (In the Market)`.
+4. **Question 4 (Blank d)**: *External AI Commitment* - Triad with choices `No Commitment`, `Some Promise`, `Strong Commitment`.
+5. **Question 5 (Blank e)**: *Leadership Dialogue* - Triad with choices `Never Spoke`, `Had Spoken`, `Often Spoke`.
+6. **Question 6 (Blank f)**: *Primary Success Factor* - Triad with choices `The People`, `The Way They Work`, `Leadership`.
+
+Completion Screen: Directs respondent to directional measurement conclusion with action options for results download (SEND IT), peer comparison (SEND IT), user feedback (ASK ME), and session exit (EXIT).
+
+- **Bundling & Synchronization Script**: `npm run embed-research-lib` builds the standalone app in `../narrative` and bundles output into `public/narrative-app/`.
+- **Database Seeding Script**: `npx tsx scripts/seed-research-lib-survey.ts` ensures all three database targets (PostgreSQL, BuyFacts SQLite `prisma/dev.db`, and Standalone `narrative.db`) are seeded synchronously.
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.

@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient, ContentFormat } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "../lib/auth/password";
+import { DEFAULT_SURVEYS } from "../app/api/narrative-data/route";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -21,6 +22,9 @@ async function main() {
   await prisma.cubiconShare.deleteMany();
   await prisma.feedbackSubmission.deleteMany();
 
+  await prisma.researchLibResponse.deleteMany();
+  await prisma.researchLibTask.deleteMany();
+  await prisma.researchLibSurvey.deleteMany();
   await prisma.vaultAsset.deleteMany();
   await prisma.topic.deleteMany();
 
@@ -853,6 +857,37 @@ async function main() {
   console.log(
     `   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`,
   );
+
+  console.log("6. Seeding ResearchLib Narrative Surveys & Tasks...");
+  const topSurvey = await prisma.researchLibSurvey.create({
+    data: {
+      userId: "system_default",
+      title: "AI Marketing Directional Measurement",
+      timeCounter: "down",
+      pauseDuration: "3",
+      durationInMin: "30",
+      combo: "narWid",
+    },
+  });
+
+  for (let idx = 0; idx < DEFAULT_SURVEYS.length; idx++) {
+    const task = DEFAULT_SURVEYS[idx];
+    const isFinal = idx === DEFAULT_SURVEYS.length - 1;
+    await prisma.researchLibTask.create({
+      data: {
+        surveyId: topSurvey.id,
+        taskIndex: idx,
+        heading: task.heading,
+        instruction: task.instruction,
+        widget: task.widget,
+        question: task.story,
+        story: task.story,
+        blanks: task.blanks,
+        isFollowup: isFinal ? 0 : 1,
+      },
+    });
+  }
+  console.log(`   Seeded 1 top-level Survey and ${DEFAULT_SURVEYS.length} ResearchLib Tasks\n`);
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }

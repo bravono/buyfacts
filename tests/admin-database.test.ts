@@ -61,7 +61,7 @@ describe("Admin Database Dashboard API Suite", () => {
     const data = await res.json();
     assert.equal(data.success, true);
     assert.ok(data.summary);
-    assert.equal(data.summary.modelCount, 20);
+    assert.equal(data.summary.modelCount, 21);
 
     const registryKeys = Object.keys(ADMIN_MODEL_REGISTRY);
     for (const key of registryKeys) {
