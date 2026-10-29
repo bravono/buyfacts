@@ -85,11 +85,25 @@ export async function GET(req: NextRequest) {
     });
 
     if (!upstream.ok || !upstream.body) {
+      // A 404 means the link itself is wrong — say so, because that is what the user has
+      // to fix (it is a data problem, not a server problem).
+      const fileName = target.pathname.split("/").pop();
+      if (upstream.status === 404) {
+        return NextResponse.json(
+          {
+            error:
+              `The file "${fileName}" does not exist in storage. This link points at a ` +
+              `missing file — paste the correct URL for this document.`,
+            missingFile: true,
+            missingKey: target.pathname.replace(/^\//, ""),
+          },
+          { status: 404 }
+        );
+      }
       return NextResponse.json(
         {
           error:
-            `Storage returned ${upstream.status} ${upstream.statusText} for ` +
-            `${target.pathname.split("/").pop()}`,
+            `Storage returned ${upstream.status} ${upstream.statusText} for ${fileName}`,
         },
         { status: 502 }
       );

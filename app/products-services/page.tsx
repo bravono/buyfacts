@@ -94,7 +94,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "audio",
     mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
   },
   {
     label: "Survey Fieldwork",

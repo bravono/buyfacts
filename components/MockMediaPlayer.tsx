@@ -248,6 +248,23 @@ export default function MockMediaPlayer({
   })();
 
   /**
+   * The document the screen should read, chosen explicitly:
+   *  - READ IT pressed  -> this post's READ IT document
+   *  - default screen   -> the PRIMARY link when it is a document, otherwise the READ IT
+   *                        document (a post may have a document but no READ IT button filled)
+   * The READ IT link can never stand in for a primary document, which is what made a bad
+   * READ IT URL take the whole player down.
+   */
+  const screenDocUrl: string | undefined =
+    screenMode === "document"
+      ? documentSrc
+      : isDocument
+        ? mediaUrl
+        : screenMode === "auto"
+          ? documentSrc
+          : undefined;
+
+  /**
    * On the default screen this is the primary link itself (mediaUrl); the SEE IT / HEAR IT /
    * READ IT sources are only used when one of those buttons put its own media on screen.
    */
@@ -256,11 +273,9 @@ export default function MockMediaPlayer({
       ? videoSrc
       : screenMode === "audio"
         ? audioSrc
-        : screenMode === "document"
-          ? documentSrc
-          : screenType === "docx" || screenType === "pdf"
-            ? documentSrc
-            : mediaUrl;
+        : screenType === "docx" || screenType === "pdf"
+          ? screenDocUrl
+          : mediaUrl;
 
   const isScreenDocx = screenType === "docx";
   const isScreenPdf = screenType === "pdf";
@@ -717,7 +732,7 @@ export default function MockMediaPlayer({
         )}
 
         {/* No Media Found State — never covers a document that is being read */}
-        {!screenMediaUrl && !isScreenDocument && !isWelcomeActive && (
+        {!screenMediaUrl && !isScreenDocument && !isLoadingDoc && !isWelcomeActive && (
           <div className={styles.noMediaContainer}>
             <div className={styles.noMediaIconWrapper}>
               <FileQuestion size={36} className={styles.noMediaIcon} />
