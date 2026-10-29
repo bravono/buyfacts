@@ -26,7 +26,8 @@ import {
   isPdfUrl,
   isDocxUrl,
   fetchAndConvertDocx,
-  getOfficeViewerUrl,
+  getDocumentProxyUrl,
+  isUnreachableForThirdParty,
 } from "../lib/document-parser";
 
 export interface MockMediaPlayerProps {
@@ -60,6 +61,16 @@ export interface MockMediaPlayerProps {
   showWelcome?: boolean;
   onShowWelcome?: () => void;
   onDismissWelcome?: () => void;
+}
+
+/** Host of a URL, for error messages. Never throws. */
+function safeHost(url?: string): string {
+  if (!url) return "an unknown host";
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
 }
 
 function isYouTubeUrl(url?: string): boolean {
@@ -819,7 +830,7 @@ export default function MockMediaPlayer({
             </div>
             <div className={styles.inlineDocBody}>
               <iframe
-                src={`${screenMediaUrl}#view=FitH&toolbar=1&navpanes=0`}
+                src={`${getDocumentProxyUrl(screenMediaUrl)}#view=FitH&toolbar=1&navpanes=0`}
                 className={styles.inlineDocIframe}
                 title={displayTitle}
               />
@@ -856,11 +867,39 @@ export default function MockMediaPlayer({
               )}
               {!isLoadingModalDoc && docError && (
                 <div className={styles.inlineDocFallback}>
-                  <iframe
-                    src={getOfficeViewerUrl(screenMediaUrl)}
-                    className={styles.inlineDocIframe}
-                    title={displayTitle}
-                  />
+                  {isUnreachableForThirdParty(screenMediaUrl) ? (
+                    <div className={styles.inlineDocErrorNotice}>
+                      <FileQuestion size={26} />
+                      <h4>This document cannot be displayed here</h4>
+                      <p>
+                        It is hosted at <code>{safeHost(screenMediaUrl)}</code>, which is not
+                        reachable from the internet. Save the link using the public bucket URL
+                        (for example <code>https://s3.buyfacts.com</code>).
+                      </p>
+                      <a
+                        href={screenMediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.btnOpenExternal}
+                      >
+                        <ExternalLink size={15} /> Download the file
+                      </a>
+                    </div>
+                  ) : (
+                    <div className={styles.inlineDocErrorNotice}>
+                      <FileQuestion size={26} />
+                      <h4>The document could not be read</h4>
+                      <p>{docError}</p>
+                      <a
+                        href={screenMediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.btnOpenExternal}
+                      >
+                        <ExternalLink size={15} /> Download the file
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
               {!isLoadingModalDoc && !docError && modalDocxHtml && (

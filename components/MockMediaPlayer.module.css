@@ -1439,6 +1439,42 @@
   max-width: 100% !important;
 }
 
+/* Document read error: a clear reason instead of a third-party viewer's generic message */
+.inlineDocErrorNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.inlineDocErrorNotice h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #00507b;
+}
+
+.inlineDocErrorNotice p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #475569;
+  max-width: 46ch;
+}
+
+.inlineDocErrorNotice code {
+  font-size: 0.75rem;
+  background: #e2e8f0;
+  border-radius: 3px;
+  padding: 0.05rem 0.25rem;
+}
+
 /* Full screen: the player screen fills the display, and a document read inside it
    scales its text up so it is readable across a monitor. */
 .screenFrame:fullscreen {
