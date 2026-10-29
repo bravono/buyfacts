@@ -158,6 +158,12 @@ export default function MockMediaPlayer({
   /** READ IT document converted to HTML, shown on the player screen. */
   const [modalDocxHtml, setModalDocxHtml] = useState<string | null>(null);
   const [isLoadingModalDoc, setIsLoadingModalDoc] = useState(false);
+  /**
+   * Which document the current state belongs to. A failure recorded for one post must never
+   * be shown for another, and pasting the same URL into a different post must trigger a
+   * fresh read — both used to depend on the URL alone.
+   */
+  const [docKey, setDocKey] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -282,10 +288,14 @@ export default function MockMediaPlayer({
       setDocxHtml(null);
       setIsLoadingDoc(false);
       setDocError(null);
+      setDocKey(null);
       return;
     }
 
+    // Identify this read by post AND document, so switching posts always re-reads.
+    const thisKey = `${title || ""}|${displayTagline || ""}|${inlineDocxUrl}`;
     let isMounted = true;
+    setDocKey(thisKey);
     setIsLoadingDoc(true);
     setDocError(null);
 
@@ -318,7 +328,7 @@ export default function MockMediaPlayer({
     return () => {
       isMounted = false;
     };
-  }, [isScreenDocx, screenMediaUrl]);
+  }, [isScreenDocx, screenMediaUrl, title, displayTagline]);
 
 
   // Escape closes full screen, whether the screen holds a video, audio or a document.
@@ -348,6 +358,14 @@ export default function MockMediaPlayer({
     setDuration(0);
     setVideoMode("idle");
     setDownloadConfirmed(null);
+
+    // Drop any document state left over from the previous post.
+    setDocxHtml(null);
+    setModalDocxHtml(null);
+    setDocError(null);
+    setIsLoadingDoc(false);
+    setIsLoadingModalDoc(false);
+    setDocKey(null);
   }, [mediaUrl, seeItUrl, hearItUrl, readItUrl, title]);
 
   // Reset playback states on media change
@@ -865,7 +883,7 @@ export default function MockMediaPlayer({
                   <span>Rendering Word document...</span>
                 </div>
               )}
-              {!isLoadingModalDoc && docError && (
+              {!isLoadingModalDoc && docError && docKey && (
                 <div className={styles.inlineDocFallback}>
                   {isUnreachableForThirdParty(screenMediaUrl) ? (
                     <div className={styles.inlineDocErrorNotice}>
