@@ -86,18 +86,51 @@ export function getGoogleDocsViewerUrl(url: string): string {
 
 /**
  * Converts a DOCX ArrayBuffer or Node Buffer into semantic HTML using Mammoth.
+ *
+ * IMPORTANT: mammoth ships two entry points. The browser build (which the bundler picks up
+ * for a "use client" component) only understands `{ arrayBuffer }`; the Node build only
+ * understands `{ buffer }`/`{ path }` and throws "Could not find file in options" for
+ * anything else. Handing the wrong shape to either one made every document fail with that
+ * message — which is what showed up as "the document could not be read".
+ *
+ * The input is normalised so both builds are satisfied, and the failure is retried with the
+ * other shape before giving up.
  */
+function toArrayBuffer(input: ArrayBuffer | Buffer): ArrayBuffer {
+  if (input instanceof ArrayBuffer) return input;
+  const view = input as unknown as Uint8Array;
+  return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer;
+}
+
 export async function convertDocxBufferToHtml(
   input: ArrayBuffer | Buffer
 ): Promise<{ html: string; warnings: string[] }> {
-  const isBuffer = typeof Buffer !== "undefined" && Buffer.isBuffer(input);
-  const conversionInput = isBuffer
-    ? { buffer: input as Buffer }
-    : { arrayBuffer: input as ArrayBuffer };
+  const arrayBuffer = toArrayBuffer(input);
+  const asBuffer = { buffer: Buffer.from(new Uint8Array(arrayBuffer)) };
 
-  const result = await mammoth.convertToHtml(conversionInput, {
-    ignoreEmptyParagraphs: true,
-  });
+  const attempts: Array<Record<string, unknown>> = [
+    { arrayBuffer },
+    asBuffer,
+  ];
+
+  let result: Awaited<ReturnType<typeof mammoth.convertToHtml>> | null = null;
+  let lastError: unknown = null;
+
+  for (const conversionInput of attempts) {
+    try {
+      result = await mammoth.convertToHtml(conversionInput as never, {
+        ignoreEmptyParagraphs: true,
+      });
+      break;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  if (!result) {
+    const message = lastError instanceof Error ? lastError.message : "Unknown DOCX conversion error";
+    throw new Error(`DOCX conversion failed: ${message}`);
+  }
 
   const warnings = (result.messages || [])
     .filter((msg) => msg.type === "warning")
