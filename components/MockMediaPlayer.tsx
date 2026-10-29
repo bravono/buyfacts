@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import {
   Play,
   Pause,
@@ -39,10 +38,15 @@ export interface MockMediaPlayerProps {
   rightSubtitle?: string;
   mediaType?: "video" | "audio" | "image" | "pdf" | "docx";
   mediaUrl?: string;
+  /** Dedicated video source for the SEE IT action (falls back to mediaUrl). */
+  seeItUrl?: string;
+  /** Dedicated audio source for the HEAR IT action (falls back to mediaUrl). */
+  hearItUrl?: string;
+  /** Dedicated document source for the READ IT action (falls back to mediaUrl / pdfUrl). */
+  readItUrl?: string;
   pdfUrl?: string;
   pdfLabel?: string;
   moreDetailUrl?: string;
-  readItUrl?: string;
   moreDetailIconUrl?: string;
   videoIconUrl?: string;
   audioIconUrl?: string;
@@ -90,6 +94,8 @@ export default function MockMediaPlayer({
   rightSubtitle,
   mediaType = "video",
   mediaUrl,
+  seeItUrl,
+  hearItUrl,
   pdfUrl,
   pdfLabel,
   moreDetailUrl,
@@ -123,44 +129,29 @@ export default function MockMediaPlayer({
 
   // Section 6: Video opening state and In Depth preview states
   const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">("idle");
-  const [showInDepthModal, setShowInDepthModal] = useState(false);
   const [downloadConfirmed, setDownloadConfirmed] = useState<string | null>(null);
+
+  /**
+   * What SEE IT / HEAR IT / READ IT have put on the player screen.
+   * "auto"   — the post's own default media (its video, else its audio, else its document)
+   * "video"  — this post's SEE IT video
+   * "audio"  — this post's HEAR IT audio
+   * "document" — this post's READ IT document, rendered in the player (and its full screen)
+   */
+  const [screenMode, setScreenMode] = useState<"auto" | "video" | "audio" | "document">("auto");
 
   // Document state for DOCX client-side rendering
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [isLoadingDoc, setIsLoadingDoc] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
+  /** READ IT document converted to HTML, shown on the player screen. */
   const [modalDocxHtml, setModalDocxHtml] = useState<string | null>(null);
   const [isLoadingModalDoc, setIsLoadingModalDoc] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Synchronize body class and notify Navbar when document reader modal opens or closes
-  useEffect(() => {
-    if (showInDepthModal) {
-      document.body.classList.add("document-reader-open");
-      window.dispatchEvent(
-        new CustomEvent("document-reader-toggle", { detail: { isOpen: true } })
-      );
-    } else {
-      document.body.classList.remove("document-reader-open");
-      window.dispatchEvent(
-        new CustomEvent("document-reader-toggle", { detail: { isOpen: false } })
-      );
-    }
-    return () => {
-      document.body.classList.remove("document-reader-open");
-      window.dispatchEvent(
-        new CustomEvent("document-reader-toggle", { detail: { isOpen: false } })
-      );
-    };
-  }, [showInDepthModal]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  /** The player screen itself — this is what goes full screen, whatever it is showing. */
+  const screenFrameRef = useRef<HTMLDivElement>(null);
 
   const displayTitle = isWelcomeActive
     ? "Getting Started"
@@ -181,9 +172,88 @@ export default function MockMediaPlayer({
 
   const isDocument = isDocx || isPdf;
 
-  const isYouTube = Boolean(mediaUrl && isYouTubeUrl(mediaUrl));
+  // --- Dedicated per-button sources -------------------------------------------------
+  // Each of the three action buttons owns its own media, exactly like the primary
+  // BUTTON LINK does. When a dedicated link is not configured we fall back to the
+  // primary link only if that primary link is actually of the right kind.
+  const primaryIsVideo = Boolean(
+    mediaUrl &&
+      !isDocument &&
+      (isYouTubeUrl(mediaUrl) || /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(mediaUrl))
+  );
+  const primaryIsAudio = Boolean(
+    mediaUrl &&
+      !isDocument &&
+      /\.(mp3|m4a|aac|wav|oga|opus|flac)($|\?|#)/i.test(mediaUrl)
+  );
+
+  /** Video shown inside the player for SEE IT (and as the default screen for video rows). */
+  const videoSrc =
+    (seeItUrl && seeItUrl.trim()) || (primaryIsVideo ? mediaUrl : undefined);
+  /** Audio played by HEAR IT (and as the default screen for audio rows). */
+  const audioSrc =
+    (hearItUrl && hearItUrl.trim()) || (primaryIsAudio ? mediaUrl : undefined);
+  /** Document opened by READ IT and downloaded from the reader modal. */
+  const documentSrc =
+    (readItUrl && readItUrl.trim()) || (isDocument && mediaUrl ? mediaUrl : undefined);
+
+  /**
+   * The media actually shown on the player screen right now. The page passes the row's
+   * mediaType, but the screen must always match the dedicated link that really exists,
+   * otherwise every post ends up playing the same fallback asset.
+   *
+   * SEE IT / HEAR IT / READ IT each put their own asset on this one screen, so the
+   * screen mode decides first; the row's mediaType only decides the default screen.
+   */
+  const screenType: "video" | "audio" | "image" | "pdf" | "docx" = (() => {
+    if (screenMode === "document") {
+      if (documentSrc) return isDocxUrl(documentSrc) ? "docx" : "pdf";
+      return "video";
+    }
+    if (screenMode === "audio") return audioSrc ? "audio" : "video";
+    if (screenMode === "video") {
+      return videoSrc ? "video" : audioSrc ? "audio" : documentSrc ? (isDocxUrl(documentSrc) ? "docx" : "pdf") : "video";
+    }
+    if (mediaType === "image") return mediaUrl ? "image" : "video";
+    if (mediaType === "audio") return audioSrc ? "audio" : "video";
+    if (mediaType === "docx" || (isDocx && documentSrc === mediaUrl)) return documentSrc ? "docx" : "video";
+    if (mediaType === "pdf" || (isPdf && documentSrc === mediaUrl)) {
+      return documentSrc ? "pdf" : "video";
+    }
+    if (mediaType === "video") {
+      return videoSrc ? "video" : audioSrc ? "audio" : documentSrc ? (isDocxUrl(documentSrc) ? "docx" : "pdf") : "video";
+    }
+    return "video";
+  })();
+
+  const screenMediaUrl =
+    screenType === "audio"
+      ? audioSrc
+      : screenType === "image"
+        ? mediaUrl
+        : screenType === "video"
+          ? videoSrc
+          : documentSrc;
+
+  const isScreenDocx = screenType === "docx";
+  const isScreenPdf = screenType === "pdf";
+  const isScreenDocument = isScreenDocx || isScreenPdf;
+
+  /**
+   * True when the media on screen is this post's own READ IT document. In that case
+   * SEE IT / HEAR IT have nothing of their own to show and must not hijack the
+   * document that is currently on the player.
+   */
+  const screenIsOwnDocument = Boolean(
+    isScreenDocument && documentSrc && screenMediaUrl === documentSrc
+  );
+
+  const isScreenYouTube = Boolean(screenMediaUrl && isYouTubeUrl(screenMediaUrl));
   const isPlayable = Boolean(
-    (mediaType === "video" || mediaType === "audio") && mediaUrl && !isYouTube && !isDocument
+    (screenType === "video" || screenType === "audio") &&
+      screenMediaUrl &&
+      !isScreenYouTube &&
+      !isScreenDocument
   );
 
   const effectiveInDepthUrl = moreDetailUrl || readItUrl;
@@ -193,11 +263,10 @@ export default function MockMediaPlayer({
     pdfUrl ||
     "/sample-details.pdf";
 
-  const isTargetDocx = isDocxUrl(targetDocUrl);
-
-  // Fetch and convert main inline DOCX media
+  // Fetch and convert the DOCX that is on the player screen — always this post's READ IT document
   useEffect(() => {
-    if (!isDocx || !mediaUrl) {
+    const inlineDocxUrl = isScreenDocx ? screenMediaUrl : undefined;
+    if (!isScreenDocx || !inlineDocxUrl) {
       setDocxHtml(null);
       setIsLoadingDoc(false);
       setDocError(null);
@@ -208,19 +277,24 @@ export default function MockMediaPlayer({
     setIsLoadingDoc(true);
     setDocError(null);
 
-    fetchAndConvertDocx(mediaUrl)
+    fetchAndConvertDocx(inlineDocxUrl)
       .then((result) => {
         if (!isMounted) return;
         if (result.success && result.html) {
           setDocxHtml(result.html);
+          setModalDocxHtml(result.html);
           setDocError(null);
         } else {
+          setDocxHtml(null);
+          setModalDocxHtml(null);
           setDocError(result.error || "Failed to convert Word document to HTML");
         }
       })
       .catch((err: unknown) => {
         if (!isMounted) return;
         const msg = err instanceof Error ? err.message : "Error reading document";
+        setDocxHtml(null);
+        setModalDocxHtml(null);
         setDocError(msg);
       })
       .finally(() => {
@@ -232,49 +306,37 @@ export default function MockMediaPlayer({
     return () => {
       isMounted = false;
     };
-  }, [isDocx, mediaUrl]);
+  }, [isScreenDocx, screenMediaUrl]);
 
-  // Fetch and convert modal DOCX target document when reader modal opens
+
+  // Escape closes full screen, whether the screen holds a video, audio or a document.
   useEffect(() => {
-    if (!showInDepthModal || !isTargetDocx || !targetDocUrl) {
-      setModalDocxHtml(null);
-      setIsLoadingModalDoc(false);
-      return;
-    }
-
-    if (isDocx && docxHtml && targetDocUrl === mediaUrl) {
-      setModalDocxHtml(docxHtml);
-      return;
-    }
-
-    let isMounted = true;
-    setIsLoadingModalDoc(true);
-    fetchAndConvertDocx(targetDocUrl)
-      .then((res) => {
-        if (!isMounted) return;
-        if (res.success && res.html) {
-          setModalDocxHtml(res.html);
-        } else {
-          setModalDocxHtml(null);
-        }
-      })
-      .catch(() => {
-        if (isMounted) setModalDocxHtml(null);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingModalDoc(false);
-      });
-
-    return () => {
-      isMounted = false;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
     };
-  }, [showInDepthModal, isTargetDocx, targetDocUrl, isDocx, docxHtml, mediaUrl]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleNextMedia = () => {
     setIsWelcomeActive(false);
     onDismissWelcome?.();
     onNextMedia?.();
   };
+
+  // Selecting another post puts the player back on that post's primary content:
+  // whatever SEE IT / HEAR IT / READ IT had swapped onto the screen is cleared.
+  useEffect(() => {
+    setScreenMode("auto");
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+    setVideoMode("idle");
+    setDownloadConfirmed(null);
+  }, [mediaUrl, seeItUrl, hearItUrl, readItUrl, title]);
 
   // Reset playback states on media change
   useEffect(() => {
@@ -295,7 +357,7 @@ export default function MockMediaPlayer({
       audioRef.current.currentTime = 0;
       audioRef.current.load();
     }
-  }, [mediaUrl, mediaType]);
+  }, [screenMediaUrl, screenType]);
 
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLMediaElement>) => {
     const el = e.currentTarget;
@@ -316,10 +378,12 @@ export default function MockMediaPlayer({
   };
 
   const togglePlay = () => {
+    // Ref access stays inside the handler so the lint rule about values used by effects
+    // does not flag these media elements.
     const el =
-      mediaType === "video"
+      screenType === "video"
         ? videoRef.current
-        : mediaType === "audio"
+        : screenType === "audio"
           ? audioRef.current
           : null;
     if (el) {
@@ -342,9 +406,9 @@ export default function MockMediaPlayer({
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextProgress = parseFloat(e.target.value);
     const el =
-      mediaType === "video"
+      screenType === "video"
         ? videoRef.current
-        : mediaType === "audio"
+        : screenType === "audio"
           ? audioRef.current
           : null;
     if (el && el.duration) {
@@ -357,9 +421,9 @@ export default function MockMediaPlayer({
 
   const resetPlayback = () => {
     const el =
-      mediaType === "video"
+      screenType === "video"
         ? videoRef.current
-        : mediaType === "audio"
+        : screenType === "audio"
           ? audioRef.current
           : null;
     if (el) {
@@ -373,9 +437,9 @@ export default function MockMediaPlayer({
 
   const toggleMute = () => {
     const el =
-      mediaType === "video"
+      screenType === "video"
         ? videoRef.current
-        : mediaType === "audio"
+        : screenType === "audio"
           ? audioRef.current
           : null;
     if (el) {
@@ -384,13 +448,23 @@ export default function MockMediaPlayer({
     }
   };
 
+  /**
+   * Full screen the player's screen frame, so whatever is on it (video, audio visualiser
+   * or the READ IT document) fills the display. Falls back to the media element itself.
+   */
   const toggleFullscreen = () => {
-    if (mediaType === "video" && videoRef.current) {
-      if (videoRef.current.requestFullscreen) {
-        videoRef.current.requestFullscreen();
-      }
+    const frame = screenFrameRef.current;
+    if (frame?.requestFullscreen) {
+      frame.requestFullscreen().catch(() => {
+        videoRef.current?.requestFullscreen?.();
+      });
+      return;
     }
+    videoRef.current?.requestFullscreen?.();
   };
+
+  // The Full Screen control is offered for whatever is on the screen: video, audio or document.
+  const canFullscreen = Boolean(screenMediaUrl) && !isWelcomeActive;
 
   const formatTime = (secs: number) => {
     if (isNaN(secs) || !isFinite(secs) || secs <= 0) return "0:00";
@@ -399,30 +473,74 @@ export default function MockMediaPlayer({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
+  /** Pause whatever the player is currently playing (used when the screen swaps source). */
+  const pauseScreenMedia = () => {
+    if (videoRef.current) videoRef.current.pause();
+    if (audioRef.current) audioRef.current.pause();
+    setIsPlaying(false);
+  };
+
+  /**
+   * Play the media element that is already on screen, once React has rendered the new
+   * source for the mode we just selected.
+   */
+  const playScreenAfterSwitch = (next: "video" | "audio") => {
+    window.setTimeout(() => {
+      const el = next === "video" ? videoRef.current : audioRef.current;
+      if (!el) return;
+      el.muted = false;
+      setIsMuted(false);
+      el.play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => console.warn("Playback blocked or failed: ", err));
+    }, 60);
+  };
+
   // Section 6: Video Button Action (SEE IT)
+  // Always puts this button's own video on the player screen, never someone else's asset.
   const handleVideoAction = () => {
     if (onVideoClick) {
       onVideoClick();
     } else if (onExploreClick) {
       onExploreClick("video");
-    } else {
-      togglePlay();
+    } else if (videoSrc) {
+      if (screenType === "video" && videoRef.current) {
+        togglePlay();
+      } else {
+        pauseScreenMedia();
+        setScreenMode("video");
+        playScreenAfterSwitch("video");
+      }
+    } else if (screenIsOwnDocument) {
+      // Nothing of this post's own to play: leave the reader on its document untouched.
+      console.info(`No video is linked to "${displayTitle}".`);
     }
   };
 
   // Section 6: Audio Button Action (HEAR IT)
+  // Puts this button's own audio on the player screen and plays it there.
   const handleAudioAction = () => {
     if (onAudioClick) {
       onAudioClick();
     } else if (onExploreClick) {
       onExploreClick("audio");
-    } else {
-      if (isMuted) {
-        setIsMuted(false);
-        if (videoRef.current) videoRef.current.muted = false;
-        if (audioRef.current) audioRef.current.muted = false;
+    } else if (audioSrc) {
+      if (screenType === "audio" && audioRef.current) {
+        if (isMuted) {
+          setIsMuted(false);
+          audioRef.current.muted = false;
+          if (videoRef.current) videoRef.current.muted = false;
+        }
+        togglePlay();
+      } else {
+        // Swap the player screen over to this post's audio, then play it there.
+        pauseScreenMedia();
+        setScreenMode("audio");
+        playScreenAfterSwitch("audio");
       }
-      togglePlay();
+    } else if (screenIsOwnDocument) {
+      // Nothing of this post's own to play: leave the reader on its document untouched.
+      console.info(`No audio is linked to "${displayTitle}".`);
     }
   };
 
@@ -447,14 +565,18 @@ export default function MockMediaPlayer({
     setIsPlaying(false);
   };
 
-  // Section 6: In Depth Action (Opens Preview Modal before download)
+  // Section 6: READ IT — the document is rendered inside the player, never in a modal.
   const handleInDepthAction = () => {
     if (onMoreDetailClick) {
       onMoreDetailClick();
     } else if (onExploreClick) {
       onExploreClick("more_detail");
-    } else {
-      setShowInDepthModal(true);
+    } else if (documentSrc) {
+      // Swap the player screen over to this post's own document.
+      pauseScreenMedia();
+      setScreenMode("document");
+    } else if (screenIsOwnDocument) {
+      console.info(`No document is linked to "${displayTitle}".`);
     }
   };
 
@@ -472,8 +594,7 @@ export default function MockMediaPlayer({
     link.click();
     document.body.removeChild(link);
 
-    // Close preview modal and show confirmation alert
-    setShowInDepthModal(false);
+    // The reader stays on the player screen; just confirm the save.
     setDownloadConfirmed(`Document download complete: "${displayTitle}" has been saved. Your active dashboard selection remains preserved.`);
   };
 
@@ -527,10 +648,12 @@ export default function MockMediaPlayer({
         </div>
       </div>
 
-      {/* 2. Player Screen Frame */}
+      {/* 2. Player Screen Frame — SEE IT, HEAR IT and READ IT all render inside this one screen,
+          and this is the element that goes full screen. */}
       <div
+        ref={screenFrameRef}
         className={`${styles.screenFrame} ${
-          mediaType === "video" || mediaType === "image"
+          screenType === "video" || screenType === "image"
             ? styles.videoScreenFrame
             : styles.audioScreenFrame
         }`}
@@ -562,8 +685,8 @@ export default function MockMediaPlayer({
           </div>
         )}
 
-        {/* No Media Found State */}
-        {!mediaUrl && !isWelcomeActive && (
+        {/* No Media Found State — never covers a document that is being read */}
+        {!screenMediaUrl && !isScreenDocument && !isWelcomeActive && (
           <div className={styles.noMediaContainer}>
             <div className={styles.noMediaIconWrapper}>
               <FileQuestion size={36} className={styles.noMediaIcon} />
@@ -576,18 +699,19 @@ export default function MockMediaPlayer({
         )}
 
         {/* Video Render */}
-        {mediaType === "video" && mediaUrl && (
-          isYouTube ? (
+        {screenType === "video" && screenMediaUrl && (
+          isScreenYouTube ? (
             <iframe
-              src={getYouTubeEmbedUrl(mediaUrl)}
+              src={getYouTubeEmbedUrl(screenMediaUrl)}
               className={styles.realVideo}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
           ) : (
             <video
+              key={screenMediaUrl}
               ref={videoRef}
-              src={mediaUrl}
+              src={screenMediaUrl}
               className={styles.realVideo}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
@@ -605,7 +729,7 @@ export default function MockMediaPlayer({
         )}
 
         {/* Idle Audio Wave Background or Video Fallback when no url */}
-        {(mediaType !== "video" || !mediaUrl) && (
+        {(screenType !== "video" || !screenMediaUrl) && (
           <div className={styles.videoBackground}>
             <div
               className={styles.dataNode}
@@ -647,10 +771,11 @@ export default function MockMediaPlayer({
         )}
 
         {/* Audio Render */}
-        {mediaType === "audio" && mediaUrl && (
+        {screenType === "audio" && screenMediaUrl && (
           <audio
+            key={screenMediaUrl}
             ref={audioRef}
-            src={mediaUrl}
+            src={screenMediaUrl}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
             onPlay={() => setIsPlaying(true)}
@@ -660,18 +785,18 @@ export default function MockMediaPlayer({
         )}
 
         {/* Image Render */}
-        {mediaType === "image" && mediaUrl && (
+        {screenType === "image" && screenMediaUrl && (
           <div className={styles.imageViewer}>
             <img
-              src={mediaUrl}
+              src={screenMediaUrl}
               className={styles.realImage}
               alt={displayTitle}
             />
           </div>
         )}
 
-        {/* Document Render: PDF */}
-        {isPdf && !isDocx && mediaUrl && (
+        {/* Document Render: PDF — this post's READ IT document, read inside the player */}
+        {isScreenPdf && screenMediaUrl && (
           <div className={styles.inlineDocViewer}>
             <div className={styles.inlineDocHeader}>
               <div className={styles.inlineDocBadge}>
@@ -682,17 +807,17 @@ export default function MockMediaPlayer({
                 <button
                   type="button"
                   className={styles.inlineDocActionBtn}
-                  onClick={handleInDepthAction}
-                  title="Expand to Full Reader"
+                  onClick={handleDownloadDocument}
+                  title="Download a copy"
                 >
-                  <Maximize size={12} />
-                  <span>Expand</span>
+                  <Download size={12} />
+                  <span>Download</span>
                 </button>
               </div>
             </div>
             <div className={styles.inlineDocBody}>
               <iframe
-                src={`${mediaUrl}#view=FitH&toolbar=0&navpanes=0`}
+                src={`${screenMediaUrl}#view=FitH&toolbar=1&navpanes=0`}
                 className={styles.inlineDocIframe}
                 title={displayTitle}
               />
@@ -700,8 +825,8 @@ export default function MockMediaPlayer({
           </div>
         )}
 
-        {/* Document Render: DOCX */}
-        {isDocx && mediaUrl && (
+        {/* Document Render: DOCX — this post's READ IT document, read inside the player */}
+        {isScreenDocx && screenMediaUrl && (
           <div className={styles.inlineDocViewer}>
             <div className={styles.inlineDocHeader}>
               <div className={styles.inlineDocBadge}>
@@ -712,35 +837,35 @@ export default function MockMediaPlayer({
                 <button
                   type="button"
                   className={styles.inlineDocActionBtn}
-                  onClick={handleInDepthAction}
-                  title="Expand to Full Reader"
+                  onClick={handleDownloadDocument}
+                  title="Download a copy"
                 >
-                  <Maximize size={12} />
-                  <span>Expand</span>
+                  <Download size={12} />
+                  <span>Download</span>
                 </button>
               </div>
             </div>
             <div className={styles.inlineDocBody}>
-              {isLoadingDoc && (
+              {isLoadingModalDoc && (
                 <div className={styles.inlineDocLoading}>
                   <Loader2 size={24} className={styles.docSpinnerIcon} />
                   <span>Rendering Word document...</span>
                 </div>
               )}
-              {docError && (
+              {!isLoadingModalDoc && docError && (
                 <div className={styles.inlineDocFallback}>
                   <iframe
-                    src={getOfficeViewerUrl(mediaUrl)}
+                    src={getOfficeViewerUrl(screenMediaUrl)}
                     className={styles.inlineDocIframe}
                     title={displayTitle}
                   />
                 </div>
               )}
-              {!isLoadingDoc && !docError && docxHtml && (
+              {!isLoadingModalDoc && !docError && modalDocxHtml && (
                 <div className={styles.inlineDocxScroll}>
                   <div
                     className={styles.inlineDocxContent}
-                    dangerouslySetInnerHTML={{ __html: docxHtml }}
+                    dangerouslySetInnerHTML={{ __html: modalDocxHtml }}
                   />
                 </div>
               )}
@@ -751,7 +876,7 @@ export default function MockMediaPlayer({
         {/* Large Central Play Button (when playable and welcome not active) */}
         {isPlayable && !isWelcomeActive && (
           <button
-            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${mediaType === "video" && isPlaying ? styles.videoPlaying : ""}`}
+            className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${screenType === "video" && isPlaying ? styles.videoPlaying : ""}`}
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
             id="mock-media-play-btn"
@@ -782,7 +907,7 @@ export default function MockMediaPlayer({
         )}
 
         {/* Audio Oscilloscope visualizer when playing audio and welcome not active */}
-        {mediaType === "audio" && isPlaying && !isWelcomeActive && (
+        {screenType === "audio" && isPlaying && !isWelcomeActive && (
           <div className={styles.barsVisualizer}>
             <div className={styles.bar}></div>
             <div className={styles.bar}></div>
@@ -868,7 +993,7 @@ export default function MockMediaPlayer({
           description && (
             <div
               className={`${styles.descriptionOverlay} ${
-                isPlaying ? styles.descriptionOverlayHidden : ""
+                isPlaying || isScreenDocument ? styles.descriptionOverlayHidden : ""
               }`}
             >
               <p className={styles.descriptionOverlayText}>
@@ -882,68 +1007,85 @@ export default function MockMediaPlayer({
         )}
       </div>
 
-      {/* Seek Control Panel (Only for active playable media and when welcome not active) */}
-      {isPlayable && !isWelcomeActive && (
+      {/* Control Panel — playable media gets the full transport, a document gets the screen
+          controls (including Full Screen) so a document can still be enlarged. */}
+      {(isPlayable || isScreenDocument) && !isWelcomeActive && (
         <div className={styles.controlPanel}>
-          <div className={styles.sliderWrapper}>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="0.1"
-              value={progress}
-              onChange={handleSliderChange}
-              className={styles.seekBar}
-              id="mock-media-seek-bar"
-            />
-            <div
-              className={styles.seekFill}
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
+          {isPlayable && (
+            <div className={styles.sliderWrapper}>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="0.1"
+                value={progress}
+                onChange={handleSliderChange}
+                className={styles.seekBar}
+                id="mock-media-seek-bar"
+              />
+              <div
+                className={styles.seekFill}
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          )}
 
           <div className={styles.controlsRow}>
-            <div className={styles.timeInfo}>
-              <span className={styles.timeText}>{formatTime(currentTime)}</span>
-              <span className={styles.timeDivider}>/</span>
-              <span className={styles.timeText}>
-                {duration > 0 ? formatTime(duration) : "Available on start"}
-              </span>
-            </div>
+            {isPlayable ? (
+              <div className={styles.timeInfo}>
+                <span className={styles.timeText}>{formatTime(currentTime)}</span>
+                <span className={styles.timeDivider}>/</span>
+                <span className={styles.timeText}>
+                  {duration > 0 ? formatTime(duration) : "Available on start"}
+                </span>
+              </div>
+            ) : (
+              <div className={styles.timeInfo}>
+                <span className={styles.timeText}>
+                  {isScreenDocx ? "Word document (.docx)" : "PDF document"}
+                </span>
+              </div>
+            )}
 
             <div className={styles.utilityBtns}>
-              <button
-                className={styles.utilBtn}
-                onClick={resetPlayback}
-                title="Reset"
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button
-                className={styles.utilBtn}
-                onClick={toggleMute}
-                title={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-              {mediaType === "video" && (
-                <>
-                  <button
-                    className={styles.utilBtn}
-                    onClick={toggleFullscreen}
-                    title="Full Screen"
-                  >
-                    <Maximize size={16} />
-                  </button>
-                  <button
-                    className={styles.utilBtn}
-                    onClick={handleCancelVideo}
-                    title="Close Video"
-                    style={{ marginLeft: "6px", color: "#f87171" }}
-                  >
-                    <X size={16} />
-                  </button>
-                </>
+              {isPlayable && (
+                <button
+                  className={styles.utilBtn}
+                  onClick={resetPlayback}
+                  title="Reset"
+                >
+                  <RotateCcw size={16} />
+                </button>
+              )}
+              {isPlayable && (
+                <button
+                  className={styles.utilBtn}
+                  onClick={toggleMute}
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                </button>
+              )}
+              {canFullscreen && (
+                <button
+                  className={styles.utilBtn}
+                  onClick={toggleFullscreen}
+                  title="Full Screen"
+                  aria-label="Full Screen"
+                  id="mock-media-fullscreen-btn"
+                >
+                  <Maximize size={16} />
+                </button>
+              )}
+              {screenType === "video" && (
+                <button
+                  className={styles.utilBtn}
+                  onClick={handleCancelVideo}
+                  title="Close Video"
+                  style={{ marginLeft: "6px", color: "#f87171" }}
+                >
+                  <X size={16} />
+                </button>
               )}
             </div>
           </div>
@@ -1046,112 +1188,6 @@ export default function MockMediaPlayer({
           </Link>
         </div>
       </div>
-
-      {/* Section 6 & 11: In Depth Preview Modal Dialog rendered at document body via Portal */}
-      {(() => {
-        if (!showInDepthModal) return null;
-        const modalNode = (
-          <div className={styles.modalBackdrop} onClick={() => setShowInDepthModal(false)}>
-            <div className={styles.inDepthModal} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <div>
-                  <h4 className={styles.modalTitle}>{displayTitle}</h4>
-                  <p className={styles.modalSubtitle}>{displayTagline}</p>
-                </div>
-                <button
-                  type="button"
-                  className={styles.modalCloseBtn}
-                  onClick={() => setShowInDepthModal(false)}
-                  aria-label="Close Preview"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className={styles.modalBody}>
-                <div className={styles.modalDocMetaRow}>
-                  <span className={styles.modalDocBadge}>
-                    <FileText size={14} />
-                    {isTargetDocx ? "Word Document (.docx)" : "Executive Briefing (PDF)"}
-                  </span>
-                  <span className={styles.modalDocPrompt}>
-                    In-browser live reader. You do not need to download this file to review its contents.
-                  </span>
-                </div>
-
-                {description && (
-                  <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0.25rem 0 0.5rem 0" }}>
-                    {description}
-                  </p>
-                )}
-
-                {/* Interactive document reader container */}
-                <div className={styles.modalViewerContainer}>
-                  {isTargetDocx ? (
-                    isLoadingModalDoc ? (
-                      <div className={styles.inlineDocLoading}>
-                        <Loader2 size={28} className={styles.docSpinnerIcon} />
-                        <span>Formatting Word document for reading...</span>
-                      </div>
-                    ) : modalDocxHtml ? (
-                      <div className={styles.modalDocxScroll}>
-                        <div
-                          className={styles.inlineDocxContent}
-                          dangerouslySetInnerHTML={{ __html: modalDocxHtml }}
-                        />
-                      </div>
-                    ) : (
-                      <iframe
-                        src={getOfficeViewerUrl(targetDocUrl)}
-                        className={styles.modalDocIframe}
-                        title={`${displayTitle} - Online Reader`}
-                      />
-                    )
-                  ) : (
-                    <iframe
-                      src={`${targetDocUrl}#view=FitH&toolbar=1`}
-                      className={styles.modalDocIframe}
-                      title={`${displayTitle} - Detailed Reader`}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button
-                  type="button"
-                  className={styles.btnCancelVideo}
-                  style={{ color: "#475569", borderColor: "#cbd5e1" }}
-                  onClick={() => setShowInDepthModal(false)}
-                >
-                  Close Reader
-                </button>
-                <a
-                  href={`/document-viewer?url=${encodeURIComponent(targetDocUrl)}&title=${encodeURIComponent(displayTitle)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.btnOpenExternal}
-                  id="btn-open-in-new-tab"
-                >
-                  <ExternalLink size={15} /> Open in New Tab
-                </a>
-                <button
-                  type="button"
-                  className={styles.btnStartVideo}
-                  onClick={handleDownloadDocument}
-                  id="btn-confirm-download"
-                >
-                  <Download size={15} /> Download Copy
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-
-        return isClient && typeof document !== "undefined"
-          ? createPortal(modalNode, document.body)
-          : modalNode;
-      })()}
     </div>
   );
 }

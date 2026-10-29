@@ -18,7 +18,26 @@ interface ButtonData {
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
+  seeItUrl?: string;
+  hearItUrl?: string;
   readItUrl?: string;
+}
+
+/**
+ * Returns true when the URL points at a video file, so a video can be routed to SEE IT
+ * even when the database row still carries a generic mediaType ("pdf", "image", ...).
+ */
+function isVideoUrl(url?: string): boolean {
+  if (!url) return false;
+  return (
+    /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(url) ||
+    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//i.test(url)
+  );
+}
+
+function isAudioUrl(url?: string): boolean {
+  if (!url) return false;
+  return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)($|\?|#)/i.test(url);
 }
 
 const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
@@ -160,7 +179,25 @@ export default function ServicesPage() {
               const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
               const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
+              const resolvedHearItUrl = (btn.hearItUrl || "").trim();
               const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
+
+              // SEE IT is always a video, HEAR IT is always audio, READ IT is always the document.
+              // The row's mediaType only describes the primary BUTTON LINK, so it is kept in sync
+              // with whichever dedicated link is actually populated for this specific button.
+              let resolvedMediaType = (btn.mediaType || defaultFallback.mediaType) as
+                | "video"
+                | "image"
+                | "audio"
+                | "pdf"
+                | "docx";
+              if (resolvedSeeItUrl || isVideoUrl(resolvedMediaUrl)) {
+                resolvedMediaType = "video";
+              } else if (resolvedHearItUrl || isAudioUrl(resolvedMediaUrl)) {
+                resolvedMediaType = "audio";
+              }
+
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -168,8 +205,10 @@ export default function ServicesPage() {
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
+                mediaType: resolvedMediaType,
                 mediaUrl: resolvedMediaUrl,
+                seeItUrl: resolvedSeeItUrl,
+                hearItUrl: resolvedHearItUrl,
                 readItUrl: resolvedReadItUrl,
               };
             });
@@ -227,6 +266,8 @@ export default function ServicesPage() {
                 description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                seeItUrl={currentMedia.seeItUrl}
+                hearItUrl={currentMedia.hearItUrl}
                 moreDetailUrl={currentMedia.readItUrl}
                 readItUrl={currentMedia.readItUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}

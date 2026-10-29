@@ -1439,6 +1439,50 @@
   max-width: 100% !important;
 }
 
+/* Full screen: the player screen fills the display, and a document read inside it
+   scales its text up so it is readable across a monitor. */
+.screenFrame:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: none;
+}
+
+.screenFrame:fullscreen .inlineDocxScroll {
+  padding: 2rem 3rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent {
+  max-width: 1100px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h1 {
+  font-size: 1.9rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h2 {
+  font-size: 1.5rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h3,
+.screenFrame:fullscreen .inlineDocxContent h4 {
+  font-size: 1.25rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent p,
+.screenFrame:fullscreen .inlineDocxContent li {
+  font-size: 1.05rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent table {
+  font-size: 0.95rem;
+}
+
 /* Modal Document Viewer Enhancements */
 .modalDocMetaRow {
   display: flex;
