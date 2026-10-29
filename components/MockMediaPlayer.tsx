@@ -206,6 +206,7 @@ export default function MockMediaPlayer({
    * screen mode decides first; the row's mediaType only decides the default screen.
    */
   const screenType: "video" | "audio" | "image" | "pdf" | "docx" = (() => {
+    // Explicit choices made with SEE IT / HEAR IT / READ IT win while they last.
     if (screenMode === "document") {
       if (documentSrc) return isDocxUrl(documentSrc) ? "docx" : "pdf";
       return "video";
@@ -214,39 +215,39 @@ export default function MockMediaPlayer({
     if (screenMode === "video") {
       return videoSrc ? "video" : audioSrc ? "audio" : documentSrc ? (isDocxUrl(documentSrc) ? "docx" : "pdf") : "video";
     }
+
+    // Default screen: ALWAYS the primary button link. The extras play no part in it.
+    const primaryIsAudioLink = Boolean(
+      mediaUrl && /(\.mp3|\.m4a|\.aac|\.wav|\.oga|\.opus|\.flac)($|\?|#)/i.test(mediaUrl)
+    );
     if (mediaType === "image") return mediaUrl ? "image" : "video";
-    if (mediaType === "audio") return audioSrc ? "audio" : "video";
-    if (mediaType === "docx" || (isDocx && documentSrc === mediaUrl)) return documentSrc ? "docx" : "video";
-    if (mediaType === "pdf" || (isPdf && documentSrc === mediaUrl)) {
-      return documentSrc ? "pdf" : "video";
-    }
+    if (mediaType === "audio") return mediaUrl ? "audio" : "video";
+    if (mediaType === "pdf") return mediaUrl ? "pdf" : "video";
+    if (mediaType === "docx") return mediaUrl ? "docx" : "video";
     if (mediaType === "video") {
-      return videoSrc ? "video" : audioSrc ? "audio" : documentSrc ? (isDocxUrl(documentSrc) ? "docx" : "pdf") : "video";
+      return primaryIsAudioLink ? "audio" : mediaUrl ? "video" : "video";
     }
     return "video";
   })();
 
+  /**
+   * On the default screen this is the primary link itself (mediaUrl); the SEE IT / HEAR IT /
+   * READ IT sources are only used when one of those buttons put its own media on screen.
+   */
   const screenMediaUrl =
-    screenType === "audio"
-      ? audioSrc
-      : screenType === "image"
-        ? mediaUrl
-        : screenType === "video"
-          ? videoSrc
-          : documentSrc;
+    screenMode === "video"
+      ? videoSrc
+      : screenMode === "audio"
+        ? audioSrc
+        : screenMode === "document"
+          ? documentSrc
+          : screenType === "docx" || screenType === "pdf"
+            ? documentSrc
+            : mediaUrl;
 
   const isScreenDocx = screenType === "docx";
   const isScreenPdf = screenType === "pdf";
   const isScreenDocument = isScreenDocx || isScreenPdf;
-
-  /**
-   * True when the media on screen is this post's own READ IT document. In that case
-   * SEE IT / HEAR IT have nothing of their own to show and must not hijack the
-   * document that is currently on the player.
-   */
-  const screenIsOwnDocument = Boolean(
-    isScreenDocument && documentSrc && screenMediaUrl === documentSrc
-  );
 
   const isScreenYouTube = Boolean(screenMediaUrl && isYouTubeUrl(screenMediaUrl));
   const isPlayable = Boolean(
@@ -511,8 +512,8 @@ export default function MockMediaPlayer({
         setScreenMode("video");
         playScreenAfterSwitch("video");
       }
-    } else if (screenIsOwnDocument) {
-      // Nothing of this post's own to play: leave the reader on its document untouched.
+    } else {
+      // This post has no video of its own: the primary content stays on screen untouched.
       console.info(`No video is linked to "${displayTitle}".`);
     }
   };
@@ -538,8 +539,8 @@ export default function MockMediaPlayer({
         setScreenMode("audio");
         playScreenAfterSwitch("audio");
       }
-    } else if (screenIsOwnDocument) {
-      // Nothing of this post's own to play: leave the reader on its document untouched.
+    } else {
+      // This post has no audio of its own: the primary content stays on screen untouched.
       console.info(`No audio is linked to "${displayTitle}".`);
     }
   };
@@ -575,7 +576,8 @@ export default function MockMediaPlayer({
       // Swap the player screen over to this post's own document.
       pauseScreenMedia();
       setScreenMode("document");
-    } else if (screenIsOwnDocument) {
+    } else {
+      // This post has no document of its own: the primary content stays on screen untouched.
       console.info(`No document is linked to "${displayTitle}".`);
     }
   };

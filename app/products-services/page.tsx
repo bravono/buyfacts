@@ -183,20 +183,32 @@ export default function ServicesPage() {
               const resolvedHearItUrl = (btn.hearItUrl || "").trim();
               const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
 
-              // SEE IT is always a video, HEAR IT is always audio, READ IT is always the document.
-              // The row's mediaType only describes the primary BUTTON LINK, so it is kept in sync
-              // with whichever dedicated link is actually populated for this specific button.
-              let resolvedMediaType = (btn.mediaType || defaultFallback.mediaType) as
+              // THE PRIMARY BUTTON DECIDES WHAT THE PLAYER SHOWS FIRST.
+              // SEE IT / HEAR IT / READ IT are optional extras and never influence the
+              // primary content — a post may have all three, some, or none of them.
+              // The primary type comes from the row's mediaType, corrected by the
+              // extension of the primary link itself (and by mediaUrl when mediaType is absent).
+              const primaryKind: "video" | "audio" | "pdf" | "docx" | "image" | null =
+                isVideoUrl(resolvedMediaUrl)
+                  ? "video"
+                  : isAudioUrl(resolvedMediaUrl)
+                    ? "audio"
+                    : /(\.docx|\.doc)($|\?|#)/i.test(resolvedMediaUrl)
+                      ? "docx"
+                      : /(\.pdf)($|\?|#)/i.test(resolvedMediaUrl)
+                        ? "pdf"
+                        : /(\.(png|jpe?g|gif|webp|svg|avif))($|\?|#)/i.test(resolvedMediaUrl)
+                          ? "image"
+                          : null;
+
+              const storedType = (btn.mediaType || defaultFallback.mediaType) as
                 | "video"
                 | "image"
                 | "audio"
                 | "pdf"
                 | "docx";
-              if (resolvedSeeItUrl || isVideoUrl(resolvedMediaUrl)) {
-                resolvedMediaType = "video";
-              } else if (resolvedHearItUrl || isAudioUrl(resolvedMediaUrl)) {
-                resolvedMediaType = "audio";
-              }
+
+              let resolvedMediaType = primaryKind ?? storedType;
 
               return {
                 label: btn.label || defaultFallback.label,
