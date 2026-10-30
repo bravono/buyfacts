@@ -373,6 +373,11 @@ export default function MockMediaPlayer({
     setDuration(0);
     setVideoMode("idle");
     setDownloadConfirmed(null);
+    setMissingNotice(null);
+    if (missingTimer.current) {
+      window.clearTimeout(missingTimer.current);
+      missingTimer.current = null;
+    }
 
     // Drop any document state left over from the previous post.
     setDocxHtml(null);
@@ -518,6 +523,25 @@ export default function MockMediaPlayer({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
+  /** Transient notice shown when an action button has no asset of its own (auto-dismisses). */
+  const [missingNotice, setMissingNotice] = useState<{ kind: "video" | "audio" | "document"; text: string } | null>(null);
+  const missingTimer = useRef<number | null>(null);
+
+  const flashMissing = (kind: "video" | "audio" | "document", text: string) => {
+    setMissingNotice({ kind, text });
+    if (missingTimer.current) window.clearTimeout(missingTimer.current);
+    missingTimer.current = window.setTimeout(() => {
+      setMissingNotice(null);
+      missingTimer.current = null;
+    }, 6000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (missingTimer.current) window.clearTimeout(missingTimer.current);
+    };
+  }, []);
+
   /** Pause whatever the player is currently playing (used when the screen swaps source). */
   const pauseScreenMedia = () => {
     if (videoRef.current) videoRef.current.pause();
@@ -559,6 +583,7 @@ export default function MockMediaPlayer({
     } else {
       // This post has no video of its own: the primary content stays on screen untouched.
       console.info(`No video is linked to "${displayTitle}".`);
+      flashMissing("video", `No video is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
     }
   };
 
@@ -586,6 +611,7 @@ export default function MockMediaPlayer({
     } else {
       // This post has no audio of its own: the primary content stays on screen untouched.
       console.info(`No audio is linked to "${displayTitle}".`);
+      flashMissing("audio", `No audio is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
     }
   };
 
@@ -623,6 +649,7 @@ export default function MockMediaPlayer({
     } else {
       // This post has no document of its own: the primary content stays on screen untouched.
       console.info(`No document is linked to "${displayTitle}".`);
+      flashMissing("document", `No document is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
     }
   };
 
@@ -1183,6 +1210,41 @@ export default function MockMediaPlayer({
         </div>
       )}
 
+      {/* Missing-asset feedback: tells the user the clicked button has nothing attached yet. */}
+      {missingNotice && (
+        <div
+          className={`${styles.missingNotice} ${
+            missingNotice.kind === "video"
+              ? styles.missingVideo
+              : missingNotice.kind === "audio"
+                ? styles.missingAudio
+                : styles.missingDocument
+          }`}
+          role="status"
+          aria-live="polite"
+          id="mock-media-missing-notice"
+        >
+          <div className={styles.missingNoticeBody}>
+            {missingNotice.kind === "video" ? (
+              <Video size={16} aria-hidden="true" />
+            ) : missingNotice.kind === "audio" ? (
+              <Headphones size={16} aria-hidden="true" />
+            ) : (
+              <FileQuestion size={16} aria-hidden="true" />
+            )}
+            <span>{missingNotice.text}</span>
+          </div>
+          <button
+            type="button"
+            className={styles.missingNoticeDismiss}
+            onClick={() => setMissingNotice(null)}
+            aria-label="Dismiss notice"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Horizontal Separator Divider */}
       <hr className={styles.divider} />
 
@@ -1192,9 +1254,11 @@ export default function MockMediaPlayer({
           {/* Choice 1: SEE IT */}
           <button
             type="button"
-            className={`${styles.roundedActionBtn} ${styles.btnVideo}`}
+            className={`${styles.roundedActionBtn} ${styles.btnVideo} ${videoSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleVideoAction}
-            aria-label="SEE IT"
+            aria-label={videoSrc ? "SEE IT" : "SEE IT (no video attached yet)"}
+            aria-disabled={videoSrc ? undefined : true}
+            title={videoSrc ? "SEE IT" : `No video is attached to ${displayTitle} yet`}
             id="action-btn-see-it"
           >
             {videoIconUrl ? (
@@ -1208,9 +1272,11 @@ export default function MockMediaPlayer({
           {/* Choice 2: HEAR IT */}
           <button
             type="button"
-            className={`${styles.roundedActionBtn} ${styles.btnAudio}`}
+            className={`${styles.roundedActionBtn} ${styles.btnAudio} ${audioSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleAudioAction}
-            aria-label="HEAR IT"
+            aria-label={audioSrc ? "HEAR IT" : "HEAR IT (no audio attached yet)"}
+            aria-disabled={audioSrc ? undefined : true}
+            title={audioSrc ? "HEAR IT" : `No audio is attached to ${displayTitle} yet`}
             id="action-btn-hear-it"
           >
             {audioIconUrl ? (
@@ -1224,9 +1290,11 @@ export default function MockMediaPlayer({
           {/* Choice 3: READ IT */}
           <button
             type="button"
-            className={`${styles.roundedActionBtn} ${styles.btnMoreDetail}`}
+            className={`${styles.roundedActionBtn} ${styles.btnMoreDetail} ${documentSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleInDepthAction}
-            aria-label="READ IT"
+            aria-label={documentSrc ? "READ IT" : "READ IT (no document attached yet)"}
+            aria-disabled={documentSrc ? undefined : true}
+            title={documentSrc ? "READ IT" : `No document is attached to ${displayTitle} yet`}
             id="action-btn-read-it"
           >
             {moreDetailIconUrl ? (

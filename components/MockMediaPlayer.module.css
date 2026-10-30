@@ -1212,6 +1212,71 @@
   animation: fadeIn 0.25s ease-out;
 }
 
+/* Missing-asset feedback: shown when an action button with no attached asset is clicked */
+.missingNotice {
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin: 0.6rem 0 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.missingNoticeBody {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.missingVideo {
+  background: rgba(255, 153, 0, 0.1);
+  border: 1px solid rgba(255, 153, 0, 0.4);
+  color: #9a5d00;
+}
+
+.missingAudio {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  color: #075985;
+}
+
+.missingDocument {
+  background: rgba(0, 80, 123, 0.08);
+  border: 1px solid rgba(0, 80, 123, 0.35);
+  color: #00507b;
+}
+
+.missingNoticeDismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  padding: 0.15rem;
+  border-radius: 4px;
+}
+
+.missingNoticeDismiss:hover {
+  opacity: 1;
+}
+
+/* Action buttons with no asset attached yet: visibly quieter so the gap is honest */
+.btnEmpty {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+.btnEmpty:hover {
+  opacity: 0.75;
+}
+
 /* Document In-Browser Rendering Elements */
 .inlineDocViewer {
   position: absolute;
