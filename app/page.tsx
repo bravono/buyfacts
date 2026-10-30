@@ -150,7 +150,7 @@ export default function Home() {
           "Research is only as reliable as the people providing the answers. Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots. It aims to reduce fraudulent participation and protect the quality of the data marketers depend on.",
         prompt:
           "Experience one of the puzzle challenges designed to distinguish humans from automated bots.",
-        actionLabel: "Try It",
+        actionLabel: "SEE MORE",
         actionHref: "/cubicon",
       },
     },
@@ -183,7 +183,7 @@ export default function Home() {
           "Research Libs turns one survey into two valuable marketing resources: research findings that guide decisions and authentic stories that people remember. By transforming survey participants into storytellers, Research Libs brings facts to life and gives marketers compelling material for digital content while reducing the time and effort required to create it.",
         prompt:
           "Experience how survey answers can become engaging stories and useful marketing content.",
-        actionLabel: "Try It",
+        actionLabel: "SEE MORE",
         actionHref: "/research-lib",
       },
     },
@@ -216,7 +216,7 @@ export default function Home() {
           "Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment through focused research repeated over time. By revealing emerging patterns and the practical and emotional drivers behind them, it can help marketers recognize change earlier and make better-informed decisions.",
         prompt:
           "Experience how measuring practical and emotional drivers can help reveal emerging directional patterns.",
-        actionLabel: "Try It",
+        actionLabel: "SEE MORE",
         actionHref: "/triad",
       },
     },

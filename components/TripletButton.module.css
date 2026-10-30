@@ -3,9 +3,9 @@
 .tripletGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: clamp(0.75rem, 1.2vw, 1.25rem);
   width: 100%;
-  margin: 2rem auto 2.5rem auto;
+  margin: clamp(0.75rem, 1.6vh, 1.5rem) auto clamp(0.85rem, 1.8vh, 1.75rem) auto;
 }
 
 .tripletGrid[data-columns="1"] {
@@ -33,8 +33,8 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 112px;
-  padding: 0.85rem 1.25rem 0.85rem 0.95rem;
+  min-height: clamp(74px, 9.5vh, 92px);
+  padding: clamp(0.5rem, 0.8vh, 0.75rem) clamp(0.85rem, 1vw, 1.15rem) clamp(0.5rem, 0.8vh, 0.75rem) clamp(0.75rem, 0.9vw, 0.95rem);
   border-radius: 999px;
   border: 1.5px solid transparent;
   text-decoration: none;
@@ -139,8 +139,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 5.25rem;
-  height: 5.25rem;
+  width: clamp(3.2rem, 4.2vw, 4rem);
+  height: clamp(3.2rem, 4.2vw, 4rem);
   border-radius: 50%;
   background: #ffffff;
   flex-shrink: 0;
@@ -169,16 +169,16 @@
 /* Vertical Divider between Icon and Label */
 .btnDivider {
   width: 1px;
-  height: 3.5rem;
+  height: clamp(2rem, 3vh, 2.6rem);
   background: rgba(255, 255, 255, 0.38);
-  margin: 0 0.85rem;
+  margin: 0 clamp(0.55rem, 0.75vw, 0.8rem);
   flex-shrink: 0;
 }
 
 /* Label text inside pill card with orphan prevention & fluid balance */
 .btnLabel {
   font-family: var(--font-sans);
-  font-size: clamp(0.92rem, 1.1vw, 1.05rem);
+  font-size: clamp(0.82rem, 0.95vw, 0.98rem);
   font-weight: 500;
   line-height: 1.25;
   white-space: normal;
@@ -226,16 +226,25 @@
 }
 
 /* Hover Card Overlay - Positioned Strictly Above the Button (Never Covers Button) */
+/*
+ * Viewport-safety strategy:
+ * - Width is min(460px, 92vw) so the card is never wider than the viewport.
+ * - Default: horizontally centered above the button with left: 50% + translateX(-50%).
+ * - Left column (data-column="1"): card anchors to its left edge so it never clips off the left side.
+ * - Right column (data-column="3"): card anchors to its right edge so it never clips off the right side.
+ * This guarantees the card stays fully visible on all non-mobile viewports without JavaScript.
+ */
 .hoverCard {
   position: absolute;
   bottom: calc(100% + 14px);
   top: auto;
-  left: 0;
-  right: 0;
-  width: 100%;
+  left: 50%;
+  right: auto;
+  width: min(460px, 92vw);
+  transform: translateX(-50%) translateY(-8px);
   background: #ffffff;
   border-radius: 20px;
-  padding: 1.55rem 1.45rem 1.35rem 1.45rem;
+  padding: 1.1rem 1.2rem 1rem 1.2rem;
   box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.16), 0 8px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-bottom-width: 5px;
@@ -245,12 +254,25 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(-8px);
   transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               visibility 0.22s ease;
   text-align: left;
   box-sizing: border-box;
+}
+
+/* Left-column card: anchor to the left edge of the button to avoid viewport overflow */
+.tripletItem[data-column="1"] .hoverCard {
+  left: 0;
+  right: auto;
+  transform: translateX(0) translateY(-8px);
+}
+
+/* Right-column card: anchor to the right edge of the button to avoid viewport overflow */
+.tripletItem[data-column="3"] .hoverCard {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(-8px);
 }
 
 /* Invisible Hover Bridge across the 14px gap at the bottom */
@@ -271,7 +293,19 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Left-column active state: no X-shift */
+.tripletItem[data-column="1"]:hover .hoverCard,
+.tripletItem[data-column="1"]:focus-within .hoverCard {
+  transform: translateX(0) translateY(0);
+}
+
+/* Right-column active state: no X-shift */
+.tripletItem[data-column="3"]:hover .hoverCard,
+.tripletItem[data-column="3"]:focus-within .hoverCard {
+  transform: translateX(0) translateY(0);
 }
 
 /* Bottom Pointer Caret pointing downwards to the button */
@@ -293,21 +327,21 @@
 /* Hover Card Title */
 .hoverCardTitle {
   font-family: var(--font-sans);
-  font-size: 1.85rem;
+  font-size: 1.4rem;
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  margin: 0 0 0.85rem 0;
+  margin: 0 0 0.55rem 0;
 }
 
 /* Hover Card Description */
 .hoverCardDesc {
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-size: 0.88rem;
+  line-height: 1.5;
   color: #374151;
   font-weight: 400;
-  margin: 0 0 1.25rem 0;
+  margin: 0 0 0.65rem 0;
 }
 
 /* Callout Box at Bottom of Hover Card */
@@ -322,8 +356,8 @@
 
 /* Circular Logo Badge inside Callout */
 .hoverCalloutIcon {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.8rem;
+  height: 2.8rem;
   border-radius: 50%;
   background: #ffffff;
   display: flex;

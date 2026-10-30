@@ -414,6 +414,71 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
     );
   });
 
+  it("should use viewport-safe width on hoverCard so cards never overflow the screen", () => {
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      cssContent.includes("width: min(460px, 92vw)"),
+      "hoverCard must use viewport-clamped width: min(460px, 92vw)"
+    );
+    assert.ok(
+      cssContent.includes('data-column="1"') && cssContent.includes('data-column="3"'),
+      "CSS must define edge-anchor overrides for data-column=1 and data-column=3"
+    );
+  });
+
+  it("should pass data-column to each TripletButton so edge cards never clip off-screen", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("column?: number"),
+      "TripletButtonProps must declare optional column prop"
+    );
+    assert.ok(
+      componentContent.includes("data-column={column}"),
+      "TripletButton wrapper div must forward data-column attribute"
+    );
+    assert.ok(
+      componentContent.includes("column={index + 1}"),
+      "TripletButtonGroup must pass 1-based column index to each TripletButton"
+    );
+  });
+
+  it("should apply preventOrphanWords to hover card title and prompt", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.hoverCard.title)"),
+      "TripletButton must apply preventOrphanWords to hoverCard.title"
+    );
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.hoverCard.prompt)"),
+      "TripletButton must apply preventOrphanWords to hoverCard.prompt"
+    );
+  });
+
+  it("should use SEE MORE as the action label on all three hero hover cards", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+
+    const matches = [...pageContent.matchAll(/actionLabel:\s*["']SEE MORE["']/g)];
+    assert.ok(
+      matches.length >= 3,
+      `All three hover cards must use actionLabel: "SEE MORE" — found ${matches.length}`
+    );
+  });
+
   it("should configure all three hero hover cards with exact mockup copy and dedicated tool links", () => {
     const pageContent = fs.readFileSync(
       path.join(BUYFACTS_ROOT, "app", "page.tsx"),
@@ -511,6 +576,65 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
       "TripletButton.module.css must elevate hoverCard z-index to 1100 during transitions"
     );
   });
+
+  it("should enforce balanced orphan prevention across 3, 4, and 5-word phrases", async () => {
+    // Dynamically import the preventOrphanWords utility from lib/orphan-prevention
+    const { preventOrphanWords } = await import(
+      "../lib/orphan-prevention"
+    );
+
+    // 3-word title: all 3 words bound so neither line 1 nor line 2 has an orphan single word
+    const title3 = preventOrphanWords("Validate Survey Participants");
+    assert.equal(
+      title3,
+      "Validate\u00A0Survey\u00A0Participants",
+      "3-word titles must bind all words to prevent an isolated single-word line"
+    );
+
+    // 4-word title: pair 1+2 and 3+4 for balanced 2x2 wrapping
+    const title4 = preventOrphanWords("Faster Digital Asset Creation");
+    assert.equal(
+      title4,
+      "Faster\u00A0Digital Asset\u00A0Creation",
+      "4-word titles must pair words as 2-and-2 so any line break yields 2 words per line"
+    );
+
+    // 5-word title: pair 1+2 and 3+4+5 for balanced 2 and 3 wrapping
+    const title5 = preventOrphanWords("Market Changes in Real Time");
+    assert.equal(
+      title5,
+      "Market\u00A0Changes in\u00A0Real\u00A0Time",
+      "5-word titles must pair words as 2-and-3 so any line break yields at least 2 words per line"
+    );
+  });
+
+  it("should configure hero and triplet elements with fluid vertical clamping to fit within non-mobile screens", () => {
+    const pageCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+    const tripletCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      pageCss.includes("min-height: 100svh"),
+      "Hero section must use min-height: 100svh"
+    );
+    assert.ok(
+      pageCss.includes("overflow-y: visible") && pageCss.includes("overflow-x: clip"),
+      "Hero section must allow hover cards to extend vertically (overflow-y: visible) while clipping horizontal scroll"
+    );
+    assert.ok(
+      tripletCss.includes("min-height: clamp("),
+      "Triplet buttons must use clamp() on min-height to fit within viewport height"
+    );
+    assert.ok(
+      tripletCss.includes("width: clamp("),
+      "Triplet button icons must use clamp() to scale down responsively"
+    );
+  });
 });
 
 describe("Zero-Emoji Compliance Test Suite", () => {
@@ -524,6 +648,7 @@ describe("Zero-Emoji Compliance Test Suite", () => {
       path.join(BUYFACTS_ROOT, "components", "Navbar.module.css"),
       path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
       path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      path.join(BUYFACTS_ROOT, "lib", "orphan-prevention.ts"),
     ];
 
     const emojiRegex =

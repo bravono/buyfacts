@@ -7,22 +7,8 @@ import styles from "./TripletButton.module.css";
 
 export type TripletButtonTheme = "orange" | "blue" | "purple" | "teal";
 
-/**
- * Prevents orphan words by binding the final words together with a non-breaking space.
- * This guarantees that a single trailing word will never appear isolated on its own line
- * across any screen width.
- */
-export function preventOrphanWords(text: string): string {
-  if (!text || typeof text !== "string") return "";
-  const trimmed = text.trim();
-  const lastSpaceIdx = trimmed.lastIndexOf(" ");
-  if (lastSpaceIdx === -1) return trimmed;
-  return (
-    trimmed.substring(0, lastSpaceIdx) +
-    "\u00A0" +
-    trimmed.substring(lastSpaceIdx + 1)
-  );
-}
+import { preventOrphanWords } from "../lib/orphan-prevention";
+export { preventOrphanWords };
 
 export interface TripletHoverCardData {
   title: string;
@@ -54,6 +40,7 @@ export interface TripletButtonProps {
   item: TripletButtonItem;
   className?: string;
   showCaption?: boolean;
+  column?: number;
 }
 
 export interface TripletButtonGroupProps {
@@ -68,6 +55,7 @@ export function TripletButton({
   item,
   className = "",
   showCaption = false,
+  column,
 }: TripletButtonProps) {
   const [imageError, setImageError] = useState(false);
   const [hoverImageError, setHoverImageError] = useState(false);
@@ -152,7 +140,11 @@ export function TripletButton({
   };
 
   return (
-    <div className={`${styles.tripletItem} ${className}`} id={`triplet-item-${item.id}`}>
+    <div
+      className={`${styles.tripletItem} ${className}`}
+      id={`triplet-item-${item.id}`}
+      data-column={column}
+    >
       {item.badge && <span className={styles.itemBadge}>{item.badge}</span>}
 
       {/* Primary Pill Action Button */}
@@ -205,7 +197,7 @@ export function TripletButton({
           <span className={styles.hoverPointer} aria-hidden="true" />
 
           {/* Card Title */}
-          <h3 className={styles.hoverCardTitle}>{item.hoverCard.title}</h3>
+          <h3 className={styles.hoverCardTitle}>{preventOrphanWords(item.hoverCard.title)}</h3>
 
           {/* Description Paragraph */}
           <p className={styles.hoverCardDesc}>{item.hoverCard.description}</p>
@@ -231,7 +223,7 @@ export function TripletButton({
 
             <div className={styles.hoverCalloutContent}>
               <p className={styles.hoverCalloutPrompt}>
-                {item.hoverCard.prompt}
+                {preventOrphanWords(item.hoverCard.prompt)}
               </p>
               <Link
                 href={item.hoverCard.actionHref || item.href || "#"}
@@ -293,8 +285,8 @@ export default function TripletButtonGroup({
       onFocusCapture={() => notifyHover(true)}
       onBlurCapture={() => notifyHover(false)}
     >
-      {items.map((item) => (
-        <TripletButton key={item.id} item={item} showCaption={showCaption} />
+      {items.map((item, index) => (
+        <TripletButton key={item.id} item={item} showCaption={showCaption} column={index + 1} />
       ))}
     </div>
   );

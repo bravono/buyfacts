@@ -752,24 +752,33 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
 1. **Self-Contained Pill Card Affordance & Orphan Word Prevention**:
    - Distinct rounded pill card container (`border-radius: 999px`) featuring a circular logo badge on the left, a vertical divider line (`.btnDivider`), left-aligned pathway title text inside the card, and a directional action arrow on the right.
    - **Orphan Word Elimination Across All Screen Sizes**: Combines typography and CSS techniques to guarantee that a single isolated word never appears alone on a line:
-     - `preventOrphanWords()` utility binds the trailing words together with a non-breaking space (`\u00A0`), ensuring the final words wrap together if the line breaks.
-     - Fluid responsive font sizing using CSS `clamp(0.92rem, 1.1vw, 1.05rem)` on `.btnLabel`.
+     - `preventOrphanWords()` utility (`lib/orphan-prevention.ts`) enforces intelligent grouping so no single word ever appears alone:
+       - 3-word titles ("Validate Survey Participants") bind all 3 words with non-breaking spaces (`\u00A0`) so they stay unified on a single line.
+       - 4-word titles ("Faster Digital Asset Creation") pair words 1+2 and 3+4 (`Faster\u00A0Digital Asset\u00A0Creation`) so any line wrap cleanly splits as 2 words and 2 words.
+       - 5-word titles ("Market Changes in Real Time") pair words 1+2 and 3+4+5 (`Market\u00A0Changes in\u00A0Real\u00A0Time`) ensuring balanced 2-and-3 wrapping.
+     - Fluid responsive font sizing using CSS `clamp(0.82rem, 0.95vw, 0.98rem)` on `.btnLabel`.
+     - Compact responsive icon sizing (`clamp(3.2rem, 4.2vw, 4rem)`) and divider spacing (`clamp(0.55rem, 0.75vw, 0.8rem)`) to maximize horizontal text width.
      - Modern CSS text balancing via `text-wrap: balance;` and `text-wrap: pretty;` across supporting browsers.
-     - Optimized button padding and divider margins to maximize available horizontal text width.
    - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-scaling.
 2. **Interactive Hover Card Overlays & Dedicated Tool Navigation**:
    - Hovering over any triplet button reveals an information card positioned strictly above the button (`bottom: calc(100% + 14px)`), ensuring the pill button remains completely visible and eliminating page scrolling or parent container clipping issues.
+   - **Viewport-Safe Dimensions & Edge Overflow Prevention**:
+     - Hover cards use `width: min(460px, 92vw)` so they never exceed viewport boundaries.
+     - Column-aware CSS positioning prevents edge clipping: column 1 (`data-column="1"`) anchors to its left edge, column 3 (`data-column="3"`) anchors to its right edge, and column 2 centers horizontally above the button.
+     - Compact typography (`1.4rem` title, `0.88rem` description) and streamlined padding prevent cards from overflowing the top of the viewport.
    - **Navbar Auto-Collapse on Hover**: Hovering over the triplet buttons automatically triggers a graceful upward slide of the fixed navbar (`transform: translateY(-100% - 30px); opacity: 0;`), providing unobstructed headroom for the cards. When the mouse leaves the triplet area, the navbar smoothly slides back down. Hover cards also utilize `z-index: 1100` to ensure smooth rendering during transitions.
    - An invisible bridge (`.hoverCard::before`) spans the 14px gap at the bottom so moving the mouse into the hover card maintains active hover state without flickering.
    - Each hover card includes:
      - A downward-pointing triangle caret (`.hoverPointer`) pointing directly to the pill button below.
-     - Large bold pathway title (`Cubicon`, `Research Libs`, `TRIAD`) in the theme color.
+     - Large bold pathway title (`Cubicon`, `Research Libs`, `TRIAD`) in the theme color with orphan word protection.
      - Detailed explanatory narrative.
-     - Bottom callout sub-card retaining the existing product logo in a circular badge, vertical divider line, and a bold "Try It ->" link that takes users to the dedicated tool pages:
+     - Bottom callout sub-card retaining the existing product logo in a circular badge, vertical divider line, callout prompt with orphan prevention, and a bold "SEE MORE ->" link that takes users to the dedicated tool pages:
        - **Cubicon**: `/cubicon` (with automated `/cubion` rewrite in `next.config.ts`)
        - **Research Libs**: `/research-lib`
        - **TRIAD**: `/triad` (dedicated showcase page with video demo and methodology breakdown)
-3. **Hero Section Architecture & 3 Core Value Pillars**:
+3. **Hero Section Screen Fit (Non-Mobile) & 3 Core Value Pillars**:
+   - **Screen Height and Width Fit on Current Non-Mobile Devices**: The hero section uses `min-height: 100svh` combined with fluid vertical `clamp()` expressions on section padding, eyebrow margins, main heading font and margins, lead paragraph spacing, triplet button min-heights, and value pillar spacing. This guarantees that all key elements (eyebrow, title, lead, triplet buttons, and 3 value pillars) fit within the screen of the device on desktop, laptop, and tablet viewports without forcing vertical scrolling.
+   - Mobile viewports (≤680px) automatically revert to vertical scroll flow with `min-height: auto`.
    - Displays the brand eyebrow (`THE EARLY RECOGNITION COMPANY™`), primary heading (`BuyFacts Gives Marketers Earlier Recognition, Better Choices, and More Time.`), and directional buyer research lead statement above the 3 triplet pill cards.
    - Directly beneath the triplet pill cards sits a 3-column value pillar row separated by vertical dividers:
      - **Recognize Earlier**: "See meaningful changes before they become obvious."
