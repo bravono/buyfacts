@@ -1,11 +1,16 @@
 /* Triplet Button Card & Group Styles */
 
+.tripletGroup {
+  width: 100%;
+  margin: clamp(0.75rem, 1.6vh, 1.5rem) auto clamp(0.85rem, 1.8vh, 1.75rem) auto;
+}
+
 .tripletGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(0.75rem, 1.2vw, 1.25rem);
   width: 100%;
-  margin: clamp(0.75rem, 1.6vh, 1.5rem) auto clamp(0.85rem, 1.8vh, 1.75rem) auto;
+  margin: 0;
 }
 
 .tripletGrid[data-columns="1"] {
@@ -25,6 +30,20 @@
   text-align: left;
   position: relative;
   width: 100%;
+  outline: none;
+}
+
+/*
+ * Mobile collapsible trigger for the hover information card.
+ * Hidden by default: desktop and tablet keep the hover behaviour.
+ */
+.expandToggle {
+  display: none;
+}
+
+/* Mobile carousel pager dots. Hidden by default (grid layout on tablet/desktop). */
+.carouselDots {
+  display: none;
 }
 
 /* Tactile Vibrant Pill Card Base */
@@ -559,5 +578,236 @@
   .btnDivider {
     height: 2.8rem;
     margin: 0 0.85rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * MOBILE ONLY (<= 680px): swipeable carousel + collapsible information card.
+ * Tablet and desktop keep the 3-up grid and the hover card untouched.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 680px) {
+  /* One card visible at a time; the track slides horizontally. */
+  .tripletGrid,
+  .tripletGrid[data-columns="1"],
+  .tripletGrid[data-columns="2"],
+  .tripletGrid[data-columns="3"] {
+    display: flex;
+    grid-template-columns: none;
+    gap: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    touch-action: pan-y pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tripletGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tripletItem {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    padding: 0 0.15rem;
+  }
+
+  /*
+   * The card opens ABOVE the pill (same side as the desktop hover card) so it
+   * is revealed at the top of the viewport instead of pushing content down and
+   * forcing a scroll. Absolute placement keeps it out of the page flow, so the
+   * hero never grows and nothing below it shifts.
+   */
+  .hoverCard,
+  .tripletItem[data-column="1"] .hoverCard,
+  .tripletItem[data-column="3"] .hoverCard {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    top: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    transform: translateY(10px) scale(0.97);
+    transform-origin: bottom center;
+    z-index: 1200;
+    /* Collapsed: invisible, no box. */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    max-height: none;
+    padding: 1rem 1.05rem 0.95rem 1.05rem;
+    border-width: 1px;
+    border-bottom-width: 5px;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                visibility 0.24s ease;
+  }
+
+  /* Expanded: springy pop-up reveal driven by the data attribute from React. */
+  .tripletItem[data-expanded="true"] .hoverCard {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Invisible hover bridge so the card never flickers when tapped. */
+  .hoverCard::before {
+    display: block;
+    bottom: -14px;
+    height: 16px;
+  }
+
+  /* Caret points down at the pill, like the desktop card. */
+  .hoverPointer {
+    display: block;
+    bottom: -13px;
+  }
+
+  /* Cancel the desktop hover/focus reveal so only the collapsible controls it. */
+  .tripletItem:hover .hoverCard,
+  .tripletItem:focus-within .hoverCard,
+  .tripletItem[data-column="1"]:hover .hoverCard,
+  .tripletItem[data-column="1"]:focus-within .hoverCard,
+  .tripletItem[data-column="3"]:hover .hoverCard,
+  .tripletItem[data-column="3"]:focus-within .hoverCard {
+    transform: translateY(10px) scale(0.97);
+  }
+
+  .tripletItem[data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-expanded="true"]:focus-within .hoverCard,
+  .tripletItem[data-column="1"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-column="1"][data-expanded="true"]:focus-within .hoverCard,
+  .tripletItem[data-column="3"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-column="3"][data-expanded="true"]:focus-within .hoverCard {
+    transform: translateY(0) scale(1);
+  }
+
+  .tripletItem:not([data-expanded="true"]):hover .hoverCard,
+  .tripletItem:not([data-expanded="true"]):focus-within .hoverCard {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Tighter card typography so the floating panel stays compact on a phone. */
+  .hoverCardTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .hoverCardDesc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-bottom: 0.55rem;
+  }
+
+  .hoverCallout {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .hoverCalloutPrompt {
+    font-size: 0.76rem;
+  }
+
+  /* Cute collapsible trigger: tiny glass pill under the button. */
+  .expandToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    align-self: center;
+    margin-top: 0.6rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s ease,
+                color 0.2s ease,
+                background-color 0.2s ease;
+  }
+
+  .expandToggle:active {
+    transform: scale(0.94);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .tripletItem[data-expanded="true"] .expandToggle {
+    color: var(--interactive-blue);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .expandChevron {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .tripletItem[data-expanded="true"] .expandChevron {
+    transform: rotate(180deg);
+  }
+
+  /* Pager dots */
+  .carouselDots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
+  }
+
+  .carouselDot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .carouselDotCore {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.28s ease;
+  }
+
+  .carouselDot[aria-selected="true"] .carouselDotCore {
+    width: 20px;
+    background: var(--interactive-orange);
+  }
+}
+
+@media (max-width: 680px) and (prefers-reduced-motion: reduce) {
+  .tripletGrid {
+    scroll-behavior: auto;
+  }
+
+  .hoverCard,
+  .expandChevron,
+  .carouselDotCore {
+    transition-duration: 0.01ms;
   }
 }

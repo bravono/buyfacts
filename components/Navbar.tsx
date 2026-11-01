@@ -169,7 +169,7 @@ export default function Navbar({
   return (
     <header
       className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${
-        isHidden ? styles.collapsed : ""
+        isHidden ? `${styles.collapsed} ${styles.hidden}` : ""
       }`}
     >
       <div className={styles.container}>
