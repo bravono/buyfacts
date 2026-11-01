@@ -275,7 +275,8 @@ export default function MockMediaPlayer({
         ? audioSrc
         : screenType === "docx" || screenType === "pdf"
           ? screenDocUrl
-          : mediaUrl;
+          : // The default screen plays the primary media link.
+            (mediaUrl ?? videoSrc ?? audioSrc ?? screenDocUrl);
 
   const isScreenDocx = screenType === "docx";
   const isScreenPdf = screenType === "pdf";
@@ -784,7 +785,11 @@ export default function MockMediaPlayer({
             <video
               key={screenMediaUrl}
               ref={videoRef}
-              src={screenMediaUrl}
+              /*
+               * On the default screen this is the post's own mediaUrl; when SEE IT
+               * or HEAR IT is active it is that button's dedicated source.
+               */
+              src={mediaUrl}
               className={styles.realVideo}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
@@ -1256,8 +1261,9 @@ export default function MockMediaPlayer({
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnVideo} ${videoSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleVideoAction}
-            aria-label={videoSrc ? "SEE IT" : "SEE IT (no video attached yet)"}
+            aria-label="SEE IT"
             aria-disabled={videoSrc ? undefined : true}
+            aria-describedby={videoSrc ? undefined : "action-hint-see-it"}
             title={videoSrc ? "SEE IT" : `No video is attached to ${displayTitle} yet`}
             id="action-btn-see-it"
           >
@@ -1274,8 +1280,9 @@ export default function MockMediaPlayer({
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnAudio} ${audioSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleAudioAction}
-            aria-label={audioSrc ? "HEAR IT" : "HEAR IT (no audio attached yet)"}
+            aria-label="HEAR IT"
             aria-disabled={audioSrc ? undefined : true}
+            aria-describedby={audioSrc ? undefined : "action-hint-hear-it"}
             title={audioSrc ? "HEAR IT" : `No audio is attached to ${displayTitle} yet`}
             id="action-btn-hear-it"
           >
@@ -1292,8 +1299,9 @@ export default function MockMediaPlayer({
             type="button"
             className={`${styles.roundedActionBtn} ${styles.btnMoreDetail} ${documentSrc ? "" : ` ${styles.btnEmpty}`}`}
             onClick={handleInDepthAction}
-            aria-label={documentSrc ? "READ IT" : "READ IT (no document attached yet)"}
+            aria-label="READ IT"
             aria-disabled={documentSrc ? undefined : true}
+            aria-describedby={documentSrc ? undefined : "action-hint-read-it"}
             title={documentSrc ? "READ IT" : `No document is attached to ${displayTitle} yet`}
             id="action-btn-read-it"
           >
@@ -1329,6 +1337,17 @@ export default function MockMediaPlayer({
             <span>CONTACT US</span>
           </Link>
         </div>
+
+        {/* Screen-reader hints for actions that have no media attached yet */}
+        <span id="action-hint-see-it" hidden>
+          No video is attached to this topic yet.
+        </span>
+        <span id="action-hint-hear-it" hidden>
+          No audio is attached to this topic yet.
+        </span>
+        <span id="action-hint-read-it" hidden>
+          No document is attached to this topic yet.
+        </span>
       </div>
     </div>
   );
