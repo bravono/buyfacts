@@ -115,27 +115,6 @@ model ResearchLibResponse {
   createdAt DateTime @default(now())
 }
 
-model ResearchLibTimer {
-  id           Int      @id @default(autoincrement())
-  userId       String   @unique
-  sessionTimer String?  @default("{}")
-  pauseTimer   String?  @default("{}")
-  updatedAt    DateTime @default(now()) @updatedAt
-}
-
-model ResearchLibElement {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  state     String?  @default("{}")
-  updatedAt DateTime @default(now()) @updatedAt
-}
-
-model ResearchLibAppState {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  state     String?  @default("{}")
-  updatedAt DateTime @default(now()) @updatedAt
-}
 
 // 7. Cubicon 3D Interactive Survey & Verification Platform
 model CubiconSequence {
