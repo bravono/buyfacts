@@ -587,7 +587,10 @@ export default function Home() {
               id="hero-value-pillars"
               aria-label="Core value pillars"
             >
-              <div className={styles.heroPillarItem} id="pillar-recognize-earlier">
+              <div
+                className={styles.heroPillarItem}
+                id="pillar-recognize-earlier"
+              >
                 <div className={styles.heroPillarIcon}>
                   <svg
                     width="44"
@@ -597,19 +600,71 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line x1="24" y1="6" x2="24" y2="11" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
-                    <line x1="16" y1="8" x2="18" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
-                    <line x1="32" y1="8" x2="30" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
-                    <line x1="9.5" y1="12.5" x2="12.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
-                    <line x1="38.5" y1="12.5" x2="35.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line
+                      x1="24"
+                      y1="6"
+                      x2="24"
+                      y2="11"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="16"
+                      y1="8"
+                      x2="18"
+                      y2="12.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="32"
+                      y1="8"
+                      x2="30"
+                      y2="12.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="9.5"
+                      y1="12.5"
+                      x2="12.5"
+                      y2="16"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="38.5"
+                      y1="12.5"
+                      x2="35.5"
+                      y2="16"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
                     <path
                       d="M6 27C10.5 19.5 16.8 16 24 16C31.2 16 37.5 19.5 42 27C37.5 34.5 31.2 38 24 38C16.8 38 10.5 34.5 6 27Z"
                       stroke="#00507b"
                       strokeWidth="2"
                       strokeLinejoin="round"
                     />
-                    <circle cx="24" cy="27" r="6.5" stroke="#00507b" strokeWidth="2" />
-                    <circle cx="24" cy="27" r="2.5" stroke="#00507b" strokeWidth="2" />
+                    <circle
+                      cx="24"
+                      cy="27"
+                      r="6.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx="24"
+                      cy="27"
+                      r="2.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                    />
                   </svg>
                 </div>
                 <h2 className={styles.heroPillarTitle}>Recognize Earlier</h2>
@@ -618,7 +673,10 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className={styles.heroPillarItem} id="pillar-understand-choices">
+              <div
+                className={styles.heroPillarItem}
+                id="pillar-understand-choices"
+              >
                 <div className={styles.heroPillarIcon}>
                   <svg
                     width="44"
@@ -628,7 +686,15 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line x1="24" y1="7" x2="24" y2="41" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line
+                      x1="24"
+                      y1="7"
+                      x2="24"
+                      y2="41"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
                     <path
                       d="M24 10H38L34.5 15.5L38 21H24V10Z"
                       stroke="#00507b"
@@ -659,10 +725,42 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line x1="8" y1="40" x2="40" y2="40" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
-                    <rect x="12" y="29" width="5.5" height="11" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
-                    <rect x="21.25" y="23" width="5.5" height="17" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
-                    <rect x="30.5" y="16" width="5.5" height="24" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <line
+                      x1="8"
+                      y1="40"
+                      x2="40"
+                      y2="40"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <rect
+                      x="12"
+                      y="29"
+                      width="5.5"
+                      height="11"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="21.25"
+                      y="23"
+                      width="5.5"
+                      height="17"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="30.5"
+                      y="16"
+                      width="5.5"
+                      height="24"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
                     <path
                       d="M11 22L19 14L24 17.5L34 8"
                       stroke="#00507b"
@@ -1607,8 +1705,8 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-guduspa">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/guduspa.jpg"
-                  alt="Guduspa Kumar"
+                  src="/gunduspa.jpg"
+                  alt="Gunduspa Kumar"
                   className={styles.memberImg}
                 />
               </div>
@@ -1620,7 +1718,7 @@ export default function Home() {
                   Analysis and Analytics
                 </span>
                 <p className={styles.memberBio}>
-                  Guduspa translates raw data patterns into predictive models.
+                  Gunduspa translates raw data patterns into predictive models.
                   He designs quantitative Super Intelligence (SI) scoring
                   mechanisms to visualize B2B buyer intent.
                 </p>
@@ -1630,7 +1728,7 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-robert">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/robert.jpg"
+                  src="/robert2.png"
                   alt="Robert M Johnson"
                   className={styles.memberImg}
                 />
@@ -1664,6 +1762,49 @@ export default function Home() {
                   Bernie pioneers many survey participant data quality
                   safeguards to manage survey hosting for More Than One Hundred
                   Marketing Teams
+                </p>
+              </div>
+            </div>
+            <div className={styles.memberCard} id="team-member-bernie">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/yusuf2.png"
+                  alt="Ahbideen"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Ahbideen Yusuf</h3>
+                <span className={styles.memberRole}>
+                  Interactive 3D & Web Development
+                </span>
+                <p className={styles.memberBio}>
+                  Ahbideen works in interactive 3D, web and software — using
+                  Three.js and WebGL to build experiences people can explore,
+                  move through and use. His skill areas include 3D modelling and
+                  animation, interactive interfaces, and full-stack web
+                  development.
+                </p>
+              </div>
+            </div>
+            <div className={styles.memberCard} id="team-member-bernie">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/rahel.png"
+                  alt="Rahel"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Rahel</h3>
+                <span className={styles.memberRole}>
+                  Full-Stack Web Development
+                </span>
+                <p className={styles.memberBio}>
+                  Rahel is a full-stack web developer and software engineer with
+                  a focus on building scalable and efficient web applications.
+                  He has experience in front-end and back-end development,
+                  database management, and cloud services.
                 </p>
               </div>
             </div>
