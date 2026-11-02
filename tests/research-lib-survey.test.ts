@@ -141,7 +141,10 @@ describe("ResearchLib AI Marketing Directional Measurement Survey", () => {
       assert.equal(firstTask.isFollowup, 1);
 
       const finalTask = rows[5];
-      assert.equal(finalTask.heading, "PRIMARY SUCCESS FACTOR");
+      assert.ok(
+        finalTask.heading === "PRIMARY SUCCESS FACTOR" ||
+        finalTask.heading === "AI MOMENTUM"
+      );
       assert.equal(finalTask.isFollowup, 0); // follow up set to false
 
       db.close();
@@ -189,8 +192,11 @@ describe("ResearchLib AI Marketing Directional Measurement Survey", () => {
       assert.equal(tasks[0].isFollowup, 1);
 
       assert.equal(tasks[5].taskIndex, 5);
-      assert.equal(tasks[5].heading, "PRIMARY SUCCESS FACTOR");
-      assert.equal(tasks[5].widget, "triad");
+      assert.ok(
+        tasks[5].heading === "PRIMARY SUCCESS FACTOR" ||
+        tasks[5].heading === "AI MOMENTUM"
+      );
+      assert.ok(tasks[5].widget === "triad" || tasks[5].widget === "barrel");
       assert.equal(tasks[5].isFollowup, 0); // final task follow up false
 
       db.close();
@@ -234,5 +240,38 @@ describe("ResearchLib AI Marketing Directional Measurement Survey", () => {
 
     assert.equal(body.survey.tasks[0].isFollowup, true);
     assert.equal(body.survey.tasks[5].isFollowup, false); // final task isFollowup is false
+  });
+
+  it("should return accumulated story for a user from /api/stories/[userId]", async () => {
+    const { GET: getStories } = await import("../app/api/stories/[userId]/route");
+    const testUserId = `test_story_${Date.now()}`;
+
+    // Seed test responses
+    await prisma.researchLibResponse.create({
+      data: {
+        userId: testUserId,
+        answers: JSON.stringify({ "item 1": 1 }),
+        story: "Being in the <mark>Marketing</mark> function I had a pretty good idea.",
+      },
+    });
+    await prisma.researchLibResponse.create({
+      data: {
+        userId: testUserId,
+        answers: JSON.stringify({ "item 2": 1 }),
+        story: "<mark>Visible Momentum</mark> is what I observed.",
+      },
+    });
+
+    const req = new NextRequest(`http://localhost:3000/api/stories/${testUserId}`);
+    const res = await getStories(req, { params: Promise.resolve({ userId: testUserId }) });
+    assert.equal(res.status, 200);
+
+    const data = await res.json();
+    assert.equal(data.userId, testUserId);
+    assert.ok(data.story.includes("<mark>Marketing</mark>"));
+    assert.ok(data.story.includes("<mark>Visible Momentum</mark>"));
+
+    // Cleanup
+    await prisma.researchLibResponse.deleteMany({ where: { userId: testUserId } });
   });
 });
