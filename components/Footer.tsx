@@ -51,12 +51,12 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} BuyFacts, Inc. All rights reserved.
             </p>
             <span style={{ opacity: 0.3, color: 'var(--text-muted)' }}>•</span>
-            <Link
+            {/* <Link
               href="/admin"
               className={styles.adminLink}
             >
               Admin Access
-            </Link>
+            </Link> */}
           </div>
           <p className={styles.disclaimer}>
             BuyFacts, Cubicon, TRIAD, and Rule of Three are trademarks or registered trademarks of BuyFacts, Inc.
