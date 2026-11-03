@@ -13,7 +13,6 @@ import {
   Zap,
   Gift,
   Star,
-  CheckCircle2,
   Send,
   AlertCircle,
   FileCheck,
@@ -35,7 +34,6 @@ import {
   X,
   LogOut,
   BarChart3,
-  Video,
   FastForward,
   ArrowRight,
 } from "lucide-react";
@@ -197,8 +195,6 @@ const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
 
 const CUBICON_VIDEO_CDN_URL =
   "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
-const CUBICON_VIDEO_CDN_FALLBACK =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 export default function CubiconPage() {
   const router = useRouter();
@@ -210,7 +206,8 @@ export default function CubiconPage() {
   const [showVideo, setShowVideo] = useState(false);
   const [isVideoStarted, setIsVideoStarted] = useState(false);
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
-  const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
+  const [videoReloadKey, setVideoReloadKey] = useState(0);
+  const [videoError, setVideoError] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideAnimationKey, setSlideAnimationKey] = useState(0);
 
@@ -964,14 +961,6 @@ export default function CubiconPage() {
             <div className={styles.videoWrapper}>
               <div className={styles.videoHeader}>
                 <div className={styles.videoTitleGroup}>
-                  <span
-                    className={`${styles.videoBadge} ${
-                      isVideoCompleted ? styles.videoCompletedBadge : ""
-                    }`}
-                  >
-                    <Video size={14} />{" "}
-                    {isVideoCompleted ? "PREVIEW COMPLETE" : "VIDEO DEMO"}
-                  </span>
                   <span className={styles.videoTitle}>
                     Cubicon Self-Running Demonstration
                   </span>
@@ -989,11 +978,8 @@ export default function CubiconPage() {
                   <button
                     className={styles.controlBtn}
                     onClick={() => {
-                      setVideoSrc((prev) =>
-                        prev === CUBICON_VIDEO_CDN_URL
-                          ? CUBICON_VIDEO_CDN_FALLBACK
-                          : CUBICON_VIDEO_CDN_URL,
-                      );
+                      setVideoError(false);
+                      setVideoReloadKey((prev) => prev + 1);
                       setIsVideoCompleted(false);
                       setIsVideoStarted(true);
                     }}
@@ -1022,29 +1008,35 @@ export default function CubiconPage() {
                   </button>
                 )}
 
-                <video
-                  key={videoSrc}
-                  className={styles.videoElement}
-                  controls
-                  autoPlay
-                  playsInline
-                  src={videoSrc}
-                  onEnded={() => setIsVideoCompleted(true)}
-                  onError={() => {
-                    if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
-                      setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
-                    }
-                  }}
-                />
+                {videoError ? (
+                  <div
+                    className={styles.videoElement}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      padding: "2rem",
+                    }}
+                  >
+                    Unable to load video. Please click Reload Video.
+                  </div>
+                ) : (
+                  <video
+                    key={`${CUBICON_VIDEO_CDN_URL}-${videoReloadKey}`}
+                    className={styles.videoElement}
+                    controls
+                    autoPlay
+                    playsInline
+                    src={CUBICON_VIDEO_CDN_URL}
+                    onEnded={() => setIsVideoCompleted(true)}
+                    onError={() => setVideoError(true)}
+                  />
+                )}
 
                 {isVideoCompleted && (
                   <div className={styles.videoCompletionOverlay}>
-                    <span
-                      className={styles.videoBadge}
-                      style={{ marginBottom: "0.2rem" }}
-                    >
-                      <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
-                    </span>
                     <div className={styles.videoCompletionTitle}>
                       Automated Video Demonstration Complete
                     </div>
