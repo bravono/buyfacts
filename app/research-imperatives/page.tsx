@@ -271,6 +271,8 @@ export default function PortfolioPage() {
                 setShowWelcome(false);
               }}
             />
+              <strong>RESEARCH INNOVATION</strong>
+
           </div>
 
           {/* Right Column: MockMediaPlayer component configured dynamically */}

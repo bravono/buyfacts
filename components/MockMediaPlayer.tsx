@@ -689,25 +689,6 @@ export default function MockMediaPlayer({
           <p className={styles.headerSubtitle}>{displayTagline}</p>
         </div>
         <div className={styles.headerRight}>
-          <button
-            type="button"
-            className={`${styles.gettingStartedToggleBtn} ${
-              isWelcomeActive ? styles.gettingStartedToggleBtnActive : ""
-            }`}
-            onClick={() => {
-              const next = !isWelcomeActive;
-              setIsWelcomeActive(next);
-              if (next) {
-                onShowWelcome?.();
-              } else {
-                onDismissWelcome?.();
-              }
-            }}
-            aria-label="Getting Started guide"
-            title="Getting Started guide"
-          >
-            Getting Started
-          </button>
           <Link
             href="/"
             style={{

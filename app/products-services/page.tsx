@@ -266,7 +266,8 @@ export default function ServicesPage() {
                 setSelectedButtonIndex(index);
                 setShowWelcome(false);
               }}
-            />
+              />
+              <strong>PRODUCTS & SERVICES</strong>
           </div>
 
           {/* Right Column: MockMediaPlayer component */}
