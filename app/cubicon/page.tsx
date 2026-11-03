@@ -785,6 +785,13 @@ export default function CubiconPage() {
           ? `/feedback?sessionId=${encodeURIComponent(sessId)}`
           : "/feedback";
         router.push(targetUrl);
+      } else if (event.data?.type === "CUBICON_NAVIGATE" && event.data?.url) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        router.push(event.data.url);
       }
     };
 

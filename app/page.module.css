@@ -46,9 +46,17 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    radial-gradient(ellipse at bottom, rgba(255, 153, 0, 0.04) 0%, transparent 60%),
-    radial-gradient(circle at 75% 20%, rgba(0, 80, 123, 0.03) 0%, transparent 50%);
+  background:
+    radial-gradient(
+      ellipse at bottom,
+      rgba(255, 153, 0, 0.04) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 75% 20%,
+      rgba(0, 80, 123, 0.03) 0%,
+      transparent 50%
+    );
   z-index: 1;
   pointer-events: none;
 }
@@ -232,7 +240,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(255, 153, 0, 0.12) 0%, rgba(0, 80, 123, 0.06) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 153, 0, 0.12) 0%,
+    rgba(0, 80, 123, 0.06) 100%
+  );
   border: 1.5px solid var(--interactive-orange);
   color: var(--interactive-orange);
   padding: 0.6rem 1.8rem;
@@ -555,7 +567,7 @@
 /* Scroll indicator mockup */
 .scrollIndicator {
   position: absolute;
-  bottom: .5rem;
+  bottom: 0.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -588,7 +600,8 @@
 }
 
 @keyframes bounce-slow {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-2px);
   }
   50% {
@@ -628,7 +641,7 @@
   color: var(--color-grey-4);
   font-size: 1.15rem;
   line-height: 1.6;
-  max-width: 680px;
+  max-width: 450px;
   margin: 0 auto;
 }
 
@@ -697,7 +710,11 @@
   gap: 0.75rem;
   margin: 1.75rem auto 0 auto;
   padding: 0.85rem 1.75rem;
-  background: linear-gradient(135deg, rgba(0, 80, 123, 0.05) 0%, rgba(255, 153, 0, 0.06) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 80, 123, 0.05) 0%,
+    rgba(255, 153, 0, 0.06) 100%
+  );
   border: 1px solid rgba(0, 80, 123, 0.14);
   border-radius: var(--radius-md);
   box-shadow: 0 2px 10px rgba(0, 80, 123, 0.04);
@@ -927,7 +944,11 @@
 }
 
 .aboutHighlightBlock {
-  background: linear-gradient(135deg, rgba(0, 80, 123, 0.04) 0%, rgba(255, 153, 0, 0.04) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 80, 123, 0.04) 0%,
+    rgba(255, 153, 0, 0.04) 100%
+  );
   border-left: 4px solid var(--interactive-orange);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: 1.75rem 2rem;
@@ -1057,7 +1078,11 @@
   color: var(--interactive-blue);
   line-height: 1.5;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, rgba(0, 80, 123, 0.06) 0%, rgba(255, 153, 0, 0.08) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 80, 123, 0.06) 0%,
+    rgba(255, 153, 0, 0.08) 100%
+  );
   border-radius: var(--radius-md);
   border-left: 4px solid var(--interactive-blue);
   margin: 0.5rem 0;
@@ -1147,7 +1172,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .apartCard:hover {
@@ -1434,7 +1461,8 @@
   letter-spacing: 0.05em;
 }
 
-.input, .textarea {
+.input,
+.textarea {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -1457,7 +1485,9 @@
   max-height: 140px;
 }
 
-.input:focus, .textarea:focus, .textareaCompact:focus {
+.input:focus,
+.textarea:focus,
+.textareaCompact:focus {
   outline: none;
   background: var(--bg-color);
   border-color: var(--interactive-orange);
@@ -1520,12 +1550,12 @@
   .heroTitle {
     white-space: nowrap;
   }
-  
+
   .servicesGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
   }
-  
+
   .teamGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1548,6 +1578,7 @@
   .calloutBanner {
     padding: 0.75rem 1rem;
     text-align: left;
+    max-width: 400px;
   }
 
   .aboutDocument {
@@ -1572,7 +1603,7 @@
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
-  
+
   .contactGrid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
@@ -1596,7 +1627,7 @@
     align-items: flex-start;
     gap: 0.65rem;
   }
-  
+
   .heroTitle {
     font-size: 1.8rem;
     white-space: normal; /* wraps to two lines on mobile */
@@ -1606,7 +1637,7 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .section {
     padding: 5rem 0;
   }
@@ -1994,7 +2025,9 @@
   width: 100%;
   max-width: 960px;
   overflow: hidden;
-  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 25px 60px -10px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
 }
@@ -2091,7 +2124,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--vibrant-blue-gradient, linear-gradient(135deg, #0284c7 0%, #0369a1 100%));
+  background: var(
+    --vibrant-blue-gradient,
+    linear-gradient(135deg, #0284c7 0%, #0369a1 100%)
+  );
   color: #ffffff;
   padding: 0.55rem 1.25rem;
   border-radius: 999px;
@@ -2144,6 +2180,3 @@
     padding: 0.75rem 1rem;
   }
 }
-
-
-

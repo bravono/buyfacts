@@ -830,7 +830,7 @@ export default function Home() {
             </div>
 
             <div className={styles.calloutBanner}>
-              <ShieldCheck size={20} className={styles.calloutIcon} />
+              
               <span className={styles.calloutText}>
                 Protect Data Quality - Remove Pay for Participation that
                 Promotes Cash-Grab Participation

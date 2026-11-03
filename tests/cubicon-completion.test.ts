@@ -16,7 +16,7 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
     );
     assert.equal(
       COMPLETION_MESSAGES.success.description,
-      "Next we offer you a number of choices below. Please make a selection and we thank you for considering Cubicon and BuyFacts."
+      "Please use the navigation buttons on the right to take your next action, or select an option below."
     );
 
     // Verify rejection copy
@@ -26,7 +26,7 @@ test("Cubicon Completion Messages and Pass Evaluation Test Suite", async (t) => 
     );
     assert.equal(
       COMPLETION_MESSAGES.rejection.description,
-      "Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below."
+      "Please use the navigation buttons on the right to take your next action, or select an option below."
     );
   });
 
