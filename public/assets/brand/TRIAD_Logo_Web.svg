@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 390" width="100%" height="100%">
+  <defs>
+    <linearGradient id="topBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00b4ff"/>
+      <stop offset="55%" stop-color="#0077e6"/>
+      <stop offset="100%" stop-color="#003b8e"/>
+    </linearGradient>
+    <linearGradient id="leftGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9be13b"/>
+      <stop offset="55%" stop-color="#298f32"/>
+      <stop offset="100%" stop-color="#064e27"/>
+    </linearGradient>
+    <linearGradient id="rightGold" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffc619"/>
+      <stop offset="55%" stop-color="#f57c14"/>
+      <stop offset="100%" stop-color="#c43210"/>
+    </linearGradient>
+    <radialGradient id="centerSphere" cx="38%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#5ce1ff"/>
+      <stop offset="35%" stop-color="#0077cc"/>
+      <stop offset="80%" stop-color="#002b5e"/>
+      <stop offset="100%" stop-color="#001838"/>
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#cbd5e1"/>
+      <stop offset="50%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Subtle Ring -->
+  <circle cx="260" cy="148" r="112" fill="none" stroke="url(#ringGrad)" stroke-width="5.5" opacity="0.78"/>
+
+  <!-- Top Blue Swirl Corner -->
+  <path d="M 260,22 C 272,22 280,30 286,42 L 322,106 C 330,122 318,148 302,162 C 304,132 286,105 260,102 C 236,100 218,112 208,125 L 234,42 C 240,30 248,22 260,22 Z" fill="url(#topBlue)" filter="url(#softShadow)"/>
+
+  <!-- Left Green Swirl Corner -->
+  <path d="M 152,216 C 145,206 146,195 152,183 L 190,118 C 204,104 228,100 250,106 C 224,116 212,142 222,168 C 230,188 248,198 264,202 L 176,222 C 164,224 157,223 152,216 Z" fill="url(#leftGreen)" filter="url(#softShadow)"/>
+
+  <!-- Right Gold/Orange Swirl Corner -->
+  <path d="M 368,216 C 362,224 352,224 338,222 L 254,202 C 236,196 226,178 224,158 C 242,180 272,184 294,166 C 310,152 314,130 312,112 L 368,183 C 374,195 374,206 368,216 Z" fill="url(#rightGold)" filter="url(#softShadow)"/>
+
+  <!-- Center 3D Blue Puck Sphere -->
+  <circle cx="260" cy="150" r="28" fill="url(#centerSphere)" filter="url(#softShadow)"/>
+
+  <!-- TRIAD Wordmark -->
+  <text x="260" y="318" text-anchor="middle" fill="#0b284c" font-family="Segoe UI, Montserrat, Arial, sans-serif" font-size="84" font-weight="900" letter-spacing="8">TRIAD</text>
+
+  <!-- Sub-tagline: DIRECTION. THEN SPEED. -->
+  <text x="260" y="362" text-anchor="middle" fill="#52637a" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="600" letter-spacing="7.5">DIRECTION. THEN SPEED.</text>
+</svg>

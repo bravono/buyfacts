@@ -220,7 +220,26 @@ export default function Home() {
         actionHref: "/triad",
       },
     },
-  ];
+        {
+        id: "rule-of-three-framework",
+        title: "Rule of Three in Action",
+        tagline:
+          "Rule of Three turns findings into concise, reusable, co-branded content designed to make insight easier to understand, remember, share, and use.",
+        href: "/rule-of-three",
+        theme: "teal",
+        fallbackIcon: <Compass size={20} />,
+        iconUrl: "/r3-main-logo.png",
+        hoverCard: {
+          title: "Rule of Three",
+          description:
+            "Rule of Three turns findings into concise, reusable, co-branded content designed to make insight easier to understand, remember, share, and use.",
+          prompt:
+            "Experience how interactive frameworks structure principles, disciplines, and market rules.",
+          actionLabel: "SEE MORE",
+          actionHref: "/rule-of-three",
+        },
+      },
+    ];
 
   // Navigation collapse state when hovering over hero triplet pathway cards
   const [isNavHoverCollapsed, setIsNavHoverCollapsed] = useState(false);
@@ -587,10 +606,7 @@ export default function Home() {
               id="hero-value-pillars"
               aria-label="Core value pillars"
             >
-              <div
-                className={styles.heroPillarItem}
-                id="pillar-recognize-earlier"
-              >
+              <div className={styles.heroPillarItem} id="pillar-recognize-earlier">
                 <div className={styles.heroPillarIcon}>
                   <svg
                     width="44"
@@ -600,71 +616,19 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line
-                      x1="24"
-                      y1="6"
-                      x2="24"
-                      y2="11"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="16"
-                      y1="8"
-                      x2="18"
-                      y2="12.5"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="32"
-                      y1="8"
-                      x2="30"
-                      y2="12.5"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="9.5"
-                      y1="12.5"
-                      x2="12.5"
-                      y2="16"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="38.5"
-                      y1="12.5"
-                      x2="35.5"
-                      y2="16"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
+                    <line x1="24" y1="6" x2="24" y2="11" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="16" y1="8" x2="18" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="32" y1="8" x2="30" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="9.5" y1="12.5" x2="12.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="38.5" y1="12.5" x2="35.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
                     <path
                       d="M6 27C10.5 19.5 16.8 16 24 16C31.2 16 37.5 19.5 42 27C37.5 34.5 31.2 38 24 38C16.8 38 10.5 34.5 6 27Z"
                       stroke="#00507b"
                       strokeWidth="2"
                       strokeLinejoin="round"
                     />
-                    <circle
-                      cx="24"
-                      cy="27"
-                      r="6.5"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="24"
-                      cy="27"
-                      r="2.5"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                    />
+                    <circle cx="24" cy="27" r="6.5" stroke="#00507b" strokeWidth="2" />
+                    <circle cx="24" cy="27" r="2.5" stroke="#00507b" strokeWidth="2" />
                   </svg>
                 </div>
                 <h2 className={styles.heroPillarTitle}>Recognize Earlier</h2>
@@ -673,10 +637,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div
-                className={styles.heroPillarItem}
-                id="pillar-understand-choices"
-              >
+              <div className={styles.heroPillarItem} id="pillar-understand-choices">
                 <div className={styles.heroPillarIcon}>
                   <svg
                     width="44"
@@ -686,15 +647,7 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line
-                      x1="24"
-                      y1="7"
-                      x2="24"
-                      y2="41"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
+                    <line x1="24" y1="7" x2="24" y2="41" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
                     <path
                       d="M24 10H38L34.5 15.5L38 21H24V10Z"
                       stroke="#00507b"
@@ -725,42 +678,10 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                   >
-                    <line
-                      x1="8"
-                      y1="40"
-                      x2="40"
-                      y2="40"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <rect
-                      x="12"
-                      y="29"
-                      width="5.5"
-                      height="11"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                    <rect
-                      x="21.25"
-                      y="23"
-                      width="5.5"
-                      height="17"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                    <rect
-                      x="30.5"
-                      y="16"
-                      width="5.5"
-                      height="24"
-                      stroke="#00507b"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
+                    <line x1="8" y1="40" x2="40" y2="40" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <rect x="12" y="29" width="5.5" height="11" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="21.25" y="23" width="5.5" height="17" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="30.5" y="16" width="5.5" height="24" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
                     <path
                       d="M11 22L19 14L24 17.5L34 8"
                       stroke="#00507b"
@@ -798,11 +719,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 2: Peer Benchmark Incentive Surveys (8 Cards Grid) */}
-      <section
-        className="section-light"
-        id="portfolio"
-        style={{ padding: "7rem 0" }}
-      >
+      <section className={`section-light ${styles.viewportSlide}`} id="portfolio" data-slide-id="portfolio">
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitleLight}>
@@ -830,7 +747,7 @@ export default function Home() {
             </div>
 
             <div className={styles.calloutBanner}>
-              
+              <ShieldCheck size={20} className={styles.calloutIcon} />
               <span className={styles.calloutText}>
                 Protect Data Quality - Remove Pay for Participation that
                 Promotes Cash-Grab Participation
@@ -875,9 +792,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 2.5: Cubicon Founding Client Invitation Banner */}
-      <section
-        className="section-brand-bg"
-        id="founding-client-banner"
+      <section className={`section-brand-bg ${styles.viewportSlide}`} id="founding-client-banner" data-slide-id="founding-client-banner"
         style={{
           padding: "4rem 0",
           background:
@@ -1035,11 +950,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 3: About Us (Teal Theme matching Mockup image) */}
-      <section
-        className="section-teal-bg"
-        id="about"
-        style={{ padding: "7rem 0" }}
-      >
+      <section className={`section-teal-bg ${styles.viewportSlide}`} id="about" data-slide-id="about">
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
@@ -1319,7 +1230,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 4: Contact Us Form Section */}
-      <section className={styles.contactSection} id="contact">
+      <section className={`${styles.contactSection} ${styles.viewportSlide}`} id="contact" data-slide-id="contact">
         <div className={styles.container}>
           <div className={styles.contactGrid}>
             <div className={styles.contactInfo}>
@@ -1685,11 +1596,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 5: Our Team (Relocated to the bottom) */}
-      <section
-        className={styles.teamSection}
-        id="team"
-        style={{ padding: "6rem 0" }}
-      >
+      <section className={`${styles.teamSection} ${styles.viewportSlide}`} id="team" data-slide-id="team">
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
@@ -1705,8 +1612,8 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-guduspa">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/gunduspa.jpg"
-                  alt="Gunduspa Kumar"
+                  src="/guduspa.jpg"
+                  alt="Guduspa Kumar"
                   className={styles.memberImg}
                 />
               </div>
@@ -1718,7 +1625,7 @@ export default function Home() {
                   Analysis and Analytics
                 </span>
                 <p className={styles.memberBio}>
-                  Gunduspa translates raw data patterns into predictive models.
+                  Guduspa translates raw data patterns into predictive models.
                   He designs quantitative Super Intelligence (SI) scoring
                   mechanisms to visualize B2B buyer intent.
                 </p>
@@ -1728,7 +1635,7 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-robert">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/robert2.png"
+                  src="/robert.jpg"
                   alt="Robert M Johnson"
                   className={styles.memberImg}
                 />
@@ -1762,49 +1669,6 @@ export default function Home() {
                   Bernie pioneers many survey participant data quality
                   safeguards to manage survey hosting for More Than One Hundred
                   Marketing Teams
-                </p>
-              </div>
-            </div>
-            <div className={styles.memberCard} id="team-member-bernie">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/yusuf2.png"
-                  alt="Ahbideen"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Ahbideen Yusuf</h3>
-                <span className={styles.memberRole}>
-                  Interactive 3D & Web Development
-                </span>
-                <p className={styles.memberBio}>
-                  Ahbideen works in interactive 3D, web and software — using
-                  Three.js and WebGL to build experiences people can explore,
-                  move through and use. His skill areas include 3D modelling and
-                  animation, interactive interfaces, and full-stack web
-                  development.
-                </p>
-              </div>
-            </div>
-            <div className={styles.memberCard} id="team-member-bernie">
-              <div className={styles.imageWrapper}>
-                <img
-                  src="/rahel.png"
-                  alt="Rahel"
-                  className={styles.memberImg}
-                />
-              </div>
-              <div className={styles.memberInfo}>
-                <h3 className={styles.memberName}>Rahel</h3>
-                <span className={styles.memberRole}>
-                  Full-Stack Web Development
-                </span>
-                <p className={styles.memberBio}>
-                  Rahel is a full-stack web developer and software engineer with
-                  a focus on building scalable and efficient web applications.
-                  He has experience in front-end and back-end development,
-                  database management, and cloud services.
                 </p>
               </div>
             </div>

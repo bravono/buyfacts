@@ -1,0 +1,272 @@
+[
+  {
+    "Question": "How did you feel after learning about this topic?",
+    "QueryName": "Engagement Progression",
+    "LL": "No Interest",
+    "LR": "Inquisitive",
+    "Top": "Positive Interest",
+    "Category": "Life",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Did the content make sense to you?",
+    "QueryName": "Clarity of Understanding",
+    "LL": "Disorienting",
+    "LR": "Good Navigation",
+    "Top": "Effortless Flow",
+    "Category": "Work",
+    "Pcolor": "Light Yellow",
+    "Tcolor": "Teal"
+  },
+  {
+    "Question": "What did you learn from this topic?",
+    "QueryName": "Perception of Value",
+    "LL": "Confusing Value",
+    "LR": "Clearer Value",
+    "Top": "New Value",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How was it working with the words and ideas?",
+    "QueryName": "Engagement Complexity",
+    "LL": "Challenging",
+    "LR": "Manageable",
+    "Top": "Easy",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "Do you see yourself using this topic in the future?",
+    "QueryName": "Future Curiosity",
+    "LL": "Frustrated",
+    "LR": "Waiting to See",
+    "Top": "Curious",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "What emotions did you feel while working on this topic?",
+    "QueryName": "Emotional Involvement",
+    "LL": "Struggling to Finish",
+    "LR": "On Track",
+    "Top": "Engaged",
+    "Category": "Work",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How did you feel when you were asked a question in class?",
+    "QueryName": "Reaction to Participation",
+    "LL": "Anxious",
+    "LR": "Okay",
+    "Top": "Relaxed",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How did you feel working in a group?",
+    "QueryName": "Interaction and Collaboration",
+    "LL": "Quiet",
+    "LR": "Engaged",
+    "Top": "Talkative",
+    "Category": "Work",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Green"
+  },
+  {
+    "Question": "Did you find anything you learned that you can use again later?",
+    "QueryName": "Retained Clarity in Learning",
+    "LL": "Hard to Picture",
+    "LR": "Getting Clearer",
+    "Top": "Easy to See",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How are you doing with homework?",
+    "QueryName": "Ease of Task Completion",
+    "LL": "Spotty",
+    "LR": "Comfortable",
+    "Top": "Effortless",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How do you feel about being in class?",
+    "QueryName": "Focus and Attention in Class",
+    "LL": "Distracted",
+    "LR": "Somewhat Focused",
+    "Top": "Attentive",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How did you find the assignments and homework outside of class?",
+    "QueryName": "Assignment Attitude",
+    "LL": "Tough",
+    "LR": "Challenging",
+    "Top": "Enjoyable",
+    "Category": "Work",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How did you feel about the time you spent on this?",
+    "QueryName": "Perception of Time and Flow",
+    "LL": "Moved Slowly",
+    "LR": "Moderate Pace",
+    "Top": "Time Flew By",
+    "Category": "Life",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Did you get any questions from your own curiosity?",
+    "QueryName": "Curiosity and Engagement",
+    "LL": "Nothing to Add",
+    "LR": "Engaged",
+    "Top": "Curious",
+    "Category": "Work",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "Did this topic help you understand other things better?",
+    "QueryName": "Progression and Clarity",
+    "LL": "Bridge to Nowhere",
+    "LR": "A New Path",
+    "Top": "Clear Next Step",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How do you feel about the time you spent on this?",
+    "QueryName": "Perception of Time",
+    "LL": "Required Time",
+    "LR": "Time Well Spent",
+    "Top": "Welcome Time",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How did you feel about the topic itself?",
+    "QueryName": "Emotional Response to Topic",
+    "LL": "Not Positive",
+    "LR": "Satisfactory",
+    "Top": "Happy",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Did you enjoy working with others in class?",
+    "QueryName": "Emotional Reward",
+    "LL": "Low Confidence",
+    "LR": "Recognition",
+    "Top": "Achievement",
+    "Category": "Work",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How did you feel after learning more about this topic?",
+    "QueryName": "Lasting Engagement",
+    "LL": "No Interest",
+    "LR": "Inquisitive",
+    "Top": "Positive Interest",
+    "Category": "Life",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How are you doing in class?",
+    "QueryName": "Focus and Attention in Class",
+    "LL": "Distracted",
+    "LR": "Dreaming",
+    "Top": "Attentive",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Do you think the time you spent on this was useful?",
+    "QueryName": "Time Efficiency and Value",
+    "LL": "Time Efficiency and Value",
+    "LR": "Time Spent",
+    "Top": "Welcome Time",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "How do you feel about this topic now?",
+    "QueryName": " Interest Progression",
+    "LL": "Indifferent",
+    "LR": "Curiosity",
+    "Top": "Positive Interest",
+    "Category": "Life",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Do you see yourself using this topic in the future?",
+    "QueryName": "Future Clarity",
+    "LL": "Future Outlook and Clarity",
+    "LR": "Waiting for Clarity",
+    "Top": "Curious",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How would you describe the effort you put in?",
+    "QueryName": "Sense of Engagement",
+    "LL": "Did What Was Required",
+    "LR": "Participation as Desired",
+    "Top": "At Times Felt Inspired",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "Did this topic lead to conversations outside of class?",
+    "QueryName": "Sense of Connection",
+    "LL": "Never",
+    "LR": "On One or More Occasions",
+    "Top": "A Topic of Interest",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  },
+  {
+    "Question": "Did you know about this subject before the class?",
+    "QueryName": "Previous Familiarity",
+    "LL": "Unaware",
+    "LR": "Aware ",
+    "Top": "Familiar",
+    "Category": "Work",
+    "Pcolor": "Light Blue",
+    "Tcolor": "Blue"
+  },
+  {
+    "Question": "How did your thoughts on this subject change?",
+    "QueryName": "Post Subject Positioning",
+    "LL": "Less Connection",
+    "LR": "Similar Connection",
+    "Top": "Increased Connection",
+    "Category": "Life",
+    "Pcolor": "Dark Green",
+    "Tcolor": "Yellow"
+  }
+]
