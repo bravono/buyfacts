@@ -1214,10 +1214,10 @@ export default function CubiconPage() {
       <section
         className="section-brand-bg"
         id="founding-client-invitation"
-        style={{ padding: "6rem 0" }}
+        style={{ padding: "2rem 0" }}
       >
         <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: "0" }}>
+          <div className={styles.sectionHeader} style={{ marginBottom: "0", minWidth: "90vw"}}>
             <span className={styles.sectionTag}>EXCLUSIVE INVITATION</span>
             <h2 className={styles.sectionTitle}>
               Cubicon Founding Client Invitation
@@ -1317,7 +1317,7 @@ export default function CubiconPage() {
       </section>
 
       {/* WHY WE CREATED CUBICON */}
-      <section className="section-light" style={{ padding: "6rem 0" }}>
+      <section className="section-light" style={{ padding: "2rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>RATIONALE &amp; MISSION</span>
@@ -1393,7 +1393,7 @@ export default function CubiconPage() {
       <section
         className="section-brand-bg"
         id="founding-client-benefits"
-        style={{ padding: "6rem 0" }}
+        style={{ padding: "2rem 0" }}
       >
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -1463,7 +1463,7 @@ export default function CubiconPage() {
       </section>
 
       {/* FOUNDATION CLIENT REQUIREMENTS */}
-      <section className="section-light" style={{ padding: "6rem 0" }}>
+      <section className="section-light" style={{ padding: "2rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>QUALIFICATION CRITERIA</span>
@@ -1515,7 +1515,7 @@ export default function CubiconPage() {
       <section
         className="section-brand-bg"
         id="founding-client"
-        style={{ padding: "6rem 0" }}
+        style={{ padding: "2rem 0" }}
       >
         <div id="register-form" />
         <div id="founding-client-form" />
