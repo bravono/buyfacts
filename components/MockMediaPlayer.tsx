@@ -130,7 +130,9 @@ export default function MockMediaPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isWelcomeActive, setIsWelcomeActive] = useState<boolean>(showWelcome ?? true);
+  const [isWelcomeActive, setIsWelcomeActive] = useState<boolean>(
+    showWelcome ?? true,
+  );
 
   useEffect(() => {
     if (showWelcome !== undefined) {
@@ -139,8 +141,12 @@ export default function MockMediaPlayer({
   }, [showWelcome]);
 
   // Section 6: Video opening state and In Depth preview states
-  const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">("idle");
-  const [downloadConfirmed, setDownloadConfirmed] = useState<string | null>(null);
+  const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">(
+    "idle",
+  );
+  const [downloadConfirmed, setDownloadConfirmed] = useState<string | null>(
+    null,
+  );
 
   /**
    * What SEE IT / HEAR IT / READ IT have put on the player screen.
@@ -149,7 +155,9 @@ export default function MockMediaPlayer({
    * "audio"  — this post's HEAR IT audio
    * "document" — this post's READ IT document, rendered in the player (and its full screen)
    */
-  const [screenMode, setScreenMode] = useState<"auto" | "video" | "audio" | "document">("auto");
+  const [screenMode, setScreenMode] = useState<
+    "auto" | "video" | "audio" | "document"
+  >("auto");
 
   // Document state for DOCX client-side rendering
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
@@ -172,10 +180,10 @@ export default function MockMediaPlayer({
 
   const displayTitle = isWelcomeActive
     ? "Getting Started"
-    : (title || "Operational Demonstration");
+    : title || "Operational Demonstration";
   const displayTagline = isWelcomeActive
     ? "Welcome to your Marketers tool workspace!"
-    : (tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough");
+    : tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
 
   const isDocx =
     mediaType === "docx" ||
@@ -195,13 +203,14 @@ export default function MockMediaPlayer({
   // primary link only if that primary link is actually of the right kind.
   const primaryIsVideo = Boolean(
     mediaUrl &&
-      !isDocument &&
-      (isYouTubeUrl(mediaUrl) || /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(mediaUrl))
+    !isDocument &&
+    (isYouTubeUrl(mediaUrl) ||
+      /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(mediaUrl)),
   );
   const primaryIsAudio = Boolean(
     mediaUrl &&
-      !isDocument &&
-      /\.(mp3|m4a|aac|wav|oga|opus|flac)($|\?|#)/i.test(mediaUrl)
+    !isDocument &&
+    /\.(mp3|m4a|aac|wav|oga|opus|flac)($|\?|#)/i.test(mediaUrl),
   );
 
   /** Video shown inside the player for SEE IT (and as the default screen for video rows). */
@@ -212,7 +221,8 @@ export default function MockMediaPlayer({
     (hearItUrl && hearItUrl.trim()) || (primaryIsAudio ? mediaUrl : undefined);
   /** Document opened by READ IT and downloaded from the reader modal. */
   const documentSrc =
-    (readItUrl && readItUrl.trim()) || (isDocument && mediaUrl ? mediaUrl : undefined);
+    (readItUrl && readItUrl.trim()) ||
+    (isDocument && mediaUrl ? mediaUrl : undefined);
 
   /**
    * The media actually shown on the player screen right now. The page passes the row's
@@ -230,12 +240,21 @@ export default function MockMediaPlayer({
     }
     if (screenMode === "audio") return audioSrc ? "audio" : "video";
     if (screenMode === "video") {
-      return videoSrc ? "video" : audioSrc ? "audio" : documentSrc ? (isDocxUrl(documentSrc) ? "docx" : "pdf") : "video";
+      return videoSrc
+        ? "video"
+        : audioSrc
+          ? "audio"
+          : documentSrc
+            ? isDocxUrl(documentSrc)
+              ? "docx"
+              : "pdf"
+            : "video";
     }
 
     // Default screen: ALWAYS the primary button link. The extras play no part in it.
     const primaryIsAudioLink = Boolean(
-      mediaUrl && /(\.mp3|\.m4a|\.aac|\.wav|\.oga|\.opus|\.flac)($|\?|#)/i.test(mediaUrl)
+      mediaUrl &&
+      /(\.mp3|\.m4a|\.aac|\.wav|\.oga|\.opus|\.flac)($|\?|#)/i.test(mediaUrl),
     );
     if (mediaType === "image") return mediaUrl ? "image" : "video";
     if (mediaType === "audio") return mediaUrl ? "audio" : "video";
@@ -282,12 +301,14 @@ export default function MockMediaPlayer({
   const isScreenPdf = screenType === "pdf";
   const isScreenDocument = isScreenDocx || isScreenPdf;
 
-  const isScreenYouTube = Boolean(screenMediaUrl && isYouTubeUrl(screenMediaUrl));
+  const isScreenYouTube = Boolean(
+    screenMediaUrl && isYouTubeUrl(screenMediaUrl),
+  );
   const isPlayable = Boolean(
     (screenType === "video" || screenType === "audio") &&
-      screenMediaUrl &&
-      !isScreenYouTube &&
-      !isScreenDocument
+    screenMediaUrl &&
+    !isScreenYouTube &&
+    !isScreenDocument,
   );
 
   const effectiveInDepthUrl = moreDetailUrl || readItUrl;
@@ -325,12 +346,15 @@ export default function MockMediaPlayer({
         } else {
           setDocxHtml(null);
           setModalDocxHtml(null);
-          setDocError(result.error || "Failed to convert Word document to HTML");
+          setDocError(
+            result.error || "Failed to convert Word document to HTML",
+          );
         }
       })
       .catch((err: unknown) => {
         if (!isMounted) return;
-        const msg = err instanceof Error ? err.message : "Error reading document";
+        const msg =
+          err instanceof Error ? err.message : "Error reading document";
         setDocxHtml(null);
         setModalDocxHtml(null);
         setDocError(msg);
@@ -345,7 +369,6 @@ export default function MockMediaPlayer({
       isMounted = false;
     };
   }, [isScreenDocx, screenMediaUrl, title, displayTagline]);
-
 
   // Escape closes full screen, whether the screen holds a video, audio or a document.
   useEffect(() => {
@@ -525,7 +548,10 @@ export default function MockMediaPlayer({
   };
 
   /** Transient notice shown when an action button has no asset of its own (auto-dismisses). */
-  const [missingNotice, setMissingNotice] = useState<{ kind: "video" | "audio" | "document"; text: string } | null>(null);
+  const [missingNotice, setMissingNotice] = useState<{
+    kind: "video" | "audio" | "document";
+    text: string;
+  } | null>(null);
   const missingTimer = useRef<number | null>(null);
 
   const flashMissing = (kind: "video" | "audio" | "document", text: string) => {
@@ -584,7 +610,10 @@ export default function MockMediaPlayer({
     } else {
       // This post has no video of its own: the primary content stays on screen untouched.
       console.info(`No video is linked to "${displayTitle}".`);
-      flashMissing("video", `No video is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
+      flashMissing(
+        "video",
+        `No video is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+      );
     }
   };
 
@@ -612,7 +641,10 @@ export default function MockMediaPlayer({
     } else {
       // This post has no audio of its own: the primary content stays on screen untouched.
       console.info(`No audio is linked to "${displayTitle}".`);
-      flashMissing("audio", `No audio is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
+      flashMissing(
+        "audio",
+        `No audio is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+      );
     }
   };
 
@@ -650,7 +682,10 @@ export default function MockMediaPlayer({
     } else {
       // This post has no document of its own: the primary content stays on screen untouched.
       console.info(`No document is linked to "${displayTitle}".`);
-      flashMissing("document", `No document is attached to "${displayTitle}" yet — the player is still showing its primary content.`);
+      flashMissing(
+        "document",
+        `No document is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+      );
     }
   };
 
@@ -669,7 +704,9 @@ export default function MockMediaPlayer({
     document.body.removeChild(link);
 
     // The reader stays on the player screen; just confirm the save.
-    setDownloadConfirmed(`Document download complete: "${displayTitle}" has been saved. Your active dashboard selection remains preserved.`);
+    setDownloadConfirmed(
+      `Document download complete: "${displayTitle}" has been saved. Your active dashboard selection remains preserved.`,
+    );
   };
 
   const handleContactAction = () => {
@@ -741,21 +778,25 @@ export default function MockMediaPlayer({
         )}
 
         {/* No Media Found State — never covers a document that is being read */}
-        {!screenMediaUrl && !isScreenDocument && !isLoadingDoc && !isWelcomeActive && (
-          <div className={styles.noMediaContainer}>
-            <div className={styles.noMediaIconWrapper}>
-              <FileQuestion size={36} className={styles.noMediaIcon} />
+        {!screenMediaUrl &&
+          !isScreenDocument &&
+          !isLoadingDoc &&
+          !isWelcomeActive && (
+            <div className={styles.noMediaContainer}>
+              <div className={styles.noMediaIconWrapper}>
+                <FileQuestion size={36} className={styles.noMediaIcon} />
+              </div>
+              <h4 className={styles.noMediaTitle}>No Media Found</h4>
+              <p className={styles.noMediaSubtitle}>
+                No media asset is currently linked to {displayTitle}.
+              </p>
             </div>
-            <h4 className={styles.noMediaTitle}>No Media Found</h4>
-            <p className={styles.noMediaSubtitle}>
-              No media asset is currently linked to {displayTitle}.
-            </p>
-          </div>
-        )}
+          )}
 
         {/* Video Render */}
-        {screenType === "video" && screenMediaUrl && (
-          isScreenYouTube ? (
+        {screenType === "video" &&
+          screenMediaUrl &&
+          (isScreenYouTube ? (
             <iframe
               src={getYouTubeEmbedUrl(screenMediaUrl)}
               className={styles.realVideo}
@@ -784,8 +825,7 @@ export default function MockMediaPlayer({
               preload="metadata"
               playsInline
             />
-          )
-        )}
+          ))}
 
         {/* Idle Audio Wave Background or Video Fallback when no url */}
         {(screenType !== "video" || !screenMediaUrl) && (
@@ -862,17 +902,6 @@ export default function MockMediaPlayer({
                 <FileText size={14} color="#00507b" />
                 <span>PDF Document</span>
               </div>
-              <div className={styles.inlineDocActions}>
-                <button
-                  type="button"
-                  className={styles.inlineDocActionBtn}
-                  onClick={handleDownloadDocument}
-                  title="Download a copy"
-                >
-                  <Download size={12} />
-                  <span>Download</span>
-                </button>
-              </div>
             </div>
             <div className={styles.inlineDocBody}>
               <iframe
@@ -887,23 +916,7 @@ export default function MockMediaPlayer({
         {/* Document Render: DOCX — this post's READ IT document, read inside the player */}
         {isScreenDocx && screenMediaUrl && (
           <div className={styles.inlineDocViewer}>
-            <div className={styles.inlineDocHeader}>
-              <div className={styles.inlineDocBadge}>
-                <FileText size={14} color="#00507b" />
-                <span>Word Document (.docx)</span>
-              </div>
-              <div className={styles.inlineDocActions}>
-                <button
-                  type="button"
-                  className={styles.inlineDocActionBtn}
-                  onClick={handleDownloadDocument}
-                  title="Download a copy"
-                >
-                  <Download size={12} />
-                  <span>Download</span>
-                </button>
-              </div>
-            </div>
+            <div className={styles.inlineDocHeader}></div>
             <div className={styles.inlineDocBody}>
               {isLoadingModalDoc && (
                 <div className={styles.inlineDocLoading}>
@@ -918,9 +931,10 @@ export default function MockMediaPlayer({
                       <FileQuestion size={26} />
                       <h4>This document cannot be displayed here</h4>
                       <p>
-                        It is hosted at <code>{safeHost(screenMediaUrl)}</code>, which is not
-                        reachable from the internet. Save the link using the public bucket URL
-                        (for example <code>https://s3.buyfacts.com</code>).
+                        It is hosted at <code>{safeHost(screenMediaUrl)}</code>,
+                        which is not reachable from the internet. Save the link
+                        using the public bucket URL (for example{" "}
+                        <code>https://s3.buyfacts.com</code>).
                       </p>
                       <a
                         href={screenMediaUrl}
@@ -1053,7 +1067,10 @@ export default function MockMediaPlayer({
                   >
                     •
                   </span>
-                  <span>See, hear, read and apply our shared learnings that will save you time</span>
+                  <span>
+                    See, hear, read and apply our shared learnings that will
+                    save you time
+                  </span>
                 </li>
                 <li>
                   <span
@@ -1071,7 +1088,10 @@ export default function MockMediaPlayer({
                   >
                     •
                   </span>
-                  <span>Download and save time with our ideas and tools (no strings attached)</span>
+                  <span>
+                    Download and save time with our ideas and tools (no strings
+                    attached)
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1080,7 +1100,9 @@ export default function MockMediaPlayer({
           description && (
             <div
               className={`${styles.descriptionOverlay} ${
-                isPlaying || isScreenDocument ? styles.descriptionOverlayHidden : ""
+                isPlaying || isScreenDocument
+                  ? styles.descriptionOverlayHidden
+                  : ""
               }`}
             >
               <p className={styles.descriptionOverlayText}>
@@ -1120,7 +1142,9 @@ export default function MockMediaPlayer({
           <div className={styles.controlsRow}>
             {isPlayable ? (
               <div className={styles.timeInfo}>
-                <span className={styles.timeText}>{formatTime(currentTime)}</span>
+                <span className={styles.timeText}>
+                  {formatTime(currentTime)}
+                </span>
                 <span className={styles.timeDivider}>/</span>
                 <span className={styles.timeText}>
                   {duration > 0 ? formatTime(duration) : "Available on start"}
@@ -1128,9 +1152,17 @@ export default function MockMediaPlayer({
               </div>
             ) : (
               <div className={styles.timeInfo}>
-                <span className={styles.timeText}>
-                  {isScreenDocx ? "Word document (.docx)" : "PDF document"}
-                </span>
+                <div className={styles.inlineDocActions}>
+                  <button
+                    type="button"
+                    className={styles.inlineDocActionBtn}
+                    onClick={handleDownloadDocument}
+                    title="Download a copy"
+                  >
+                    <Download size={12} />
+                    <span>Download</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1189,7 +1221,12 @@ export default function MockMediaPlayer({
           <button
             type="button"
             onClick={() => setDownloadConfirmed(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#065f46" }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#065f46",
+            }}
           >
             <X size={16} />
           </button>
@@ -1245,7 +1282,11 @@ export default function MockMediaPlayer({
             aria-label="SEE IT"
             aria-disabled={videoSrc ? undefined : true}
             aria-describedby={videoSrc ? undefined : "action-hint-see-it"}
-            title={videoSrc ? "SEE IT" : `No video is attached to ${displayTitle} yet`}
+            title={
+              videoSrc
+                ? "SEE IT"
+                : `No video is attached to ${displayTitle} yet`
+            }
             id="action-btn-see-it"
           >
             {videoIconUrl ? (
@@ -1264,7 +1305,11 @@ export default function MockMediaPlayer({
             aria-label="HEAR IT"
             aria-disabled={audioSrc ? undefined : true}
             aria-describedby={audioSrc ? undefined : "action-hint-hear-it"}
-            title={audioSrc ? "HEAR IT" : `No audio is attached to ${displayTitle} yet`}
+            title={
+              audioSrc
+                ? "HEAR IT"
+                : `No audio is attached to ${displayTitle} yet`
+            }
             id="action-btn-hear-it"
           >
             {audioIconUrl ? (
@@ -1283,7 +1328,11 @@ export default function MockMediaPlayer({
             aria-label="READ IT"
             aria-disabled={documentSrc ? undefined : true}
             aria-describedby={documentSrc ? undefined : "action-hint-read-it"}
-            title={documentSrc ? "READ IT" : `No document is attached to ${displayTitle} yet`}
+            title={
+              documentSrc
+                ? "READ IT"
+                : `No document is attached to ${displayTitle} yet`
+            }
             id="action-btn-read-it"
           >
             {moreDetailIconUrl ? (
