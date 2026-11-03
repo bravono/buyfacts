@@ -1,0 +1,382 @@
+[
+  {
+    "qNo": "kym-01",
+    "questionNumber": 1,
+    "focusArea": "Priority",
+    "question": "How do you feel after learning about this topic?",
+    "queryName": "Engagement Reflection",
+    "Top": "Positive Interest",
+    "LL": "No Interest",
+    "LR": "Inquisitive",
+    "learningMode": "Emotional",
+    "category": "Life",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Positive Interest",
+      "LL": "No Interest",
+      "LR": "Inquisitive"
+    }
+  },
+  {
+    "qNo": "kym-02",
+    "questionNumber": 2,
+    "focusArea": "Effort",
+    "question": "Did the content make sense to you?",
+    "queryName": "Clarity of Understanding",
+    "Top": "Effortless Flow",
+    "LL": "Disorienting",
+    "LR": "Good Navigation",
+    "learningMode": "Logical",
+    "category": "Work",
+    "puckColor": "Light Yellow",
+    "fillColor": "Teal",
+    "choices": {
+      "Top": "Effortless Flow",
+      "LL": "Disorienting",
+      "LR": "Good Navigation"
+    }
+  },
+  {
+    "qNo": "kym-03",
+    "questionNumber": 3,
+    "focusArea": "Legacy",
+    "question": "What did you learn from this topic?",
+    "queryName": "Knowledge Retention",
+    "Top": "New Value",
+    "LL": "Confusing Value",
+    "LR": "Clearer Value",
+    "learningMode": "Reading/Writing",
+    "category": "Work",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "New Value",
+      "LL": "Confusing Value",
+      "LR": "Clearer Value"
+    }
+  },
+  {
+    "qNo": "kym-04",
+    "questionNumber": 4,
+    "focusArea": "Legacy",
+    "question": "Do you see yourself using this topic in the future?",
+    "queryName": "Future Application",
+    "Top": "Curious",
+    "LL": "Frustrated",
+    "LR": "Waiting to See",
+    "learningMode": "Kinesthetic",
+    "category": "Work",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Curious",
+      "LL": "Frustrated",
+      "LR": "Waiting to See"
+    }
+  },
+  {
+    "qNo": "kym-05",
+    "questionNumber": 5,
+    "focusArea": "Priority",
+    "question": "What emotions did you experience while learning about this topic?",
+    "queryName": "Emotional Engagement",
+    "Top": "Engaged",
+    "LL": "Struggling to Finish",
+    "LR": "On Track",
+    "learningMode": "Emotional",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Engaged",
+      "LL": "Struggling to Finish",
+      "LR": "On Track"
+    }
+  },
+  {
+    "qNo": "kym-06",
+    "questionNumber": 6,
+    "focusArea": "Priority",
+    "question": "How did you feel when asked questions in class?",
+    "queryName": "Response to Participation",
+    "Top": "Relaxed",
+    "LL": "Anxious",
+    "LR": "Okay",
+    "learningMode": "Verbal",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Relaxed",
+      "LL": "Anxious",
+      "LR": "Okay"
+    }
+  },
+  {
+    "qNo": "kym-07",
+    "questionNumber": 7,
+    "focusArea": "Share",
+    "question": "How did you feel about working in a group?",
+    "queryName": "Group Collaboration",
+    "Top": "Talkative",
+    "LL": "Quiet",
+    "LR": "Engaged",
+    "learningMode": "Social",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Green",
+    "choices": {
+      "Top": "Talkative",
+      "LL": "Quiet",
+      "LR": "Engaged"
+    }
+  },
+  {
+    "qNo": "kym-08",
+    "questionNumber": 8,
+    "focusArea": "Legacy",
+    "question": "Did you find anything in this topic that you can use again?",
+    "queryName": "Practical Takeaways",
+    "Top": "Easy to See",
+    "LL": "Hard to Picture",
+    "LR": "Getting Clearer",
+    "learningMode": "Visual",
+    "category": "Work",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Easy to See",
+      "LL": "Hard to Picture",
+      "LR": "Getting Clearer"
+    }
+  },
+  {
+    "qNo": "kym-09",
+    "questionNumber": 9,
+    "focusArea": "Effort",
+    "question": "How are you managing your homework assignments?",
+    "queryName": "Task Management",
+    "Top": "Effortless",
+    "LL": "Spotty",
+    "LR": "Comfortable",
+    "learningMode": "Solitary",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Effortless",
+      "LL": "Spotty",
+      "LR": "Comfortable"
+    }
+  },
+  {
+    "qNo": "kym-10",
+    "questionNumber": 10,
+    "focusArea": "Priority",
+    "question": "What do you enjoy about being in class?",
+    "queryName": "Classroom Experience",
+    "Top": "Attentive",
+    "LL": "Distracted",
+    "LR": "Somewhat Focused",
+    "learningMode": "Social",
+    "category": "Life",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Attentive",
+      "LL": "Distracted",
+      "LR": "Somewhat Focused"
+    }
+  },
+  {
+    "qNo": "kym-11",
+    "questionNumber": 11,
+    "focusArea": "Effort",
+    "question": "Did the assignments and homework help you understand the topic better?",
+    "queryName": "Assignment Effectiveness",
+    "Top": "Enjoyable",
+    "LL": "Tough",
+    "LR": "Challenging",
+    "learningMode": "Reading/Writing",
+    "category": "Work",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Enjoyable",
+      "LL": "Tough",
+      "LR": "Challenging"
+    }
+  },
+  {
+    "qNo": "kym-12",
+    "questionNumber": 12,
+    "focusArea": "Effort",
+    "question": "How did you feel about the amount of time you spent on this?",
+    "queryName": "Time Investment",
+    "Top": "Time Flew By",
+    "LL": "Moved Slowly",
+    "LR": "Moderate Pace",
+    "learningMode": "Logical",
+    "category": "Life",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Time Flew By",
+      "LL": "Moved Slowly",
+      "LR": "Moderate Pace"
+    }
+  },
+  {
+    "qNo": "kym-13",
+    "questionNumber": 13,
+    "focusArea": "Legacy",
+    "question": "Did this topic make you curious to learn more?",
+    "queryName": "Curiosity and Interest",
+    "Top": "Curious",
+    "LL": "Nothing to Add",
+    "LR": "Engaged",
+    "learningMode": "Reading/Writing",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Curious",
+      "LL": "Nothing to Add",
+      "LR": "Engaged"
+    }
+  },
+  {
+    "qNo": "kym-14",
+    "questionNumber": 14,
+    "focusArea": "Legacy",
+    "question": "How useful was the time you spent learning about this topic?",
+    "queryName": "Time Usefulness",
+    "Top": "Welcome Time",
+    "LL": "Bridge to Nowhere",
+    "LR": "Time Well Spent",
+    "learningMode": "Logical",
+    "category": "Work",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Welcome Time",
+      "LL": "Bridge to Nowhere",
+      "LR": "Time Well Spent"
+    }
+  },
+  {
+    "qNo": "kym-15",
+    "questionNumber": 15,
+    "focusArea": "Effort",
+    "question": "Did you have prior knowledge of this subject before the class?",
+    "queryName": "Prior Subject Familiarity",
+    "Top": "Happy",
+    "LL": "Not Positive",
+    "LR": "Satisfactory",
+    "learningMode": "Logical",
+    "category": "Work",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Happy",
+      "LL": "Not Positive",
+      "LR": "Satisfactory"
+    }
+  },
+  {
+    "qNo": "kym-16",
+    "questionNumber": 16,
+    "focusArea": "Share",
+    "question": "Did you enjoy collaborating with others in class?",
+    "queryName": "Enjoyment of Peer Collaboration",
+    "Top": "Achievement",
+    "LL": "Low Confidence",
+    "LR": "Recognition",
+    "learningMode": "Social",
+    "category": "Love",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Achievement",
+      "LL": "Low Confidence",
+      "LR": "Recognition"
+    }
+  },
+  {
+    "qNo": "kym-17",
+    "questionNumber": 17,
+    "focusArea": "Effort",
+    "question": "How would you describe your effort during this topic?",
+    "queryName": "Effort Perception",
+    "Top": "At Times Felt Inspired",
+    "LL": "Did What Was Required",
+    "LR": "Participation as Desired",
+    "learningMode": "Kinesthetic",
+    "category": "Work",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "At Times Felt Inspired",
+      "LL": "Did What Was Required",
+      "LR": "Participation as Desired"
+    }
+  },
+  {
+    "qNo": "kym-18",
+    "questionNumber": 18,
+    "focusArea": "Effort",
+    "question": "How are you progressing in class?",
+    "queryName": "Academic Progress",
+    "Top": "Attentive",
+    "LL": "Spotty",
+    "LR": "Dreaming",
+    "learningMode": "Logical",
+    "category": "Life",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Attentive",
+      "LL": "Spotty",
+      "LR": "Dreaming"
+    }
+  },
+  {
+    "qNo": "kym-19",
+    "questionNumber": 19,
+    "focusArea": "Legacy",
+    "question": "Has your perspective on this subject changed after the class?",
+    "queryName": "Change in Perspective",
+    "Top": "Positive Interest",
+    "LL": "Low Confidence",
+    "LR": "Inquisitive",
+    "learningMode": "Reading/Writing",
+    "category": "Life",
+    "puckColor": "Light Blue",
+    "fillColor": "Blue",
+    "choices": {
+      "Top": "Positive Interest",
+      "LL": "Low Confidence",
+      "LR": "Inquisitive"
+    }
+  },
+  {
+    "qNo": "kym-20",
+    "questionNumber": 20,
+    "focusArea": "Priority",
+    "question": "How do you feel about this topic now?",
+    "queryName": "Current Subject Positioning",
+    "Top": "Increased Connection",
+    "LL": "Less Connection",
+    "LR": "Similar Connection",
+    "learningMode": "Emotional",
+    "category": "Life",
+    "puckColor": "Dark Green",
+    "fillColor": "Yellow",
+    "choices": {
+      "Top": "Increased Connection",
+      "LL": "Less Connection",
+      "LR": "Similar Connection"
+    }
+  }
+]

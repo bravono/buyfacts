@@ -811,3 +811,53 @@
     transition-duration: 0.01ms;
   }
 }
+
+
+/* 4 Hero Buttons Grid (Cubicon, Research Labs, TRIAD, Rule of Three) */
+.tripletGrid {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: clamp(0.55rem, 0.9vw, 0.95rem) !important;
+  max-width: 1180px !important;
+}
+
+.tripletBtn {
+  min-height: clamp(68px, 8.5vh, 84px) !important;
+  padding: 0.45rem 0.75rem 0.45rem 0.65rem !important;
+}
+
+.themeTeal {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(13, 148, 136, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.themeTeal:hover {
+  box-shadow: 0 16px 34px -6px rgba(13, 148, 136, 0.55), 0 0 0 2px rgba(20, 184, 166, 0.35);
+}
+
+.themeTeal .iconWrapper {
+  background: #ffffff !important;
+  padding: 4px !important;
+}
+
+.themeTeal .cdnIcon {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.hoverThemeTeal {
+  border-top: 4px solid #0d9488;
+}
+
+@media (max-width: 1100px) {
+  .tripletGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .tripletGrid {
+    grid-template-columns: 1fr !important;
+  }
+}

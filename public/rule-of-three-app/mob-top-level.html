@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Mobile UI Layout – Accordion</title>
+    <style>
+        /*──────────────── Reset & Base ────────────────*/
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            /* no page scrollbars */
+            font-family: Roboto, sans-serif;
+            background: #f0f0f0;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /*──────────────── Container ────────────────*/
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            margin: 0 auto;
+            background: #000;
+            color: #fff;
+            overflow: visible;
+            /* allow dropdowns to overflow */
+        }
+
+        /*──────────────── Header Grid ────────────────*/
+        .header-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+        }
+
+        .header-grid .cell {
+            padding: 12px 16px;
+            border-bottom: 1px solid #06507B;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .header-grid .left {
+            border-right: 1px solid #06507B;
+        }
+
+        .left.row1 {
+            grid-area: 1 / 1;
+        }
+
+        .left.row2 {
+            grid-area: 2 / 1;
+        }
+
+        .left.row3 {
+            grid-area: 3 / 1;
+        }
+
+        .right.row12 {
+            grid-area: 1 / 2 / span 2 / span 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .right.row3 {
+            grid-area: 3 / 2;
+            text-align: right;
+        }
+
+        /*──────────────── Principles / Accordion ────────────────*/
+        .principle {
+            position: relative;
+            /* for absolute dropdown */
+            border-bottom: 1px solid #06507B;
+        }
+
+        .principle-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .principle-header strong {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .arrow-icon {
+            width: 16px;
+            height: 16px;
+            transform: rotate(-90deg);
+            transition: transform .3s ease;
+        }
+
+        .rule-list {
+            position: absolute;
+            top: 100%;
+            display: none;
+            /* Initially hidden */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            /* right under the header */
+            left: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            background: #000;
+            z-index: 10;
+        }
+
+        .principle.expanded .rule-list {
+            display: block;
+            opacity: 1;
+        }
+
+        .principle.expanded .arrow-icon {
+            transform: rotate(0deg);
+        }
+
+
+        .rule-list li {
+            padding: 12px 16px;
+            border-top: 1px solid #06507B;
+            font-size: 14px;
+        }
+
+
+        /*──────────────── Control Panel & Footer (unchanged) ────────────────*/
+        .control-panel {
+            position: relative;
+            background: #FBB040;
+            padding: 24px 16px 12px;
+        }
+
+
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .button-grid button {
+            width: 100%;
+            padding: 8px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        footer.footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            padding: 12px 16px;
+        }
+
+        .footer-logo img {
+            height: 40px;
+        }
+
+        .footer-text {
+            display: flex;
+            flex-direction: column;
+            font-size: 10px;
+            color: #00527C;
+            gap: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Corner Logo -->
+        <img src="./assets/r3-top.svg" alt="Logo" class="corner-logo"
+            style="position:absolute; top:0; right:0; width:40px; height:40px;">
+
+        <!-- Header Grid -->
+        <div class="header-grid">
+            <div class="cell left row1">Push Marketing (A Focus Rule)</div>
+            <div class="cell right row12">Drive Awarenessand Engagementwith Push Strategies</div>
+            <div class="cell left row2">RULE SUMMARY</div>
+            <div class="cell right row3">Act First, Engage Always</div>
+            <div class="cell left row3">As the saying goes...</div>
+        </div>
+
+        <!-- Principles Section -->
+        <div class="principle collapsed" id="principle-one">
+            <div class="principle-header">
+                <strong>Principle One: Time and Timing</strong>
+                <img class="arrow-icon" src="./assets/arrow-down.svg" alt="Toggle">
+            </div>
+            <ul class="rule-list">
+                <li>Plan launch calendars</li>
+                <li>Use optimal times for posting</li>
+                <li>Leverage analytics for scheduling</li>
+            </ul>
+        </div>
+
+        <div class="principle collapsed" id="principle-two">
+            <div class="principle-header">
+                <strong>Principle Two: Measurable Goals</strong>
+                <img class="arrow-icon" src="./assets/arrow-down.svg" alt="Toggle">
+            </div>
+            <ul class="rule-list">
+                <li>Highlight ROI Benefits</li>
+                <li>Showcase Competitive Positioning</li>
+                <li>Ensure Internal Alignment</li>
+            </ul>
+        </div>
+
+        <div class="principle collapsed" id="principle-three">
+            <div class="principle-header">
+                <strong>Principle Three: Stakeholder Considerations</strong>
+                <img class="arrow-icon" src="./assets/arrow-down.svg" alt="Toggle">
+            </div>
+            <ul class="rule-list">
+                <li>Set SMART objectives</li>
+                <li>Track conversion rates</li>
+                <li>Adapt to underperforming campaigns</li>
+            </ul>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="button-grid">
+                <button>PDF</button>
+                <button>LEVEL ONE</button>
+                <button>LEVEL TWO</button>
+                <button>RULE LIST</button>
+                <button>SHARE</button>
+                <button>EXIT</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-logo">
+                <img src="./assets/LogoName.svg" alt="BuyFacts Logo">
+            </div>
+            <div class="footer-text">
+                <span>REAL DATA – REAL PEOPLE</span>
+                <span>https://www.buyfacts.com</span>
+            </div>
+        </footer>
+    </div>
+
+
+</body>
+
+</html>

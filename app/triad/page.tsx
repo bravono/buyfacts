@@ -1,131 +1,206 @@
-import React from "react";
-import type { Metadata } from "next";
-import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { ArrowLeft, Compass, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
-import styles from "./triad.module.css";
+"use client";
 
-export const metadata: Metadata = {
-  title: "TRIAD - Market Changes in Real Time | BuyFacts",
-  description:
-    "TRIAD measures shifts in buyer sentiment through focused research repeated over time, revealing emerging directional patterns and emotional drivers.",
-};
+import React, { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Compass, Layers, PlayCircle, Maximize2 } from "lucide-react";
 
 const TRIAD_VIDEO_CDN =
   "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
 
-export default function TriadPage() {
+export default function TriadFullscreenPage() {
+  const [activeMode, setActiveMode] = useState<"triad" | "kym" | "video">("triad");
+
   return (
-    <div className={styles.pageWrapper}>
-      <Navbar />
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "#0f172a",
+      }}
+    >
+      <header
+        style={{
+          height: "54px",
+          minHeight: "54px",
+          width: "100%",
+          background: "#0b192c",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 1.25rem",
+          boxSizing: "border-box",
+          zIndex: 100,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <Link
+            href="/"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              color: "#ffffff",
+              background: "rgba(255, 255, 255, 0.1)",
+              padding: "0.4rem 0.9rem",
+              borderRadius: "999px",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              textDecoration: "none",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+            }}
+          >
+            <ArrowLeft size={15} />
+            Back to BuyFacts Home
+          </Link>
 
-      <main className={styles.mainContent}>
-        <div className={styles.container}>
-          {/* Back Navigation Link */}
-          <div className={styles.backNav}>
-            <Link href="/" className={styles.backLink}>
-              <ArrowLeft size={16} />
-              <span>Back to BuyFacts Home</span>
-            </Link>
-          </div>
-
-          {/* Hero Section */}
-          <header className={styles.header}>
-            <span className={styles.eyebrow}>
-              <Compass size={16} className={styles.eyebrowIcon} />
-              BUYFACTS RESEARCH PLATFORM
-            </span>
-            <h1 className={styles.title}>TRIAD: Market Changes in Real Time</h1>
-            <p className={styles.lead}>
-              Markets change before those changes become obvious. TRIAD is designed to
-              measure shifts in buyer sentiment through focused research repeated over
-              time. By revealing emerging patterns and the practical and emotional
-              drivers behind them, it can help marketers recognize change earlier and
-              make better-informed decisions.
-            </p>
-          </header>
-
-          {/* Video Showcase Section */}
-          <section className={styles.videoSection} aria-label="TRIAD Demonstration Video">
-            <div className={styles.videoCard}>
-              <div className={styles.videoHeader}>
-                <span className={styles.videoBadge}>Feature Demonstration</span>
-                <h2 className={styles.videoTitle}>Watch TRIAD in Action</h2>
-              </div>
-              <div className={styles.videoContainer}>
-                <video
-                  src={TRIAD_VIDEO_CDN}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className={styles.videoElement}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-          </section>
-
-          {/* Methodology Pillars */}
-          <section className={styles.pillarsSection} aria-label="TRIAD Core Capabilities">
-            <div className={styles.pillarsGrid}>
-              <div className={styles.pillarCard}>
-                <div className={styles.pillarIcon}>
-                  <Compass size={24} />
-                </div>
-                <h3 className={styles.pillarHeading}>Three-Corner Questioning</h3>
-                <p className={styles.pillarText}>
-                  Interactive triangle question structure captures nuanced buyer sentiment
-                  and trade-offs across competing priorities in real time.
-                </p>
-              </div>
-
-              <div className={styles.pillarCard}>
-                <div className={styles.pillarIcon}>
-                  <TrendingUp size={24} />
-                </div>
-                <h3 className={styles.pillarHeading}>Directional Trend Velocity</h3>
-                <p className={styles.pillarText}>
-                  Longitudinal pulse tracking detects subtle momentum shifts and sentiment
-                  trajectories well before competitors observe lagging indicators.
-                </p>
-              </div>
-
-              <div className={styles.pillarCard}>
-                <div className={styles.pillarIcon}>
-                  <Sparkles size={24} />
-                </div>
-                <h3 className={styles.pillarHeading}>Emotional &amp; Practical Drivers</h3>
-                <p className={styles.pillarText}>
-                  Uncover what motivates buyer decisions by mapping underlying feelings,
-                  unspoken frustrations, and pragmatic requirements.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Action CTA Section */}
-          <section className={styles.ctaSection}>
-            <div className={styles.ctaContent}>
-              <h2 className={styles.ctaTitle}>Ready to Experience Earlier Recognition?</h2>
-              <p className={styles.ctaSubtitle}>
-                Discover how TRIAD and the BuyFacts research suite empower strategic decisions.
-              </p>
-              <div className={styles.ctaActions}>
-                <Link href="/contact" className={styles.primaryBtn}>
-                  Contact Our Research Team
-                </Link>
-                <Link href="/" className={styles.secondaryBtn}>
-                  Explore All Tools
-                </Link>
-              </div>
-            </div>
-          </section>
+          <span
+            style={{
+              color: "#94a3b8",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+            }}
+          >
+            TRIAD FULLSCREEN WORKSPACE
+          </span>
         </div>
-      </main>
 
-      <Footer />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={() => setActiveMode("triad")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.4rem 0.95rem",
+              borderRadius: "999px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              background: activeMode === "triad" ? "#7c3aed" : "rgba(255,255,255,0.08)",
+              color: "#ffffff",
+            }}
+          >
+            <Compass size={14} />
+            B2B TRIAD Studio
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMode("kym")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.4rem 0.95rem",
+              borderRadius: "999px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              background: activeMode === "kym" ? "#0284c7" : "rgba(255,255,255,0.08)",
+              color: "#ffffff",
+            }}
+          >
+            <Layers size={14} />
+            Know Your Major (KYM)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMode("video")}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.4rem 0.95rem",
+              borderRadius: "999px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              background: activeMode === "video" ? "#ff9900" : "rgba(255,255,255,0.08)",
+              color: "#ffffff",
+            }}
+          >
+            <PlayCircle size={14} />
+            Overview Video
+          </button>
+
+          <Link
+            href="/rule-of-three"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.4rem 0.95rem",
+              borderRadius: "999px",
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              background: "#0d9488",
+              color: "#ffffff",
+              textDecoration: "none",
+              marginLeft: "0.35rem",
+            }}
+          >
+            <Maximize2 size={13} />
+            Rule of Three
+          </Link>
+        </div>
+      </header>
+
+      <div style={{ flex: 1, width: "100%", height: "calc(100vh - 54px)", position: "relative" }}>
+        {activeMode === "triad" && (
+          <iframe
+            src="/affinity-effect"
+            title="B2B TRIAD Fullscreen Studio"
+            style={{ width: "100%", height: "100%", border: "none", display: "block", background: "#ffffff" }}
+          />
+        )}
+
+        {activeMode === "kym" && (
+          <iframe
+            src="/know-your-major"
+            title="Know Your Major Fullscreen TRIAD"
+            style={{ width: "100%", height: "100%", border: "none", display: "block", background: "#ffffff" }}
+          />
+        )}
+
+        {activeMode === "video" && (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#090d16",
+              padding: "2rem",
+              boxSizing: "border-box",
+            }}
+          >
+            <video
+              src={TRIAD_VIDEO_CDN}
+              controls
+              autoPlay
+              playsInline
+              style={{
+                maxWidth: "1100px",
+                width: "100%",
+                maxHeight: "82vh",
+                borderRadius: "16px",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
