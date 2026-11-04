@@ -2023,7 +2023,8 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   width: 100%;
-  max-width: 960px;
+  max-width: min(960px, calc((100dvh - 2rem - 150px) * 16 / 9));
+  max-height: calc(100dvh - 1rem);
   overflow: hidden;
   box-shadow:
     0 25px 60px -10px rgba(0, 0, 0, 0.8),
@@ -2099,6 +2100,53 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.videoEndScreen {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.videoEndTitle {
+  color: #f8fafc;
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.videoEndActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.videoEndBtn,
+.videoEndBtnGhost {
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  font-size: clamp(0.75rem, 1.6vw, 0.88rem);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid transparent;
+}
+
+.videoEndBtnGhost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #cbd5e1;
 }
 
 .videoModalPlayer {
@@ -2179,4 +2227,19 @@
   .videoModalFooter {
     padding: 0.75rem 1rem;
   }
+}
+
+@media (max-height: 760px) {
+  .videoModalHeader { padding: 0.5rem 1rem; }
+  .videoModalTitle { font-size: 0.95rem; }
+  .videoModalSubtitle {
+    font-size: 0.72rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .videoModalFooter { padding: 0.45rem 1rem; }
+  .videoModalDestinationBtn { padding: 0.4rem 1rem; font-size: 0.8rem; }
+  .videoModalDismissBtn { padding: 0.35rem 0.9rem; }
 }

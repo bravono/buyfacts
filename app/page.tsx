@@ -119,6 +119,11 @@ export default function Home() {
     destinationLabel?: string;
   } | null>(null);
 
+  const [videoEnded, setVideoEnded] = useState(false);
+  useEffect(() => {
+    setVideoEnded(false);
+  }, [activeVideoModal?.videoUrl, activeVideoModal?.isOpen]);
+
   // Hero Triplet Button Pathways
   const heroTripletButtons: TripletButtonItem[] = [
     {
@@ -1956,9 +1961,55 @@ export default function Home() {
                 preload="auto"
                 className={styles.videoModalPlayer}
                 aria-label={activeVideoModal.title}
+                onEnded={() => setVideoEnded(true)}
+                onPlay={() => setVideoEnded(false)}
               >
                 Your browser does not support the video tag.
               </video>
+              {videoEnded && (
+                <div className={styles.videoEndScreen}>
+                  <p className={styles.videoEndTitle}>Where to next?</p>
+                  <div className={styles.videoEndActions}>
+                    <Link
+                      href="/"
+                      className={styles.videoEndBtn}
+                      onClick={() => setActiveVideoModal(null)}
+                    >
+                      Back to Home
+                    </Link>
+                    <Link
+                      href="/products-services"
+                      className={styles.videoEndBtn}
+                      onClick={() => setActiveVideoModal(null)}
+                    >
+                      Products &amp; Services
+                    </Link>
+                    <Link
+                      href="/research-imperatives"
+                      className={styles.videoEndBtn}
+                      onClick={() => setActiveVideoModal(null)}
+                    >
+                      Research Innovation
+                    </Link>
+                    <button
+                      type="button"
+                      className={styles.videoEndBtnGhost}
+                      onClick={() => {
+                        setVideoEnded(false);
+                        const v = document.querySelector<HTMLVideoElement>(
+                          "video[aria-label='" + activeVideoModal.title + "']",
+                        );
+                        if (v) {
+                          v.currentTime = 0;
+                          v.play();
+                        }
+                      }}
+                    >
+                      Replay
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.videoModalFooter}>
