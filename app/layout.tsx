@@ -4,7 +4,7 @@ import "./globals.css";
 import BorderFrame from "@/components/BorderFrame";
 
 export const metadata: Metadata = {
-  title: "BuyFacts® | B2B Research Methods, Tools & Return on Effort Framework",
+  title: "BuyFacts® | The Early Recognition Company",
   description: "BuyFacts® is a professional framework of B2B research methods and tools designed to help organizations recognize market movement early, reduce uncertainty, and maximize Return on Effort.",
   keywords: ["BuyFacts", "B2B Research", "Cubicon", "TRIAD", "Research Tools", "Survey Hosting", "Rule of Three", "Value Quantification", "Return on Effort", "Market Insights"],
   authors: [{ name: "BuyFacts Team" }],
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   openGraph: {
-    title: "BuyFacts® | B2B Research Methods, Tools & Return on Effort",
+    title: "BuyFacts® | The Early Recognition Company",
     description: "Recognize meaningful movement earlier, reduce uncertainty, and improve Return on Effort through faster, easier, and better research.",
     type: "website",
   }

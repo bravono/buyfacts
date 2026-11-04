@@ -1,0 +1,1 @@
+import{j as e,N as o}from"./vendor-react-BjiCUzKZ.js";import{a}from"./index-DomJ-FGi.js";import"./vendor-konva-CQ-uKkYF.js";import"./vendor-antd-D0NrWiN6.js";import"./vendor-query-DWP-djkn.js";const u=({children:t})=>{const{isAuthenticated:r}=a();return r?t:e.jsx(o,{to:"/parent/login",replace:!0})};export{u as default};

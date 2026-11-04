@@ -40,6 +40,7 @@ import {
   Crosshair,
 } from "lucide-react";
 import CubiconCoordinatePicker from "@/components/CubiconCoordinatePicker";
+import { normalizeQuestionType } from "@/lib/cubicon/coordinateHelper";
 
 interface UserSession {
   userId: string;
@@ -326,6 +327,7 @@ export default function AdminDatabaseDashboard() {
     }
     if (activeTab === "cubiconTask") {
       fetchSequences();
+      initial.questionType = normalizeQuestionType(initial.questionType);
     }
     setFormData(initial);
     setFormError("");
@@ -1531,8 +1533,26 @@ export default function AdminDatabaseDashboard() {
         onClose={() => setIsPickerOpen(false)}
         initialScreen={formData.screen || "Active_front"}
         initialImage={formData.image || "/cubicon-app/arts/Puzzle1.webp"}
-        initialQuestionType={formData.questionType || "Selection"}
+        initialQuestionType={normalizeQuestionType(formData.questionType)}
         initialCoordinates={formData.correctCoordinates || ""}
+        onDataChange={(syncData) => {
+          setFormData((prev) => ({
+            ...prev,
+            ...(syncData.screen !== undefined ? { screen: syncData.screen } : {}),
+            ...(syncData.image !== undefined ? { image: syncData.image } : {}),
+            ...(syncData.questionType !== undefined ? { questionType: syncData.questionType } : {}),
+            ...(syncData.correctCoordinates !== undefined ? { correctCoordinates: syncData.correctCoordinates } : {}),
+            ...(syncData.startPoint !== undefined ? { startPoint: syncData.startPoint } : {}),
+            ...(syncData.midPoint !== undefined ? { midPoint: syncData.midPoint } : {}),
+            ...(syncData.endPoint !== undefined ? { endPoint: syncData.endPoint } : {}),
+          }));
+        }}
+        onQuestionTypeChange={(qt) => {
+          setFormData((prev) => ({
+            ...prev,
+            questionType: qt,
+          }));
+        }}
         onApply={(result) => {
           setFormData((prev) => ({
             ...prev,
@@ -1542,6 +1562,7 @@ export default function AdminDatabaseDashboard() {
             endPoint: result.endPoint,
             ...(result.image ? { image: result.image } : {}),
             ...(result.screen ? { screen: result.screen } : {}),
+            ...(result.questionType ? { questionType: result.questionType } : {}),
           }));
         }}
       />

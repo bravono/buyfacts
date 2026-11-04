@@ -6,15 +6,20 @@ import Link from "next/link";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import styles from "./Navbar.module.css";
 
+export interface NavbarProps {
+  hideOnScroll?: boolean;
+  isCollapsed?: boolean;
+}
+
 export default function Navbar({
   hideOnScroll = false,
-}: {
-  hideOnScroll?: boolean;
-}) {
+  isCollapsed = false,
+}: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isContactCollapsed, setIsContactCollapsed] = useState(false);
   const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
+  const [isEventCollapsed, setIsEventCollapsed] = useState(false);
   const pathname = usePathname() || "/";
 
   const lastScrollYRef = useRef(0);
@@ -121,6 +126,25 @@ export default function Navbar({
     };
   }, []);
 
+  // Listen for triplet hover card collapse events
+  useEffect(() => {
+    const handleCollapseEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ collapsed?: boolean }>;
+      setIsEventCollapsed(Boolean(customEvent.detail?.collapsed));
+    };
+
+    window.addEventListener(
+      "buyfacts:navbar-collapse",
+      handleCollapseEvent
+    );
+    return () => {
+      window.removeEventListener(
+        "buyfacts:navbar-collapse",
+        handleCollapseEvent
+      );
+    };
+  }, []);
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -133,13 +157,23 @@ export default function Navbar({
   const isInnovationsActive = pathname === "/products-services";
   const isResearchActive = pathname === "/research-imperatives";
   const isCubiconActive = pathname.startsWith("/cubicon");
+  const isResearchLibActive = pathname.startsWith("/research-lib");
+  const isTriadActive = pathname.startsWith("/triad") || pathname.startsWith("/know-your-major");
+  const isRuleOfThreeActive = pathname.startsWith("/rule-of-three") || pathname.startsWith("/r3");
   const isVaultActive = pathname.startsWith("/vault");
 
-  const isHidden = (hideOnScroll && isScrolled) || isContactCollapsed || isReaderModalOpen;
+  const isHidden =
+    (hideOnScroll && isScrolled) ||
+    isContactCollapsed ||
+    isReaderModalOpen ||
+    isCollapsed ||
+    isEventCollapsed;
 
   return (
     <header
-      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${isHidden ? styles.hidden : ""} ${isContactCollapsed ? styles.collapsed : ""}`}
+      className={`${styles.header} ${isScrolled ? styles.scrolled : ""} ${
+        isHidden ? `${styles.collapsed} ${styles.hidden}` : ""
+      }`}
     >
       <div className={styles.container}>
         <Link href="/" className={styles.logo} id="nav-logo-link">
@@ -191,6 +225,33 @@ export default function Navbar({
             onClick={() => setIsContactCollapsed(false)}
           >
             CUBICON
+          </Link>
+
+          <Link
+            href="/research-lib"
+            className={`${styles.navLink} ${isResearchLibActive ? styles.navLinkActive : ""}`}
+            id="nav-link-research-labs"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            RESEARCH LABS
+          </Link>
+
+          <Link
+            href="/triad"
+            className={`${styles.navLink} ${isTriadActive ? styles.navLinkActive : ""}`}
+            id="nav-link-triad"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            TRIAD
+          </Link>
+
+          <Link
+            href="/rule-of-three"
+            className={`${styles.navLink} ${isRuleOfThreeActive ? styles.navLinkActive : ""}`}
+            id="nav-link-rule-of-three"
+            onClick={() => setIsContactCollapsed(false)}
+          >
+            RULE OF THREE
           </Link>
 
           <Link
@@ -289,6 +350,39 @@ export default function Navbar({
             id="mob-link-cubicon"
           >
             CUBICON
+          </Link>
+          <Link
+            href="/research-lib"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isResearchLibActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-research-labs"
+          >
+            RESEARCH LABS
+          </Link>
+          <Link
+            href="/triad"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isTriadActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-triad"
+          >
+            TRIAD
+          </Link>
+          <Link
+            href="/rule-of-three"
+            onClick={() => {
+              closeMobileMenu();
+              setIsContactCollapsed(false);
+            }}
+            className={`${styles.mobileNavLink} ${isRuleOfThreeActive ? styles.mobileNavLinkActive : ""}`}
+            id="mob-link-rule-of-three"
+          >
+            RULE OF THREE
           </Link>
           <Link
             href="/vault"

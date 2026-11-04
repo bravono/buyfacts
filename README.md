@@ -268,8 +268,44 @@ The database schema is standardized on PascalCase table names (matching Prisma m
 - **`CubiconRegistration`**: Founding client registration submissions (`id`, `firstName`, `lastName`, `email`, `phone`, `company`, `role`, `interest`, `notes`, `isUsBased`, `status`, `createdAt`, `updatedAt`).
 - **`CubiconShare`**: Invitation records (`id`, `senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `shareUrl`, `sessionId`, `status`, `createdAt`).
 - **`FeedbackSubmission`**: User star ratings and feedback commentary (`id`, `userId`, `userEmail`, `sessionId`, `feedbackText`, `rating`, `createdAt`).
-- **`ResearchLibSurvey`**: Research library survey definitions linked to `userId` (`id`, `userId`, `title`, `description`, `category`, `status`, `createdAt`, `updatedAt`).
-- **`ResearchLibResponse`**: Research survey responses linked to `surveyId` and `userId` (`id`, `surveyId`, `userId`, `answers`, `completed`, `submittedAt`).
+- **`ResearchLibSurvey`**: Research library narrative survey top-level configuration (`id`, `userId`, `title`, `timeCounter`, `pauseDuration`, `durationInMin`, `combo`, `tasks`, `createdAt`). Configured with the canonical 6-task AI Marketing Directional Measurement survey.
+- **`ResearchLibTask`**: Research library individual survey task items linked to `ResearchLibSurvey` (`id`, `surveyId`, `taskIndex`, `heading`, `instruction`, `widget`, `question`, `story`, `blanks`, `isFollowup`, `createdAt`). Intermediate tasks have `isFollowup = 1` (`true`); the final task has `isFollowup = 0` (`false`).
+- **`ResearchLibResponse`**: Participant narrative survey responses and choices (`id`, `userId`, `surveyId`, `answers`, `story`, `createdAt`).
+- **`ResearchLibTimer`**: Session and pause timer state per user.
+- **`ResearchLibElement`**: Interactive UI element positions and state.
+- **`ResearchLibAppState`**: Application runtime recording and participant state.
+
+### ResearchLib & Narrative Survey Platform
+
+The embedded Narrative app (`/research-lib` iframe wrapper pointing to `/narrative-app/index.html`) and the standalone repository (`../narrative`) use a unified survey and task architecture:
+
+- **Top-Level Survey Elements**:
+  - **Time Direction** (`timeCounter`): `down`, `up`
+  - **Pause Duration** (`pauseDuration`): default `3` minutes
+  - **Duration** (`durationInMin`): default `30` minutes
+  - **Combination Rule** (`combo`): Approved modes include `narWid`, `tradWid`, `narList`, `tradList`
+
+- **Task-Level Elements**:
+  - **Heading** & **Instruction**: Task-specific headers and directions
+  - **Widget Type** (`widget`): Approved widgets include `triad`, `bar`, `ring`, `barrel`
+  - **Question / Story Chunk** (`story` / `question`): Segment of the progressive story containing fill-in-the-blank markers
+  - **Blanks & Choices** (`blanks`): JSON array of choices with approved **QuestionType** values:
+    `scale`, `multipleChoice`, `checkbox`, `rank`, `singleChoice`, `radio`, `number`, `text`, `ring`, `rate`, `slider`, `triad`
+  - **Follow-up Rule** (`isFollowup`): intermediate tasks have `isFollowup = 1` (`true`), while the **final task** has `isFollowup = 0` (`false`) to trigger completion.
+
+The canonical 6-part sequential survey:
+
+1. **Question 1 (Blank a)**: *Organizational Function* - Triad with choices `Marketing`, `Sales`, `Operations`.
+2. **Question 2 (Blank b)**: *AI Adoption Rate* - Triad with choices `Slow`, `Moderate`, `Rapid`.
+3. **Question 3 (Blank c)**: *AI Momentum* - Triad with choices `Hidden Momentum (Internal Work and Programs)`, `Visible Momentum (With Other Functions/Customers)`, `Network Momentum (In the Market)`.
+4. **Question 4 (Blank d)**: *External AI Commitment* - Triad with choices `No Commitment`, `Some Promise`, `Strong Commitment`.
+5. **Question 5 (Blank e)**: *Leadership Dialogue* - Triad with choices `Never Spoke`, `Had Spoken`, `Often Spoke`.
+6. **Question 6 (Blank f)**: *Primary Success Factor* - Triad with choices `The People`, `The Way They Work`, `Leadership`.
+
+Completion Screen: Directs respondent to directional measurement conclusion with action options for results download (SEND IT), peer comparison (SEND IT), user feedback (ASK ME), and session exit (EXIT).
+
+- **Bundling & Synchronization Script**: `npm run embed-research-lib` builds the standalone app in `../narrative` and bundles output into `public/narrative-app/`.
+- **Database Seeding Script**: `npx tsx scripts/seed-research-lib-survey.ts` ensures all three database targets (PostgreSQL, BuyFacts SQLite `prisma/dev.db`, and Standalone `narrative.db`) are seeded synchronously.
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
@@ -307,7 +343,7 @@ npm run dev
 Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/analytics) in your browser to view the Executive Analytics Dashboard.
 
 ### Database Seeding & Replacement Behavior
-The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks (12 tasks across 3 sequences), the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
 
 ### Production Seeding (User and DashboardButton Only)
 For staging or production environments where destructive table resets and placeholder media/vault assets are not desired, use the non-destructive production seed script:
@@ -376,6 +412,9 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
   - **Navigation Bar Auto-Hiding**: When the document reader modal is opened, the top site navigation bar automatically hides (`document-reader-open` state) so it never gets in the way of reading. The navigation bar smoothly restores the moment the modal is closed.
   - **Top-Level Portal Rendering**: The reader modal is mounted at the root of `document.body` via `createPortal` with `z-index: 99999`, preventing stacking context trapping by lower section wrappers.
   - **File Upload & Asset Preview Integration**: Uploaded `.docx` and `.pdf` documents on `/file-upload` also leverage the document parser ([`lib/document-parser.ts`](file:///c:/Users/USER/BuyFacts/lib/document-parser.ts)) to render inline previews via [`components/FilePreview.tsx`](file:///c:/Users/USER/BuyFacts/components/FilePreview.tsx).
+- **No Media Found State & Clean Fallbacks**: When a button has no associated mediaUrl in the database (or during initial load), the player window cleanly displays a "No Media Found" state with an icon and contextual item title instead of rendering broken media or random placeholder URLs. Default static button configurations maintain empty strings for mediaUrl, preventing unwanted third-party media leaks.
+- **Detailed Descriptions**: The `DashboardButton` schema model includes a `description` column storing detailed explanatory text for each button, surfaced within the media player description overlay and in-depth document reader.
+- **Separation of Primary Media and In-Depth Assets**: The primary player media asset (`mediaUrl`) is strictly distinct from the in-depth technical documentation (`readItUrl`). The In-Depth ("READ IT") action button explicitly renders and downloads the comprehensive `.docx` document containing full technical specifications and deep content, while the primary screen displays the selected button's multimedia asset (videos, audios, images).
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
@@ -710,31 +749,71 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 The `TripletButtonGroup` and `TripletButton` components (`components/TripletButton.tsx`, `components/TripletButton.module.css`) provide high-vitality, tactile interactive pathways for key site destinations.
 
 ### Key Features
-1. **Clear Button Affordance**:
-   - Distinct rounded pill button container with subtle 3D top-shimmer, active click press response (`translateY(2px) scale(0.985)`), and directional action arrows.
-   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-rotation.
-2. **Brief Text Below**:
-   - Descriptive captions sit directly below each button, answering stakeholder usability requirements so visitors immediately understand both the destination purpose and interactive affordance.
-3. **CDN Icon Support & Fallbacks**:
+1. **Self-Contained Pill Card Affordance & Orphan Word Prevention**:
+   - Distinct rounded pill card container (`border-radius: 999px`) featuring a circular logo badge on the left, a vertical divider line (`.btnDivider`), left-aligned pathway title text inside the card, and a directional action arrow on the right.
+   - **Orphan Word Elimination Across All Screen Sizes**: Combines typography and CSS techniques to guarantee that a single isolated word never appears alone on a line:
+     - `preventOrphanWords()` utility (`lib/orphan-prevention.ts`) enforces intelligent grouping so no single word ever appears alone:
+       - 3-word titles ("Validate Survey Participants") bind all 3 words with non-breaking spaces (`\u00A0`) so they stay unified on a single line.
+       - 4-word titles ("Faster Digital Asset Creation") pair words 1+2 and 3+4 (`Faster\u00A0Digital Asset\u00A0Creation`) so any line wrap cleanly splits as 2 words and 2 words.
+       - 5-word titles ("Market Changes in Real Time") pair words 1+2 and 3+4+5 (`Market\u00A0Changes in\u00A0Real\u00A0Time`) ensuring balanced 2-and-3 wrapping.
+     - Fluid responsive font sizing using CSS `clamp(0.82rem, 0.95vw, 0.98rem)` on `.btnLabel`.
+     - Compact responsive icon sizing (`clamp(3.2rem, 4.2vw, 4rem)`) and divider spacing (`clamp(0.55rem, 0.75vw, 0.8rem)`) to maximize horizontal text width.
+     - Modern CSS text balancing via `text-wrap: balance;` and `text-wrap: pretty;` across supporting browsers.
+   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-scaling.
+2. **Interactive Hover Card Overlays & Dedicated Tool Navigation**:
+   - Hovering over any triplet button reveals an information card positioned strictly above the button (`bottom: calc(100% + 14px)`), ensuring the pill button remains completely visible and eliminating page scrolling or parent container clipping issues.
+   - **Viewport-Safe Dimensions & Edge Overflow Prevention**:
+     - Hover cards use `width: min(460px, 92vw)` so they never exceed viewport boundaries.
+     - Column-aware CSS positioning prevents edge clipping: column 1 (`data-column="1"`) anchors to its left edge, column 3 (`data-column="3"`) anchors to its right edge, and column 2 centers horizontally above the button.
+     - Compact typography (`1.4rem` title, `0.88rem` description) and streamlined padding prevent cards from overflowing the top of the viewport.
+   - **Navbar Auto-Collapse on Hover**: Hovering over the triplet buttons automatically triggers a graceful upward slide of the fixed navbar (`transform: translateY(-100% - 30px); opacity: 0;`), providing unobstructed headroom for the cards. When the mouse leaves the triplet area, the navbar smoothly slides back down. Hover cards also utilize `z-index: 1100` to ensure smooth rendering during transitions.
+   - An invisible bridge (`.hoverCard::before`) spans the 14px gap at the bottom so moving the mouse into the hover card maintains active hover state without flickering.
+   - Each hover card includes:
+     - A downward-pointing triangle caret (`.hoverPointer`) pointing directly to the pill button below.
+     - Large bold pathway title (`Cubicon`, `Research Libs`, `TRIAD`) in the theme color with orphan word protection.
+     - Detailed explanatory narrative.
+     - Bottom callout sub-card retaining the existing product logo in a circular badge, vertical divider line, callout prompt with orphan prevention, and a bold "SEE MORE ->" link that takes users to the dedicated tool pages:
+       - **Cubicon**: `/cubicon` (with automated `/cubion` rewrite in `next.config.ts`)
+       - **Research Libs**: `/research-lib`
+       - **TRIAD**: `/triad` (dedicated showcase page with video demo and methodology breakdown)
+3. **Hero Section Screen Fit (Non-Mobile) & 3 Core Value Pillars**:
+   - **Screen Height and Width Fit on Current Non-Mobile Devices**: The hero section uses `min-height: 100svh` combined with fluid vertical `clamp()` expressions on section padding, eyebrow margins, main heading font and margins, lead paragraph spacing, triplet button min-heights, and value pillar spacing. This guarantees that all key elements (eyebrow, title, lead, triplet buttons, and 3 value pillars) fit within the screen of the device on desktop, laptop, and tablet viewports without forcing vertical scrolling.
+   - Mobile viewports (≤680px) automatically revert to vertical scroll flow with `min-height: auto`.
+   - Displays the brand eyebrow (`THE EARLY RECOGNITION COMPANY™`), primary heading (`BuyFacts Gives Marketers Earlier Recognition, Better Choices, and More Time.`), and directional buyer research lead statement above the 3 triplet pill cards.
+   - Directly beneath the triplet pill cards sits a 3-column value pillar row separated by vertical dividers:
+     - **Recognize Earlier**: "See meaningful changes before they become obvious."
+     - **Understand Choices**: "Gain time to consider possibilities and choose a direction."
+     - **Act for Impact**: "Turn informed decisions into meaningful results."
+   - Optional external captions below each button remain supported via the `showCaption` prop (`default: false`).
+4. **CDN Icon Support & Fallbacks**:
    - Accepts direct CDN icon URLs (`iconUrl`) with automated image error fallback (`onError`) to high-resolution Lucide React vector icons.
-4. **Vibrant Color Tokens**:
+5. **Vibrant Color Tokens**:
    - Expanded global CSS color system in `app/globals.css`:
      - `--vibrant-orange-gradient` and `--vibrant-orange-glow` (warm sunset amber for Early Recognition)
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **CDN Video Playback Plumbing & Lightbox Modal**:
+6. **CDN Video Playback Plumbing & Lightbox Modal**:
    - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
-   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`.
    - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
-6. **Component API**:
+7. **Component API**:
    ```typescript
+   export interface TripletHoverCardData {
+     title: string;
+     description: string;
+     prompt: string;
+     actionLabel?: string;
+     actionHref?: string;
+     onActionClick?: (e: React.MouseEvent<HTMLElement>) => void;
+   }
+
    export interface TripletButtonItem {
      id: string;
      title: string;
-     tagline: string; // Brief text below the button
+     tagline: string;
      href?: string;
-     iconUrl?: string; // Optional CDN icon URL
+     iconUrl?: string;
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
      theme?: "orange" | "blue" | "purple" | "teal";
@@ -743,10 +822,11 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      actionHint?: string;
      onClick?: (e: React.MouseEvent<HTMLElement>) => void;
      videoUrl?: string;
+     hoverCard?: TripletHoverCardData;
    }
    ```
-7. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
+8. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, hover card placement, orphan word prevention, and layout defaults.
 
 ---
 
@@ -976,7 +1056,7 @@ The dashboard organizes all 17 Prisma database models into five primary domains:
    - `NotificationSubscription`: Newsletter and product launch subscribers.
    - `FeedbackSubmission`: Customer feedback, reviews, and star ratings.
 3. **Content & Media**:
-   - `DashboardButton`: Interactive media trigger buttons, categories, and URLs.
+   - `DashboardButton`: Interactive media trigger buttons, categories, asset URLs, and detailed descriptions (`description`).
    - `MediaAsset`: Storage upload logs for images, videos, audio, and documents.
 4. **Cubicon 3D Platform**:
    - `CubiconSequence`: Multi-step 3D validation puzzle sequences.
@@ -1145,4 +1225,29 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
 - **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
 
+### 9.4 Client-Side Image Optimization & WebP Conversion
+- **In-Memory Conversion**: JPG, JPEG, PNG, and BMP image assets are automatically converted to modern WebP format directly in browser memory before network upload begins.
+- **Toggle Control**: Users can toggle auto-conversion on or off via the `Auto-WebP: ON (85% Quality)` control in `FileUploader.tsx`.
+- **Bandwidth & Storage Savings**: Cuts image byte sizes by up to 80% without noticeable visual fidelity degradation.
+- **Fidelity Preservation**: SVGs (vector graphics) and animated GIFs are automatically preserved in their native formats without canvas rasterization.
+- **Hierarchy Retention**: File extensions in relative paths (e.g. `assets/images/header.jpg` -> `assets/images/header.webp`) are automatically updated and tracked.
+- **Visual Feedback**: Queue items display clear savings metrics (e.g. `WebP (-68%)`) and tooltip comparisons with original file sizes.
 
+
+---
+
+## 10. Cubicon Visual Coordinate Picker & Bidirectional Data Synchronization
+
+- **Moveable & Collapsible 3D Picker HUD**: In 3D coordinate picker mode (`?picker=true&admin=true`), the overlay panel is draggable via its header bar (`:: PICKER`) and collapsible into a compact pill so it never blocks the 3D cube face.
+- **Complete Bidirectional Task Data Synchronization**:
+  - Full two-way live data synchronization connects the form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon iframe across all task parameters:
+    1. **`questionType`**: Normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks). Changing the type in the form modal, the picker toolbar, or the 3D HUD immediately synchronizes across all layers and clears stale points.
+    2. **`screen`**: Changing the face in the form modal (`Active_front`, `Active_side_r`, `Active_back`, `Active_side_l`, `Active_top`, `Active_bottom`), the picker toolbar, or the 3D HUD buttons immediately updates the active face without reloading the iframe.
+    3. **`image`**: Selecting a texture from the CDN gallery, custom URL input, or 3D HUD buttons immediately updates the texture in the form record, picker surface, and 3D cube model.
+    4. **`correctCoordinates` and Waypoints**: Capturing clicks/drags in 2D or 3D live-updates `correctCoordinates`, `startPoint`, `midPoint`, and `endPoint` in the parent form data via `onDataChange`, with final persistence on `onApply`.
+  - Echo loops and state wiping on re-render are prevented by reference tracking (`wasOpenRef`, `prevInitial*Ref`), ensuring active coordinate plotting is never reset prematurely.
+
+- **Thumbnail Optimization & Fast Gallery Loading (`/api/cubicon/thumbnail`)**:
+  - The Coordinate Picker thumbnail strip loads compact 160px WebP thumbnails via `/api/cubicon/thumbnail?url=...&w=160` instead of downloading multi-megabyte full-resolution assets (such as 71MB PNGs) for thumbnail cards.
+  - The thumbnail endpoint resizes images on the fly using `sharp`, validates host safety to prevent SSRF, and caches generated thumbnails on disk with long-term immutable cache headers (`Cache-Control: public, max-age=31536000, immutable`).
+  - Selecting an image continues to assign the full-resolution `publicUrl` to the 3D model screen texture and 2D target coordinate surface.

@@ -8,6 +8,7 @@ export interface PuzzleCdnImage {
   fileName: string;
   objectKey: string;
   publicUrl: string;
+  thumbnailUrl?: string;
   format: string;
   size?: number;
 }
@@ -310,10 +311,18 @@ export async function GET(request: NextRequest) {
       return a.name.localeCompare(b.name);
     });
 
+    // Populate lightweight 160px WebP thumbnail URLs for responsive gallery rendering
+    const imagesWithThumbnails = images.map((img) => ({
+      ...img,
+      thumbnailUrl:
+        img.thumbnailUrl ||
+        `/api/cubicon/thumbnail?url=${encodeURIComponent(img.publicUrl)}&w=160`,
+    }));
+
     return NextResponse.json({
       success: true,
-      count: images.length,
-      images,
+      count: imagesWithThumbnails.length,
+      images: imagesWithThumbnails,
     });
   } catch (error: any) {
     console.error("[Puzzle Images API] Unexpected error:", error);

@@ -78,10 +78,10 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     assert.equal(totalButtons, 18, "Repeated seeding must retain exactly 18 buttons");
 
     const totalTasks = await prisma.cubiconTask.count();
-    assert.equal(totalTasks, 8, "Repeated seeding must retain exactly 8 cubicon tasks (4 per sequence)");
+    assert.equal(totalTasks, 12, "Repeated seeding must retain exactly 12 cubicon tasks (4 per sequence across 3 sequences)");
 
     const totalSequences = await prisma.cubiconSequence.count();
-    assert.equal(totalSequences, 2, "Repeated seeding must retain exactly 2 cubicon sequences");
+    assert.equal(totalSequences, 3, "Repeated seeding must retain exactly 3 cubicon sequences");
 
     const totalAssets = await prisma.mediaAsset.count();
     assert.equal(totalAssets, 3, "Repeated seeding must retain exactly 3 media assets");

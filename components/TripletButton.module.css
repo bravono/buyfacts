@@ -1,11 +1,16 @@
-/* Triplet Button & Group Styles */
+/* Triplet Button Card & Group Styles */
+
+.tripletGroup {
+  width: 100%;
+  margin: clamp(0.75rem, 1.6vh, 1.5rem) auto clamp(0.85rem, 1.8vh, 1.75rem) auto;
+}
 
 .tripletGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.75rem;
+  gap: clamp(0.75rem, 1.2vw, 1.25rem);
   width: 100%;
-  margin: 1.5rem auto;
+  margin: 0;
 }
 
 .tripletGrid[data-columns="1"] {
@@ -22,28 +27,41 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  text-align: left;
   position: relative;
   width: 100%;
+  outline: none;
 }
 
-/* Tactile Vibrant Button Base */
+/*
+ * Mobile collapsible trigger for the hover information card.
+ * Hidden by default: desktop and tablet keep the hover behaviour.
+ */
+.expandToggle {
+  display: none;
+}
+
+/* Mobile carousel pager dots. Hidden by default (grid layout on tablet/desktop). */
+.carouselDots {
+  display: none;
+}
+
+/* Tactile Vibrant Pill Card Base */
 .tripletBtn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  min-height: 64px;
-  padding: 0.85rem 1.4rem;
+  min-height: clamp(74px, 9.5vh, 92px);
+  padding: clamp(0.5rem, 0.8vh, 0.75rem) clamp(0.85rem, 1vw, 1.15rem) clamp(0.5rem, 0.8vh, 0.75rem) clamp(0.75rem, 0.9vw, 0.95rem);
   border-radius: 999px;
   border: 1.5px solid transparent;
   text-decoration: none;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-weight: 500;
   letter-spacing: -0.01em;
   color: #ffffff;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -54,7 +72,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle top-light shimmer inside button for glossy 3D snap */
+/* Subtle top-light shimmer inside pill card */
 .tripletBtn::before {
   content: "";
   position: absolute;
@@ -62,7 +80,7 @@
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
   border-top-left-radius: 999px;
   border-top-right-radius: 999px;
   pointer-events: none;
@@ -79,72 +97,83 @@
   transition-duration: 0.08s;
 }
 
-/* Theme: Vibrant Orange (Early Recognition) */
+/* Theme: Vibrant Orange (Cubicon) */
 .themeOrange {
-  background: var(--vibrant-orange-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-orange-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #ffa019 0%, #ff5e00 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(255, 102, 0, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeOrange:hover {
-  box-shadow: 0 14px 30px -4px rgba(255, 106, 0, 0.55), 0 0 0 2px rgba(255, 145, 0, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(255, 102, 0, 0.55), 0 0 0 2px rgba(255, 145, 0, 0.35);
 }
 
-/* Theme: Vibrant Blue (Story-Based Research) */
+.themeOrange .iconWrapper {
+  background: #ffffff;
+}
+
+/* Theme: Vibrant Blue / Teal (Research Libs) */
 .themeBlue {
-  background: var(--vibrant-blue-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-blue-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #005587 0%, #00a2b8 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(0, 128, 170, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeBlue:hover {
-  box-shadow: 0 14px 30px -4px rgba(0, 180, 216, 0.55), 0 0 0 2px rgba(0, 180, 216, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(0, 162, 184, 0.55), 0 0 0 2px rgba(0, 180, 216, 0.35);
+}
+
+.themeBlue .iconWrapper {
+  background: #dff3fd;
 }
 
 /* Theme: Vibrant Purple (TRIAD) */
 .themePurple {
-  background: var(--vibrant-purple-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-purple-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 55%, #9333ea 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(139, 92, 246, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themePurple:hover {
-  box-shadow: 0 14px 30px -4px rgba(168, 85, 247, 0.55), 0 0 0 2px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(147, 51, 234, 0.55), 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+.themePurple .iconWrapper {
+  background: #f0e7ff;
 }
 
 /* Theme: Vibrant Teal */
 .themeTeal {
   background: var(--vibrant-teal-gradient);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 24px -4px var(--vibrant-teal-glow), 0 3px 6px rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px var(--vibrant-teal-glow), 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .themeTeal:hover {
-  box-shadow: 0 14px 30px -4px rgba(0, 196, 159, 0.55), 0 0 0 2px rgba(0, 196, 159, 0.4);
+  box-shadow: 0 16px 34px -6px rgba(0, 196, 159, 0.55), 0 0 0 2px rgba(0, 196, 159, 0.35);
 }
 
-/* Icon Container inside the button */
+/* Icon Container inside the pill card */
 .iconWrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 5rem;
-  height: 5rem;
+  width: clamp(3.2rem, 4.2vw, 4rem);
+  height: clamp(3.2rem, 4.2vw, 4rem);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  margin-right: 0.75rem;
+  background: #ffffff;
   flex-shrink: 0;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tripletBtn:hover .iconWrapper {
-  transform: scale(1.12) rotate(4deg);
-  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.06);
 }
 
 .cdnIcon {
-  width: 90%;
+  width: 82%;
+  height: 82%;
   object-fit: contain;
   display: block;
 }
@@ -153,16 +182,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #00507b;
 }
 
-/* Label text inside button */
+/* Vertical Divider between Icon and Label */
+.btnDivider {
+  width: 1px;
+  height: clamp(2rem, 3vh, 2.6rem);
+  background: rgba(255, 255, 255, 0.38);
+  margin: 0 clamp(0.55rem, 0.75vw, 0.8rem);
+  flex-shrink: 0;
+}
+
+/* Label text inside pill card with orphan prevention & fluid balance */
 .btnLabel {
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: var(--font-sans);
+  font-size: clamp(0.82rem, 0.95vw, 0.98rem);
+  font-weight: 500;
+  line-height: 1.25;
   white-space: normal;
-  text-align: center;
+  text-align: left;
   flex: 1;
+  text-wrap: balance;
+  text-wrap: pretty;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 /* Action indicator arrow */
@@ -172,11 +217,13 @@
   justify-content: center;
   margin-left: 0.6rem;
   flex-shrink: 0;
-  transition: transform 0.25s ease;
+  opacity: 0.92;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .tripletBtn:hover .arrowWrapper {
   transform: translateX(4px);
+  opacity: 1;
 }
 
 /* Optional Top-Edge Pill Badge */
@@ -197,13 +244,282 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Brief Caption Below the Button */
+/* Hover Card Overlay - Positioned Strictly Above the Button (Never Covers Button) */
+/*
+ * Viewport-safety strategy:
+ * - Width is min(460px, 92vw) so the card is never wider than the viewport.
+ * - Default: horizontally centered above the button with left: 50% + translateX(-50%).
+ * - Left column (data-column="1"): card anchors to its left edge so it never clips off the left side.
+ * - Right column (data-column="3"): card anchors to its right edge so it never clips off the right side.
+ * This guarantees the card stays fully visible on all non-mobile viewports without JavaScript.
+ */
+.hoverCard {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  top: auto;
+  left: 50%;
+  right: auto;
+  width: min(460px, 92vw);
+  transform: translateX(-50%) translateY(-8px);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.1rem 1.2rem 1rem 1.2rem;
+  box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.16), 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom-width: 5px;
+  border-bottom-style: solid;
+  border-bottom-color: #ff5e00;
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.22s ease;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Left-column card: anchor to the left edge of the button to avoid viewport overflow */
+.tripletItem[data-column="1"] .hoverCard {
+  left: 0;
+  right: auto;
+  transform: translateX(0) translateY(-8px);
+}
+
+/* Right-column card: anchor to the right edge of the button to avoid viewport overflow */
+.tripletItem[data-column="3"] .hoverCard {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(-8px);
+}
+
+/* Invisible Hover Bridge across the 14px gap at the bottom */
+.hoverCard::before {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  top: auto;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: transparent;
+}
+
+/* Show Card on Parent Hover or Focus Within */
+.tripletItem:hover .hoverCard,
+.tripletItem:focus-within .hoverCard {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Left-column active state: no X-shift */
+.tripletItem[data-column="1"]:hover .hoverCard,
+.tripletItem[data-column="1"]:focus-within .hoverCard {
+  transform: translateX(0) translateY(0);
+}
+
+/* Right-column active state: no X-shift */
+.tripletItem[data-column="3"]:hover .hoverCard,
+.tripletItem[data-column="3"]:focus-within .hoverCard {
+  transform: translateX(0) translateY(0);
+}
+
+/* Bottom Pointer Caret pointing downwards to the button */
+.hoverPointer {
+  position: absolute;
+  bottom: -13px;
+  top: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ff5e00;
+  border-bottom: none;
+  z-index: 3;
+}
+
+/* Hover Card Title */
+.hoverCardTitle {
+  font-family: var(--font-sans);
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.55rem 0;
+}
+
+/* Hover Card Description */
+.hoverCardDesc {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #374151;
+  font-weight: 400;
+  margin: 0 0 0.65rem 0;
+}
+
+/* Callout Box at Bottom of Hover Card */
+.hoverCallout {
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  margin-top: auto;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Circular Logo Badge inside Callout */
+.hoverCalloutIcon {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hoverIconImg {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  display: block;
+}
+
+.hoverFallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Vertical divider between icon and text */
+.hoverCalloutDivider {
+  width: 1px;
+  height: 3.25rem;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 0 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Callout Content Area */
+.hoverCalloutContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.hoverCalloutPrompt {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.38;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 0 0 0.35rem 0;
+}
+
+/* Callout Action "Try It ->" Link */
+.hoverCalloutAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.96rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  width: fit-content;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hoverActionArrow {
+  transition: transform 0.2s ease;
+}
+
+.hoverCalloutAction:hover .hoverActionArrow {
+  transform: translateX(3px);
+}
+
+/* Theme: Orange (Cubicon) */
+.hoverThemeOrange {
+  border-bottom-color: #ff5e00;
+}
+.hoverThemeOrange .hoverPointer {
+  border-top-color: #ff5e00;
+}
+.hoverThemeOrange .hoverCardTitle {
+  color: #ff5e00;
+}
+.hoverThemeOrange .hoverCallout {
+  background-color: #fff7ed;
+  border: 1px solid rgba(255, 94, 0, 0.12);
+}
+.hoverThemeOrange .hoverCalloutAction {
+  color: #ea580c;
+}
+.hoverThemeOrange .hoverCalloutAction:hover {
+  color: #c2410c;
+}
+
+/* Theme: Blue (Research Libs) */
+.hoverThemeBlue {
+  border-bottom-color: #0077b6;
+}
+.hoverThemeBlue .hoverPointer {
+  border-top-color: #0077b6;
+}
+.hoverThemeBlue .hoverCardTitle {
+  color: #0077b6;
+}
+.hoverThemeBlue .hoverCallout {
+  background-color: #f0f9ff;
+  border: 1px solid rgba(0, 119, 182, 0.12);
+}
+.hoverThemeBlue .hoverCalloutAction {
+  color: #0284c7;
+}
+.hoverThemeBlue .hoverCalloutAction:hover {
+  color: #0369a1;
+}
+
+/* Theme: Purple (TRIAD) */
+.hoverThemePurple {
+  border-bottom-color: #7c3aed;
+}
+.hoverThemePurple .hoverPointer {
+  border-top-color: #7c3aed;
+}
+.hoverThemePurple .hoverCardTitle {
+  color: #7c3aed;
+}
+.hoverThemePurple .hoverCallout {
+  background-color: #faf5ff;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+}
+.hoverThemePurple .hoverCalloutAction {
+  color: #7c3aed;
+}
+.hoverThemePurple .hoverCalloutAction:hover {
+  color: #6d28d9;
+}
+
+/* Optional Caption Below the Button */
 .captionBox {
   margin-top: 0.85rem;
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .captionText {
@@ -236,22 +552,312 @@
 }
 
 /* Responsive Breakpoints */
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .tripletGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .tripletGrid {
+    grid-template-columns: 1fr;
+    gap: 1.15rem;
+  }
+
+  .tripletBtn {
+    min-height: 96px;
+    padding: 0.75rem 1.15rem 0.75rem 0.85rem;
+  }
+
+  .iconWrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .btnDivider {
+    height: 2.8rem;
+    margin: 0 0.85rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * MOBILE ONLY (<= 680px): swipeable carousel + collapsible information card.
+ * Tablet and desktop keep the 3-up grid and the hover card untouched.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 680px) {
+  /* One card visible at a time; the track slides horizontally. */
+  .tripletGrid,
+  .tripletGrid[data-columns="1"],
+  .tripletGrid[data-columns="2"],
+  .tripletGrid[data-columns="3"] {
+    display: flex;
+    grid-template-columns: none;
+    gap: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    touch-action: pan-y pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tripletGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tripletItem {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    padding: 0 0.15rem;
+  }
+
+  /*
+   * The card opens ABOVE the pill (same side as the desktop hover card) so it
+   * is revealed at the top of the viewport instead of pushing content down and
+   * forcing a scroll. Absolute placement keeps it out of the page flow, so the
+   * hero never grows and nothing below it shifts.
+   */
+  .hoverCard,
+  .tripletItem[data-column="1"] .hoverCard,
+  .tripletItem[data-column="3"] .hoverCard {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    top: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    transform: translateY(10px) scale(0.97);
+    transform-origin: bottom center;
+    z-index: 1200;
+    /* Collapsed: invisible, no box. */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    max-height: none;
+    padding: 1rem 1.05rem 0.95rem 1.05rem;
+    border-width: 1px;
+    border-bottom-width: 5px;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                visibility 0.24s ease;
+  }
+
+  /* Expanded: springy pop-up reveal driven by the data attribute from React. */
+  .tripletItem[data-expanded="true"] .hoverCard {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  /* Invisible hover bridge so the card never flickers when tapped. */
+  .hoverCard::before {
+    display: block;
+    bottom: -14px;
+    height: 16px;
+  }
+
+  /* Caret points down at the pill, like the desktop card. */
+  .hoverPointer {
+    display: block;
+    bottom: -13px;
+  }
+
+  /* Cancel the desktop hover/focus reveal so only the collapsible controls it. */
+  .tripletItem:hover .hoverCard,
+  .tripletItem:focus-within .hoverCard,
+  .tripletItem[data-column="1"]:hover .hoverCard,
+  .tripletItem[data-column="1"]:focus-within .hoverCard,
+  .tripletItem[data-column="3"]:hover .hoverCard,
+  .tripletItem[data-column="3"]:focus-within .hoverCard {
+    transform: translateY(10px) scale(0.97);
+  }
+
+  .tripletItem[data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-expanded="true"]:focus-within .hoverCard,
+  .tripletItem[data-column="1"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-column="1"][data-expanded="true"]:focus-within .hoverCard,
+  .tripletItem[data-column="3"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-column="3"][data-expanded="true"]:focus-within .hoverCard {
+    transform: translateY(0) scale(1);
+  }
+
+  .tripletItem:not([data-expanded="true"]):hover .hoverCard,
+  .tripletItem:not([data-expanded="true"]):focus-within .hoverCard {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Tighter card typography so the floating panel stays compact on a phone. */
+  .hoverCardTitle {
+    font-size: 1.2rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .hoverCardDesc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-bottom: 0.55rem;
+  }
+
+  .hoverCallout {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .hoverCalloutPrompt {
+    font-size: 0.76rem;
+  }
+
+  /* Cute collapsible trigger: tiny glass pill under the button. */
+  .expandToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    align-self: center;
+    margin-top: 0.6rem;
+    padding: 0.3rem 0.8rem 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s ease,
+                color 0.2s ease,
+                background-color 0.2s ease;
+  }
+
+  .expandToggle:active {
+    transform: scale(0.94);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .tripletItem[data-expanded="true"] .expandToggle {
+    color: var(--interactive-blue);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .expandChevron {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .tripletItem[data-expanded="true"] .expandChevron {
+    transform: rotate(180deg);
+  }
+
+  /* Pager dots */
+  .carouselDots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
+  }
+
+  .carouselDot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .carouselDotCore {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.28s ease;
+  }
+
+  .carouselDot[aria-selected="true"] .carouselDotCore {
+    width: 20px;
+    background: var(--interactive-orange);
+  }
+}
+
+@media (max-width: 680px) and (prefers-reduced-motion: reduce) {
+  .tripletGrid {
+    scroll-behavior: auto;
+  }
+
+  .hoverCard,
+  .expandChevron,
+  .carouselDotCore {
+    transition-duration: 0.01ms;
+  }
+}
+
+
+/* 4 Hero Buttons Grid (Cubicon, Research Labs, TRIAD, Rule of Three) */
+.tripletGrid {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: clamp(0.55rem, 0.9vw, 0.95rem) !important;
+  max-width: 1180px !important;
+}
+
+.tripletBtn {
+  min-height: clamp(68px, 8.5vh, 84px) !important;
+  padding: 0.45rem 0.75rem 0.45rem 0.65rem !important;
+}
+
+.themeTeal {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 55%, #115e59 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 28px -6px rgba(13, 148, 136, 0.38), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.themeTeal:hover {
+  box-shadow: 0 16px 34px -6px rgba(13, 148, 136, 0.55), 0 0 0 2px rgba(20, 184, 166, 0.35);
+}
+
+.themeTeal .iconWrapper {
+  background: #ffffff !important;
+  padding: 4px !important;
+}
+
+.themeTeal .cdnIcon {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.hoverThemeTeal {
+  border-top: 4px solid #0d9488;
+}
+
+@media (max-width: 1100px) {
+  .tripletGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
 @media (max-width: 640px) {
   .tripletGrid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-
-  .tripletBtn {
-    min-height: 58px;
-    padding: 0.75rem 1.2rem;
-    font-size: 0.98rem;
+    grid-template-columns: 1fr !important;
   }
 }

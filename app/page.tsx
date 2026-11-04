@@ -49,16 +49,16 @@ const APART_VIDEO_2_FALLBACK =
 const CUBICON_VIDEO_CDN = "";
 
 const RESEARCH_LIB_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4";
 
 const TRIAD_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792160756094-3m50lb-Market_Changes_in_Real_Time_Triad.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
 // Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
 // ─────────────────────────────────────────────────────────────────────────────
-const COMING_SOON = true;
+const COMING_SOON = false;
 
 interface ServiceCardData {
   id: string;
@@ -144,6 +144,15 @@ export default function Home() {
           destinationLabel: "Explore Cubicon",
         });
       },
+      hoverCard: {
+        title: "Cubicon",
+        description:
+          "Research is only as reliable as the people providing the answers. Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots. It aims to reduce fraudulent participation and protect the quality of the data marketers depend on.",
+        prompt:
+          "Experience one of the puzzle challenges designed to distinguish humans from automated bots.",
+        actionLabel: "SEE MORE",
+        actionHref: "/cubicon",
+      },
     },
     {
       id: "faster-digital-asset-creation",
@@ -167,6 +176,15 @@ export default function Home() {
           destinationHref: "/research-lib",
           destinationLabel: "Explore Research Libs",
         });
+      },
+      hoverCard: {
+        title: "Research Libs",
+        description:
+          "Research Libs turns one survey into two valuable marketing resources: research findings that guide decisions and authentic stories that people remember. By transforming survey participants into storytellers, Research Libs brings facts to life and gives marketers compelling material for digital content while reducing the time and effort required to create it.",
+        prompt:
+          "Experience how survey answers can become engaging stories and useful marketing content.",
+        actionLabel: "SEE MORE",
+        actionHref: "/research-lib",
       },
     },
     {
@@ -192,8 +210,39 @@ export default function Home() {
           destinationLabel: "Explore TRIAD",
         });
       },
+      hoverCard: {
+        title: "TRIAD",
+        description:
+          "Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment through focused research repeated over time. By revealing emerging patterns and the practical and emotional drivers behind them, it can help marketers recognize change earlier and make better-informed decisions.",
+        prompt:
+          "Experience how measuring practical and emotional drivers can help reveal emerging directional patterns.",
+        actionLabel: "SEE MORE",
+        actionHref: "/triad",
+      },
     },
-  ];
+        {
+        id: "rule-of-three-framework",
+        title: "Rule of Three in Action",
+        tagline:
+          "Rule of Three turns findings into concise, reusable, co-branded content designed to make insight easier to understand, remember, share, and use.",
+        href: "/rule-of-three",
+        theme: "teal",
+        fallbackIcon: <Compass size={20} />,
+        iconUrl: "/r3-main-logo.png",
+        hoverCard: {
+          title: "Rule of Three",
+          description:
+            "Rule of Three turns findings into concise, reusable, co-branded content designed to make insight easier to understand, remember, share, and use.",
+          prompt:
+            "Experience how interactive frameworks structure principles, disciplines, and market rules.",
+          actionLabel: "SEE MORE",
+          actionHref: "/rule-of-three",
+        },
+      },
+    ];
+
+  // Navigation collapse state when hovering over hero triplet pathway cards
+  const [isNavHoverCollapsed, setIsNavHoverCollapsed] = useState(false);
 
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
@@ -518,7 +567,7 @@ export default function Home() {
       <div className="glow-blob blob-green"></div>
       <div className="glow-blob blob-blue"></div>
 
-      <Navbar />
+      <Navbar isCollapsed={isNavHoverCollapsed} />
 
       {/* SECTION 1: Hero Section */}
       <section className={styles.hero} id="hero">
@@ -527,14 +576,134 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
+            <p className={styles.heroCompanyEyebrow}>
+              THE EARLY RECOGNITION COMPANY™
+            </p>
+
             <h1 className={styles.heroTitle}>
-              Marketers Need Earlier{" "}
-              <span className={styles.heroHighlight}>Recognition,</span> Better
-              Choices, and More Time
+              BuyFacts Gives Marketers Earlier
+              <br />
+              Recognition, Better Choices, and More Time.
             </h1>
 
-            {/* Reusable Vibrant Triplet Button Group with brief text below */}
-            <TripletButtonGroup items={heroTripletButtons} />
+            <p className={styles.heroLead}>
+              More information isn&apos;t the answer. BuyFacts believes that
+              focused, directional buyer research repeated over time can reveal
+              emerging patterns in wants, needs, attitudes, and experiences,
+              helping marketers decide where to focus, what to do, and when to
+              act.
+            </p>
+
+            {/* Reusable Vibrant Triplet Pill Cards with Navbar Collapse Coordination */}
+            <TripletButtonGroup
+              items={heroTripletButtons}
+              onHoverChange={setIsNavHoverCollapsed}
+            />
+
+            {/* 3 Hero Value Pillars */}
+            <div
+              className={styles.heroPillarsGrid}
+              id="hero-value-pillars"
+              aria-label="Core value pillars"
+            >
+              <div className={styles.heroPillarItem} id="pillar-recognize-earlier">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="24" y1="6" x2="24" y2="11" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="16" y1="8" x2="18" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="32" y1="8" x2="30" y2="12.5" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="9.5" y1="12.5" x2="12.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <line x1="38.5" y1="12.5" x2="35.5" y2="16" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M6 27C10.5 19.5 16.8 16 24 16C31.2 16 37.5 19.5 42 27C37.5 34.5 31.2 38 24 38C16.8 38 10.5 34.5 6 27Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="24" cy="27" r="6.5" stroke="#00507b" strokeWidth="2" />
+                    <circle cx="24" cy="27" r="2.5" stroke="#00507b" strokeWidth="2" />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Recognize Earlier</h2>
+                <p className={styles.heroPillarDesc}>
+                  See meaningful changes before they become obvious.
+                </p>
+              </div>
+
+              <div className={styles.heroPillarItem} id="pillar-understand-choices">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="24" y1="7" x2="24" y2="41" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M24 10H38L34.5 15.5L38 21H24V10Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M24 22H10L13.5 27.5L10 33H24V22Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Understand Choices</h2>
+                <p className={styles.heroPillarDesc}>
+                  Gain time to consider possibilities and choose a direction.
+                </p>
+              </div>
+
+              <div className={styles.heroPillarItem} id="pillar-act-for-impact">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line x1="8" y1="40" x2="40" y2="40" stroke="#00507b" strokeWidth="2" strokeLinecap="round" />
+                    <rect x="12" y="29" width="5.5" height="11" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="21.25" y="23" width="5.5" height="17" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <rect x="30.5" y="16" width="5.5" height="24" stroke="#00507b" strokeWidth="2" strokeLinejoin="round" />
+                    <path
+                      d="M11 22L19 14L24 17.5L34 8"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M28 8H34V14"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Act for Impact</h2>
+                <p className={styles.heroPillarDesc}>
+                  Turn informed decisions into meaningful results.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -550,11 +719,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 2: Peer Benchmark Incentive Surveys (8 Cards Grid) */}
-      <section
-        className="section-light"
-        id="portfolio"
-        style={{ padding: "7rem 0" }}
-      >
+      <section className={`section-light ${styles.viewportSlide}`} id="portfolio" data-slide-id="portfolio">
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitleLight}>
@@ -627,9 +792,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 2.5: Cubicon Founding Client Invitation Banner */}
-      <section
-        className="section-brand-bg"
-        id="founding-client-banner"
+      <section className={`section-brand-bg ${styles.viewportSlide}`} id="founding-client-banner" data-slide-id="founding-client-banner"
         style={{
           padding: "4rem 0",
           background:
@@ -787,11 +950,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 3: About Us (Teal Theme matching Mockup image) */}
-      <section
-        className="section-teal-bg"
-        id="about"
-        style={{ padding: "7rem 0" }}
-      >
+      <section className={`section-teal-bg ${styles.viewportSlide}`} id="about" data-slide-id="about">
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
@@ -1071,7 +1230,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 4: Contact Us Form Section */}
-      <section className={styles.contactSection} id="contact">
+      <section className={`${styles.contactSection} ${styles.viewportSlide}`} id="contact" data-slide-id="contact">
         <div className={styles.container}>
           <div className={styles.contactGrid}>
             <div className={styles.contactInfo}>
@@ -1437,11 +1596,7 @@ export default function Home() {
       </section>
 
       {/* SECTION 5: Our Team (Relocated to the bottom) */}
-      <section
-        className={styles.teamSection}
-        id="team"
-        style={{ padding: "6rem 0" }}
-      >
+      <section className={`${styles.teamSection} ${styles.viewportSlide}`} id="team" data-slide-id="team">
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}

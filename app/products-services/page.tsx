@@ -18,6 +18,26 @@ interface ButtonData {
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
+  seeItUrl?: string;
+  hearItUrl?: string;
+  readItUrl?: string;
+}
+
+/**
+ * Returns true when the URL points at a video file, so a video can be routed to SEE IT
+ * even when the database row still carries a generic mediaType ("pdf", "image", ...).
+ */
+function isVideoUrl(url?: string): boolean {
+  if (!url) return false;
+  return (
+    /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(url) ||
+    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//i.test(url)
+  );
+}
+
+function isAudioUrl(url?: string): boolean {
+  if (!url) return false;
+  return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)($|\?|#)/i.test(url);
 }
 
 const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
@@ -29,7 +49,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
   },
   {
     label: "Survey Design",
@@ -39,7 +60,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
   },
   {
     label: "Story-Based Surveys",
@@ -49,7 +71,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
   },
   {
     label: "Improve Surveys",
@@ -59,7 +82,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
   },
   {
     label: "Participant Validation",
@@ -69,7 +93,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
   },
   {
     label: "Survey Fieldwork",
@@ -79,7 +104,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
   },
   {
     label: "Content Value",
@@ -89,7 +115,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
   },
   {
     label: "Pattern Insights",
@@ -100,6 +127,7 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
     mediaType: "video",
     mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
   },
   {
     label: "Audience Validation",
@@ -109,7 +137,8 @@ const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
   },
 ];
 
@@ -137,10 +166,50 @@ export default function ServicesPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiServices = data.buttons
-            .filter((btn: any) => btn.category === "Products & Services")
+            .filter(
+              (btn: any) =>
+                btn.category === "Products & Services" ||
+                btn.category === "Services" ||
+                btn.id?.startsWith("btn-srv") ||
+                (typeof btn.category === "string" &&
+                  (btn.category.toLowerCase().includes("service") ||
+                    btn.category.toLowerCase().includes("product")))
+            )
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
+              const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
+              const resolvedHearItUrl = (btn.hearItUrl || "").trim();
+              const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
+
+              // THE PRIMARY BUTTON DECIDES WHAT THE PLAYER SHOWS FIRST.
+              // SEE IT / HEAR IT / READ IT are optional extras and never influence the
+              // primary content — a post may have all three, some, or none of them.
+              // The primary type comes from the row's mediaType, corrected by the
+              // extension of the primary link itself (and by mediaUrl when mediaType is absent).
+              const primaryKind: "video" | "audio" | "pdf" | "docx" | "image" | null =
+                isVideoUrl(resolvedMediaUrl)
+                  ? "video"
+                  : isAudioUrl(resolvedMediaUrl)
+                    ? "audio"
+                    : /(\.docx|\.doc)($|\?|#)/i.test(resolvedMediaUrl)
+                      ? "docx"
+                      : /(\.pdf)($|\?|#)/i.test(resolvedMediaUrl)
+                        ? "pdf"
+                        : /(\.(png|jpe?g|gif|webp|svg|avif))($|\?|#)/i.test(resolvedMediaUrl)
+                          ? "image"
+                          : null;
+
+              const storedType = (btn.mediaType || defaultFallback.mediaType) as
+                | "video"
+                | "image"
+                | "audio"
+                | "pdf"
+                | "docx";
+
+              let resolvedMediaType = primaryKind ?? storedType;
+
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -148,13 +217,18 @@ export default function ServicesPage() {
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
+                mediaType: resolvedMediaType,
+                mediaUrl: resolvedMediaUrl,
+                seeItUrl: resolvedSeeItUrl,
+                hearItUrl: resolvedHearItUrl,
+                readItUrl: resolvedReadItUrl,
               };
             });
 
           if (apiServices.length > 0) {
             setCustomButtons(apiServices);
+          } else {
+            console.warn("No Products & Services buttons matched from /api/buttons response:", data.buttons);
           }
         }
       } catch (err) {
@@ -192,7 +266,8 @@ export default function ServicesPage() {
                 setSelectedButtonIndex(index);
                 setShowWelcome(false);
               }}
-            />
+              />
+              <strong>PRODUCTS & SERVICES</strong>
           </div>
 
           {/* Right Column: MockMediaPlayer component */}
@@ -204,6 +279,10 @@ export default function ServicesPage() {
                 description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                seeItUrl={currentMedia.seeItUrl}
+                hearItUrl={currentMedia.hearItUrl}
+                moreDetailUrl={currentMedia.readItUrl}
+                readItUrl={currentMedia.readItUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}

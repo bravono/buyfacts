@@ -50,7 +50,7 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.ok(data.error.includes("Invalid table"));
   });
 
-  test("Summary Action: should return counts for all 17 registered models", async () => {
+  test("Summary Action: should return counts for all registered models", async () => {
     const headers = await createAdminAuthHeader();
     const req = new Request("http://localhost/api/admin/database?action=summary", {
       headers,
@@ -61,7 +61,7 @@ describe("Admin Database Dashboard API Suite", () => {
     const data = await res.json();
     assert.equal(data.success, true);
     assert.ok(data.summary);
-    assert.equal(data.summary.modelCount, 20);
+    assert.equal(data.summary.modelCount, Object.keys(ADMIN_MODEL_REGISTRY).length);
 
     const registryKeys = Object.keys(ADMIN_MODEL_REGISTRY);
     for (const key of registryKeys) {

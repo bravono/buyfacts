@@ -314,3 +314,24 @@
     font-size: clamp(0.38rem, 2.8vw, 0.52rem);
   }
 }
+
+
+.container {
+  max-width: 1440px !important;
+  padding: 0 1.25rem !important;
+}
+.navDesktop {
+  gap: clamp(0.4rem, 0.72vw, 0.82rem) !important;
+  flex-wrap: nowrap !important;
+}
+.navLink {
+  font-size: clamp(0.62rem, 0.68vw, 0.73rem) !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+}
+.btnNav {
+  padding: 0.48rem 0.9rem !important;
+  font-size: 0.73rem !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}

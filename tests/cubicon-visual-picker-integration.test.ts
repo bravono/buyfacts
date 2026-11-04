@@ -153,7 +153,51 @@ test("Cubicon Visual Coordinate Picker Integration Test Suite", async (t) => {
     assert.deepEqual(parsedMulti[2], { x: 0.6, y: 0.1, z: 1.0 });
   });
 
-  await t.test("5. Zero-Emoji Compliance across all Coordinate Picker Files", async () => {
+  await t.test("5. Question Type and Task Parameter Bidirectional Sync Contract across Picker and Form Modals", async () => {
+    const pickerContent = fs.readFileSync(
+      path.resolve(__dirname, "../components/CubiconCoordinatePicker.tsx"),
+      "utf8"
+    );
+    const adminContent = fs.readFileSync(
+      path.resolve(__dirname, "../app/admin/page.tsx"),
+      "utf8"
+    );
+    const analyticsContent = fs.readFileSync(
+      path.resolve(__dirname, "../app/cubicon/analytics/page.tsx"),
+      "utf8"
+    );
+
+    // Picker exports CoordinateDataSync and props contract
+    assert.ok(pickerContent.includes("export interface CoordinateDataSync"));
+    assert.ok(pickerContent.includes("onDataChange?: (data: CoordinateDataSync) => void;"));
+    assert.ok(pickerContent.includes("questionType: CanonicalQuestionType"));
+    assert.ok(pickerContent.includes("questionType: normalizedType"));
+
+    // Picker handles live iframe messages for all parameters
+    assert.ok(pickerContent.includes("CUBICON_SCREEN_CHANGED"));
+    assert.ok(pickerContent.includes("CUBICON_IMAGE_CHANGED"));
+    assert.ok(pickerContent.includes("CUBICON_PICKER_MODE_CHANGED"));
+    assert.ok(pickerContent.includes("CUBICON_COORDINATE_PICKED"));
+    assert.ok(pickerContent.includes("CUBICON_APPLY_COORDINATES"));
+
+    // Both Admin and Analytics modals sync all parameters via onDataChange and onApply
+    assert.ok(adminContent.includes("onDataChange={(syncData) => {"));
+    assert.ok(adminContent.includes("onQuestionTypeChange"));
+    assert.ok(adminContent.includes("result.questionType"));
+    assert.ok(analyticsContent.includes("onDataChange={handlePickerDataChange}"));
+    assert.ok(analyticsContent.includes("onQuestionTypeChange={handlePickerQuestionTypeChange}"));
+    assert.ok(analyticsContent.includes("result.questionType"));
+
+    // Analytics sequence screen options include all faces
+    assert.ok(analyticsContent.includes("Active_top"));
+    assert.ok(analyticsContent.includes("Active_bottom"));
+
+    // Picker uses a stable iframeSrc and postMessage instead of reloading iframe on config changes
+    assert.ok(pickerContent.includes("src={iframeSrc}"));
+    assert.ok(pickerContent.includes("syncIframeConfig()"));
+  });
+
+  await t.test("6. Zero-Emoji Compliance across all Coordinate Picker Files", async () => {
     const filesToCheck = [
       path.resolve(__dirname, "../lib/cubicon/coordinateHelper.ts"),
       path.resolve(__dirname, "../components/CubiconCoordinatePicker.tsx"),

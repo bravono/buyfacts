@@ -1212,6 +1212,71 @@
   animation: fadeIn 0.25s ease-out;
 }
 
+/* Missing-asset feedback: shown when an action button with no attached asset is clicked */
+.missingNotice {
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin: 0.6rem 0 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.missingNoticeBody {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.missingVideo {
+  background: rgba(255, 153, 0, 0.1);
+  border: 1px solid rgba(255, 153, 0, 0.4);
+  color: #9a5d00;
+}
+
+.missingAudio {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  color: #075985;
+}
+
+.missingDocument {
+  background: rgba(0, 80, 123, 0.08);
+  border: 1px solid rgba(0, 80, 123, 0.35);
+  color: #00507b;
+}
+
+.missingNoticeDismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  padding: 0.15rem;
+  border-radius: 4px;
+}
+
+.missingNoticeDismiss:hover {
+  opacity: 1;
+}
+
+/* Action buttons with no asset attached yet: visibly quieter so the gap is honest */
+.btnEmpty {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+.btnEmpty:hover {
+  opacity: 0.75;
+}
+
 /* Document In-Browser Rendering Elements */
 .inlineDocViewer {
   position: absolute;
@@ -1439,6 +1504,86 @@
   max-width: 100% !important;
 }
 
+/* Document read error: a clear reason instead of a third-party viewer's generic message */
+.inlineDocErrorNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.inlineDocErrorNotice h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #00507b;
+}
+
+.inlineDocErrorNotice p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #475569;
+  max-width: 46ch;
+}
+
+.inlineDocErrorNotice code {
+  font-size: 0.75rem;
+  background: #e2e8f0;
+  border-radius: 3px;
+  padding: 0.05rem 0.25rem;
+}
+
+/* Full screen: the player screen fills the display, and a document read inside it
+   scales its text up so it is readable across a monitor. */
+.screenFrame:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: none;
+}
+
+.screenFrame:fullscreen .inlineDocxScroll {
+  padding: 2rem 3rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent {
+  max-width: 1100px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h1 {
+  font-size: 1.9rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h2 {
+  font-size: 1.5rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent h3,
+.screenFrame:fullscreen .inlineDocxContent h4 {
+  font-size: 1.25rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent p,
+.screenFrame:fullscreen .inlineDocxContent li {
+  font-size: 1.05rem;
+}
+
+.screenFrame:fullscreen .inlineDocxContent table {
+  font-size: 0.95rem;
+}
+
 /* Modal Document Viewer Enhancements */
 .modalDocMetaRow {
   display: flex;
@@ -1567,4 +1712,55 @@
 .btnOpenExternal:hover {
   background: #f0f9ff;
   border-color: #0284c7;
+}
+
+/* No Media Found State */
+.noMediaContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(11, 21, 30, 0.95) 0%, rgba(7, 14, 21, 0.98) 100%);
+  padding: 1.5rem;
+  text-align: center;
+  z-index: 4;
+}
+
+.noMediaIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  color: var(--color-orange-1, #ff9900);
+}
+
+.noMediaIcon {
+  color: var(--color-orange-1, #ff9900);
+}
+
+.noMediaTitle {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.35rem 0;
+}
+
+.noMediaSubtitle {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 380px;
+  margin: 0;
+  line-height: 1.4;
 }

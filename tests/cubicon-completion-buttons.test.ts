@@ -10,6 +10,7 @@ function simulateCubiconMessage(
     onExit: () => void;
     onContact: () => void;
     onFeedback?: (sessionId?: string) => void;
+    onNavigate?: (url: string) => void;
   }
 ) {
   if (data?.type === "CUBICON_EXIT" || data === "CUBICON_EXIT") {
@@ -24,6 +25,10 @@ function simulateCubiconMessage(
     const sessionId = typeof data === "object" ? data?.sessionId : undefined;
     handlers.onFeedback?.(sessionId);
     return "feedback";
+  }
+  if (data?.type === "CUBICON_NAVIGATE" && data?.url) {
+    handlers.onNavigate?.(data.url);
+    return "navigate";
   }
   return "unhandled";
 }
@@ -192,5 +197,58 @@ test("Cubicon Completion Buttons Message Handling Test Suite", async (t) => {
       "/feedback?sessionId=cubicon_sess_99"
     );
     assert.equal(feedbackWithSession(""), "/feedback");
+  });
+
+  await t.test("6. CUBICON_NAVIGATE message handling", () => {
+    let navigateTriggered = 0;
+    let navigatedUrl = "";
+    let exitTriggered = 0;
+    let contactTriggered = 0;
+    let feedbackTriggered = 0;
+    const handlers = {
+      onExit: () => { exitTriggered++; },
+      onContact: () => { contactTriggered++; },
+      onFeedback: () => { feedbackTriggered++; },
+      onNavigate: (url: string) => { navigateTriggered++; navigatedUrl = url; },
+    };
+
+    // Valid CUBICON_NAVIGATE with a known destination URL
+    const res1 = simulateCubiconMessage({ type: "CUBICON_NAVIGATE", url: "/products-services" }, handlers);
+    assert.equal(res1, "navigate");
+    assert.equal(navigateTriggered, 1);
+    assert.equal(navigatedUrl, "/products-services");
+    assert.equal(exitTriggered, 0);
+    assert.equal(contactTriggered, 0);
+    assert.equal(feedbackTriggered, 0);
+
+    // Second navigation to a different destination
+    const res2 = simulateCubiconMessage({ type: "CUBICON_NAVIGATE", url: "/research-imperatives" }, handlers);
+    assert.equal(res2, "navigate");
+    assert.equal(navigateTriggered, 2);
+    assert.equal(navigatedUrl, "/research-imperatives");
+
+    // CUBICON_NAVIGATE without url should be treated as unhandled
+    const res3 = simulateCubiconMessage({ type: "CUBICON_NAVIGATE" }, handlers);
+    assert.equal(res3, "unhandled");
+    assert.equal(navigateTriggered, 2);
+
+    // CUBICON_NAVIGATE with empty string url should be treated as unhandled
+    const res4 = simulateCubiconMessage({ type: "CUBICON_NAVIGATE", url: "" }, handlers);
+    assert.equal(res4, "unhandled");
+    assert.equal(navigateTriggered, 2);
+
+    // All nav destinations from the dock
+    const navDestinations = [
+      { url: "/products-services", label: "TIME SAVING INNOVATION" },
+      { url: "/research-imperatives", label: "RESEARCH IMPERATIVES" },
+      { url: "/vault", label: "CONTENT VAULT" },
+      { url: "/research-lib", label: "DIRECTIONAL MEASUREMENT" },
+      { url: "/", label: "HOME" },
+    ];
+    navDestinations.forEach(({ url }) => {
+      const r = simulateCubiconMessage({ type: "CUBICON_NAVIGATE", url }, handlers);
+      assert.equal(r, "navigate");
+    });
+    assert.equal(navigateTriggered, 2 + navDestinations.length);
   });
 });

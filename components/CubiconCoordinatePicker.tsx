@@ -10,6 +10,11 @@ import {
   projectScreenUVTo3D,
   project3DToScreenUV,
   extractWaypoints,
+  normalizeQuestionType,
+  questionTypeToInteractionMode,
+  interactionModeToQuestionType,
+  CanonicalQuestionType,
+  getThumbnailUrl,
 } from "@/lib/cubicon/coordinateHelper";
 import {
   X,
@@ -37,6 +42,18 @@ export interface CoordinatePickerApplyResult {
   points: Point3D[];
   image?: string;
   screen?: string;
+  questionType: CanonicalQuestionType;
+}
+
+export interface CoordinateDataSync {
+  screen?: string;
+  image?: string;
+  questionType?: CanonicalQuestionType;
+  correctCoordinates?: string;
+  startPoint?: string;
+  midPoint?: string;
+  endPoint?: string;
+  points?: Point3D[];
 }
 
 export interface CubiconCoordinatePickerProps {
@@ -46,6 +63,17 @@ export interface CubiconCoordinatePickerProps {
   initialImage?: string;
   initialQuestionType?: string;
   initialCoordinates?: string;
+  onDataChange?: (data: CoordinateDataSync) => void;
+  onQuestionTypeChange?: (questionType: CanonicalQuestionType) => void;
+  onScreenChange?: (screen: string) => void;
+  onImageChange?: (image: string) => void;
+  onCoordinatesChange?: (coords: {
+    correctCoordinates: string;
+    startPoint: string;
+    midPoint: string;
+    endPoint: string;
+    points: Point3D[];
+  }) => void;
   onApply: (result: CoordinatePickerApplyResult) => void;
 }
 
@@ -55,9 +83,12 @@ export interface CdnPuzzleItem {
   fileName: string;
   objectKey: string;
   publicUrl: string;
+  thumbnailUrl?: string;
   format: string;
   size?: number;
 }
+
+export { getThumbnailUrl };
 
 const PRESET_SCREENS = [
   { value: "Active_front", label: "Front Screen (Active_front)" },
@@ -82,11 +113,18 @@ export default function CubiconCoordinatePicker({
   initialImage = "/cubicon-app/arts/Puzzle1.webp",
   initialQuestionType = "Selection",
   initialCoordinates = "",
+  onDataChange,
+  onQuestionTypeChange,
+  onScreenChange,
+  onImageChange,
+  onCoordinatesChange,
   onApply,
 }: CubiconCoordinatePickerProps) {
   const [screen, setScreen] = useState(initialScreen);
   const [image, setImage] = useState(initialImage);
-  const [questionType, setQuestionType] = useState(initialQuestionType);
+  const [questionType, setQuestionType] = useState<CanonicalQuestionType>(() =>
+    normalizeQuestionType(initialQuestionType)
+  );
   const [viewMode, setViewMode] = useState<"surface" | "3d">("surface");
   const [points, setPoints] = useState<Point3D[]>([]);
   const [consoleInput, setConsoleInput] = useState("");
@@ -100,58 +138,233 @@ export default function CubiconCoordinatePicker({
   const [cdnSearch, setCdnSearch] = useState<string>("");
   const [formatFilter, setFormatFilter] = useState<string>("all");
   const [assignedNotice, setAssignedNotice] = useState<string>("");
+  const [isGalleryCollapsed, setIsGalleryCollapsed] = useState<boolean>(false);
+  const [iframeSrc, setIframeSrc] = useState<string>(
+    "/cubicon-app/index.html?picker=true&admin=true"
+  );
   const scrollTrackRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const surfaceRef = useRef<HTMLDivElement>(null);
 
-  // Initialize or re-sync when opened
+  const wasOpenRef = useRef(false);
+  const prevInitialScreenRef = useRef(initialScreen);
+  const prevInitialImageRef = useRef(initialImage);
+  const prevInitialQtRef = useRef(initialQuestionType);
+  const prevInitialCoordsRef = useRef<string | undefined>(initialCoordinates);
+
+  const isDragTask = questionTypeToInteractionMode(questionType) === "drag";
+
+  const syncIframeConfig = useCallback(
+    (targetScreen = screen, targetImage = image, targetMode = isDragTask ? "drag" : "click") => {
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          {
+            type: "CUBICON_SET_PICKER_CONFIG",
+            screen: targetScreen,
+            image: targetImage,
+            interactionMode: targetMode,
+          },
+          "*"
+        );
+      }
+    },
+    [screen, image, isDragTask]
+  );
+
+  // Centralized live data synchronization dispatcher
+  const notifySync = useCallback(
+    (overrides: Partial<CoordinateDataSync> = {}) => {
+      const targetPts = overrides.points !== undefined ? overrides.points : points;
+      const waypoints = extractWaypoints(targetPts);
+      const coordsJson = formatCoordinatesJson(targetPts);
+      const targetScreen = overrides.screen !== undefined ? overrides.screen : screen;
+      const targetImage = overrides.image !== undefined ? overrides.image : image;
+      const targetQt = overrides.questionType !== undefined ? overrides.questionType : questionType;
+
+      const syncData: CoordinateDataSync = {
+        screen: targetScreen,
+        image: targetImage,
+        questionType: targetQt,
+        correctCoordinates: overrides.correctCoordinates !== undefined ? overrides.correctCoordinates : coordsJson,
+        startPoint: overrides.startPoint !== undefined ? overrides.startPoint : waypoints.startPoint,
+        midPoint: overrides.midPoint !== undefined ? overrides.midPoint : waypoints.midPoint,
+        endPoint: overrides.endPoint !== undefined ? overrides.endPoint : waypoints.endPoint,
+        points: targetPts,
+      };
+
+      // Record latest values to prevent echo loops when parent echoes them back as props
+      prevInitialScreenRef.current = targetScreen;
+      prevInitialImageRef.current = targetImage;
+      prevInitialQtRef.current = targetQt;
+      prevInitialCoordsRef.current = syncData.correctCoordinates;
+
+      if (overrides.screen !== undefined) {
+        onScreenChange?.(overrides.screen);
+      }
+      if (overrides.image !== undefined) {
+        onImageChange?.(overrides.image);
+      }
+      if (overrides.questionType !== undefined) {
+        onQuestionTypeChange?.(overrides.questionType);
+      }
+      if (overrides.points !== undefined || overrides.correctCoordinates !== undefined) {
+        onCoordinatesChange?.({
+          correctCoordinates: syncData.correctCoordinates || "",
+          startPoint: syncData.startPoint || "",
+          midPoint: syncData.midPoint || "",
+          endPoint: syncData.endPoint || "",
+          points: targetPts,
+        });
+      }
+
+      onDataChange?.(syncData);
+    },
+    [
+      points,
+      screen,
+      image,
+      questionType,
+      onScreenChange,
+      onImageChange,
+      onQuestionTypeChange,
+      onCoordinatesChange,
+      onDataChange,
+    ]
+  );
+
+  // Initialize on open and synchronize external parent changes while open
   useEffect(() => {
-    if (isOpen) {
-      setScreen(initialScreen || "Active_front");
-      setImage(initialImage || "/cubicon-app/arts/Puzzle1.webp");
-      setQuestionType(initialQuestionType || "Selection");
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    if (!wasOpenRef.current) {
+      // First open event: initialize picker state from props
+      wasOpenRef.current = true;
+      const initScreen = initialScreen || "Active_front";
+      const initImg = initialImage || "/cubicon-app/arts/Puzzle1.webp";
+      const initQt = normalizeQuestionType(initialQuestionType);
+      const initMode = questionTypeToInteractionMode(initQt);
+      setScreen(initScreen);
+      setImage(initImg);
+      setQuestionType(initQt);
+      setIframeSrc(
+        `/cubicon-app/index.html?picker=true&admin=true&screen=${encodeURIComponent(initScreen)}&image=${encodeURIComponent(initImg)}&interactionMode=${initMode}`
+      );
       if (initialCoordinates) {
         const parsed = parseCoordinateInput(initialCoordinates);
         setPoints(parsed);
       } else {
         setPoints([]);
       }
+      prevInitialScreenRef.current = initialScreen;
+      prevInitialImageRef.current = initialImage;
+      prevInitialQtRef.current = initialQuestionType;
+      prevInitialCoordsRef.current = initialCoordinates;
+    } else {
+      // Already open: synchronize changes if parent form updated externally
+      if (initialScreen && initialScreen !== prevInitialScreenRef.current && initialScreen !== screen) {
+        prevInitialScreenRef.current = initialScreen;
+        setScreen(initialScreen);
+        syncIframeConfig(initialScreen, image, isDragTask ? "drag" : "click");
+      }
+      if (initialImage && initialImage !== prevInitialImageRef.current && initialImage !== image) {
+        prevInitialImageRef.current = initialImage;
+        setImage(initialImage);
+        syncIframeConfig(screen, initialImage, isDragTask ? "drag" : "click");
+      }
+      if (initialQuestionType && initialQuestionType !== prevInitialQtRef.current) {
+        const normQt = normalizeQuestionType(initialQuestionType);
+        if (normQt !== questionType) {
+          prevInitialQtRef.current = initialQuestionType;
+          const nextMode = questionTypeToInteractionMode(normQt);
+          setQuestionType(normQt);
+          setPoints([]);
+          syncIframeConfig(screen, image, nextMode);
+        }
+      }
     }
-  }, [isOpen, initialScreen, initialImage, initialQuestionType, initialCoordinates]);
+  }, [
+    isOpen,
+    initialScreen,
+    initialImage,
+    initialQuestionType,
+    initialCoordinates,
+    screen,
+    image,
+    questionType,
+    isDragTask,
+    syncIframeConfig,
+  ]);
 
-  const isDragTask = questionType === "Anticipation" || questionType === "drag" || questionType === "Drawing";
+  // Sync screen, image, and interactionMode to the embedded 3D iframe when view switches to 3D
+  useEffect(() => {
+    if (viewMode === "3d") {
+      syncIframeConfig();
+    }
+  }, [viewMode, syncIframeConfig]);
 
   // Listen for postMessage from embedded 3D Cubicon iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!isOpen) return;
 
+      if (event.data?.type === "CUBICON_SCREEN_CHANGED" && typeof event.data.screen === "string") {
+        const nextScreen = event.data.screen;
+        setScreen(nextScreen);
+        notifySync({ screen: nextScreen });
+      }
+
+      if (event.data?.type === "CUBICON_IMAGE_CHANGED" && typeof event.data.image === "string") {
+        const nextImage = event.data.image;
+        setImage(nextImage);
+        notifySync({ image: nextImage });
+      }
+
+      if (event.data?.type === "CUBICON_PICKER_MODE_CHANGED" && event.data.interactionMode) {
+        const syncedType = interactionModeToQuestionType(event.data.interactionMode);
+        setQuestionType(syncedType);
+        setPoints([]);
+        notifySync({ questionType: syncedType, points: [] });
+      }
+
       if (event.data?.type === "CUBICON_COORDINATE_PICKED" && event.data.point) {
         const pt = normalizePoint(event.data.point);
         setPoints((prev) => {
+          let nextPts: Point3D[];
           if (!isDragTask) {
             // Single-click mode: replaces target point
-            return [pt];
+            nextPts = [pt];
+          } else if (prev.length >= 3) {
+            // Multi-point drag mode: capped at 3 waypoints
+            nextPts = [prev[0], prev[1], pt];
+          } else {
+            nextPts = [...prev, pt];
           }
-          // Multi-point drag mode: capped at 3 waypoints
-          if (prev.length >= 3) {
-            return [prev[0], prev[1], pt];
-          }
-          return [...prev, pt];
+          notifySync({ points: nextPts });
+          return nextPts;
         });
       }
 
       if (event.data?.type === "CUBICON_APPLY_COORDINATES" && Array.isArray(event.data.coordinates)) {
+        let syncedType = questionType;
+        if (event.data.interactionMode) {
+          syncedType = interactionModeToQuestionType(event.data.interactionMode);
+          setQuestionType(syncedType);
+        }
         const parsed = parseCoordinateInput(event.data.coordinates);
         if (parsed.length > 0) {
           setPoints(parsed);
+          notifySync({ questionType: syncedType, points: parsed });
         }
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [isOpen, isDragTask]);
+  }, [isOpen, isDragTask, questionType, notifySync]);
 
   // Click handler on the 2D surface
   const handleSurfacePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -163,14 +376,18 @@ export default function CubiconCoordinatePicker({
 
     if (!isDragTask) {
       // Single-click task: set exactly one coordinate
-      setPoints([point]);
+      const nextPts = [point];
+      setPoints(nextPts);
+      notifySync({ points: nextPts });
       return;
     }
 
     // Drag task: begin drag tracking
     setIsPointerDragging(true);
     dragWaypointsRef.current = [point];
-    setPoints([point]);
+    const nextPts = [point];
+    setPoints(nextPts);
+    notifySync({ points: nextPts });
   };
 
   const handleSurfacePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -181,17 +398,16 @@ export default function CubiconCoordinatePicker({
     const currentPoint = projectScreenUVTo3D(u, v);
 
     const waypoints = dragWaypointsRef.current;
+    let nextPts: Point3D[];
     if (waypoints.length === 1) {
-      dragWaypointsRef.current = [waypoints[0], currentPoint];
-      setPoints([waypoints[0], currentPoint]);
-    } else if (waypoints.length === 2) {
-      dragWaypointsRef.current = [waypoints[0], waypoints[1], currentPoint];
-      setPoints([waypoints[0], waypoints[1], currentPoint]);
+      nextPts = [waypoints[0], currentPoint];
     } else {
       // Keep start and mid, update moving end
-      dragWaypointsRef.current = [waypoints[0], waypoints[1], currentPoint];
-      setPoints([waypoints[0], waypoints[1], currentPoint]);
+      nextPts = [waypoints[0], waypoints[1], currentPoint];
     }
+    dragWaypointsRef.current = nextPts;
+    setPoints(nextPts);
+    notifySync({ points: nextPts });
   };
 
   const handleSurfacePointerUp = () => {
@@ -208,21 +424,29 @@ export default function CubiconCoordinatePicker({
     const v = (e.clientY - rect.top) / rect.height;
     const point = projectScreenUVTo3D(u, v);
 
-    setPoints((prev) => {
-      if (prev.length >= 3) {
-        return [point]; // Restart from point 1
-      }
-      return [...prev, point];
-    });
+    let nextPts: Point3D[];
+    if (points.length >= 3) {
+      nextPts = [point]; // Restart from point 1
+    } else {
+      nextPts = [...points, point];
+    }
+    setPoints(nextPts);
+    notifySync({ points: nextPts });
   };
 
   const handleUndo = () => {
-    setPoints((prev) => prev.slice(0, -1));
+    const nextPts = points.slice(0, -1);
+    setPoints(nextPts);
+    notifySync({ points: nextPts });
   };
 
   const handleClear = () => {
     setPoints([]);
     dragWaypointsRef.current = [];
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: "CUBICON_CLEAR_COORDINATES" }, "*");
+    }
+    notifySync({ points: [] });
   };
 
   const handleCopyJson = () => {
@@ -240,6 +464,7 @@ export default function CubiconCoordinatePicker({
     if (parsed.length > 0) {
       setPoints(parsed);
       setConsoleInput("");
+      notifySync({ points: parsed });
     }
   };
 
@@ -266,10 +491,44 @@ export default function CubiconCoordinatePicker({
     }
   }, [isOpen, fetchCdnImages]);
 
+  const handleScreenChange = (nextScreen: string) => {
+    setScreen(nextScreen);
+    syncIframeConfig(nextScreen, image, isDragTask ? "drag" : "click");
+    notifySync({ screen: nextScreen });
+  };
+
+  const handleImageChange = (nextImage: string) => {
+    setImage(nextImage);
+    syncIframeConfig(screen, nextImage, isDragTask ? "drag" : "click");
+    notifySync({ image: nextImage });
+  };
+
   const handleAssignImage = (item: CdnPuzzleItem) => {
     setImage(item.publicUrl);
     setAssignedNotice(`Assigned "${item.name}" to ${screen}`);
     setTimeout(() => setAssignedNotice(""), 3500);
+    syncIframeConfig(screen, item.publicUrl, isDragTask ? "drag" : "click");
+    notifySync({ image: item.publicUrl });
+  };
+
+  const handleQuestionTypeChange = (nextTypeVal: string) => {
+    const nextType = normalizeQuestionType(nextTypeVal);
+    const nextMode = questionTypeToInteractionMode(nextType);
+    setQuestionType(nextType);
+    setPoints([]);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: "CUBICON_SET_PICKER_CONFIG",
+          screen,
+          image,
+          interactionMode: nextMode,
+        },
+        "*"
+      );
+      iframeRef.current.contentWindow.postMessage({ type: "CUBICON_CLEAR_COORDINATES" }, "*");
+    }
+    notifySync({ questionType: nextType, points: [] });
   };
 
   const handleScrollLeft = () => {
@@ -303,6 +562,7 @@ export default function CubiconCoordinatePicker({
   const handleApply = () => {
     const correctCoordinates = formatCoordinatesJson(points);
     const waypoints = extractWaypoints(points);
+    const normalizedType = normalizeQuestionType(questionType);
     onApply({
       correctCoordinates,
       startPoint: waypoints.startPoint,
@@ -311,6 +571,7 @@ export default function CubiconCoordinatePicker({
       points,
       image,
       screen,
+      questionType: normalizedType,
     });
     onClose();
   };
@@ -345,7 +606,7 @@ export default function CubiconCoordinatePicker({
               <select
                 className={styles.select}
                 value={screen}
-                onChange={(e) => setScreen(e.target.value)}
+                onChange={(e) => handleScreenChange(e.target.value)}
               >
                 {PRESET_SCREENS.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -360,7 +621,7 @@ export default function CubiconCoordinatePicker({
               <select
                 className={styles.select}
                 value={image}
-                onChange={(e) => setImage(e.target.value)}
+                onChange={(e) => handleImageChange(e.target.value)}
               >
                 {cdnImages.map((c) => (
                   <option key={c.publicUrl} value={c.publicUrl}>
@@ -384,10 +645,7 @@ export default function CubiconCoordinatePicker({
               <select
                 className={styles.select}
                 value={questionType}
-                onChange={(e) => {
-                  setQuestionType(e.target.value);
-                  setPoints([]);
-                }}
+                onChange={(e) => handleQuestionTypeChange(e.target.value)}
               >
                 <option value="Selection">Single Click (Selection)</option>
                 <option value="Anticipation">Multi-Point Drag (Anticipation / Drawing)</option>
@@ -475,10 +733,21 @@ export default function CubiconCoordinatePicker({
                 >
                   <RefreshCw size={12} className={isLoadingCdn ? "spin" : ""} />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryCollapsed((prev) => !prev)}
+                  className={styles.btnSecondary}
+                  style={{ padding: "4px 8px", height: "26px", fontSize: "0.7rem" }}
+                  title={isGalleryCollapsed ? "Expand CDN gallery" : "Collapse CDN gallery"}
+                >
+                  {isGalleryCollapsed ? "Expand" : "Collapse"}
+                </button>
               </div>
             </div>
 
             {/* Scrollable Track with Left/Right Nav Buttons */}
+            {!isGalleryCollapsed && (
             <div className={styles.scrollTrackWrapper}>
               <button
                 type="button"
@@ -510,12 +779,21 @@ export default function CubiconCoordinatePicker({
                       >
                         <div className={styles.thumbnailImgWrapper}>
                           <img
-                            src={item.publicUrl}
+                            src={item.thumbnailUrl || getThumbnailUrl(item.publicUrl, 160)}
                             alt={item.name}
                             loading="lazy"
+                            decoding="async"
+                            width={72}
+                            height={72}
                             className={styles.thumbnailImg}
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/cubicon-app/cubicon_logo.png";
+                              const target = e.target as HTMLImageElement;
+                              if (!target.dataset.triedOriginal && item.publicUrl) {
+                                target.dataset.triedOriginal = "true";
+                                target.src = item.publicUrl;
+                              } else {
+                                target.src = "/cubicon-app/cubicon_logo.png";
+                              }
                             }}
                           />
                           {isSelected && (
@@ -546,6 +824,7 @@ export default function CubiconCoordinatePicker({
                 <ChevronRight size={16} />
               </button>
             </div>
+            )}
           </div>
 
           {/* Interactive Workspace Row */}
@@ -636,7 +915,9 @@ export default function CubiconCoordinatePicker({
               ) : (
                 /* Live 3D Cube Canvas iframe - strictly admin authorized */
                 <iframe
-                  src={`/cubicon-app/index.html?picker=true&admin=true&screen=${encodeURIComponent(screen)}&image=${encodeURIComponent(image)}`}
+                  ref={iframeRef}
+                  src={iframeSrc}
+                  onLoad={() => syncIframeConfig()}
                   className={styles.iframeWrapper}
                   title="Cubicon 3D Interactive Canvas"
                 />

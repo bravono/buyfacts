@@ -5,7 +5,7 @@ import path from "node:path";
 
 const BUYFACTS_ROOT = path.resolve(__dirname, "..");
 const EXPECTED_CDN_VIDEO_URL =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4";
 
 describe("Hero Triplet Button Middle Video Playback Test Suite", () => {
   it("should have RESEARCH_LIB_VIDEO_CDN constant defined with the exact CDN URL", () => {
@@ -279,6 +279,362 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
       "Element must announce role='button' when onClick is specified"
     );
   });
+
+  it("should render triplet buttons as self-contained pill cards with vertical divider and left-aligned label", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("styles.btnDivider"),
+      "TripletButton must include vertical divider inside the pill card"
+    );
+    assert.ok(
+      componentContent.includes("showCaption = false"),
+      "TripletButton must default showCaption to false so card text is self-contained inside the card"
+    );
+    assert.ok(
+      cssContent.includes(".btnDivider"),
+      "TripletButton.module.css must define .btnDivider styles"
+    );
+  });
+
+  it("should render the new Hero section header, lead copy, and 3 bottom value pillars", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const pageCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      pageContent.includes("THE EARLY RECOGNITION COMPANY"),
+      "Hero section must display 'THE EARLY RECOGNITION COMPANY' eyebrow"
+    );
+    assert.ok(
+      pageContent.includes("BuyFacts Gives Marketers Earlier") &&
+        pageContent.includes("Recognition, Better Choices, and More Time."),
+      "Hero section must display the updated main heading"
+    );
+    assert.ok(
+      pageContent.includes("More information isn&apos;t the answer.") &&
+        pageContent.includes("helping marketers decide where to focus, what to do, and when to"),
+      "Hero section must display the directional buyer research lead paragraph"
+    );
+    assert.ok(
+      pageContent.includes("Recognize Earlier") &&
+        pageContent.includes("See meaningful changes before they become obvious."),
+      "Hero section must include the 'Recognize Earlier' value pillar"
+    );
+    assert.ok(
+      pageContent.includes("Understand Choices") &&
+        pageContent.includes("Gain time to consider possibilities and choose a direction."),
+      "Hero section must include the 'Understand Choices' value pillar"
+    );
+    assert.ok(
+      pageContent.includes("Act for Impact") &&
+        pageContent.includes("Turn informed decisions into meaningful results."),
+      "Hero section must include the 'Act for Impact' value pillar"
+    );
+    assert.ok(
+      pageCss.includes(".heroPillarsGrid") && pageCss.includes(".heroPillarItem"),
+      "page.module.css must define styles for the 3-column hero value pillars"
+    );
+  });
+
+  it("should prevent orphan words on triplet buttons with non-breaking space and balanced wrap", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("preventOrphanWords"),
+      "TripletButton.tsx must define and use preventOrphanWords"
+    );
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.title)"),
+      "TripletButton.tsx must apply preventOrphanWords to item.title in .btnLabel"
+    );
+    assert.ok(
+      cssContent.includes("text-wrap: balance") && cssContent.includes("text-wrap: pretty"),
+      "TripletButton.module.css must specify text-wrap: balance and pretty on .btnLabel"
+    );
+    assert.ok(
+      cssContent.includes("clamp("),
+      "TripletButton.module.css must use fluid clamp for font-size"
+    );
+  });
+
+  it("should render hover cards strictly above the buttons without covering them", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+    const heroCssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("item.hoverCard") &&
+        componentContent.includes("styles.hoverCard"),
+      "TripletButton.tsx must conditionally render hoverCard"
+    );
+    assert.ok(
+      componentContent.includes("styles.hoverPointer"),
+      "TripletButton.tsx must render hover pointer caret"
+    );
+    assert.ok(
+      componentContent.includes("styles.hoverCallout"),
+      "TripletButton.tsx must render callout box in hoverCard"
+    );
+    assert.ok(
+      cssContent.includes("bottom: calc(100% + 14px)"),
+      "hoverCard must be positioned above the button so it never covers up the button and avoids scrolling truncation"
+    );
+    assert.ok(
+      heroCssContent.includes("overflow-y: visible"),
+      "page.module.css hero section must have overflow-y: visible to prevent card clipping"
+    );
+  });
+
+  it("should use viewport-safe width on hoverCard so cards never overflow the screen", () => {
+    const cssContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      cssContent.includes("width: min(460px, 92vw)"),
+      "hoverCard must use viewport-clamped width: min(460px, 92vw)"
+    );
+    assert.ok(
+      cssContent.includes('data-column="1"') && cssContent.includes('data-column="3"'),
+      "CSS must define edge-anchor overrides for data-column=1 and data-column=3"
+    );
+  });
+
+  it("should pass data-column to each TripletButton so edge cards never clip off-screen", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("column?: number"),
+      "TripletButtonProps must declare optional column prop"
+    );
+    assert.ok(
+      componentContent.includes("data-column={column}"),
+      "TripletButton wrapper div must forward data-column attribute"
+    );
+    assert.ok(
+      componentContent.includes("column={index + 1}"),
+      "TripletButtonGroup must pass 1-based column index to each TripletButton"
+    );
+  });
+
+  it("should apply preventOrphanWords to hover card title and prompt", () => {
+    const componentContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.hoverCard.title)"),
+      "TripletButton must apply preventOrphanWords to hoverCard.title"
+    );
+    assert.ok(
+      componentContent.includes("preventOrphanWords(item.hoverCard.prompt)"),
+      "TripletButton must apply preventOrphanWords to hoverCard.prompt"
+    );
+  });
+
+  it("should use SEE MORE as the action label on all three hero hover cards", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+
+    const matches = [...pageContent.matchAll(/actionLabel:\s*["']SEE MORE["']/g)];
+    assert.ok(
+      matches.length >= 3,
+      `All three hover cards must use actionLabel: "SEE MORE" — found ${matches.length}`
+    );
+  });
+
+  it("should configure all three hero hover cards with exact mockup copy and dedicated tool links", () => {
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const nextConfigContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "next.config.ts"),
+      "utf-8"
+    );
+
+    // Cubicon
+    assert.ok(
+      pageContent.includes("Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots."),
+      "page.tsx must contain exact Cubicon hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience one of the puzzle challenges designed to distinguish humans from automated bots."),
+      "page.tsx must contain exact Cubicon callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/cubicon"'),
+      "Cubicon hover card must link to /cubicon"
+    );
+    assert.ok(
+      nextConfigContent.includes('source: "/cubion"') &&
+        nextConfigContent.includes('destination: "/cubicon"'),
+      "next.config.ts must rewrite /cubion to /cubicon"
+    );
+
+    // Research Libs
+    assert.ok(
+      pageContent.includes("Research Libs turns one survey into two valuable marketing resources:"),
+      "page.tsx must contain exact Research Libs hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience how survey answers can become engaging stories and useful marketing content."),
+      "page.tsx must contain exact Research Libs callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/research-lib"'),
+      "Research Libs hover card must link to /research-lib"
+    );
+
+    // TRIAD
+    assert.ok(
+      pageContent.includes("Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment"),
+      "page.tsx must contain exact TRIAD hover description"
+    );
+    assert.ok(
+      pageContent.includes("Experience how measuring practical and emotional drivers can help reveal emerging directional patterns."),
+      "page.tsx must contain exact TRIAD callout prompt"
+    );
+    assert.ok(
+      pageContent.includes('actionHref: "/triad"'),
+      "TRIAD hover card must link to /triad"
+    );
+  });
+
+  it("should coordinate navbar auto-collapse when hovering over triplet buttons", () => {
+    const navbarContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "Navbar.tsx"),
+      "utf-8"
+    );
+    const tripletContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      "utf-8"
+    );
+    const pageContent = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.tsx"),
+      "utf-8"
+    );
+    const tripletCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      navbarContent.includes("isCollapsed") &&
+        navbarContent.includes("buyfacts:navbar-collapse"),
+      "Navbar.tsx must support isCollapsed prop and listen for buyfacts:navbar-collapse events"
+    );
+    assert.ok(
+      tripletContent.includes("buyfacts:navbar-collapse") &&
+        tripletContent.includes("onHoverChange"),
+      "TripletButton.tsx must dispatch buyfacts:navbar-collapse and notify onHoverChange"
+    );
+    assert.ok(
+      pageContent.includes("isNavHoverCollapsed") &&
+        pageContent.includes("isCollapsed={isNavHoverCollapsed}") &&
+        pageContent.includes("onHoverChange={setIsNavHoverCollapsed}"),
+      "page.tsx must wire isNavHoverCollapsed state between Navbar and TripletButtonGroup"
+    );
+    assert.ok(
+      tripletCss.includes("z-index: 1100"),
+      "TripletButton.module.css must elevate hoverCard z-index to 1100 during transitions"
+    );
+  });
+
+  it("should enforce balanced orphan prevention across 3, 4, and 5-word phrases", async () => {
+    // Dynamically import the preventOrphanWords utility from lib/orphan-prevention
+    const { preventOrphanWords } = await import(
+      "../lib/orphan-prevention"
+    );
+
+    // 3-word title: all 3 words bound so neither line 1 nor line 2 has an orphan single word
+    const title3 = preventOrphanWords("Validate Survey Participants");
+    assert.equal(
+      title3,
+      "Validate\u00A0Survey\u00A0Participants",
+      "3-word titles must bind all words to prevent an isolated single-word line"
+    );
+
+    // 4-word title: pair 1+2 and 3+4 for balanced 2x2 wrapping
+    const title4 = preventOrphanWords("Faster Digital Asset Creation");
+    assert.equal(
+      title4,
+      "Faster\u00A0Digital Asset\u00A0Creation",
+      "4-word titles must pair words as 2-and-2 so any line break yields 2 words per line"
+    );
+
+    // 5-word title: pair 1+2 and 3+4+5 for balanced 2 and 3 wrapping
+    const title5 = preventOrphanWords("Market Changes in Real Time");
+    assert.equal(
+      title5,
+      "Market\u00A0Changes in\u00A0Real\u00A0Time",
+      "5-word titles must pair words as 2-and-3 so any line break yields at least 2 words per line"
+    );
+  });
+
+  it("should configure hero and triplet elements with fluid vertical clamping to fit within non-mobile screens", () => {
+    const pageCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      "utf-8"
+    );
+    const tripletCss = fs.readFileSync(
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      "utf-8"
+    );
+
+    assert.ok(
+      pageCss.includes("min-height: 100svh"),
+      "Hero section must use min-height: 100svh"
+    );
+    assert.ok(
+      pageCss.includes("overflow-y: visible") && pageCss.includes("overflow-x: clip"),
+      "Hero section must allow hover cards to extend vertically (overflow-y: visible) while clipping horizontal scroll"
+    );
+    assert.ok(
+      tripletCss.includes("min-height: clamp("),
+      "Triplet buttons must use clamp() on min-height to fit within viewport height"
+    );
+    assert.ok(
+      tripletCss.includes("width: clamp("),
+      "Triplet button icons must use clamp() to scale down responsively"
+    );
+  });
 });
 
 describe("Zero-Emoji Compliance Test Suite", () => {
@@ -286,9 +642,13 @@ describe("Zero-Emoji Compliance Test Suite", () => {
     const targetFiles = [
       path.join(BUYFACTS_ROOT, "app", "page.tsx"),
       path.join(BUYFACTS_ROOT, "app", "page.module.css"),
+      path.join(BUYFACTS_ROOT, "app", "triad", "page.tsx"),
+      path.join(BUYFACTS_ROOT, "app", "triad", "triad.module.css"),
       path.join(BUYFACTS_ROOT, "components", "Navbar.tsx"),
       path.join(BUYFACTS_ROOT, "components", "Navbar.module.css"),
       path.join(BUYFACTS_ROOT, "components", "TripletButton.tsx"),
+      path.join(BUYFACTS_ROOT, "components", "TripletButton.module.css"),
+      path.join(BUYFACTS_ROOT, "lib", "orphan-prevention.ts"),
     ];
 
     const emojiRegex =

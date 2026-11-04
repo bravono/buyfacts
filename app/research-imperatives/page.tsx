@@ -18,6 +18,26 @@ interface ButtonData {
   hoverShadow: string;
   mediaType: "video" | "image" | "audio" | "pdf" | "docx";
   mediaUrl: string;
+  seeItUrl?: string;
+  hearItUrl?: string;
+  readItUrl?: string;
+}
+
+/**
+ * Returns true when the URL points at a video file, so a video can be routed to SEE IT
+ * even when the database row still carries a generic mediaType ("pdf", "image", ...).
+ */
+function isVideoUrl(url?: string): boolean {
+  if (!url) return false;
+  return (
+    /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(url) ||
+    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//i.test(url)
+  );
+}
+
+function isAudioUrl(url?: string): boolean {
+  if (!url) return false;
+  return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)($|\?|#)/i.test(url);
 }
 
 const DEFAULT_TL_BUTTONS: ButtonData[] = [
@@ -29,7 +49,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
   },
   {
     label: "Cohort Research",
@@ -39,7 +60,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://pdfobject.com/pdf/sample.pdf",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
   },
   {
     label: "Survey Engagement",
@@ -49,7 +71,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
   },
   {
     label: "Hybrid Marketing",
@@ -59,7 +82,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
   },
   {
     label: "Content Creation",
@@ -69,7 +93,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.orimi.com/pdf-test.pdf",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
   },
   {
     label: "Marketing Leadership",
@@ -79,7 +104,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "var(--color-blue-5)",
     hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
     mediaType: "audio",
-    mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
   },
   {
     label: "Research Leadership",
@@ -89,7 +115,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
     mediaType: "video",
-    mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
   },
   {
     label: "Early Recognition",
@@ -100,6 +127,7 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
     mediaType: "video",
     mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
   },
   {
     label: "Wisdom Gap",
@@ -109,7 +137,8 @@ const DEFAULT_TL_BUTTONS: ButtonData[] = [
     textColor: "white",
     hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
     mediaType: "pdf",
-    mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    mediaUrl: "",
+    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
   },
 ];
 
@@ -137,10 +166,51 @@ export default function PortfolioPage() {
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
           const apiTL = data.buttons
-            .filter((btn: any) => btn.category === "Research Imperatives")
+            .filter(
+              (btn: any) =>
+                btn.category === "Research Imperatives" ||
+                btn.category === "Thought Leadership" ||
+                btn.id?.startsWith("btn-tl") ||
+                (typeof btn.category === "string" &&
+                  (btn.category.toLowerCase().includes("imperative") ||
+                    btn.category.toLowerCase().includes("thought") ||
+                    btn.category.toLowerCase().includes("leadership")))
+            )
             .map((btn: any, idx: number) => {
               const defaultFallback = DEFAULT_TL_BUTTONS[idx] || DEFAULT_TL_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
+              const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
+              const resolvedHearItUrl = (btn.hearItUrl || "").trim();
+              const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
+
+              // THE PRIMARY BUTTON DECIDES WHAT THE PLAYER SHOWS FIRST.
+              // SEE IT / HEAR IT / READ IT are optional extras and never influence the
+              // primary content — a post may have all three, some, or none of them.
+              // The primary type comes from the row's mediaType, corrected by the
+              // extension of the primary link itself (and by mediaUrl when mediaType is absent).
+              const primaryKind: "video" | "audio" | "pdf" | "docx" | "image" | null =
+                isVideoUrl(resolvedMediaUrl)
+                  ? "video"
+                  : isAudioUrl(resolvedMediaUrl)
+                    ? "audio"
+                    : /(\.docx|\.doc)($|\?|#)/i.test(resolvedMediaUrl)
+                      ? "docx"
+                      : /(\.pdf)($|\?|#)/i.test(resolvedMediaUrl)
+                        ? "pdf"
+                        : /(\.(png|jpe?g|gif|webp|svg|avif))($|\?|#)/i.test(resolvedMediaUrl)
+                          ? "image"
+                          : null;
+
+              const storedType = (btn.mediaType || defaultFallback.mediaType) as
+                | "video"
+                | "image"
+                | "audio"
+                | "pdf"
+                | "docx";
+
+              let resolvedMediaType = primaryKind ?? storedType;
+
               return {
                 label: btn.label || defaultFallback.label,
                 tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
@@ -148,13 +218,18 @@ export default function PortfolioPage() {
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: (btn.mediaType || defaultFallback.mediaType) as "video" | "image" | "audio" | "pdf" | "docx",
-                mediaUrl: btn.mediaUrl || defaultFallback.mediaUrl,
+                mediaType: resolvedMediaType,
+                mediaUrl: resolvedMediaUrl,
+                seeItUrl: resolvedSeeItUrl,
+                hearItUrl: resolvedHearItUrl,
+                readItUrl: resolvedReadItUrl,
               };
             });
 
           if (apiTL.length > 0) {
             setThoughtLeadershipButtons(apiTL);
+          } else {
+            console.warn("No Research Imperatives buttons matched from /api/buttons response:", data.buttons);
           }
         }
       } catch (err) {
@@ -196,6 +271,8 @@ export default function PortfolioPage() {
                 setShowWelcome(false);
               }}
             />
+              <strong>RESEARCH INNOVATION</strong>
+
           </div>
 
           {/* Right Column: MockMediaPlayer component configured dynamically */}
@@ -207,6 +284,10 @@ export default function PortfolioPage() {
                 description={showWelcome ? undefined : currentMedia.description}
                 mediaType={currentMedia.mediaType}
                 mediaUrl={currentMedia.mediaUrl}
+                seeItUrl={currentMedia.seeItUrl}
+                hearItUrl={currentMedia.hearItUrl}
+                moreDetailUrl={currentMedia.readItUrl}
+                readItUrl={currentMedia.readItUrl}
                 pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}

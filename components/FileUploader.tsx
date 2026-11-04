@@ -21,9 +21,15 @@ import {
   Film,
   Music,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { FilePreview } from './FilePreview';
 import { sanitizeFolderPrefix } from '@/lib/minio';
+import {
+  convertImageToWebp,
+  isConvertibleImage,
+  changePathToWebp,
+} from '@/lib/image-optimizer';
 import styles from './FileUploader.module.css';
 
 // 1GB File Size Limit in Bytes (1024MB)
@@ -57,6 +63,9 @@ export interface QueueItem {
   error?: string;
   result?: UploadSuccessResult;
   mediaType: 'video' | 'image' | 'audio' | 'pdf';
+  originalSize?: number;
+  optimized?: boolean;
+  savingsPercentage?: number;
 }
 
 interface FileUploaderProps {
@@ -147,6 +156,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
   // Upload method (default: 'multipart' for robust resumable chunked transfers)
   const [uploadMethod, setUploadMethod] = useState<'multipart' | 'server' | 'presigned'>('multipart');
+
+  // Image optimization (auto-convert JPG, PNG, BMP to WebP prior to upload)
+  const [autoConvertToWebp, setAutoConvertToWebp] = useState<boolean>(true);
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
 
   // Drag and drop & Queue state
   const [dragActive, setDragActive] = useState(false);
@@ -269,45 +282,77 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     return results;
   };
 
-  // Add files to queue (handles both single files and directory entries with relative paths)
-  const addFilesToQueue = useCallback((
+  // Add files to queue (handles single files, directory entries, and automatic WebP conversion)
+  const addFilesToQueue = useCallback(async (
     newFiles: FileList | File[] | { file: File; relativePath?: string }[]
   ) => {
     setGlobalError(null);
     setBatchResults(null);
 
-    const itemsToAdd: QueueItem[] = [];
-    const errors: string[] = [];
+    const rawList = Array.from(newFiles as any[]);
+    if (rawList.length === 0) return;
 
-    Array.from(newFiles as any[]).forEach((itemEntry: any) => {
-      const file: File = itemEntry && typeof itemEntry === 'object' && 'file' in itemEntry ? itemEntry.file : itemEntry;
-      const relativePath: string | undefined = itemEntry && typeof itemEntry === 'object' && 'relativePath' in itemEntry
-        ? itemEntry.relativePath
-        : (file as any).webkitRelativePath || undefined;
+    if (autoConvertToWebp) {
+      setIsOptimizing(true);
+    }
 
-      const error = validateFile(file);
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
-      } else {
-        itemsToAdd.push({
-          id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          file,
-          relativePath,
-          status: 'ready',
-          progress: 0,
-          mediaType: detectMediaType(file),
-        });
+    try {
+      const itemsToAdd: QueueItem[] = [];
+      const errors: string[] = [];
+
+      for (const itemEntry of rawList) {
+        let file: File = itemEntry && typeof itemEntry === 'object' && 'file' in itemEntry ? itemEntry.file : itemEntry;
+        let relativePath: string | undefined = itemEntry && typeof itemEntry === 'object' && 'relativePath' in itemEntry
+          ? itemEntry.relativePath
+          : (file as any).webkitRelativePath || undefined;
+
+        let originalSize = file.size;
+        let optimized = false;
+        let savingsPercentage = 0;
+
+        // Auto-convert eligible image formats (JPG, PNG, BMP) to WebP if enabled
+        if (autoConvertToWebp && isConvertibleImage(file)) {
+          const optResult = await convertImageToWebp(file, { quality: 0.85 });
+          file = optResult.file;
+          if (optResult.converted) {
+            optimized = true;
+            originalSize = optResult.originalSize;
+            savingsPercentage = optResult.savingsPercentage;
+            if (relativePath) {
+              relativePath = changePathToWebp(relativePath);
+            }
+          }
+        }
+
+        const error = validateFile(file);
+        if (error) {
+          errors.push(`${file.name}: ${error}`);
+        } else {
+          itemsToAdd.push({
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            file,
+            relativePath,
+            status: 'ready',
+            progress: 0,
+            mediaType: detectMediaType(file),
+            originalSize: optimized ? originalSize : undefined,
+            optimized,
+            savingsPercentage: optimized ? savingsPercentage : undefined,
+          });
+        }
       }
-    });
 
-    if (errors.length > 0) {
-      setGlobalError(errors.join(' | '));
-    }
+      if (errors.length > 0) {
+        setGlobalError(errors.join(' | '));
+      }
 
-    if (itemsToAdd.length > 0) {
-      setFileQueue((prev) => [...prev, ...itemsToAdd]);
+      if (itemsToAdd.length > 0) {
+        setFileQueue((prev) => [...prev, ...itemsToAdd]);
+      }
+    } finally {
+      setIsOptimizing(false);
     }
-  }, []);
+  }, [autoConvertToWebp]);
 
   // Drag and Drop handlers
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -994,6 +1039,33 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </div>
         </div>
 
+        {/* WebP Auto-Conversion & Optimization Configuration */}
+        <div className={styles.optimizationBar}>
+          <div className={styles.optLabelWrapper}>
+            <Sparkles className="w-4 h-4 text-[var(--interactive-orange)]" />
+            <span className={styles.optLabelText}>Image Optimization</span>
+            <span className={styles.optDescription}>Auto-convert JPG and PNG assets to WebP format before upload</span>
+          </div>
+          <div className={styles.optControls}>
+            <button
+              type="button"
+              disabled={isUploading || isOptimizing}
+              onClick={() => setAutoConvertToWebp((prev) => !prev)}
+              className={`${styles.optToggleBtn} ${autoConvertToWebp ? styles.optToggleBtnActive : ''}`}
+              title="Automatically converts JPG, PNG, and BMP images into modern WebP format in browser memory prior to uploading, saving up to 80% bandwidth"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {autoConvertToWebp ? 'Auto-WebP: ON (85% Quality)' : 'Auto-WebP: OFF (Keep Originals)'}
+            </button>
+            {isOptimizing && (
+              <span className={styles.optimizingIndicator}>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--interactive-orange)]" />
+                Optimizing images in browser...
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Successful Batch Banner */}
         {batchResults && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -1204,6 +1276,17 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                             </div>
                             <div className={styles.queueItemDetails}>
                               <span>{formatBytes(item.file.size)}</span>
+                              {item.optimized && item.originalSize && item.savingsPercentage ? (
+                                <>
+                                  <span>•</span>
+                                  <span
+                                    className={styles.savingsBadge}
+                                    title={`Optimized from ${formatBytes(item.originalSize)} to ${formatBytes(item.file.size)}`}
+                                  >
+                                    WebP (-{item.savingsPercentage}%)
+                                  </span>
+                                </>
+                              ) : null}
                               <span>•</span>
                               <select
                                 value={item.mediaType}
