@@ -157,9 +157,6 @@ export default function Navbar({
   const isInnovationsActive = pathname === "/products-services";
   const isResearchActive = pathname === "/research-imperatives";
   const isCubiconActive = pathname.startsWith("/cubicon");
-  const isResearchLibActive = pathname.startsWith("/research-lib");
-  const isTriadActive = pathname.startsWith("/triad") || pathname.startsWith("/know-your-major");
-  const isRuleOfThreeActive = pathname.startsWith("/rule-of-three") || pathname.startsWith("/r3");
   const isVaultActive = pathname.startsWith("/vault");
 
   const isHidden =
@@ -225,33 +222,6 @@ export default function Navbar({
             onClick={() => setIsContactCollapsed(false)}
           >
             CUBICON
-          </Link>
-
-          <Link
-            href="/research-lib"
-            className={`${styles.navLink} ${isResearchLibActive ? styles.navLinkActive : ""}`}
-            id="nav-link-research-labs"
-            onClick={() => setIsContactCollapsed(false)}
-          >
-            RESEARCH LABS
-          </Link>
-
-          <Link
-            href="/triad"
-            className={`${styles.navLink} ${isTriadActive ? styles.navLinkActive : ""}`}
-            id="nav-link-triad"
-            onClick={() => setIsContactCollapsed(false)}
-          >
-            TRIAD
-          </Link>
-
-          <Link
-            href="/rule-of-three"
-            className={`${styles.navLink} ${isRuleOfThreeActive ? styles.navLinkActive : ""}`}
-            id="nav-link-rule-of-three"
-            onClick={() => setIsContactCollapsed(false)}
-          >
-            RULE OF THREE
           </Link>
 
           <Link
@@ -350,39 +320,6 @@ export default function Navbar({
             id="mob-link-cubicon"
           >
             CUBICON
-          </Link>
-          <Link
-            href="/research-lib"
-            onClick={() => {
-              closeMobileMenu();
-              setIsContactCollapsed(false);
-            }}
-            className={`${styles.mobileNavLink} ${isResearchLibActive ? styles.mobileNavLinkActive : ""}`}
-            id="mob-link-research-labs"
-          >
-            RESEARCH LABS
-          </Link>
-          <Link
-            href="/triad"
-            onClick={() => {
-              closeMobileMenu();
-              setIsContactCollapsed(false);
-            }}
-            className={`${styles.mobileNavLink} ${isTriadActive ? styles.mobileNavLinkActive : ""}`}
-            id="mob-link-triad"
-          >
-            TRIAD
-          </Link>
-          <Link
-            href="/rule-of-three"
-            onClick={() => {
-              closeMobileMenu();
-              setIsContactCollapsed(false);
-            }}
-            className={`${styles.mobileNavLink} ${isRuleOfThreeActive ? styles.mobileNavLinkActive : ""}`}
-            id="mob-link-rule-of-three"
-          >
-            RULE OF THREE
           </Link>
           <Link
             href="/vault"
