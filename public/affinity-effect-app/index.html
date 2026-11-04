@@ -16105,7 +16105,7 @@
     });
 
     e("wave").value = "2026-Q2";
-    e("participant").value = "BOOK-EXAMPLE";
+    e("participant").value = "SYN-001";
 
     function findSeedRecord(waveId, participantId) {
       return [...D.assessments, ...D.book_example].find(
@@ -16591,7 +16591,7 @@
 
       document.querySelectorAll(".load-book-wave-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          e("participant").value = "BOOK-EXAMPLE";
+          e("participant").value = "SYN-001";
           e("wave").value = btn.dataset.loadBookWave;
           selectedTriadId = "perception_practical_fit";
           switchActive();

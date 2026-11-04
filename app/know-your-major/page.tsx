@@ -574,7 +574,7 @@ export default function KnowYourMajorTriadPage() {
   const [showPersonalizedLabels, setShowPersonalizedLabels] = useState<boolean>(true);
   const [contourDisplayMode, setContourDisplayMode] = useState<"HIGHLIGHTS" | "COMPOSITE">("HIGHLIGHTS");
 
-  const [journeyEnabled, setJourneyEnabled] = useState<boolean>(true);
+  const [journeyEnabled, setJourneyEnabled] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string>("YEAR_4");
   const [periodFrom, setPeriodFrom] = useState<string>("2026-09-01");
   const [periodTo, setPeriodTo] = useState<string>("2027-05-30");
@@ -1981,7 +1981,7 @@ export default function KnowYourMajorTriadPage() {
             </div>
 
             {(() => {
-              const domains: KymDomain[] = ["Cognitive", "Creative", "Social", "Physical"];
+              const domains: KymDomain[] = ["Cognitive", "Creative", "Social", "Practical"];
               const activeSource = FOUR_YEAR_JOURNEY[selectedYear];
               const hasLiveAnswers = Object.keys(reflections).length > 0;
 
