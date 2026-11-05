@@ -251,10 +251,9 @@ function renderButtonLabel(lines: string[], fontSize: number): React.ReactNode {
 function resolveButtons(buttons?: DashboardButton[]): DashboardButton[] {
   return BUTTON_SLOTS.map((_, index) => {
     const provided = buttons?.[index];
-    const fallback = DEFAULT_BUTTONS[index];
     return {
-      label: provided?.label ?? fallback.label,
-      mediaUrl: provided?.mediaUrl ?? provided?.href ?? fallback.mediaUrl,
+      label: provided?.label ?? "",
+      mediaUrl: provided?.mediaUrl ?? provided?.href,
     };
   });
 }
