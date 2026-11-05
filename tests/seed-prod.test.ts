@@ -9,18 +9,18 @@ import {
 import { verifyPassword } from "../lib/auth/password";
 
 describe("Production Seed Script (User & DashboardButton Only)", () => {
-  it("should define exactly 2 admin users and 18 canonical dashboard buttons", () => {
+  it("should define exactly 2 admin users and 20 canonical dashboard buttons", () => {
     assert.equal(PRODUCTION_USERS.length, 2);
     assert.equal(PRODUCTION_USERS[0].email, "rmj@robertjohnson.com");
     assert.equal(PRODUCTION_USERS[1].email, "ahbideeny@gmail.com");
     assert.ok(PRODUCTION_USERS.every((u) => u.role === "admin"));
 
-    assert.equal(PRODUCTION_DASHBOARD_BUTTONS.length, 18);
+    assert.equal(PRODUCTION_DASHBOARD_BUTTONS.length, 20);
     const services = PRODUCTION_DASHBOARD_BUTTONS.filter(
-      (b) => b.category === "Products & Services"
+      (b) => b.category === "Products & Services" && !b.id.endsWith("-000")
     );
     const imperatives = PRODUCTION_DASHBOARD_BUTTONS.filter(
-      (b) => b.category === "Research Imperatives"
+      (b) => b.category === "Research Imperatives" && !b.id.endsWith("-000")
     );
     assert.equal(services.length, 9);
     assert.equal(imperatives.length, 9);
@@ -29,7 +29,7 @@ describe("Production Seed Script (User & DashboardButton Only)", () => {
   it("should upsert all users and dashboard buttons without calling deleteMany or touching other tables", async () => {
     const upsertedUsers: Array<{
       where: { email: string };
-      update: { name: string; passwordHash: string; role: string };
+      update: { name: string; role: string };
       create: { email: string; name: string; passwordHash: string; role: string };
     }> = [];
     const upsertedButtons: Array<{
@@ -56,21 +56,17 @@ describe("Production Seed Script (User & DashboardButton Only)", () => {
     const result = await seedProductionDatabase(mockClient, "CustomAdminPass99!");
 
     assert.equal(result.usersSeeded, 2);
-    assert.equal(result.buttonsSeeded, 18);
+    assert.equal(result.buttonsSeeded, 20);
     assert.equal(upsertedUsers.length, 2);
-    assert.equal(upsertedButtons.length, 18);
+    assert.equal(upsertedButtons.length, 20);
 
     for (const u of upsertedUsers) {
       const validCreate = await verifyPassword(
         "CustomAdminPass99!",
         u.create.passwordHash
       );
-      const validUpdate = await verifyPassword(
-        "CustomAdminPass99!",
-        u.update.passwordHash
-      );
       assert.equal(validCreate, true);
-      assert.equal(validUpdate, true);
+      assert.equal("passwordHash" in u.update, false, "existing passwords must not be reset");
     }
   });
 

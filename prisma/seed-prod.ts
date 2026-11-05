@@ -10,12 +10,14 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 /**
- * Production seed script (Users + DashboardButton only).
+ * Production seed script. Non-destructive and idempotent: safe on a live database.
  *
- * This script is deliberately narrow: it creates or updates the two production
- * admin accounts and the 18 canonical dashboard buttons, and touches nothing
- * else. It never calls deleteMany, so running it against a live database cannot
- * wipe research data, vault assets or analytics.
+ * It never calls deleteMany. Every record is upserted or inserted only if missing:
+ *  - Users: created if missing; existing accounts keep their password.
+ *  - DashboardButtons: created if missing; existing rows get their label/text refreshed
+ *    but keep their media links and type.
+ *  - Media assets, Cubicon sequences/tasks, vault topics/assets, the default
+ *    ResearchLib survey: upserted or created only when absent.
  *
  * The seeding engine is exported so it can be driven by a real Prisma client in
  * `main()` or by a lightweight stub in tests.
@@ -30,14 +32,14 @@ export interface SeedProdUserCreate {
 
 export interface SeedProdUserUpsertArgs {
   where: { email: string };
-  update: { name: string; passwordHash: string; role: string };
+  update: { name: string; role: string };
   create: SeedProdUserCreate;
 }
 
 export interface DashboardButtonSeed {
   id: string;
   label: string;
-  mediaUrl: string;
+  descriptionText: string;
   readItUrl: string;
   mediaType: string;
   seeItUrl: string;
@@ -50,7 +52,7 @@ export interface DashboardButtonSeed {
 
 export interface SeedProdDashboardButtonUpsertArgs {
   where: { id: string };
-  update: DashboardButtonSeed;
+  update: Partial<DashboardButtonSeed>;
   create: DashboardButtonSeed;
 }
 
@@ -87,240 +89,266 @@ export const PRODUCTION_USERS: ReadonlyArray<{
 ];
 
 export const PRODUCTION_DASHBOARD_BUTTONS: DashboardButtonSeed[] = [
-{
-  id: "btn-srv-001",
-  label: "Research Planning",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Inclusive Research Definition",
-  description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
-  category: "Products & Services",
-  color: "#9b5d00"
-},
-{
-  id: "btn-srv-002",
-  label: "Survey Design",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Make Each Question Actionable",
-  description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
-  category: "Products & Services",
-  color: "#ea425f"
-},
-{
-  id: "btn-srv-003",
-  label: "Story-Based Surveys",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Execute a Dual-Based Survey Model",
-  description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
-  category: "Products & Services",
-  color: "#ff9900"
-},
-{
-  id: "btn-srv-004",
-  label: "Improve Surveys",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Increase the Return on Research",
-  description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
-  category: "Products & Services",
-  color: "#006398"
-},
-{
-  id: "btn-srv-005",
-  label: "Participant Validation",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Play Cubicon Puzzle Games",
-  description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
-  category: "Products & Services",
-  color: "#ffc164"
-},
-{
-  id: "btn-srv-006",
-  label: "Survey Fieldwork",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Quality-Centric Survey Execution",
-  description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
-  category: "Products & Services",
-  color: "#b0e843"
-},
-{
-  id: "btn-srv-007",
-  label: "Content Value",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Maximize the Return on Content",
-  description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
-  category: "Products & Services",
-  color: "#42ea86"
-},
-{
-  id: "btn-srv-008",
-  label: "Pattern Insights",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Active Pattern Analytics",
-  description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
-  category: "Products & Services",
-  color: "#ed40ed"
-},
-{
-  id: "btn-srv-009",
-  label: "Audience Validation",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Opportunity Validation",
-  description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
-  category: "Products & Services",
-  color: "#532254"
-},
-{
-  id: "btn-tl-001",
-  label: "Research Methods",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Exceed Stakeholder Wants and Needs",
-  description: "Rigorous multi-channel research protocols designed to consistently surpass stakeholder expectations with bulletproof empirical validation.",
-  category: "Research Imperatives",
-  color: "#006398"
-},
-{
-  id: "btn-tl-002",
-  label: "Cohort Research",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Smaller Groups that Know the Topic",
-  description: "Targeted cohort intelligence focusing on niche practitioner panels and specialist groups who possess deep, authoritative domain expertise.",
-  category: "Research Imperatives",
-  color: "#ffc164"
-},
-{
-  id: "btn-tl-003",
-  label: "Survey Engagement",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Optimize Question Value",
-  description: "Structuring engaging, high-yield survey instruments that maximize participant completion rates while extracting deep, high-value data.",
-  category: "Research Imperatives",
-  color: "#42ea86"
-},
-{
-  id: "btn-tl-004",
-  label: "Hybrid Marketing",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Digital Reach and a Human Touch",
-  description: "Harmonizing high-scale digital reach with consultative human engagement to cultivate authentic relationships and sustained audience loyalty.",
-  category: "Research Imperatives",
-  color: "#532254"
-},
-{
-  id: "btn-tl-005",
-  label: "Content Creation",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Assets that Engage with Thought Leadership",
-  description: "Transforming empirical data points into compelling thought leadership whitepapers, interactive infographics, and high-impact digital narratives.",
-  category: "Research Imperatives",
-  color: "#ffc164"
-},
-{
-  id: "btn-tl-006",
-  label: "Marketing Leadership",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Best Practices by Marketing Area",
-  description: "Curated best practices across enterprise marketing divisions, aligning narrative precision with measurable campaign outcomes and growth metrics.",
-  category: "Research Imperatives",
-  color: "#b0e843"
-},
-{
-  id: "btn-tl-007",
-  label: "Research Leadership",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Return on Primary Research",
-  description: "High-fidelity primary research methodologies delivering strategic insights, benchmark telemetry, and quantitative clarity to guide executive leadership.",
-  category: "Research Imperatives",
-  color: "#ff9900"
-},
-{
-  id: "btn-tl-008",
-  label: "Early Recognition",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Earlier Recognition for Your Time Advantage",
-  description: "Detecting nascent market signals and emerging customer sentiment early to secure a definitive first-mover advantage.",
-  category: "Research Imperatives",
-  color: "#ea425f"
-},
-{
-  id: "btn-tl-009",
-  label: "Wisdom Gap",
-  mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
-  mediaType: "video",
-  seeItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-  hearItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
-  subtitle: "Research Becomes Intellectual Currency",
-  description: "Bridging the gap between raw data collection and actionable organizational wisdom, converting research findings into proprietary intellectual currency.",
-  category: "Research Imperatives",
-  color: "#9b5d00"
-}
+  {
+    "id": "btn-srv-000",
+    "label": "Innovations That Save Time",
+    "descriptionText": "Saving time in research begins with knowing where effort creates value and where it is wasted. BuyFacts innovations help marketers and researchers strengthen participant quality, understand the practical and emotional drivers behind decisions, and turn findings into knowledge that remains useful beyond a single report.\n\nCubicon, TRIAD, Research Libs, and Rule of Three each address a distinct challenge. Research planning, survey improvement, creation, fieldwork, and research-led content extend their value throughout the process. Together, these innovations combine rigor with efficiency, reducing avoidable effort and increasing the return on research through more useful findings, earlier recognition, and more time to make better choices.",
+    "readItUrl": "",
+    "mediaType": "video",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "",
+    "description": "Saving time in research begins with knowing where effort creates value and where it is wasted. BuyFacts innovations help marketers and researchers strengthen participant quality, understand the practical and emotional drivers behind decisions, and turn findings into knowledge that remains useful beyond a single report.",
+    "category": "Products & Services",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-tl-000",
+    "label": "Roles and Topics",
+    "descriptionText": "Seeing change sooner gives people more time to make better choices. This dashboard connects nine roles and topics to practical questions about buyer behavior, research quality, and coordinated action.\n\nStart with the responsibility closest to your work: leadership, marketing, research, survey design, agency direction, or stewardship. Then ask what you need to recognize before a decision becomes urgent.\n\nBuyFacts focuses on useful evidence, not information for its own sake. Each topic helps reduce uncertainty, save time, and turn new understanding into better choices.",
+    "readItUrl": "",
+    "mediaType": "video",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "",
+    "description": "Seeing change sooner gives people more time to make better choices. This dashboard connects nine roles and topics to practical questions about buyer behavior, research quality, and coordinated action.",
+    "category": "Research Imperatives",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-srv-001",
+    "label": "Cubicon",
+    "descriptionText": "Reliable research starts with genuine people. Cubicon helps validate that survey participants are human through engaging visual puzzle challenges that call for spatial reasoning and contextual interpretation. This additional validation layer helps protect surveys from bots and rogue respondents, increasing genuine participation that reflects the market's wants, needs, and experiences.\n\nWhen automated responses compromise a study, findings may be rejected, questioned, or collected again. By helping prevent that contamination before it reaches analysis, Cubicon reduces avoidable rework, saves research time, and supports more dependable findings that marketers and researchers can use with greater confidence.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Verify Human Engagement",
+    "description": "Reliable research starts with genuine people. Cubicon helps validate that survey participants are human through engaging visual puzzle challenges that call for spatial reasoning and contextual interpretation. This additional validation layer helps protect surveys from bots and rogue respondents, increasing genuine participation that reflects the market's wants, needs, and experiences.",
+    "category": "Products & Services",
+    "color": "#9b5d00"
+  },
+  {
+    "id": "btn-srv-002",
+    "label": "TRIAD",
+    "descriptionText": "TRIAD helps marketers recognize developing patterns sooner and understand where attention may be most valuable. It captures directional changes in the practical and emotional factors that influence buyers' affinity for particular vendors and products.\n\nKnowledgeable participants express their sentiment about the drivers shaping their perceptions and experiences, while identifying the relative importance of those drivers. Repeated measurements reveal where sentiment is strengthening, weakening, or diverging among audience groups. This continuing view moves beyond a single research snapshot to help marketers recognize changes in buyer affinity earlier, refine their priorities, and gain more time to make informed choices.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Recognize Developing Patterns Sooner",
+    "description": "TRIAD helps marketers recognize developing patterns sooner and understand where attention may be most valuable. It captures directional changes in the practical and emotional factors that influence buyers' affinity for particular vendors and products.",
+    "category": "Products & Services",
+    "color": "#ea425f"
+  },
+  {
+    "id": "btn-srv-003",
+    "label": "Research Libs",
+    "descriptionText": "Traditional surveys make answers easy to compare, but often leave the personal experience behind each choice unexplored. Research Libs addresses that gap with a dual survey method: identical response choices support structured quantitative measurement while participants use those choices to build connected stories in their own voices. Participants can also add their own words, revealing context that fixed choices may miss.\n\nThe result is comparable research evidence alongside authentic narratives that illuminate practical needs and emotional buyer drivers. For marketers, those storylines, backed by survey findings, create opportunities for educational thought leadership and other useful content without separating the facts from the people behind them.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Structured Narrative Storytelling",
+    "description": "Traditional surveys make answers easy to compare, but often leave the personal experience behind each choice unexplored. Research Libs addresses that gap with a dual survey method: identical response choices support structured quantitative measurement while participants use those choices to build connected stories in their own voices. Participants can also add their own words, revealing context that fixed choices may miss.",
+    "category": "Products & Services",
+    "color": "#ff9900"
+  },
+  {
+    "id": "btn-srv-004",
+    "label": "Rule of Three",
+    "descriptionText": "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention. Each offers deeper understanding and practical guidance.\n\nFor vendors, Rule of Three assets offer white-label or shared-branding opportunities that reinforce the value of their go-to-market methods, tools, and distinctive positioning. By extending useful best practices into the fabric of daily decision-making, these engaging assets help vendors demonstrate continuing value while strengthening their relationships with the audiences they serve.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Three Actionable Perspectives",
+    "description": "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention. Each offers deeper understanding and practical guidance.",
+    "category": "Products & Services",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-srv-005",
+    "label": "Research Planning",
+    "descriptionText": "Promising investments often stall when stakeholders disagree about priorities, expected benefits, or the uncertainties surrounding a decision. These cross-functional differences can undermine worthwhile initiatives before they gain momentum.\n\nBuyFacts Research Planner engages key stakeholders early, bringing their concerns, experience, and expectations into a shared understanding of what the research must accomplish. By examining practical needs, emotional considerations, and individual and organizational benefits, it helps clarify the value an investment should deliver. The resulting alignment reduces uncertainty, strengthens the relevance of survey questions, and provides a sounder foundation for decisions, improving the likelihood of meaningful outcomes and a greater Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Align Teams Around Shared Strategy",
+    "description": "Promising investments often stall when stakeholders disagree about priorities, expected benefits, or the uncertainties surrounding a decision. These cross-functional differences can undermine worthwhile initiatives before they gain momentum.",
+    "category": "Products & Services",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-srv-006",
+    "label": "Survey Improvement",
+    "descriptionText": "A better survey creates a more engaging experience for respondents while producing answers researchers can interpret with greater clarity. Unnecessary repetition, ambiguous choices, and awkward transitions can interrupt participation and weaken the usefulness of findings.\n\nBuyFacts approaches survey improvement through careful attention to question wording, response choices, sequence, and the cadence that carries respondents naturally from one subject to the next. Each question should contribute to understanding without placing unnecessary demands on the participant. The result is stronger engagement, clearer interpretation, and more meaningful evidence, reducing wasted effort while improving research quality and the Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Engage Respondents, Sharpen Evidence",
+    "description": "A better survey creates a more engaging experience for respondents while producing answers researchers can interpret with greater clarity. Unnecessary repetition, ambiguous choices, and awkward transitions can interrupt participation and weaken the usefulness of findings.",
+    "category": "Products & Services",
+    "color": "#b0e843"
+  },
+  {
+    "id": "btn-srv-007",
+    "label": "Survey Creation",
+    "descriptionText": "A well-created survey connects the questions people answer with the decisions the research must inform. BuyFacts approaches survey creation with careful attention to stakeholder objectives, participant understanding, and the practical and emotional factors that influence buyer behavior.\n\nThe Question Map establishes a clear relationship between what is asked, what will be learned, and how the findings will be used. Thoughtful language, response choices, and question sequencing make the survey easier to complete and its answers easier to interpret. The result is purposeful research that respects participant time and produces findings with greater usefulness and a stronger Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Custom Instruments Leaders Can Trust",
+    "description": "A well-created survey connects the questions people answer with the decisions the research must inform. BuyFacts approaches survey creation with careful attention to stakeholder objectives, participant understanding, and the practical and emotional factors that influence buyer behavior.",
+    "category": "Products & Services",
+    "color": "#42ea86"
+  },
+  {
+    "id": "btn-srv-008",
+    "label": "Survey Fieldwork",
+    "descriptionText": "A thoughtfully designed survey deserves equally thoughtful execution. Survey fieldwork must balance timely participation with the quality and relevance of the people providing answers. Rushing to complete quotas can create problems that undermine otherwise sound research.\n\nBuyFacts emphasizes knowledgeable participants, human validation, respondent engagement, and careful attention to data quality throughout fieldwork. These practices help protect the integrity of the findings while reducing avoidable delays and rework. The value extends beyond completing a survey efficiently: it lies in collecting dependable evidence that reflects the market and gives marketers greater confidence in the decisions that follow.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Protect Data Quality and Speed",
+    "description": "A thoughtfully designed survey deserves equally thoughtful execution. Survey fieldwork must balance timely participation with the quality and relevance of the people providing answers. Rushing to complete quotas can create problems that undermine otherwise sound research.",
+    "category": "Products & Services",
+    "color": "#ed40ed"
+  },
+  {
+    "id": "btn-srv-009",
+    "label": "Research-Led Content",
+    "descriptionText": "Research becomes more valuable when its findings continue working long after the survey ends. BuyFacts helps transform authentic buyer experiences, practical needs, emotional drivers, and emerging patterns into educational content that audiences find useful.\n\nQuantitative evidence provides factual support, while participant stories add context, emotion, and human perspective. Together, they create opportunities for educational best-practice and thought leadership assets, social media posts, and sales force-led insights for prospects, buyers, and customers.\n\nThis gives marketing and sales valuable material throughout the customer relationship, strengthens vendor positioning, and extends the useful life of original findings, increasing both Return on Research and return on content.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Turn Evidence into Lasting Momentum",
+    "description": "Research becomes more valuable when its findings continue working long after the survey ends. BuyFacts helps transform authentic buyer experiences, practical needs, emotional drivers, and emerging patterns into educational content that audiences find useful.",
+    "category": "Products & Services",
+    "color": "#532254"
+  },
+  {
+    "id": "btn-tl-001",
+    "label": "CxO",
+    "descriptionText": "Executive decisions rarely wait for certainty. Buyer expectations, market conditions, and competitive pressures often shift before those changes appear in familiar reports. For the CxO, earlier recognition creates an advantage that speed alone cannot provide: more time to understand what is changing, explore alternatives, and choose a response with confidence.\n\nBuyFacts uses focused, directional buyer research and informed interpretation to bring emerging patterns into view while options remain open. The result is not simply more information for leadership. It is clearer direction, better choices, and the time to act before change becomes obvious.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Decision-Focused Executive Clarity",
+    "description": "Executive decisions rarely wait for certainty. Buyer expectations, market conditions, and competitive pressures often shift before those changes appear in familiar reports. For the CxO, earlier recognition creates an advantage that speed alone cannot provide: more time to understand what is changing, explore alternatives, and choose a response with confidence.",
+    "category": "Research Imperatives",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-tl-002",
+    "label": "Chief Marketing Officer",
+    "descriptionText": "A Chief Marketing Officer must connect what buyers are beginning to feel and need with decisions across brand, demand generation, content, and customer relationships. Yet each function sees only part of the picture, and yesterday's research may not explain today's behavior.\n\nBuyFacts brings practical and emotional buyer drivers into a shared, evolving view through focused research repeated over time. Emerging patterns become easier to recognize, priorities easier to discuss, and marketing choices more coherent across teams. Earlier recognition helps the CMO direct resources with greater confidence and gives people more time to create meaningful market impact.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Connect Buyer Needs to Strategy",
+    "description": "A Chief Marketing Officer must connect what buyers are beginning to feel and need with decisions across brand, demand generation, content, and customer relationships. Yet each function sees only part of the picture, and yesterday's research may not explain today's behavior.",
+    "category": "Research Imperatives",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-tl-003",
+    "label": "Marketer",
+    "descriptionText": "Good marketing begins with a genuine understanding of the people it hopes to reach. But needs, expectations, and emotions shift, and familiar messages can become less relevant long before campaign results explain why.\n\nBuyFacts uses focused, directional buyer research to reveal emerging changes in what matters to audiences, including the practical considerations and personal feelings behind their choices. Beyond improving campaign relevance, these findings provide the foundation for educational thought leadership, turning authentic buyer experiences and insights into compelling stories, fresh perspectives, and useful content that informs, engages, and helps buyers make better choices.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Turn Human Understanding into Impact",
+    "description": "Good marketing begins with a genuine understanding of the people it hopes to reach. But needs, expectations, and emotions shift, and familiar messages can become less relevant long before campaign results explain why.",
+    "category": "Research Imperatives",
+    "color": "#42ea86"
+  },
+  {
+    "id": "btn-tl-004",
+    "label": "Researcher",
+    "descriptionText": "Researchers are often expected to deliver speed, accuracy, and actionable findings, even when the most important questions have yet to be fully defined. Strong methodology matters, but so does understanding whose experience can inform a decision and how the findings will be used.\n\nBuyFacts connects sponsor and stakeholder priorities with thoughtful survey design, knowledgeable participants, and disciplined interpretation. Patterns and unusual responses become opportunities for deeper understanding rather than numbers to report and forget. The result is research that reduces uncertainty, protects the time invested, and gives researchers greater confidence that their work will make a meaningful difference.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Rigor, Integrity, and Actionable Evidence",
+    "description": "Researchers are often expected to deliver speed, accuracy, and actionable findings, even when the most important questions have yet to be fully defined. Strong methodology matters, but so does understanding whose experience can inform a decision and how the findings will be used.",
+    "category": "Research Imperatives",
+    "color": "#532254"
+  },
+  {
+    "id": "btn-tl-005",
+    "label": "Early Recognition",
+    "descriptionText": "Markets rarely change all at once. New needs may first appear in an unexpected question, a shift in sentiment, or a subtle difference between what buyers say today and what they said before. What begins as an isolated occurrence may become a repeating pattern that reveals a meaningful direction.\n\nBuyFacts combines focused, directional buyer research with knowledgeable participants and repeated observation to recognize changes while choices remain open. The advantage is not predicting the future. It is gaining time to understand what is developing, explore alternatives, and take a better first step before change becomes obvious.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Notice Developing Signals Sooner",
+    "description": "Markets rarely change all at once. New needs may first appear in an unexpected question, a shift in sentiment, or a subtle difference between what buyers say today and what they said before. What begins as an isolated occurrence may become a repeating pattern that reveals a meaningful direction.",
+    "category": "Research Imperatives",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-tl-006",
+    "label": "Building Great Surveys",
+    "descriptionText": "A great survey begins long before the first participant responds. Its questions must reflect what sponsors and stakeholders genuinely need to understand while remaining clear, relevant, and worthwhile for the people answering them.\n\nBuyFacts uses the Question Map to connect every survey question to three essential considerations: what is being asked, what will be learned, and how that learning will be used. This disciplined connection reveals gaps, unnecessary questions, and opportunities to improve language, response choices, and flow. It also strengthens the usefulness of the findings, giving marketers and researchers more to act upon and a greater return on research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Intentional Design for High-Yield Data",
+    "description": "A great survey begins long before the first participant responds. Its questions must reflect what sponsors and stakeholders genuinely need to understand while remaining clear, relevant, and worthwhile for the people answering them.",
+    "category": "Research Imperatives",
+    "color": "#b0e843"
+  },
+  {
+    "id": "btn-tl-007",
+    "label": "Agency Principal",
+    "descriptionText": "As AI makes content faster to produce, agency principals face a more important challenge: creating programs and positioning grounded in genuine buyer understanding. BuyFacts Research Libs uses a dual survey method, combining comparable quantitative answers with participant-authored stories that reveal practical needs and emotional drivers.\n\nThe resulting storylines are backed by research facts, creating timely opportunities for educational thought leadership. Agencies add perspective and stewardship by translating that evidence into distinctive positioning, useful programs, relevant messaging, and calls to action that resonate with buyers. Technology can accelerate production, but informed interpretation makes the work worth producing.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Strategic Substance Over Generic AI",
+    "description": "As AI makes content faster to produce, agency principals face a more important challenge: creating programs and positioning grounded in genuine buyer understanding. BuyFacts Research Libs uses a dual survey method, combining comparable quantitative answers with participant-authored stories that reveal practical needs and emotional drivers.",
+    "category": "Research Imperatives",
+    "color": "#ff9900"
+  },
+  {
+    "id": "btn-tl-008",
+    "label": "BuyFacts Methods",
+    "descriptionText": "BuyFacts methods put sound direction ahead of speed. Inclusive Agile engages cross-functional influencers through defined roles, drawing on their observations and expertise to build research momentum. Blitz Research turns that momentum into focused questions and timely evidence, while Stewardship fosters the exchange and interpretation of ideas.\n\nA variety of tools, including Cubicon, TRIAD, and Research Libs, add rigor while saving time. Together, these methods and tools illuminate the emotional triggers, practical priorities, and individual benefits behind buyer choices. Their advantage lies in reducing uncertainty and increasing the usefulness of research, creating the velocity that comes from starting in the right direction.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Sound Direction Ahead of Speed",
+    "description": "BuyFacts methods put sound direction ahead of speed. Inclusive Agile engages cross-functional influencers through defined roles, drawing on their observations and expertise to build research momentum. Blitz Research turns that momentum into focused questions and timely evidence, while Stewardship fosters the exchange and interpretation of ideas.",
+    "category": "Research Imperatives",
+    "color": "#ea425f"
+  },
+  {
+    "id": "btn-tl-009",
+    "label": "Stewardship",
+    "descriptionText": "Stewardship helps organizations turn experience and judgment into corporate knowledge while strengthening early recognition of change. BuyFacts fosters the exchange of ideas through frameworks that encourage people to explore different ways to approach the market, recognize emerging buyer needs, and identify opportunities for meaningful innovation.\n\nBy examining observations and perspectives together, organizations can identify developing patterns earlier and preserve useful knowledge for future decisions. This process encourages fresh thinking without losing sight of the core competencies and distinctive value propositions a business can demonstrate and defend. The result is clearer direction, more time to act, and the ability to adapt without losing what makes the organization valuable.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
+    "mediaType": "video",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Experience and Judgment into Corporate Knowledge",
+    "description": "Stewardship helps organizations turn experience and judgment into corporate knowledge while strengthening early recognition of change. BuyFacts fosters the exchange of ideas through frameworks that encourage people to explore different ways to approach the market, recognize emerging buyer needs, and identify opportunities for meaningful innovation.",
+    "category": "Research Imperatives",
+    "color": "#9b5d00"
+  }
 ];
 
 
@@ -345,9 +373,9 @@ export async function seedProductionDatabase(
   for (const user of PRODUCTION_USERS) {
     await client.user.upsert({
       where: { email: user.email },
+      // Never reset the password of an existing account on a live database.
       update: {
         name: user.name,
-        passwordHash,
         role: user.role,
       },
       create: {
@@ -362,7 +390,16 @@ export async function seedProductionDatabase(
   for (const btn of PRODUCTION_DASHBOARD_BUTTONS) {
     await client.dashboardButton.upsert({
       where: { id: btn.id },
-      update: btn,
+      // On existing rows only refresh the text; keep SEE IT / HEAR IT / READ IT
+      // links and media type, which may have been changed through the admin area.
+      update: {
+        label: btn.label,
+        descriptionText: btn.descriptionText,
+        subtitle: btn.subtitle,
+        description: btn.description,
+        category: btn.category,
+        color: btn.color,
+      },
       create: btn,
     });
   }
@@ -375,28 +412,10 @@ export async function seedProductionDatabase(
 
 
 async function main() {
-  console.log("Starting BuyFacts Core DB seed...\n");
+  console.log("Starting BuyFacts Core DB seed (non-destructive)...\n");
 
-  // 0. Reset existing database records so seed replaces existing state instead of appending
-  console.log("0. Cleaning existing records to replace database state...");
-  await prisma.cubiconAttempt.deleteMany();
-  await prisma.cubiconSession.deleteMany();
-  await prisma.cubiconTask.deleteMany();
-  await prisma.cubiconSequence.deleteMany();
-  await prisma.cubiconRegistration.deleteMany();
-  await prisma.cubiconShare.deleteMany();
-  await prisma.feedbackSubmission.deleteMany();
-
-  await prisma.researchLibResponse.deleteMany();
-  await prisma.researchLibTask.deleteMany();
-  await prisma.researchLibSurvey.deleteMany();
-  await prisma.vaultAsset.deleteMany();
-  await prisma.topic.deleteMany();
-
-  await prisma.dashboardButton.deleteMany();
-  await prisma.mediaAsset.deleteMany();
-  await prisma.user.deleteMany();
-  console.log("   Cleared existing records successfully.\n");
+  // Non-destructive: every step below is an upsert or an "insert if missing",
+  // so this script is safe to run repeatedly against a live database.
 
   // 1-2. Users and Dashboard Buttons (the only tables this script owns)
   console.log("1. Seeding Users and Dashboard Buttons...");
@@ -811,8 +830,10 @@ async function main() {
 
   const createdTopics: Record<string, string> = {};
   for (const t of vaultTopics) {
-    const topicRecord = await prisma.topic.create({
-      data: t,
+    const topicRecord = await prisma.topic.upsert({
+      where: { slug: t.slug },
+      update: t,
+      create: t,
     });
     createdTopics[t.slug] = topicRecord.id;
   }
@@ -979,44 +1000,61 @@ async function main() {
   ];
 
   for (const a of vaultAssets) {
-    await prisma.vaultAsset.create({
-      data: a,
+    // No natural unique key: match on topic + title so re-runs update in place.
+    const existingAsset = await prisma.vaultAsset.findFirst({
+      where: { topicId: a.topicId, title: a.title },
+      select: { id: true },
     });
+    if (existingAsset) {
+      await prisma.vaultAsset.update({ where: { id: existingAsset.id }, data: a });
+    } else {
+      await prisma.vaultAsset.create({ data: a });
+    }
   }
   console.log(
     `   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`,
   );
 
   console.log("6. Seeding ResearchLib Narrative Surveys & Tasks...");
-  const topSurvey = await prisma.researchLibSurvey.create({
-    data: {
-      userId: "system_default",
-      title: "AI Marketing Directional Measurement",
-      timeCounter: "down",
-      pauseDuration: "3",
-      durationInMin: "30",
-      combo: "narWid",
-    },
+  const SURVEY_TITLE = "AI Marketing Directional Measurement";
+  const existingSurvey = await prisma.researchLibSurvey.findFirst({
+    where: { userId: "system_default", title: SURVEY_TITLE },
+    select: { id: true },
   });
 
-  for (let idx = 0; idx < DEFAULT_SURVEYS.length; idx++) {
-    const task = DEFAULT_SURVEYS[idx];
-    const isFinal = idx === DEFAULT_SURVEYS.length - 1;
-    await prisma.researchLibTask.create({
+  if (existingSurvey) {
+    console.log("   Default survey already exists, leaving it and its tasks untouched.");
+  } else {
+    const topSurvey = await prisma.researchLibSurvey.create({
       data: {
-        surveyId: topSurvey.id,
-        taskIndex: idx,
-        heading: task.heading,
-        instruction: task.instruction,
-        widget: task.widget,
-        question: task.story,
-        story: task.story,
-        blanks: task.blanks,
-        isFollowup: isFinal ? 0 : 1,
+        userId: "system_default",
+        title: "AI Marketing Directional Measurement",
+        timeCounter: "down",
+        pauseDuration: "3",
+        durationInMin: "30",
+        combo: "narWid",
       },
     });
+
+    for (let idx = 0; idx < DEFAULT_SURVEYS.length; idx++) {
+      const task = DEFAULT_SURVEYS[idx];
+      const isFinal = idx === DEFAULT_SURVEYS.length - 1;
+      await prisma.researchLibTask.create({
+        data: {
+          surveyId: topSurvey.id,
+          taskIndex: idx,
+          heading: task.heading,
+          instruction: task.instruction,
+          widget: task.widget,
+          question: task.story,
+          story: task.story,
+          blanks: task.blanks,
+          isFollowup: isFinal ? 0 : 1,
+        },
+      });
+    }
   }
-  console.log(`   Seeded 1 top-level Survey and ${DEFAULT_SURVEYS.length} ResearchLib Tasks\n`);
+  console.log("   ResearchLib survey step complete\n");
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }
