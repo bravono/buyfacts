@@ -54,14 +54,12 @@ export async function POST(req: NextRequest) {
 
     // Update DashboardButton table if any buttons are linked to old URL
     try {
-      await prisma.dashboardButton.updateMany({
-        where: {
-          mediaUrl: oldPublicUrl,
-        },
-        data: {
-          mediaUrl: newPublicUrl,
-        },
-      });
+      for (const field of ["seeItUrl", "hearItUrl", "readItUrl"] as const) {
+        await prisma.dashboardButton.updateMany({
+          where: { [field]: oldPublicUrl },
+          data: { [field]: newPublicUrl },
+        });
+      }
     } catch (dbErr) {
       console.warn('Could not update DashboardButton records during move:', dbErr);
     }

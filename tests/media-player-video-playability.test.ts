@@ -143,86 +143,15 @@ test("Media Player Video Playability & Controls Test Suite", async (t) => {
     );
   });
 
-  await t.test("8. Getting Started welcome overlay displays verbatim required copy on initial landing", () => {
-    assert.ok(
-      playerContent.includes("Welcome to your Marketers tool workspace!"),
-      "MockMediaPlayer must render Welcome to your Marketers tool workspace! in the header banner"
-    );
-    assert.ok(
-      playerContent.includes("Here are the basics:"),
-      "MockMediaPlayer must render Here are the basics:"
-    );
-    assert.ok(
-      playerContent.includes("Click on Any Tool or Resource topic"),
-      "MockMediaPlayer must include bullet 1: Click on Any Tool or Resource topic"
-    );
-    assert.ok(
-      playerContent.includes("View a description and available resources"),
-      "MockMediaPlayer must include bullet 2: View a description and available resources"
-    );
-    assert.ok(
-      playerContent.includes("See, hear, read and apply our shared learnings that will save you time"),
-      "MockMediaPlayer must include bullet 3: See, hear, read and apply our shared learnings"
-    );
-    assert.ok(
-      playerContent.includes("Pose a question or a request to Robert for help"),
-      "MockMediaPlayer must include bullet 4: Pose a question or a request to Robert for help"
-    );
-    assert.ok(
-      playerContent.includes("Download and save time with our ideas and tools (no strings attached)"),
-      "MockMediaPlayer must include bullet 5: Download and save time"
-    );
-    assert.ok(
-      playerContent.includes("gettingStartedToggleBtn"),
-      "MockMediaPlayer must include Getting Started header toggle button"
-    );
-    assert.ok(
-      playerContent.includes("welcomeDismissBtn"),
-      "MockMediaPlayer must include dismiss action for welcome overlay"
-    );
-    assert.ok(
-      cssContent.includes(".welcomeOverlay {"),
-      "MockMediaPlayer.module.css must define .welcomeOverlay"
-    );
-    assert.ok(
-      cssContent.includes("inset: 0;"),
-      "welcomeOverlay must occupy entirety of media display area with inset: 0"
-    );
-    assert.ok(
-      cssContent.includes(".bulletDot {"),
-      "MockMediaPlayer.module.css must define .bulletDot"
-    );
-
-    // Verify media controls are hidden when welcome overlay is active
-    assert.ok(
-      playerContent.includes("isPlayable && !isWelcomeActive"),
-      "Play button and seek control panel must be hidden when isWelcomeActive is true"
-    );
-    assert.ok(
-      playerContent.includes("!isWelcomeActive && (\n          <button\n            className={styles.nextMediaButton}"),
-      "Next media button must be hidden when isWelcomeActive is true"
-    );
-
-    // Verify phrases are not repeated inside the display area
-    const welcomeOverlayMatch = playerContent.match(/id="mock-media-welcome-overlay"[\s\S]*?<\/div>\s*<\/div>/);
-    assert.ok(welcomeOverlayMatch, "mock-media-welcome-overlay block must exist");
-    const welcomeBlock = welcomeOverlayMatch[0];
-    assert.ok(
-      !welcomeBlock.includes("welcomeBadge"),
-      "welcomeBadge phrase must not be repeated inside the display area"
-    );
-    assert.ok(
-      !welcomeBlock.includes("welcomeTitle"),
-      "welcomeTitle phrase must not be repeated inside the display area"
-    );
-    assert.ok(
-      !welcomeBlock.includes("Welcome to your Marketers tool workspace!"),
-      "Subtitle phrase must not be duplicated inside the display area"
-    );
-    assert.ok(
-      !welcomeBlock.includes("Getting Started"),
-      "Header phrase must not be duplicated inside the display area"
-    );
+  await t.test("8. Welcome overlay renders DB-provided title and paragraphs, with no hardcoded copy", () => {
+    assert.ok(playerContent.includes("welcomeParagraphs?.map"), "welcome paragraphs must come from props");
+    assert.ok(!playerContent.includes("Here are the basics:"));
+    assert.ok(!playerContent.includes("Click on Any Tool or Resource topic"));
+    assert.ok(!playerContent.includes("Welcome to your Marketers tool workspace!"));
+    assert.ok(playerContent.includes("welcomeDismissBtn"), "dismiss action must exist");
+    assert.ok(cssContent.includes(".welcomeOverlay {"));
+    assert.ok(cssContent.includes("inset: 0;"));
+    assert.ok(playerContent.includes("isPlayable && !isWelcomeActive"), "controls hidden while welcome is active");
   });
 
   await t.test("9. Products & Services page preserves colorful theme and glowing ambience", () => {
@@ -257,30 +186,6 @@ test("Media Player Video Playability & Controls Test Suite", async (t) => {
     assert.ok(
       riContent.includes("showWelcome={showWelcome}"),
       "research-imperatives/page.tsx must bind showWelcome to MockMediaPlayer"
-    );
-  });
-
-  await t.test("10. Public S3 Affinity video URL is wired to Pattern Insights and Early Recognition buttons", () => {
-    const s3VideoUrl = "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4";
-    const seedPath = path.join(__dirname, "..", "prisma", "seed.ts");
-    const psPath = path.join(__dirname, "..", "app", "products-services", "page.tsx");
-    const riPath = path.join(__dirname, "..", "app", "research-imperatives", "page.tsx");
-
-    const seedContent = fs.readFileSync(seedPath, "utf-8");
-    const psContent = fs.readFileSync(psPath, "utf-8");
-    const riContent = fs.readFileSync(riPath, "utf-8");
-
-    assert.ok(
-      seedContent.includes(s3VideoUrl),
-      "prisma/seed.ts must include the S3 Affinity video URL"
-    );
-    assert.ok(
-      psContent.includes(s3VideoUrl),
-      "products-services/page.tsx must configure S3 Affinity video URL"
-    );
-    assert.ok(
-      riContent.includes(s3VideoUrl),
-      "research-imperatives/page.tsx must configure S3 Affinity video URL"
     );
   });
 

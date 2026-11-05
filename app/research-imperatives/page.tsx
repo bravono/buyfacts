@@ -88,7 +88,7 @@ export default function PortfolioPage() {
             )
             .map((btn: any, idx: number) => {
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
-              const resolvedMediaUrl = (btn.mediaUrl || "").trim();
+              const resolvedMediaUrl: string = "";
               const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
               const resolvedHearItUrl = (btn.hearItUrl || "").trim();
               const resolvedReadItUrl = (btn.readItUrl || "").trim();

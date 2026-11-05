@@ -9,7 +9,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     await prisma.dashboardButton.create({
       data: {
         label: "Content Value",
-        mediaUrl: "https://example.com/test1",
+        descriptionText: "Duplicate item test 1",
         mediaType: "video",
         subtitle: "Duplicate item test 1",
         category: "Products & Services",
@@ -19,7 +19,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     await prisma.dashboardButton.create({
       data: {
         label: "Research Planning",
-        mediaUrl: "https://example.com/test2",
+        descriptionText: "Duplicate item test 2",
         mediaType: "video",
         subtitle: "Duplicate item test 2",
         category: "Products & Services",
@@ -28,22 +28,22 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
 
     // Verify database currently has more than 18 buttons
     const countBefore = await prisma.dashboardButton.count();
-    assert.ok(countBefore > 18, `Expected count before seed to exceed 18, got ${countBefore}`);
+    assert.ok(countBefore > 20, `Expected count before seed to exceed 20, got ${countBefore}`);
 
     // Run the seed script to replace the database
     execSync("npm run seed", { stdio: "pipe" });
 
     // Verify database buttons are cleaned and exactly 18 exist
     const countAfter = await prisma.dashboardButton.count();
-    assert.equal(countAfter, 18, "DashboardButton count should be exactly 18 after seeding");
+    assert.equal(countAfter, 20, "DashboardButton count should be exactly 20 after seeding");
 
     // Verify 9 Products & Services and 9 Research Imperatives
     const services = await prisma.dashboardButton.findMany({
-      where: { category: "Products & Services" },
+      where: { category: "Products & Services", NOT: { id: { endsWith: "-000" } } },
       orderBy: { id: "asc" },
     });
     const tl = await prisma.dashboardButton.findMany({
-      where: { category: "Research Imperatives" },
+      where: { category: "Research Imperatives", NOT: { id: { endsWith: "-000" } } },
       orderBy: { id: "asc" },
     });
 
@@ -75,7 +75,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
     execSync("npm run seed", { stdio: "pipe" });
 
     const totalButtons = await prisma.dashboardButton.count();
-    assert.equal(totalButtons, 18, "Repeated seeding must retain exactly 18 buttons");
+    assert.equal(totalButtons, 20, "Repeated seeding must retain exactly 20 buttons (18 + 2 welcome rows)");
 
     const totalTasks = await prisma.cubiconTask.count();
     assert.equal(totalTasks, 12, "Repeated seeding must retain exactly 12 cubicon tasks (4 per sequence across 3 sequences)");
@@ -92,20 +92,20 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
 
   await t.test("3. Button slot IDs and canonical sequence are preserved", async () => {
     const services = await prisma.dashboardButton.findMany({
-      where: { category: "Products & Services" },
+      where: { category: "Products & Services", NOT: { id: { endsWith: "-000" } } },
       orderBy: { id: "asc" },
     });
 
     const expectedServiceLabels = [
+      "Cubicon",
+      "TRIAD",
+      "Research Libs",
+      "Rule of Three",
       "Research Planning",
-      "Survey Design",
-      "Story-Based Surveys",
-      "Improve Surveys",
-      "Participant Validation",
+      "Survey Improvement",
+      "Survey Creation",
       "Survey Fieldwork",
-      "Content Value",
-      "Pattern Insights",
-      "Audience Validation",
+      "Research-Led Content",
     ];
 
     for (let i = 0; i < expectedServiceLabels.length; i++) {

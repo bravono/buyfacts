@@ -19,34 +19,12 @@ export type DashboardButton = {
   href?: string;
 };
 
-/**
- * Default button list (9 slots). Pass a different `buttons` prop per page
- * to control labels and URLs.
- *
- * Slot order (matches the SVG layout):
- * 0–2 left column, 3–5 center column, 6–8 right column
- */
-export const DEFAULT_BUTTONS: DashboardButton[] = [
-  { label: "Research Planning", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Survey Design", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Story-Based Surveys", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Improve Surveys", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Participant Validation", mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4" },
-  { label: "Survey Fieldwork", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Content Value", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Pattern Insights", mediaUrl: "https://www.buyfacts.com/" },
-  { label: "Audience Validation", mediaUrl: "https://www.buyfacts.com/" },
-];
-
-/** @deprecated Use DEFAULT_BUTTONS */
-export const BUTTONS = DEFAULT_BUTTONS;
-
 export type DashboardAnimationProps = SVGProps<SVGSVGElement> & {
   /** Arc title text */
   title?: string;
   /**
    * List of up to 9 buttons. Order maps to 3x3 layout (row 1: 0-2, row 2: 3-5, row 3: 6-8).
-   * Missing slots fall back to DEFAULT_BUTTONS.
+   * Missing slots render empty.
    */
   buttons?: DashboardButton[];
   selectedButtonIndex?: number;

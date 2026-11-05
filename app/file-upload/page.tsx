@@ -60,7 +60,7 @@ interface SavedRecord {
 interface DatabaseButton {
   id: string;
   label: string;
-  mediaUrl: string;
+  descriptionText: string;
   seeItUrl?: string | null;
   hearItUrl?: string | null;
   readItUrl?: string | null;
@@ -72,7 +72,6 @@ interface DatabaseButton {
 export default function FileUploadDemoPage() {
   const [savedRecords, setSavedRecords] = useState<SavedRecord[]>([]);
   const [lastUploadedUrl, setLastUploadedUrl] = useState<string | null>(null);
-  const [assigningButtonId, setAssigningButtonId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>("");
   const [mockButtons, setMockButtons] = useState<DatabaseButton[]>([]);
@@ -391,7 +390,7 @@ export default function FileUploadDemoPage() {
 
   const handleUpdateSubLink = async (
     buttonId: string,
-    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "descriptionText",
     url: string
   ) => {
     const key = `${buttonId}-${field}`;
@@ -421,37 +420,12 @@ export default function FileUploadDemoPage() {
 
   const handleLocalSubLinkChange = (
     buttonId: string,
-    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "descriptionText",
     val: string
   ) => {
     setMockButtons((prev) =>
       prev.map((btn) => (btn.id === buttonId ? { ...btn, [field]: val } : btn))
     );
-  };
-
-  const handleAssignUrl = async (buttonId: string, url: string) => {
-    setAssigningButtonId(buttonId);
-    try {
-      const res = await fetch("/api/buttons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: buttonId,
-          mediaUrl: url,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setMockButtons((prev) =>
-          prev.map((btn) => (btn.id === buttonId ? { ...btn, mediaUrl: url } : btn))
-        );
-      }
-    } catch (err) {
-      console.error("Failed to assign URL to button:", err);
-    } finally {
-      setTimeout(() => setAssigningButtonId(null), 1500);
-    }
   };
 
   const handleClearHistory = async () => {
@@ -795,61 +769,32 @@ export default function FileUploadDemoPage() {
 
                         {/* Four Media Action Rows: Button Link, SEE IT, HEAR IT, READ IT */}
                         <div className={styles.subLinksSection}>
-                          {/* 1. BUTTON LINK (Primary Default Link) */}
+                          {/* 1. DESCRIPTION (text shown in the player) */}
                           <div className={styles.subLinkRow}>
                             <div className={styles.subLinkHeader}>
                               <div className={styles.subLinkLabel}>
                                 <LinkIcon className="w-3.5 h-3.5 text-[var(--interactive-blue)]" />
-                                <span>BUTTON LINK (Primary)</span>
+                                <span>DESCRIPTION</span>
                               </div>
                               <div className={styles.subLinkActions}>
-                                <button
-                                  type="button"
-                                  disabled={!lastUploadedUrl}
-                                  onClick={() =>
-                                    handleUpdateSubLink(btn.id, "mediaUrl", lastUploadedUrl!)
-                                  }
-                                  className={styles.subLinkPasteBtn}
-                                  title={
-                                    lastUploadedUrl
-                                      ? `Link staged URL: ${lastUploadedUrl}`
-                                      : "No staged URL"
-                                  }
-                                >
-                                  {savingButtonSubLinkId === `${btn.id}-mediaUrl` ? (
-                                    <>
-                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <LinkIcon className="w-3 h-3" /> Link Staged
-                                    </>
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={!btn.mediaUrl}
-                                  onClick={() =>
-                                    triggerPreview(btn.mediaUrl, `${btn.label} - Button Link`)
-                                  }
-                                  className={styles.previewIconBtn}
-                                  title="Preview Button Link"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
+                                {savingButtonSubLinkId === `${btn.id}-descriptionText` && (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-500" /> Saved!
+                                  </>
+                                )}
                               </div>
                             </div>
                             <div className={styles.subLinkInputWrapper}>
-                              <input
-                                type="text"
-                                value={btn.mediaUrl ?? ""}
+                              <textarea
+                                rows={6}
+                                value={btn.descriptionText ?? ""}
                                 onChange={(e) =>
-                                  handleLocalSubLinkChange(btn.id, "mediaUrl", e.target.value)
+                                  handleLocalSubLinkChange(btn.id, "descriptionText", e.target.value)
                                 }
                                 onBlur={(e) =>
-                                  handleUpdateSubLink(btn.id, "mediaUrl", e.target.value)
+                                  handleUpdateSubLink(btn.id, "descriptionText", e.target.value)
                                 }
-                                placeholder="Paste or type main button link (e.g. S3 URL, video, doc, web)..."
+                                placeholder="Description text shown in the media player (blank line = new paragraph)..."
                                 className={styles.subLinkInput}
                               />
                             </div>
@@ -888,10 +833,10 @@ export default function FileUploadDemoPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  disabled={!btn.seeItUrl && !btn.mediaUrl}
+                                  disabled={!btn.seeItUrl}
                                   onClick={() =>
                                     triggerPreview(
-                                      btn.seeItUrl || btn.mediaUrl,
+                                      btn.seeItUrl!,
                                       `${btn.label} - SEE IT`
                                     )
                                   }

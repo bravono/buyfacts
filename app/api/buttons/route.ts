@@ -20,7 +20,7 @@ export async function GET() {
 }
 
 /**
- * POST Handler: Updates/assigns a new mediaUrl and other configuration details to a specific button
+ * POST Handler: Updates description text, links and other configuration details to a specific button
  */
 export async function POST(req: NextRequest) {
   try {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { id, descriptionText, mediaUrl, seeItUrl, hearItUrl, readItUrl, mediaType, subtitle, description } =
+    const { id, descriptionText, seeItUrl, hearItUrl, readItUrl, mediaType, subtitle, description } =
       await req.json();
 
     if (!id) {
@@ -40,11 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     const updateData: Record<string, any> = {};
-    if (descriptionText !== undefined) {
-      updateData.descriptionText = descriptionText;
-    } else if (mediaUrl !== undefined) {
-      updateData.descriptionText = mediaUrl;
-    }
+    if (descriptionText !== undefined) updateData.descriptionText = descriptionText;
     if (seeItUrl !== undefined) updateData.seeItUrl = seeItUrl;
     if (hearItUrl !== undefined) updateData.hearItUrl = hearItUrl;
     if (readItUrl !== undefined) updateData.readItUrl = readItUrl;

@@ -24,7 +24,7 @@ import { prisma } from "@/lib/prisma";
 
 interface LinkProblem {
   id: string;
-  field: "mediaUrl" | "seeItUrl" | "hearItUrl" | "readItUrl";
+  field: "seeItUrl" | "hearItUrl" | "readItUrl";
   url: string;
   reason: string;
 }
@@ -72,7 +72,6 @@ export async function GET(req: NextRequest) {
     select: {
       id: true,
       label: true,
-      mediaUrl: true,
       seeItUrl: true,
       hearItUrl: true,
       readItUrl: true,
@@ -82,7 +81,7 @@ export async function GET(req: NextRequest) {
 
   const problems: LinkProblem[] = [];
   for (const button of buttons) {
-    for (const field of ["mediaUrl", "seeItUrl", "hearItUrl", "readItUrl"] as const) {
+    for (const field of ["seeItUrl", "hearItUrl", "readItUrl"] as const) {
       const value = button[field];
       if (!value) continue;
       const reason = unreachableReason(value);
