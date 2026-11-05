@@ -54,10 +54,10 @@ model NotificationSubscription {
 
 // 4. Interactive Dashboard Buttons configuration
 model DashboardButton {
-  id        String   @id @default(uuid())
-  label     String
-  mediaUrl  String
-  seeItUrl  String?  // Video link for SEE IT
+  id              String   @id @default(uuid())
+  label           String
+  descriptionText String   @default("") // Renamed from mediaUrl: description text displayed in player
+  seeItUrl        String?  // Video link for SEE IT
   hearItUrl String?  // Audio link for HEAR IT
   readItUrl String?  // Document/PDF link for READ IT
   mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"

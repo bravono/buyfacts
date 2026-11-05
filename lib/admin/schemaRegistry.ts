@@ -157,7 +157,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
       { name: "subtitle", label: "Subtitle / Tagline", type: "string" },
       { name: "category", label: "Category", type: "string", defaultValue: "Products & Services", options: ["Products & Services", "Research Imperatives", "Thought Leadership"] },
       { name: "mediaType", label: "Default Media Type", type: "string", defaultValue: "video", options: ["video", "pdf", "audio", "image"] },
-      { name: "mediaUrl", label: "Primary Media URL", type: "string", required: true },
+      { name: "descriptionText", label: "Description Text", type: "string" },
       { name: "seeItUrl", label: "See It Video URL", type: "string" },
       { name: "hearItUrl", label: "Hear It Audio URL", type: "string" },
       { name: "readItUrl", label: "Read It Document URL", type: "string" },

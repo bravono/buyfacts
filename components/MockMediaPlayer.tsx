@@ -35,6 +35,10 @@ export interface MockMediaPlayerProps {
   tagline?: string;
   subtitle?: string;
   description?: string;
+  descriptionText?: string;
+  welcomeTitle?: string;
+  welcomeTagline?: string;
+  welcomeParagraphs?: string[];
   rightTitle?: string;
   rightSubtitle?: string;
   mediaType?: "video" | "audio" | "image" | "pdf" | "docx";
@@ -101,6 +105,10 @@ export default function MockMediaPlayer({
   tagline,
   subtitle,
   description,
+  descriptionText,
+  welcomeTitle,
+  welcomeTagline,
+  welcomeParagraphs,
   rightTitle,
   rightSubtitle,
   mediaType = "video",
@@ -179,11 +187,19 @@ export default function MockMediaPlayer({
   const screenFrameRef = useRef<HTMLDivElement>(null);
 
   const displayTitle = isWelcomeActive
-    ? "Getting Started"
-    : title || "Operational Demonstration";
+    ? welcomeTitle || ""
+    : title || "";
   const displayTagline = isWelcomeActive
-    ? "Welcome to your Marketers tool workspace!"
-    : tagline || subtitle || "BuyFacts B2B Validation Pipeline Walkthrough";
+    ? welcomeTagline || ""
+    : tagline || subtitle || "";
+
+  const rawDescription = descriptionText || description || "";
+  const buttonParagraphs = rawDescription
+    .split(/\r?\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .filter((p) => p.toLowerCase() !== (displayTitle || "").toLowerCase());
+  const hasDescription = buttonParagraphs.length > 0 || Boolean(rawDescription);
 
   const isDocx =
     mediaType === "docx" ||
@@ -975,7 +991,7 @@ export default function MockMediaPlayer({
         )}
 
         {/* Large Central Play Button (when playable and welcome not active) */}
-        {isPlayable && !isWelcomeActive && (
+        {isPlayable && !isWelcomeActive && screenMode !== "auto" && (
           <button
             className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${screenType === "video" && isPlaying ? styles.videoPlaying : ""}`}
             onClick={togglePlay}
@@ -1040,60 +1056,32 @@ export default function MockMediaPlayer({
               <X size={18} />
             </button>
             <div className={styles.welcomeContent}>
-              <h4 className={styles.welcomeIntro}>Here are the basics:</h4>
-              <ul className={styles.welcomeList}>
-                <li>
-                  <span
-                    className={styles.bulletDot}
-                    style={{ color: "var(--color-orange-1, #ff9900)" }}
-                  >
-                    •
-                  </span>
-                  <span>Click on Any Tool or Resource topic</span>
-                </li>
-                <li>
-                  <span
-                    className={styles.bulletDot}
-                    style={{ color: "var(--color-accent-green-mint, #42ea86)" }}
-                  >
-                    •
-                  </span>
-                  <span>View a description and available resources</span>
-                </li>
-                <li>
-                  <span
-                    className={styles.bulletDot}
-                    style={{ color: "var(--color-blue-2, #0089d2)" }}
-                  >
-                    •
-                  </span>
-                  <span>
-                    See, hear, read and apply our shared learnings that will
-                    save you time
-                  </span>
-                </li>
-                <li>
-                  <span
-                    className={styles.bulletDot}
-                    style={{ color: "var(--color-accent-green-lime, #b0e843)" }}
-                  >
-                    •
-                  </span>
-                  <span>Pose a question or a request to Robert for help</span>
-                </li>
-                <li>
-                  <span
-                    className={styles.bulletDot}
-                    style={{ color: "var(--color-orange-2, #ffc164)" }}
-                  >
-                    •
-                  </span>
-                  <span>
-                    Download and save time with our ideas and tools (no strings
-                    attached)
-                  </span>
-                </li>
-              </ul>
+              <h4 className={styles.welcomeIntro}>
+                {welcomeTitle}
+              </h4>
+              {welcomeParagraphs?.map((para, idx) => (
+                <p key={idx} className={styles.welcomeParagraph}>
+                  {para}
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : screenMode === "auto" && hasDescription ? (
+          <div
+            className={`${styles.descriptionOverlay} ${styles.welcomeOverlay}`}
+            id="mock-media-button-description"
+          >
+            <div className={styles.welcomeContent}>
+              <h4 className={styles.welcomeIntro}>{displayTitle}</h4>
+              {buttonParagraphs.length > 0 ? (
+                buttonParagraphs.map((para, idx) => (
+                  <p key={idx} className={styles.welcomeParagraph}>
+                    {para}
+                  </p>
+                ))
+              ) : (
+                <p className={styles.welcomeParagraph}>{rawDescription}</p>
+              )}
             </div>
           </div>
         ) : (
@@ -1118,7 +1106,7 @@ export default function MockMediaPlayer({
 
       {/* Control Panel — playable media gets the full transport, a document gets the screen
           controls (including Full Screen) so a document can still be enlarged. */}
-      {(isPlayable || isScreenDocument) && !isWelcomeActive && (
+      {(isPlayable || isScreenDocument) && !isWelcomeActive && screenMode !== "auto" && (
         <div className={styles.controlPanel}>
           {isPlayable && (
             <div className={styles.sliderWrapper}>

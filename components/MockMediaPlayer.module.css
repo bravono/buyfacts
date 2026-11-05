@@ -674,6 +674,19 @@
   letter-spacing: -0.01em;
 }
 
+.welcomeParagraph {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: #f1f5f9 !important;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.welcomeParagraph:last-child {
+  margin-bottom: 0;
+}
+
 .welcomeList {
   list-style: none;
   margin: 0;

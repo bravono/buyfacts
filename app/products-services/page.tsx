@@ -40,108 +40,6 @@ function isAudioUrl(url?: string): boolean {
   return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)($|\?|#)/i.test(url);
 }
 
-const DEFAULT_SERVICES_BUTTONS: ButtonData[] = [
-  {
-    label: "Research Planning",
-    tagline: "Inclusive Research Definition",
-    description: "Collaborative scoping and question architecture ensuring comprehensive coverage of core business objectives and target demographics.",
-    color: "var(--color-orange-5)",
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)",
-    mediaType: "video",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
-  },
-  {
-    label: "Survey Design",
-    tagline: "Make Each Question Actionable",
-    description: "Constructing streamlined survey workflows with zero ambiguity, ensuring every collected response informs direct business decisions.",
-    color: "var(--color-accent-crimson)",
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)",
-    mediaType: "audio",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
-  },
-  {
-    label: "Story-Based Surveys",
-    tagline: "Execute a Dual-Based Survey Model",
-    description: "Narrative-driven interactive inquiry combining quantitative polling with qualitative scenario-based storytelling.",
-    color: "var(--color-orange-1)",
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(255, 153, 0, 0.4)",
-    mediaType: "image",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
-  },
-  {
-    label: "Improve Surveys",
-    tagline: "Increase the Return on Research",
-    description: "Iterative prompt refinement and telemetry tuning to amplify insight yield and maximize return on research investment.",
-    color: "var(--color-blue-3)",
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(0, 99, 152, 0.4)",
-    mediaType: "pdf",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
-  },
-  {
-    label: "Participant Validation",
-    tagline: "Play Cubicon Puzzle Games",
-    description: "Interactive verification mechanics using engaging 3D Cubicon spatial puzzles to verify genuine human participant engagement.",
-    color: "var(--color-orange-2)",
-    textColor: "var(--color-blue-5)",
-    hoverShadow: "0 0 15px rgba(255, 193, 100, 0.4)",
-    mediaType: "audio",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
-  },
-  {
-    label: "Survey Fieldwork",
-    tagline: "Quality-Centric Survey Execution",
-    description: "High-fidelity deployment across verified B2B panels with real-time fraud mitigation and strict data integrity enforcement.",
-    color: "var(--color-accent-green-lime)",
-    textColor: "var(--color-blue-5)",
-    hoverShadow: "0 0 15px rgba(176, 232, 67, 0.4)",
-    mediaType: "image",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
-  },
-  {
-    label: "Content Value",
-    tagline: "Maximize the Return on Content",
-    description: "Diagnostic evaluation of collateral effectiveness, optimizing messaging resonance and content syndication impact.",
-    color: "var(--color-accent-green-mint)",
-    textColor: "var(--color-blue-5)",
-    hoverShadow: "0 0 15px rgba(66, 234, 134, 0.4)",
-    mediaType: "video",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
-  },
-  {
-    label: "Pattern Insights",
-    tagline: "Active Pattern Analytics",
-    description: "Automated pattern detection and anomaly recognition uncovering non-obvious correlations in real-time response streams.",
-    color: "linear-gradient(135deg, #ea425f 0%, #ed40ed 100%)",
-    textColor: "white",
-    hoverShadow: "0 0 20px rgba(234, 66, 95, 0.6)",
-    mediaType: "video",
-    mediaUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
-  },
-  {
-    label: "Audience Validation",
-    tagline: "Opportunity Validation",
-    description: "Empirical validation frameworks to confirm market demand, assess willingness-to-pay, and de-risk new product initiatives.",
-    color: "var(--color-accent-plum)",
-    textColor: "white",
-    hoverShadow: "0 0 15px rgba(83, 34, 84, 0.4)",
-    mediaType: "pdf",
-    mediaUrl: "",
-    readItUrl: "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
-  },
-];
-
 const PRESET_COLORS = [
   { color: "var(--color-orange-5)", textColor: "white", hoverShadow: "0 0 15px rgba(155, 93, 0, 0.4)" },
   { color: "var(--color-accent-crimson)", textColor: "white", hoverShadow: "0 0 15px rgba(234, 66, 95, 0.4)" },
@@ -156,8 +54,9 @@ const PRESET_COLORS = [
 
 export default function ServicesPage() {
   const [selectedButtonIndex, setSelectedButtonIndex] = useState<number | null>(null);
+  const [welcome, setWelcome] = useState<{ title: string; paragraphs: string[] } | null>(null);
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
-  const [customButtons, setCustomButtons] = useState<ButtonData[]>(DEFAULT_SERVICES_BUTTONS);
+  const [customButtons, setCustomButtons] = useState<ButtonData[]>([]);
 
   useEffect(() => {
     const fetchButtons = async () => {
@@ -165,7 +64,18 @@ export default function ServicesPage() {
         const res = await fetch("/api/buttons");
         const data = await res.json();
         if (data.success && Array.isArray(data.buttons)) {
+          const welcomeRow = data.buttons.find((btn: any) => btn.id === "btn-srv-000");
+          const welcomeText = (welcomeRow?.descriptionText || welcomeRow?.description || "").trim();
+          setWelcome(
+            welcomeRow && welcomeText
+              ? {
+                  title: welcomeRow.label || "",
+                  paragraphs: welcomeText.split(/\r?\n+/).map((p: string) => p.trim()).filter(Boolean),
+                }
+              : null
+          );
           const apiServices = data.buttons
+            .filter((btn: any) => btn.id !== "btn-srv-000")
             .filter(
               (btn: any) =>
                 btn.category === "Products & Services" ||
@@ -176,12 +86,11 @@ export default function ServicesPage() {
                     btn.category.toLowerCase().includes("product")))
             )
             .map((btn: any, idx: number) => {
-              const defaultFallback = DEFAULT_SERVICES_BUTTONS[idx] || DEFAULT_SERVICES_BUTTONS[0];
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
               const resolvedMediaUrl = (btn.mediaUrl || "").trim();
               const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
               const resolvedHearItUrl = (btn.hearItUrl || "").trim();
-              const resolvedReadItUrl = (btn.readItUrl || defaultFallback.readItUrl || "").trim();
+              const resolvedReadItUrl = (btn.readItUrl || "").trim();
 
               // THE PRIMARY BUTTON DECIDES WHAT THE PLAYER SHOWS FIRST.
               // SEE IT / HEAR IT / READ IT are optional extras and never influence the
@@ -201,7 +110,7 @@ export default function ServicesPage() {
                           ? "image"
                           : null;
 
-              const storedType = (btn.mediaType || defaultFallback.mediaType) as
+              const storedType = (btn.mediaType || "video") as
                 | "video"
                 | "image"
                 | "audio"
@@ -211,9 +120,9 @@ export default function ServicesPage() {
               let resolvedMediaType = primaryKind ?? storedType;
 
               return {
-                label: btn.label || defaultFallback.label,
-                tagline: btn.tagline || btn.subtitle || defaultFallback.tagline,
-                description: btn.description || defaultFallback.description,
+                label: btn.label || "",
+                tagline: btn.tagline || btn.subtitle || "",
+                description: btn.descriptionText || btn.description || "",
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
@@ -239,10 +148,8 @@ export default function ServicesPage() {
     fetchButtons();
   }, []);
 
-  const currentMedia =
-    selectedButtonIndex !== null
-      ? (customButtons[selectedButtonIndex] || customButtons[0])
-      : customButtons[0];
+  const currentMedia: ButtonData | undefined =
+    selectedButtonIndex !== null ? customButtons[selectedButtonIndex] : customButtons[0];
 
   return (
     <div className={styles.main}>
@@ -274,16 +181,18 @@ export default function ServicesPage() {
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
               <MockMediaPlayer
-                title={showWelcome ? "Getting Started" : currentMedia.label}
-                tagline={showWelcome ? "Welcome to your Marketers tool workspace!" : currentMedia.tagline}
-                description={showWelcome ? undefined : currentMedia.description}
-                mediaType={currentMedia.mediaType}
-                mediaUrl={currentMedia.mediaUrl}
-                seeItUrl={currentMedia.seeItUrl}
-                hearItUrl={currentMedia.hearItUrl}
-                moreDetailUrl={currentMedia.readItUrl}
-                readItUrl={currentMedia.readItUrl}
-                pdfUrl={currentMedia.mediaType === "pdf" ? currentMedia.mediaUrl : "/sample-details.pdf"}
+                title={showWelcome ? welcome?.title : currentMedia?.label}
+                tagline={showWelcome ? "" : currentMedia?.tagline}
+                description={showWelcome ? undefined : currentMedia?.description}
+                welcomeTitle={welcome?.title}
+                welcomeParagraphs={welcome?.paragraphs}
+                mediaType={currentMedia?.mediaType}
+                mediaUrl={currentMedia?.mediaUrl}
+                seeItUrl={currentMedia?.seeItUrl}
+                hearItUrl={currentMedia?.hearItUrl}
+                moreDetailUrl={currentMedia?.readItUrl}
+                readItUrl={currentMedia?.readItUrl}
+                pdfUrl={currentMedia?.mediaType === "pdf" ? currentMedia?.mediaUrl : "/sample-details.pdf"}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}
                 onShowWelcome={() => setShowWelcome(true)}
