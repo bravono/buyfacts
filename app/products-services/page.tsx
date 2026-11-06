@@ -16,28 +16,9 @@ interface ButtonData {
   color: string;
   textColor: string;
   hoverShadow: string;
-  mediaType: "video" | "image" | "audio" | "pdf" | "docx";
-  mediaUrl: string;
   seeItUrl?: string;
   hearItUrl?: string;
   readItUrl?: string;
-}
-
-/**
- * Returns true when the URL points at a video file, so a video can be routed to SEE IT
- * even when the database row still carries a generic mediaType ("pdf", "image", ...).
- */
-function isVideoUrl(url?: string): boolean {
-  if (!url) return false;
-  return (
-    /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(url) ||
-    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//i.test(url)
-  );
-}
-
-function isAudioUrl(url?: string): boolean {
-  if (!url) return false;
-  return /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac)($|\?|#)/i.test(url);
 }
 
 const PRESET_COLORS = [
@@ -54,7 +35,13 @@ const PRESET_COLORS = [
 
 export default function ServicesPage() {
   const [selectedButtonIndex, setSelectedButtonIndex] = useState<number | null>(null);
-  const [welcome, setWelcome] = useState<{ title: string; paragraphs: string[] } | null>(null);
+  const [welcome, setWelcome] = useState<{
+    title: string;
+    paragraphs: string[];
+    seeItUrl: string;
+    hearItUrl: string;
+    readItUrl: string;
+  } | null>(null);
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [customButtons, setCustomButtons] = useState<ButtonData[]>([]);
 
@@ -70,6 +57,9 @@ export default function ServicesPage() {
             welcomeRow && welcomeText
               ? {
                   title: welcomeRow.label || "",
+                  seeItUrl: (welcomeRow.seeItUrl || "").trim(),
+                  hearItUrl: (welcomeRow.hearItUrl || "").trim(),
+                  readItUrl: (welcomeRow.readItUrl || "").trim(),
                   paragraphs: welcomeText.split(/\r?\n+/).map((p: string) => p.trim()).filter(Boolean),
                 }
               : null
@@ -87,38 +77,12 @@ export default function ServicesPage() {
             )
             .map((btn: any, idx: number) => {
               const presets = PRESET_COLORS[idx % PRESET_COLORS.length];
-              const resolvedMediaUrl: string = "";
               const resolvedSeeItUrl = (btn.seeItUrl || "").trim();
               const resolvedHearItUrl = (btn.hearItUrl || "").trim();
               const resolvedReadItUrl = (btn.readItUrl || "").trim();
 
-              // THE PRIMARY BUTTON DECIDES WHAT THE PLAYER SHOWS FIRST.
-              // SEE IT / HEAR IT / READ IT are optional extras and never influence the
-              // primary content — a post may have all three, some, or none of them.
-              // The primary type comes from the row's mediaType, corrected by the
-              // extension of the primary link itself (and by mediaUrl when mediaType is absent).
-              const primaryKind: "video" | "audio" | "pdf" | "docx" | "image" | null =
-                isVideoUrl(resolvedMediaUrl)
-                  ? "video"
-                  : isAudioUrl(resolvedMediaUrl)
-                    ? "audio"
-                    : /(\.docx|\.doc)($|\?|#)/i.test(resolvedMediaUrl)
-                      ? "docx"
-                      : /(\.pdf)($|\?|#)/i.test(resolvedMediaUrl)
-                        ? "pdf"
-                        : /(\.(png|jpe?g|gif|webp|svg|avif))($|\?|#)/i.test(resolvedMediaUrl)
-                          ? "image"
-                          : null;
-
-              const storedType = (btn.mediaType || "video") as
-                | "video"
-                | "image"
-                | "audio"
-                | "pdf"
-                | "docx";
-
-              let resolvedMediaType = primaryKind ?? storedType;
-
+              // A button is its description plus three independent links: SEE IT (video),
+              // HEAR IT (audio) and READ IT (document). There is no primary media link.
               return {
                 label: btn.label || "",
                 tagline: btn.tagline || btn.subtitle || "",
@@ -126,8 +90,6 @@ export default function ServicesPage() {
                 color: presets.color,
                 textColor: presets.textColor,
                 hoverShadow: presets.hoverShadow,
-                mediaType: resolvedMediaType,
-                mediaUrl: resolvedMediaUrl,
                 seeItUrl: resolvedSeeItUrl,
                 hearItUrl: resolvedHearItUrl,
                 readItUrl: resolvedReadItUrl,
@@ -148,8 +110,12 @@ export default function ServicesPage() {
     fetchButtons();
   }, []);
 
+  // Nothing selected: the player shows the welcome row's own assets (never button 1).
   const currentMedia: ButtonData | undefined =
-    selectedButtonIndex !== null ? customButtons[selectedButtonIndex] : customButtons[0];
+    selectedButtonIndex !== null ? customButtons[selectedButtonIndex] : undefined;
+  const activeSeeItUrl = selectedButtonIndex !== null ? currentMedia?.seeItUrl : welcome?.seeItUrl;
+  const activeHearItUrl = selectedButtonIndex !== null ? currentMedia?.hearItUrl : welcome?.hearItUrl;
+  const activeReadItUrl = selectedButtonIndex !== null ? currentMedia?.readItUrl : welcome?.readItUrl;
 
   return (
     <div className={styles.main}>
@@ -186,13 +152,10 @@ export default function ServicesPage() {
                 description={showWelcome ? undefined : currentMedia?.description}
                 welcomeTitle={welcome?.title}
                 welcomeParagraphs={welcome?.paragraphs}
-                mediaType={currentMedia?.mediaType}
-                mediaUrl={currentMedia?.mediaUrl}
-                seeItUrl={currentMedia?.seeItUrl}
-                hearItUrl={currentMedia?.hearItUrl}
-                moreDetailUrl={currentMedia?.readItUrl}
-                readItUrl={currentMedia?.readItUrl}
-                pdfUrl={currentMedia?.mediaType === "pdf" ? currentMedia?.mediaUrl : "/sample-details.pdf"}
+                seeItUrl={activeSeeItUrl}
+                hearItUrl={activeHearItUrl}
+                moreDetailUrl={activeReadItUrl}
+                readItUrl={activeReadItUrl}
                 pdfLabel="A Deeper Preview"
                 showWelcome={showWelcome}
                 onShowWelcome={() => setShowWelcome(true)}

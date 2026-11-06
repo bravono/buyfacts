@@ -41,13 +41,18 @@ export interface MockMediaPlayerProps {
   welcomeParagraphs?: string[];
   rightTitle?: string;
   rightSubtitle?: string;
+  /**
+   * @deprecated The primary link no longer exists: a dashboard button is a description
+   * plus three independent links. Kept only so older callers still type-check; ignored.
+   */
   mediaType?: "video" | "audio" | "image" | "pdf" | "docx";
+  /** @deprecated See mediaType. Ignored: the player has no primary media link. */
   mediaUrl?: string;
-  /** Dedicated video source for the SEE IT action (falls back to mediaUrl). */
+  /** SEE IT: this button's own video. Independent of the other two links. */
   seeItUrl?: string;
-  /** Dedicated audio source for the HEAR IT action (falls back to mediaUrl). */
+  /** HEAR IT: this button's own audio. Independent of the other two links. */
   hearItUrl?: string;
-  /** Dedicated document source for the READ IT action (falls back to mediaUrl / pdfUrl). */
+  /** READ IT: this button's own document. Independent of the other two links. */
   readItUrl?: string;
   pdfUrl?: string;
   pdfLabel?: string;
@@ -111,8 +116,6 @@ export default function MockMediaPlayer({
   welcomeParagraphs,
   rightTitle,
   rightSubtitle,
-  mediaType = "video",
-  mediaUrl,
   seeItUrl,
   hearItUrl,
   pdfUrl,
@@ -201,117 +204,36 @@ export default function MockMediaPlayer({
     .filter((p) => p.toLowerCase() !== (displayTitle || "").toLowerCase());
   const hasDescription = buttonParagraphs.length > 0 || Boolean(rawDescription);
 
-  const isDocx =
-    mediaType === "docx" ||
-    isDocxUrl(mediaUrl) ||
-    Boolean(mediaUrl && /\.(docx|doc)($|\?|#)/i.test(mediaUrl));
-
-  const isPdf =
-    mediaType === "pdf" ||
-    isPdfUrl(mediaUrl) ||
-    Boolean(mediaUrl && /\.pdf($|\?|#)/i.test(mediaUrl));
-
-  const isDocument = isDocx || isPdf;
-
-  // --- Dedicated per-button sources -------------------------------------------------
-  // Each of the three action buttons owns its own media, exactly like the primary
-  // BUTTON LINK does. When a dedicated link is not configured we fall back to the
-  // primary link only if that primary link is actually of the right kind.
-  const primaryIsVideo = Boolean(
-    mediaUrl &&
-    !isDocument &&
-    (isYouTubeUrl(mediaUrl) ||
-      /\.(mp4|m4v|webm|ogv|ogg|mov|avi|mkv)($|\?|#)/i.test(mediaUrl)),
-  );
-  const primaryIsAudio = Boolean(
-    mediaUrl &&
-    !isDocument &&
-    /\.(mp3|m4a|aac|wav|oga|opus|flac)($|\?|#)/i.test(mediaUrl),
-  );
-
-  /** Video shown inside the player for SEE IT (and as the default screen for video rows). */
-  const videoSrc =
-    (seeItUrl && seeItUrl.trim()) || (primaryIsVideo ? mediaUrl : undefined);
-  /** Audio played by HEAR IT (and as the default screen for audio rows). */
-  const audioSrc =
-    (hearItUrl && hearItUrl.trim()) || (primaryIsAudio ? mediaUrl : undefined);
-  /** Document opened by READ IT and downloaded from the reader modal. */
-  const documentSrc =
-    (readItUrl && readItUrl.trim()) ||
-    (isDocument && mediaUrl ? mediaUrl : undefined);
+  // --- Three independent links -----------------------------------------------------
+  // A button is a description plus SEE IT (video), HEAR IT (audio) and READ IT (document).
+  // There is no primary media link any more, so nothing here falls back from one link
+  // to another: each action shows only its own asset, and shows nothing when it has none.
+  const videoSrc = (seeItUrl || "").trim() || undefined;
+  const audioSrc = (hearItUrl || "").trim() || undefined;
+  const documentSrc = (readItUrl || "").trim() || undefined;
 
   /**
-   * The media actually shown on the player screen right now. The page passes the row's
-   * mediaType, but the screen must always match the dedicated link that really exists,
-   * otherwise every post ends up playing the same fallback asset.
-   *
-   * SEE IT / HEAR IT / READ IT each put their own asset on this one screen, so the
-   * screen mode decides first; the row's mediaType only decides the default screen.
+   * What is on the player screen. "auto" is the description screen (no media yet);
+   * SEE IT / HEAR IT / READ IT each put their own asset on this one screen.
    */
-  const screenType: "video" | "audio" | "image" | "pdf" | "docx" = (() => {
-    // Explicit choices made with SEE IT / HEAR IT / READ IT win while they last.
+  const screenType: "video" | "audio" | "pdf" | "docx" | null = (() => {
+    if (screenMode === "video") return videoSrc ? "video" : null;
+    if (screenMode === "audio") return audioSrc ? "audio" : null;
     if (screenMode === "document") {
-      if (documentSrc) return isDocxUrl(documentSrc) ? "docx" : "pdf";
-      return "video";
+      if (!documentSrc) return null;
+      return /(\.docx|\.doc)($|\?|#)/i.test(documentSrc) ? "docx" : "pdf";
     }
-    if (screenMode === "audio") return audioSrc ? "audio" : "video";
-    if (screenMode === "video") {
-      return videoSrc
-        ? "video"
-        : audioSrc
-          ? "audio"
-          : documentSrc
-            ? isDocxUrl(documentSrc)
-              ? "docx"
-              : "pdf"
-            : "video";
-    }
-
-    // Default screen: ALWAYS the primary button link. The extras play no part in it.
-    const primaryIsAudioLink = Boolean(
-      mediaUrl &&
-      /(\.mp3|\.m4a|\.aac|\.wav|\.oga|\.opus|\.flac)($|\?|#)/i.test(mediaUrl),
-    );
-    if (mediaType === "image") return mediaUrl ? "image" : "video";
-    if (mediaType === "audio") return mediaUrl ? "audio" : "video";
-    if (mediaType === "pdf") return mediaUrl ? "pdf" : "video";
-    if (mediaType === "docx") return mediaUrl ? "docx" : "video";
-    if (mediaType === "video") {
-      return primaryIsAudioLink ? "audio" : mediaUrl ? "video" : "video";
-    }
-    return "video";
+    return null;
   })();
 
-  /**
-   * The document the screen should read, chosen explicitly:
-   *  - READ IT pressed  -> this post's READ IT document
-   *  - default screen   -> the PRIMARY link when it is a document, otherwise the READ IT
-   *                        document (a post may have a document but no READ IT button filled)
-   * The READ IT link can never stand in for a primary document, which is what made a bad
-   * READ IT URL take the whole player down.
-   */
-  const screenDocUrl: string | undefined =
-    screenMode === "document"
-      ? documentSrc
-      : isDocument
-        ? mediaUrl
-        : screenMode === "auto"
-          ? documentSrc
-          : undefined;
-
-  /**
-   * On the default screen this is the primary link itself (mediaUrl); the SEE IT / HEAR IT /
-   * READ IT sources are only used when one of those buttons put its own media on screen.
-   */
   const screenMediaUrl =
-    screenMode === "video"
+    screenType === "video"
       ? videoSrc
-      : screenMode === "audio"
+      : screenType === "audio"
         ? audioSrc
         : screenType === "docx" || screenType === "pdf"
-          ? screenDocUrl
-          : // The default screen plays the primary media link.
-            (mediaUrl ?? videoSrc ?? audioSrc ?? screenDocUrl);
+          ? documentSrc
+          : undefined;
 
   const isScreenDocx = screenType === "docx";
   const isScreenPdf = screenType === "pdf";
@@ -328,11 +250,7 @@ export default function MockMediaPlayer({
   );
 
   const effectiveInDepthUrl = moreDetailUrl || readItUrl;
-  const targetDocUrl =
-    effectiveInDepthUrl ||
-    (isDocument && mediaUrl ? mediaUrl : null) ||
-    pdfUrl ||
-    "/sample-details.pdf";
+  const targetDocUrl = effectiveInDepthUrl || undefined;
 
   // Fetch and convert the DOCX that is on the player screen — always this post's READ IT document
   useEffect(() => {
@@ -426,7 +344,7 @@ export default function MockMediaPlayer({
     setIsLoadingDoc(false);
     setIsLoadingModalDoc(false);
     setDocKey(null);
-  }, [mediaUrl, seeItUrl, hearItUrl, readItUrl, title]);
+  }, [seeItUrl, hearItUrl, readItUrl, title]);
 
   // Reset playback states on media change
   useEffect(() => {
@@ -448,6 +366,11 @@ export default function MockMediaPlayer({
       audioRef.current.load();
     }
   }, [screenMediaUrl, screenType]);
+
+  // A different button (or the welcome state) always starts on the description screen.
+  useEffect(() => {
+    setScreenMode("auto");
+  }, [title]);
 
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLMediaElement>) => {
     const el = e.currentTarget;
@@ -628,7 +551,7 @@ export default function MockMediaPlayer({
       console.info(`No video is linked to "${displayTitle}".`);
       flashMissing(
         "video",
-        `No video is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+        `No video is attached to "${displayTitle}" yet — this button has no media for it.`,
       );
     }
   };
@@ -659,7 +582,7 @@ export default function MockMediaPlayer({
       console.info(`No audio is linked to "${displayTitle}".`);
       flashMissing(
         "audio",
-        `No audio is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+        `No audio is attached to "${displayTitle}" yet — this button has no media for it.`,
       );
     }
   };
@@ -700,13 +623,14 @@ export default function MockMediaPlayer({
       console.info(`No document is linked to "${displayTitle}".`);
       flashMissing(
         "document",
-        `No document is attached to "${displayTitle}" yet — the player is still showing its primary content.`,
+        `No document is attached to "${displayTitle}" yet — this button has no media for it.`,
       );
     }
   };
 
   const handleDownloadDocument = () => {
     const targetUrl = targetDocUrl;
+    if (!targetUrl) return;
     const isDocxTarget = isDocxUrl(targetUrl);
     const extension = isDocxTarget ? "docx" : "pdf";
     // Create temporary link and trigger download
@@ -761,7 +685,7 @@ export default function MockMediaPlayer({
       <div
         ref={screenFrameRef}
         className={`${styles.screenFrame} ${
-          screenType === "video" || screenType === "image"
+          screenType === "video"
             ? styles.videoScreenFrame
             : styles.audioScreenFrame
         }`}
@@ -824,10 +748,10 @@ export default function MockMediaPlayer({
               key={screenMediaUrl}
               ref={videoRef}
               /*
-               * On the default screen this is the post's own mediaUrl; when SEE IT
-               * or HEAR IT is active it is that button's dedicated source.
+               * The media resolved for the current screen: the button's SEE IT link
+               * (or the primary link when it is itself a video).
                */
-              src={mediaUrl}
+              src={screenMediaUrl}
               className={styles.realVideo}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
@@ -897,17 +821,6 @@ export default function MockMediaPlayer({
             onPause={() => setIsPlaying(false)}
             onEnded={handleEnded}
           />
-        )}
-
-        {/* Image Render */}
-        {screenType === "image" && screenMediaUrl && (
-          <div className={styles.imageViewer}>
-            <img
-              src={screenMediaUrl}
-              className={styles.realImage}
-              alt={displayTitle}
-            />
-          </div>
         )}
 
         {/* Document Render: PDF — this post's READ IT document, read inside the player */}
@@ -991,7 +904,7 @@ export default function MockMediaPlayer({
         )}
 
         {/* Large Central Play Button (when playable and welcome not active) */}
-        {isPlayable && !isWelcomeActive && screenMode !== "auto" && (
+        {isPlayable && !isWelcomeActive && (
           <button
             className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${screenType === "video" && isPlaying ? styles.videoPlaying : ""}`}
             onClick={togglePlay}
@@ -1106,7 +1019,7 @@ export default function MockMediaPlayer({
 
       {/* Control Panel — playable media gets the full transport, a document gets the screen
           controls (including Full Screen) so a document can still be enlarged. */}
-      {(isPlayable || isScreenDocument) && !isWelcomeActive && screenMode !== "auto" && (
+      {(isPlayable || isScreenDocument) && !isWelcomeActive && (
         <div className={styles.controlPanel}>
           {isPlayable && (
             <div className={styles.sliderWrapper}>

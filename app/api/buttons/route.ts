@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { id, descriptionText, seeItUrl, hearItUrl, readItUrl, mediaType, subtitle, description } =
+    const { id, descriptionText, seeItUrl, hearItUrl, readItUrl, subtitle, description } =
       await req.json();
 
     if (!id) {
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     if (seeItUrl !== undefined) updateData.seeItUrl = seeItUrl;
     if (hearItUrl !== undefined) updateData.hearItUrl = hearItUrl;
     if (readItUrl !== undefined) updateData.readItUrl = readItUrl;
-    if (mediaType !== undefined) updateData.mediaType = mediaType;
     if (subtitle !== undefined) updateData.subtitle = subtitle;
     if (description !== undefined) updateData.description = description;
 

@@ -35,8 +35,8 @@ describe("In-Depth and Primary Button Asset Separation Test Suite", () => {
   it("3. Pages pass readItUrl from the database as moreDetailUrl to MockMediaPlayer", () => {
     for (const rel of [["app", "products-services", "page.tsx"], ["app", "research-imperatives", "page.tsx"]]) {
       const content = fs.readFileSync(path.join(BUYFACTS_ROOT, ...rel), "utf-8");
-      assert.ok(content.includes("moreDetailUrl={currentMedia?.readItUrl}"), `${rel.join("/")} must pass moreDetailUrl`);
-      assert.ok(content.includes("readItUrl={currentMedia?.readItUrl}"), `${rel.join("/")} must pass readItUrl`);
+      assert.ok(content.includes("moreDetailUrl={activeReadItUrl}"), `${rel.join("/")} must pass moreDetailUrl`);
+      assert.ok(content.includes("readItUrl={activeReadItUrl}"), `${rel.join("/")} must pass readItUrl`);
     }
   });
 

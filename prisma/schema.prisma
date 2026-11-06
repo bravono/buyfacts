@@ -60,7 +60,6 @@ model DashboardButton {
   seeItUrl        String?  // Video link for SEE IT
   hearItUrl String?  // Audio link for HEAR IT
   readItUrl String?  // Document/PDF link for READ IT
-  mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
   description String?  // Detailed button description for media player overlay and reader
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"

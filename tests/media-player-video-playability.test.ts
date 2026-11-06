@@ -19,8 +19,8 @@ test("Media Player Video Playability & Controls Test Suite", async (t) => {
       "MockMediaPlayer must bind videoRef to the video element"
     );
     assert.ok(
-      playerContent.includes('src={mediaUrl}'),
-      "MockMediaPlayer must bind mediaUrl to the video source"
+      playerContent.includes('src={screenMediaUrl}'),
+      "MockMediaPlayer must bind the resolved screen media (SEE IT link or primary video) to the video source"
     );
     assert.ok(
       playerContent.includes('preload="metadata"'),
