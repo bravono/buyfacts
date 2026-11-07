@@ -242,6 +242,7 @@ export default function MockMediaPlayer({
   const isScreenYouTube = Boolean(
     screenMediaUrl && isYouTubeUrl(screenMediaUrl),
   );
+  // Supported media: mediaType === "video" or screenType video/audio
   const isPlayable = Boolean(
     (screenType === "video" || screenType === "audio") &&
     screenMediaUrl &&
@@ -250,6 +251,7 @@ export default function MockMediaPlayer({
   );
 
   const effectiveInDepthUrl = moreDetailUrl || readItUrl;
+  // const targetDocUrl = effectiveInDepthUrl || (isDocument && mediaUrl ? mediaUrl : null);
   const targetDocUrl = effectiveInDepthUrl || undefined;
 
   // Fetch and convert the DOCX that is on the player screen — always this post's READ IT document

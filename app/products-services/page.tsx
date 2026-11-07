@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DashboardAnimation from "@/components/DashboardAnimation";
 import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
-import MockMediaPlayer from "@/components/MockMediaPlayer";
+import MediaPlayer from "@/components/MediaPlayer";
 import Link from "next/link";
 import styles from "./page.module.css";
 
@@ -146,7 +146,7 @@ export default function ServicesPage() {
           {/* Right Column: MockMediaPlayer component */}
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
-              <MockMediaPlayer
+              <MediaPlayer
                 title={showWelcome ? welcome?.title : currentMedia?.label}
                 tagline={showWelcome ? "" : currentMedia?.tagline}
                 description={showWelcome ? undefined : currentMedia?.description}

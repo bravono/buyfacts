@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DashboardAnimation from "@/components/DashboardAnimation";
-import MockMediaPlayer from "@/components/MockMediaPlayer";
+import MediaPlayer from "@/components/MediaPlayer";
 import Link from "next/link";
 import styles from "./page.module.css";
 import RangeOfResponsibilities from "@/components/RangeOfResponsibilities";
@@ -151,7 +151,7 @@ export default function PortfolioPage() {
           {/* Right Column: MockMediaPlayer component configured dynamically */}
           <div className={styles.columnRight}>
             <div className={styles.stickyWrapper}>
-              <MockMediaPlayer
+              <MediaPlayer
                 title={showWelcome ? welcome?.title : currentMedia?.label}
                 tagline={showWelcome ? "" : currentMedia?.tagline}
                 description={showWelcome ? undefined : currentMedia?.description}
