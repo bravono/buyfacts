@@ -353,7 +353,7 @@ npm run seed:prod
 npx tsx prisma/seed-prod.ts
 ```
 This script executes upsert operations strictly on:
-1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback `AdminPass123!`.
+1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback.
 2. **DashboardButton table**: Upserts the 18 canonical dashboard buttons (9 Products & Services, 9 Research Imperatives).
 
 It performs no `deleteMany()` calls and does not insert dummy `MediaAsset` or `VaultAsset` records.
@@ -391,7 +391,7 @@ Located within the About section (`id="about"`) on the homepage, the "What Sets 
 - **Zero-Emoji Compliance**: Adheres to strict corporate design and zero-emoji standards across all UI layers and metadata.
 
 ### Dashboard & Media Player Model
-The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MockMediaPlayer.tsx)) renders dynamic media associated with the active dashboard selection:
+The dashboard media player ([`components/MediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MediaPlayer.tsx)) renders dynamic media associated with the active dashboard selection:
 - **Direct Video Playability**: When an active button is associated with a video link (`mediaType: "video"`), the video element is directly loaded and playable. A prominent central Play button is rendered on the screen frame.
 - **Enlarged Media Player Dimensions**: With the description moved inside the canvas frame, the player card max-width is expanded to 860px and screen frame max-height to 480px (with 340px on compact screens), providing a substantially larger viewing surface.
 - **Getting Started Welcome Overlay**: When users land on `/products-services` or `/research-imperatives`, the media player presents the "Getting Started" guide across the entirety of the media display area. When the welcome overlay is active, media controls (central play button, right next chevron button, seek control panel, audio visualizer, and opening card) are automatically hidden. To avoid duplication with the top banner ("Getting Started" title and "Welcome to your Marketers tool workspace!" subtitle), the display area focuses cleanly on the actionable onboarding steps ("Here are the basics:") and bullet items. Includes a header toggle button to review the guide at any time and a prominent dismissal action to begin exploring topics immediately.
@@ -830,39 +830,44 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
 
 ---
 
-## 12. Homepage Section 2: Peer Benchmark Incentive Surveys
+## 12. Homepage Section 2: The Great Eight
 
 ### Component Overview
-Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) presents the core value pillars of BuyFacts' peer benchmark methodology.
+Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) presents **The Great Eight**: eight core perspectives on making market research more useful, from designing the survey to putting what you learn to work.
 
 ### Architecture & Design Elements
 1. **Section Header**:
-   - Primary Title: "Peer Benchmark Incentive Surveys"
-   - Primary Description: "Real-Time Peer Comparisons. Relevant Insight for Eery participant."
+   - Primary Title: "The Great Eight"
+   - Primary Subtitle: "Better Surveys, Smarter Research, and Putting the Findings to Work"
+   - Author Attribution: "From Robert's Research and Robert's Way"
    - Trust Badges: Sleek pill badges with dot indicators ("Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data").
-   - Callout Banner: Integrated highlight banner emphasizing data quality and removing payola incentives.
-2. **8-Pillar Card Grid & CDN Asset Architecture**:
-   - Card Architecture: Structured white card tiles with subtle brand borders, shadows, and smooth hover elevation.
-   - Header Row: Dual-tone rounded icon container alongside two-digit sequential index numerals (`01` through `08`).
-   - CDN Icon Delivery: High-resolution vector SVGs hosted on the BuyFacts public assets S3 CDN (`https://s3.buyfacts.com/buyfacts-public-assets/uploads/`).
-     - Card 01 (Survey Design): `BuyFacts_Survey_Hosting.svg`
-     - Card 02 (Perticipant Insight Choices): `BuyFacts_Early_Recognition.svg`
-     - Card 03 (Traditional and Story-based Instruments): `BuyFacts_Research_Tools_Concept.svg`
-     - Card 04 (Best Practices): `BuyFacts_Best_Practices_Keystone.svg`
-     - Card 05 (Every Question Maps to Its Purspose): `BuyFacts_Question_Design.svg`
-     - Card 06 (Executives Get peer Comparison Not Coffee Cards): `BuyFacts_Value_Quantification.svg`
-     - Card 07 (A Dual Approach Delivers Stories Backed by Facts): `BuyFacts_Thought_Leadership_TL1.svg`
-     - Card 08 (Inclusive Stakeholder Engagement Reduces Malicious Compliance): `BuyFacts_Bot_Detection.svg`
-   - Resilient Fallback: `ServiceCardIcon` component handles asset loading and falls back seamlessly to Lucide vector icons on error (`onError`).
-   - Sizing and Containment: `.cardCdnIcon` class enforces `34px x 34px` dimensions with `object-fit: contain` inside the 54px icon container.
-   - Typography: Left-aligned display titles tailored for variable length headlines.
-   - Hover Feedback: Micro-interaction accent bar expanding on card hover.
-3. **Responsive Grid**:
-   - Desktop (>= 1024px): 4-column x 2-row grid.
-   - Tablet (768px - 1023px): 2-column x 4-row grid.
-   - Mobile (< 768px): Single-column stack with adjusted card gap.
-4. **Automated Verification**:
-   - Test suite in `tests/section-two-design.test.ts` validating anchor preservation, exact copy retention, badge system, CDN asset endpoints, image fallback mechanics, CSS grid rules, and zero-emoji compliance.
+   - Callout Banner: Highlight banner with heading "Fresh Thinking, Practical Ideas, More Value from Your Findings" and descriptive copy "Eight perspectives on making research more useful, from designing the survey to putting what you learn to work."
+2. **8 Pillar Cards with Exact Updated Titles**:
+   - **Card 01**: "Targeting Your Survey" (Icon: `BuyFacts_Survey_Hosting.svg`, Teal)
+   - **Card 02**: "The Allure of Too Many Choices" (Icon: `BuyFacts_Early_Recognition.svg`, Gold)
+   - **Card 03**: "Stories Supported by Facts" (Icon: `BuyFacts_Research_Tools_Concept.svg`, Grey)
+   - **Card 04**: "The Top Ten Market Research Best Practices" (Icon: `BuyFacts_Best_Practices_Keystone.svg`, Sky Blue)
+   - **Card 05**: "The Art of Asking Great Survey Questions" (Icon: `BuyFacts_Question_Design.svg`, Lime Green)
+   - **Card 06**: "Executives Want Insight, Not Coffee Cards" (Icon: `BuyFacts_Value_Quantification.svg`, Coral)
+   - **Card 07**: "Build Content Fast from Survey Findings" (Icon: `BuyFacts_Thought_Leadership_TL1.svg`, Teal)
+   - **Card 08**: "Avoid Death from Doubt" (Icon: `BuyFacts_Bot_Detection.svg`, Accent Gold)
+3. **Clickable Card Interactivity & Lightbox Modal**:
+   - Every card is fully interactive (`role="button"`, `tabIndex={0}`, hover micro-interactions, keyboard Enter/Space support).
+   - Clicking any card opens a dedicated **Great Eight Modal Lightbox** directly on the home page.
+   - The modal embeds the renamed [`components/MediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MediaPlayer.tsx) component, giving users immediate access to:
+     - **READ IT**: Formatted document reading directly in the player for PDF and DOCX files hosted on CDN.
+     - **SEE IT**: Video demonstrations and visual presentations.
+     - **HEAR IT**: Audio performances and commentary.
+     - **CONTACT US**: Direct pathway to initiate discussions with the team.
+   - Modal header includes card sequence index, title, subtitle, a direct **Open in Reader** link to open the document in [`app/document-viewer/page.tsx`](file:///c:/Users/USER/BuyFacts/app/document-viewer/page.tsx) in a new tab, and a close button with Escape key dismissal.
+4. **Database Table & Content Decoupling (`GreatEightItem`)**:
+   - The Great Eight articles and media are backed by the `GreatEightItem` Prisma model in `prisma/schema.prisma`.
+   - Modifying article CDN URLs, titles, descriptions, video links, or audio links requires **zero codebase changes**.
+   - Backed by the REST API endpoint `GET /api/great-eight` (and authenticated `POST /api/great-eight`).
+   - Integrated into the Admin Database Dashboard at `/admin` via `ADMIN_MODEL_REGISTRY.greatEightItem` for complete CRUD management.
+5. **Automated Verification**:
+   - Test suite in `tests/section-two-design.test.ts` verifying updated titles, badges, copy, clickable card interaction, and modal integration.
+   - Test suite in `tests/great-eight.test.ts` verifying data integrity, API contract, admin registry mapping, and zero-emoji compliance.
 
 ---
 
