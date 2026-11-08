@@ -27,7 +27,10 @@ import {
   X,
   Video,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
+import MediaPlayer from "@/components/MediaPlayer";
+import { GreatEightData } from "@/app/api/great-eight/route";
 import styles from "./page.module.css";
 import TripletButtonGroup, {
   TripletButtonItem,
@@ -63,6 +66,13 @@ const COMING_SOON = false;
 interface ServiceCardData {
   id: string;
   title: string;
+  slug?: string;
+  orderIndex?: number;
+  tagline?: string;
+  description?: string;
+  seeItUrl?: string;
+  hearItUrl?: string;
+  readItUrl?: string;
   icon?: React.ReactNode;
   iconUrl?: string;
   iconColor: string;
@@ -279,16 +289,47 @@ export default function Home() {
     };
   }, []);
 
+  // Dynamic Great Eight Data and Modal State
+  const [dynamicGreatEight, setDynamicGreatEight] = useState<GreatEightData[] | null>(null);
+  const [activeGreatEightModal, setActiveGreatEightModal] = useState<{
+    isOpen: boolean;
+    card: ServiceCardData;
+    index: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/great-eight")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.items) && data.items.length > 0) {
+          setDynamicGreatEight(data.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCardClick = (card: ServiceCardData, index: number) => {
+    setActiveGreatEightModal({
+      isOpen: true,
+      card,
+      index,
+    });
+  };
+
   // Lock body scroll and listen for Escape key when any modal is open
   useEffect(() => {
     const isAnyModalOpen =
-      isVerificationModalOpen || Boolean(activeVideoModal?.isOpen);
+      isVerificationModalOpen || Boolean(activeVideoModal?.isOpen) || Boolean(activeGreatEightModal?.isOpen);
 
     if (isAnyModalOpen) {
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
-          if (activeVideoModal?.isOpen) {
+          if (activeGreatEightModal?.isOpen) { setActiveGreatEightModal(null); } else if (activeVideoModal?.isOpen) {
             setActiveVideoModal(null);
           } else if (isVerificationModalOpen && !isSubmitting) {
             setIsVerificationModalOpen(false);
@@ -303,7 +344,7 @@ export default function Home() {
     } else {
       document.body.style.overflow = "";
     }
-  }, [isVerificationModalOpen, isSubmitting, activeVideoModal]);
+  }, [isVerificationModalOpen, isSubmitting, activeVideoModal, activeGreatEightModal]);
 
   const handleResetVerification = () => {
     setIsVerified(false);
@@ -312,11 +353,20 @@ export default function Home() {
     setVerificationKey((prev) => prev + 1);
   };
 
-  // The 8 Portfolio Cards matching Section 2 of the mockup image
+  // The Great Eight Pillar Cards with Database Support and Media Reader Links
   const portfolioCards: ServiceCardData[] = [
     {
       id: "survey-design",
-      title: "Survey Design",
+      slug: "targeting-your-survey",
+      orderIndex: 1,
+      title: "Targeting Your Survey",
+      tagline: "Reach the right participants to generate accurate, actionable insights.",
+      description:
+        "Effective survey research begins with precision targeting. When questions reach qualified, genuine participants rather than unvetted panels, research findings accurately reflect your true market dynamics and prevent expensive misdirection.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315274750-bri2xa-BuyFacts_Survey_Hosting.svg",
       icon: <Compass size={32} />,
@@ -325,7 +375,16 @@ export default function Home() {
     },
     {
       id: "participant-insight-choices",
-      title: "Participant Insight Choices",
+      slug: "the-allure-of-too-many-choices",
+      orderIndex: 2,
+      title: "The Allure of Too Many Choices",
+      tagline: "Focus participant decision frameworks to avoid choice overload.",
+      description:
+        "Giving respondents excessive choices distorts feedback and lowers completion quality. Structuring decisions into focused, meaningful alternatives uncovers genuine preferences while keeping engagement high.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259736-v7irdo-BuyFacts_Early_Recognition.svg",
       icon: <Award size={32} />,
@@ -334,7 +393,16 @@ export default function Home() {
     },
     {
       id: "traditional-story-based-instruments",
-      title: "Traditional and Story-based Instruments",
+      slug: "stories-supported-by-facts",
+      orderIndex: 3,
+      title: "Stories Supported by Facts",
+      tagline: "Combine quantitative rigor with narrative recall that moves stakeholders.",
+      description:
+        "Data alone seldom convinces skeptics, while stories without evidence invite doubt. Blending verified statistics with human narratives creates memorable, defensible business cases.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269875-46dt5y-BuyFacts_Research_Tools_Concept.svg",
       icon: <Search size={32} />,
@@ -343,7 +411,16 @@ export default function Home() {
     },
     {
       id: "best-practices",
-      title: "Best Practices",
+      slug: "the-top-ten-market-research-best-practices",
+      orderIndex: 4,
+      title: "The Top Ten Market Research Best Practices",
+      tagline: "Essential principles for reliable, high-yield research design.",
+      description:
+        "Proven standards from survey architecture to data validation that ensure your findings withstand executive scrutiny and deliver enduring competitive advantage.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259493-khokty-BuyFacts_Best_Practices_Keystone.svg",
       icon: <Target size={32} />,
@@ -352,7 +429,16 @@ export default function Home() {
     },
     {
       id: "every-question-maps-to-its-purpose",
-      title: "Every Question Maps to Its Purpose",
+      slug: "the-art-of-asking-great-survey-questions",
+      orderIndex: 5,
+      title: "The Art of Asking Great Survey Questions",
+      tagline: "Every question must directly map to a strategic decision purpose.",
+      description:
+        "Crafting unbiased, unambiguous questions ensures respondents share authentic perceptions. Eliminating filler questions respects participant time and sharpens decision clarity.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269426-66lkh2-BuyFacts_Question_Design.svg",
       icon: <Edit3 size={32} />,
@@ -361,7 +447,16 @@ export default function Home() {
     },
     {
       id: "executives-get-peer-comparison-not-coffee-cards",
-      title: "Executives Get peer Comparison Not Coffee Cards",
+      slug: "executives-want-insight-not-coffee-cards",
+      orderIndex: 6,
+      title: "Executives Want Insight, Not Coffee Cards",
+      tagline: "Peer comparisons and market benchmarks that command attention.",
+      description:
+        "Executive respondents are motivated by peer benchmark insights, not trivial gift card incentives. Offering high-value market context attracts genuine leaders and drives meaningful data.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315281029-irb8ll-BuyFacts_Value_Quantification.svg",
       icon: <Users size={32} />,
@@ -370,7 +465,16 @@ export default function Home() {
     },
     {
       id: "a-dual-approach-delivers-stories-backed-by-facts",
-      title: "A Dual Approach Delivers Stories Backed by Facts",
+      slug: "build-content-fast-from-survey-findings",
+      orderIndex: 7,
+      title: "Build Content Fast from Survey Findings",
+      tagline: "Accelerate digital asset creation directly from verified research data.",
+      description:
+        "Transform survey results into thought leadership articles, graphics, and campaign copy in record time, multiplying the marketing return on every research initiative.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315275105-urqpqf-BuyFacts_Thought_Leadership_TL1.svg",
       icon: <ShieldCheck size={32} />,
@@ -379,7 +483,16 @@ export default function Home() {
     },
     {
       id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
-      title: "Inclusive Stakeholder Engagement Reduces Malicious Compliance",
+      slug: "avoid-death-from-doubt",
+      orderIndex: 8,
+      title: "Avoid Death from Doubt",
+      tagline: "Eliminate skepticism with verifiable, bot-protected research rigor.",
+      description:
+        "When leadership doubts data integrity, research recommendations stall. Rigorous anti-bot verification and robust methodology provide the confidence required to act decisively.",
+      readItUrl:
+        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+      seeItUrl: "",
+      hearItUrl: "",
       iconUrl:
         "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259585-6u4ucb-BuyFacts_Bot_Detection.svg",
       icon: <TrendingUp size={32} />,
@@ -387,6 +500,25 @@ export default function Home() {
       bgColor: "rgba(255, 176, 57, 0.08)",
     },
   ];
+
+  const mergedPortfolioCards = portfolioCards.map((card, index) => {
+    const dbItem = dynamicGreatEight?.find(
+      (item) => item.slug === card.slug || item.orderIndex === index + 1
+    );
+    if (!dbItem) return card;
+    return {
+      ...card,
+      title: dbItem.title || card.title,
+      tagline: dbItem.tagline || card.tagline,
+      description: dbItem.description || card.description,
+      readItUrl: dbItem.readItUrl || card.readItUrl,
+      seeItUrl: dbItem.seeItUrl || card.seeItUrl,
+      hearItUrl: dbItem.hearItUrl || card.hearItUrl,
+      iconUrl: dbItem.iconUrl || card.iconUrl,
+      iconColor: dbItem.iconColor || card.iconColor,
+      bgColor: dbItem.bgColor || card.bgColor,
+    };
+  });
 
   // Validate required contact form fields before launching verification puzzle
   const validateForm = () => {
@@ -802,7 +934,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION 2: Peer Benchmark Incentive Surveys (8 Cards Grid) */}
+      {/* SECTION 2: The Great Eight (8 Cards Grid) */}
       <section
         className="section-light"
         id="portfolio"
@@ -811,11 +943,13 @@ export default function Home() {
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitleLight}>
-              Peer Benchmark Incentive Surveys
+              The Great Eight
             </h2>
             <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Every
-              participant.
+              Better Surveys, Smarter Research, and Putting the Findings to Work
+            </p>
+            <p className={styles.sectionAuthorLight}>
+              From Robert&apos;s Research and Robert&apos;s Way
             </p>
 
             {/* Accent Badges matching Mockup image */}
@@ -835,21 +969,32 @@ export default function Home() {
             </div>
 
             <div className={styles.calloutBanner}>
-              
+              <span className={styles.calloutHeading}>
+                Fresh Thinking, Practical Ideas, More Value from Your Findings
+              </span>
               <span className={styles.calloutText}>
-                Protect Data Quality - Remove Pay for Participation that
-                Promotes Cash-Grab Participation
+                Eight perspectives on making research more useful, from designing the survey to putting what you learn to work.
               </span>
             </div>
           </div>
 
           {/* 8 Pillar Cards Grid */}
           <div className={styles.servicesGrid}>
-            {portfolioCards.map((card, index) => (
+            {mergedPortfolioCards.map((card, index) => (
               <div
                 key={card.id}
-                className={styles.serviceCard}
+                className={`${styles.serviceCard} ${styles.serviceCardClickable}`}
                 id={`portfolio-card-${card.id}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open article: ${card.title}`}
+                onClick={() => handleCardClick(card, index)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleCardClick(card, index);
+                  }
+                }}
               >
                 {/* Card Header Row: Icon + Sequence Number */}
                 <div className={styles.cardHeaderRow}>
@@ -869,6 +1014,12 @@ export default function Home() {
                 </div>
 
                 <h3 className={styles.cardTitle}>{card.title}</h3>
+
+                <div className={styles.cardClickIndicator}>
+                  <span>Read Article</span>
+                  <ArrowRight size={14} />
+                </div>
+
                 <div
                   className={styles.cardAccentBar}
                   style={{ backgroundColor: card.iconColor }}
@@ -1910,6 +2061,76 @@ export default function Home() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Great Eight Article & Media Player Lightbox Modal */}
+      {activeGreatEightModal && activeGreatEightModal.isOpen && (
+        <div
+          className={styles.greatEightModalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="great-eight-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setActiveGreatEightModal(null);
+            }
+          }}
+        >
+          <div className={styles.greatEightModalDialog}>
+            <div className={styles.greatEightModalHeader}>
+              <div className={styles.greatEightModalHeaderInfo}>
+                <span className={styles.greatEightSequenceBadge}>
+                  {String(activeGreatEightModal.index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 id="great-eight-modal-title" className={styles.greatEightModalTitle}>
+                    {activeGreatEightModal.card.title}
+                  </h3>
+                  <p className={styles.greatEightModalSubtitle}>
+                    {activeGreatEightModal.card.tagline ||
+                      "The Great Eight Perspectives on Better Surveys & Smarter Research"}
+                  </p>
+                </div>
+              </div>
+              <div className={styles.greatEightHeaderActions}>
+                {activeGreatEightModal.card.readItUrl && (
+                  <Link
+                    href={`/document-viewer?url=${encodeURIComponent(activeGreatEightModal.card.readItUrl)}&title=${encodeURIComponent(activeGreatEightModal.card.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.greatEightExternalBtn}
+                    title="Open document in full reader"
+                  >
+                    <ExternalLink size={15} />
+                    <span>Open in Reader</span>
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setActiveGreatEightModal(null)}
+                  className={styles.greatEightModalCloseBtn}
+                  aria-label="Close Great Eight reader"
+                  id="close-great-eight-modal-btn"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.greatEightModalBody}>
+              <MediaPlayer
+                title={activeGreatEightModal.card.title}
+                subtitle={activeGreatEightModal.card.tagline}
+                description={activeGreatEightModal.card.description}
+                seeItUrl={activeGreatEightModal.card.seeItUrl}
+                hearItUrl={activeGreatEightModal.card.hearItUrl}
+                readItUrl={activeGreatEightModal.card.readItUrl}
+                initialScreenMode={activeGreatEightModal.card.readItUrl ? "document" : "auto"}
+                showWelcome={false}
+              />
+            </div>
           </div>
         </div>
       )}

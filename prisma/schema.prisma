@@ -253,3 +253,22 @@ model Topic {
   createdAt   DateTime     @default(now())
 }
 
+
+// 8. Great Eight Articles & Media
+model GreatEightItem {
+  id          Int      @id @default(autoincrement())
+  orderIndex  Int      @default(1)
+  slug        String   @unique
+  title       String
+  tagline     String?  @default("")
+  description String?  @default("")
+  seeItUrl    String?  // Video link for SEE IT
+  hearItUrl   String?  // Audio link for HEAR IT
+  readItUrl   String?  // Document/PDF/DOCX CDN link for READ IT
+  iconUrl     String?  // Icon CDN URL
+  iconColor   String?  // Accent color (e.g. #14a38b)
+  bgColor     String?  // Background tint (e.g. rgba(20, 163, 139, 0.08))
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}

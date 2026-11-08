@@ -3,6 +3,7 @@ import { PrismaClient, ContentFormat } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "../lib/auth/password";
 import { DEFAULT_SURVEYS } from "../app/api/narrative-data/route";
+import { DEFAULT_GREAT_EIGHT } from "../app/api/great-eight/route";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -28,6 +29,8 @@ async function main() {
   await prisma.vaultAsset.deleteMany();
   await prisma.topic.deleteMany();
 
+  const db = prisma as any;
+  if (db.greatEightItem) await db.greatEightItem.deleteMany();
   await prisma.dashboardButton.deleteMany();
   await prisma.mediaAsset.deleteMany();
   await prisma.user.deleteMany();
@@ -930,6 +933,28 @@ async function main() {
     });
   }
   console.log(`   Seeded 1 top-level Survey and ${DEFAULT_SURVEYS.length} ResearchLib Tasks\n`);
+
+  console.log("7. Seeding The Great Eight Articles and Media...");
+  for (const item of DEFAULT_GREAT_EIGHT) {
+    const db = prisma as any;
+    await db.greatEightItem.create({
+      data: {
+        orderIndex: item.orderIndex,
+        slug: item.slug,
+        title: item.title,
+        tagline: item.tagline || "",
+        description: item.description || "",
+        seeItUrl: item.seeItUrl || "",
+        hearItUrl: item.hearItUrl || "",
+        readItUrl: item.readItUrl || "",
+        iconUrl: item.iconUrl || "",
+        iconColor: item.iconColor || "#14a38b",
+        bgColor: item.bgColor || "rgba(20, 163, 139, 0.08)",
+        isActive: item.isActive !== undefined ? item.isActive : true,
+      },
+    });
+  }
+  console.log(`   Seeded ${DEFAULT_GREAT_EIGHT.length} Great Eight items\n`);
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }

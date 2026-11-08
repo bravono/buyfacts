@@ -10,7 +10,6 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
       data: {
         label: "Content Value",
         descriptionText: "Duplicate item test 1",
-        mediaType: "video",
         subtitle: "Duplicate item test 1",
         category: "Products & Services",
       },
@@ -20,7 +19,6 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
       data: {
         label: "Research Planning",
         descriptionText: "Duplicate item test 2",
-        mediaType: "video",
         subtitle: "Duplicate item test 2",
         category: "Products & Services",
       },

@@ -674,7 +674,7 @@ export default function AdminDatabaseDashboard() {
                     </div>
                   </div>
                   <div className={styles.statValue}>{summary?.totalRecords.toLocaleString() ?? "0"}</div>
-                  <div className={styles.statDesc}>Across all 17 database models</div>
+                  <div className={styles.statDesc}>Across all {summary?.modelCount ?? Object.keys(ADMIN_MODEL_REGISTRY).length} database models</div>
                 </div>
 
                 <div className={styles.statCard}>
@@ -684,7 +684,7 @@ export default function AdminDatabaseDashboard() {
                       <Layers size={20} />
                     </div>
                   </div>
-                  <div className={styles.statValue}>{summary?.modelCount ?? 17}</div>
+                  <div className={styles.statValue}>{summary?.modelCount ?? Object.keys(ADMIN_MODEL_REGISTRY).length}</div>
                   <div className={styles.statDesc}>5 primary platform domains</div>
                 </div>
 
