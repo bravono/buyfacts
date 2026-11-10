@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FileUploader, UploadSuccessResult } from "@/components/FileUploader";
@@ -55,6 +55,8 @@ interface SavedRecord {
   fileType: string;
   fileSize: number;
   uploadedAt: string;
+  objectKey?: string | null;
+  folder?: string | null;
 }
 
 interface DatabaseButton {
@@ -75,6 +77,20 @@ export default function FileUploadDemoPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>("");
   const [mockButtons, setMockButtons] = useState<DatabaseButton[]>([]);
+
+  // Map of objectKey / publicUrl -> database asset ID
+  const assetIdByObjectKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const record of savedRecords) {
+      if (record.objectKey) {
+        map.set(record.objectKey, record.id);
+      }
+      if (record.publicUrl) {
+        map.set(record.publicUrl, record.id);
+      }
+    }
+    return map;
+  }, [savedRecords]);
 
   // Storage Explorer State
   const [storageFiles, setStorageFiles] = useState<MinioObjectItem[]>([]);
@@ -222,6 +238,8 @@ export default function FileUploadDemoPage() {
           fileType: item.fileType,
           fileSize: item.fileSize,
           uploadedAt: new Date(item.uploadedAt).toLocaleTimeString(),
+          objectKey: item.objectKey ?? null,
+          folder: item.folder ?? null,
         }));
         setSavedRecords(records);
       }
@@ -322,6 +340,10 @@ export default function FileUploadDemoPage() {
   // Callback when a single file is successfully uploaded
   const handleUploadSuccess = async (result: UploadSuccessResult) => {
     try {
+      const folder = result.objectKey && result.objectKey.includes("/")
+        ? result.objectKey.split("/").slice(0, -1).join("/")
+        : null;
+
       const res = await fetch("/api/media-assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -330,6 +352,8 @@ export default function FileUploadDemoPage() {
           fileName: result.fileName,
           fileType: result.fileType,
           fileSize: result.fileSize,
+          objectKey: result.objectKey ?? null,
+          folder,
         }),
       });
 
@@ -348,6 +372,7 @@ export default function FileUploadDemoPage() {
         fileType: result.fileType,
         fileSize: result.fileSize,
         uploadedAt: new Date().toLocaleTimeString(),
+        objectKey: result.objectKey ?? null,
       };
       setSavedRecords((prev) => [newRecord, ...prev]);
       setLastUploadedUrl(result.publicUrl);
@@ -362,12 +387,19 @@ export default function FileUploadDemoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assets: results.map((r) => ({
-            publicUrl: r.publicUrl,
-            fileName: r.fileName,
-            fileType: r.fileType,
-            fileSize: r.fileSize,
-          })),
+          assets: results.map((r) => {
+            const folder = r.objectKey && r.objectKey.includes("/")
+              ? r.objectKey.split("/").slice(0, -1).join("/")
+              : null;
+            return {
+              publicUrl: r.publicUrl,
+              fileName: r.fileName,
+              fileType: r.fileType,
+              fileSize: r.fileSize,
+              objectKey: r.objectKey ?? null,
+              folder,
+            };
+          }),
         }),
       });
 
@@ -1245,6 +1277,20 @@ export default function FileUploadDemoPage() {
                       </div>
                       <div className={styles.storageItemDetails}>
                         <span className={styles.folderBadge}>{file.folder}</span>
+                        {assetIdByObjectKey.has(file.objectKey) && (
+                          <span
+                            className={styles.folderBadge}
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "0.7rem",
+                              background: "rgba(59, 130, 246, 0.15)",
+                              color: "var(--interactive-blue, #60a5fa)",
+                            }}
+                            title={`Database Asset ID: ${assetIdByObjectKey.get(file.objectKey)}`}
+                          >
+                            ID: {assetIdByObjectKey.get(file.objectKey)!.slice(0, 8)}...
+                          </span>
+                        )}
                         <span>•</span>
                         <span>{formatBytes(file.size)}</span>
                         <span>•</span>
@@ -1356,7 +1402,21 @@ export default function FileUploadDemoPage() {
                   title="Click to stage this URL for button linking"
                 >
                   <div className={styles.historyInfo}>
-                    <span className={styles.historyName}>{record.fileName}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span className={styles.historyName}>{record.fileName}</span>
+                      <span
+                        className={styles.folderBadge}
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.7rem",
+                          background: "rgba(59, 130, 246, 0.15)",
+                          color: "var(--interactive-blue, #60a5fa)",
+                        }}
+                        title={`Asset ID: ${record.id}`}
+                      >
+                        ID: {record.id.length > 12 ? `${record.id.slice(0, 8)}...` : record.id}
+                      </span>
+                    </div>
                     <span className={styles.historyUrl}>{record.publicUrl}</span>
                   </div>
                   <span className={styles.historyTime}>{record.uploadedAt}</span>

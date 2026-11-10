@@ -38,16 +38,28 @@ export async function POST(req: NextRequest) {
     // Perform copy and delete in MinIO
     const { newObjectKey, newPublicUrl } = await moveMinioObject(sourceKey, targetFolder);
 
-    // Update MediaAsset table if record exists with old URL
+    // Update MediaAsset table: prefer match by old objectKey, fall back to old publicUrl
     try {
-      await prisma.mediaAsset.updateMany({
-        where: {
-          publicUrl: oldPublicUrl,
-        },
+      const newFolder = targetFolder;
+      const byKey = await prisma.mediaAsset.updateMany({
+        where: { objectKey: sourceKey },
         data: {
+          objectKey: newObjectKey,
+          folder: newFolder,
           publicUrl: newPublicUrl,
         },
       });
+      if (byKey.count === 0) {
+        // Legacy records without objectKey: match by URL
+        await prisma.mediaAsset.updateMany({
+          where: { publicUrl: oldPublicUrl },
+          data: {
+            objectKey: newObjectKey,
+            folder: newFolder,
+            publicUrl: newPublicUrl,
+          },
+        });
+      }
     } catch (dbErr) {
       console.warn('Could not update MediaAsset records during move:', dbErr);
     }

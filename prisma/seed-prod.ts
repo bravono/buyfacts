@@ -415,6 +415,8 @@ async function main() {
       fileName: "puzzle1_hd.png",
       fileType: "image/png",
       fileSize: 1048576,
+      objectKey: "cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+      folder: "cubicon",
     },
     {
       id: "asset-uuid-002",
@@ -423,6 +425,8 @@ async function main() {
       fileName: "intro_video.mp4",
       fileType: "video/mp4",
       fileSize: 5242880,
+      objectKey: "cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      folder: "cubicon",
     },
     {
       id: "asset-uuid-003",
@@ -431,6 +435,8 @@ async function main() {
       fileName: "whitepaper.pdf",
       fileType: "application/pdf",
       fileSize: 2097152,
+      objectKey: "cubicon/1788505110606-pcdywj-Puzzle3.webp",
+      folder: "cubicon",
     },
   ];
 

@@ -174,14 +174,17 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     idType: "string",
     defaultSortField: "uploadedAt",
     defaultSortOrder: "desc",
-    searchableFields: ["fileName", "fileType", "publicUrl"],
+    searchableFields: ["fileName", "fileType", "publicUrl", "objectKey", "folder"],
     fields: [
       { name: "id", label: "Asset ID", type: "string", readOnly: true },
+      { name: "objectKey", label: "MinIO Object Key", type: "string", readOnly: true },
+      { name: "folder", label: "Folder", type: "string" },
       { name: "fileName", label: "File Name", type: "string", required: true },
       { name: "fileType", label: "MIME Type", type: "string", required: true },
       { name: "fileSize", label: "File Size (bytes)", type: "number", required: true },
       { name: "publicUrl", label: "Public Storage URL", type: "string", required: true },
       { name: "uploadedAt", label: "Uploaded At", type: "datetime", readOnly: true },
+      { name: "updatedAt", label: "Updated At", type: "datetime", readOnly: true },
     ],
   },
   vaultAsset: {

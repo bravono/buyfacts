@@ -1238,6 +1238,31 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Hierarchy Retention**: File extensions in relative paths (e.g. `assets/images/header.jpg` -> `assets/images/header.webp`) are automatically updated and tracked.
 - **Visual Feedback**: Queue items display clear savings metrics (e.g. `WebP (-68%)`) and tooltip comparisons with original file sizes.
 
+### 9.5 Persistent MediaAsset Registry & Database Asset IDs
+All assets stored in the MinIO object bucket maintain canonical database identity in PostgreSQL:
+- **`MediaAsset` Table Schema**:
+  - `id`: Unique identifier (UUID string, primary key).
+  - `objectKey`: S3/MinIO object key path (e.g. `cubicon/1788505108337-1zkn2t-Puzzle1.webp`). Indexed for high-speed queries (`@@index([objectKey])`).
+  - `folder`: Storage folder prefix (e.g. `cubicon`, `products-services`). Indexed (`@@index([folder])`).
+  - `fileName`: Original file basename.
+  - `fileType`: MIME content type string (e.g. `image/webp`, `video/mp4`, `application/pdf`).
+  - `fileSize`: File byte length.
+  - `publicUrl`: Full public CDN access URL.
+  - `uploadedAt`: Upload timestamp (`DateTime @default(now())`).
+  - `updatedAt`: Auto-updating modification timestamp (`DateTime @updatedAt`).
+
+- **Automated Lifecycle Synchronization**:
+  1. **Upload Ingestion (`POST /api/media-assets`)**: Both single-file and batch uploads automatically write database records with generated asset UUIDs. When an `objectKey` already exists, an upsert is performed to prevent duplicate records.
+  2. **Storage Move Tracking (`POST /api/storage/move`)**: Relocating an asset from one folder to another updates the `objectKey`, `folder`, and `publicUrl` fields in `MediaAsset` (matching by existing `objectKey`, with fallback to `publicUrl`).
+  3. **Storage Deletion Cleanup (`DELETE /api/storage/files`)**: Deleting a file from MinIO automatically purges matching `MediaAsset` records by `objectKey` (with fallback to `publicUrl` for legacy records).
+  4. **Targeted Asset Record Deletion (`DELETE /api/media-assets`)**: Supports granular deletion by `{ "objectKey": "..." }` or `{ "id": "..." }`, as well as full history purge when no filter is supplied.
+
+- **Bulk Storage Synchronization Script**:
+  - Run `npx tsx scripts/sync-minio-assets.ts` to crawl all existing objects in the MinIO bucket, backfill missing `objectKey` and `folder` fields on legacy records, and insert canonical `MediaAsset` rows for any untracked bucket files. Empty directory placeholders (`.keep`) are automatically skipped.
+
+- **Visual Asset ID Badging**:
+  - The Media Console (`/file-upload`) surfaces the database asset `id` directly within both the Upload History log and the Storage Explorer item details, enabling administrators to easily cross-reference database IDs with storage files.
+
 
 ---
 

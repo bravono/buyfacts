@@ -67,14 +67,20 @@ model DashboardButton {
   updatedAt DateTime @updatedAt
 }
 
-// 5. Uploaded Assets history log
+// 5. Assets in MinIO Bucket Table
 model MediaAsset {
   id         String   @id @default(uuid())
-  publicUrl  String
+  objectKey  String?
+  folder     String?  @default("uploads")
   fileName   String
   fileType   String
   fileSize   Int
+  publicUrl  String
   uploadedAt DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([objectKey])
+  @@index([folder])
 }
 
 // 6. ResearchLib / Research Lib Embedded Survey Platform

@@ -39,7 +39,10 @@ dev.db-journal
 prisma/dev.db
 prisma/dev.db-journal
 prisma/migrations_sqlite_backup
-/scripts
+/scripts/*
+!/scripts/sync-minio-assets.ts
+!/scripts/bundle-cubicon.js
+!/scripts/bundle-narrative.js
 /data
 
 # vercel
