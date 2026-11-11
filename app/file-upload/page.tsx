@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FileUploader, UploadSuccessResult } from "@/components/FileUploader";
 import { FilePreview } from "@/components/FilePreview";
+import GreatEightSection from "./GreatEightSection";
 import {
   STORAGE_FOLDERS,
   MinioObjectItem,
@@ -419,6 +420,8 @@ export default function FileUploadDemoPage() {
   };
 
   const [savingButtonSubLinkId, setSavingButtonSubLinkId] = useState<string | null>(null);
+  // Collapsible state for the Interactive Component Grid cards (null = all collapsed).
+  const [expandedGridButtonId, setExpandedGridButtonId] = useState<string | null>(null);
 
   const handleUpdateSubLink = async (
     buttonId: string,
@@ -785,21 +788,60 @@ export default function FileUploadDemoPage() {
                   .filter((btn) => btn.category === category)
                   .map((btn) => {
                     const BtnIcon = getIconForType(btn.mediaType);
+                    const isOpen = expandedGridButtonId === btn.id;
+                    const linkedCount = [btn.seeItUrl, btn.hearItUrl, btn.readItUrl].filter(
+                      Boolean
+                    ).length;
                     return (
-                      <div key={btn.id} className={styles.card}>
-                        <div className={styles.cardHeader}>
-                          <div className={styles.cardIcon}>
-                            <BtnIcon className="w-4 h-4" />
+                      <div
+                        key={btn.id}
+                        className={`${styles.card} ${styles.collapsibleCard} ${
+                          isOpen ? styles.cardOpen : ""
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          className={styles.cardToggle}
+                          aria-expanded={isOpen}
+                          onClick={() =>
+                            setExpandedGridButtonId(isOpen ? null : btn.id)
+                          }
+                          title={isOpen ? "Collapse card" : "Expand card"}
+                        >
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardIcon}>
+                              <BtnIcon className="w-4 h-4" />
+                            </div>
+                            <div className={styles.cardTitleGroup}>
+                              <span className={styles.cardLabel}>{btn.label}</span>
+                              {btn.subtitle && (
+                                <span className={styles.cardSubtitle}>{btn.subtitle}</span>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <span className={styles.cardLabel}>{btn.label}</span>
-                            {btn.subtitle && (
-                              <span className={styles.cardSubtitle}>{btn.subtitle}</span>
-                            )}
+                          <div className={styles.cardToggleMeta}>
+                            <span className={styles.cardBadge}>{linkedCount}/3 linked</span>
+                            <svg
+                              className={`${styles.cardChevron} ${
+                                isOpen ? styles.cardChevronOpen : ""
+                              }`}
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Four Media Action Rows: Button Link, SEE IT, HEAR IT, READ IT */}
+                        {isOpen && (
                         <div className={styles.subLinksSection}>
                           {/* 1. DESCRIPTION (text shown in the player) */}
                           <div className={styles.subLinkRow}>
@@ -1014,6 +1056,7 @@ export default function FileUploadDemoPage() {
                             </div>
                           </div>
                         </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1022,7 +1065,18 @@ export default function FileUploadDemoPage() {
           ))}
         </div>
 
-        {/* Section 4: Storage Explorer & File Manager */}
+        {/* Section 4: The Great Eight (collapsed by default) */}
+        <GreatEightSection
+          buttons={mockButtons}
+          category="Research Imperatives"
+          stagedUrl={lastUploadedUrl}
+          onLocalChange={handleLocalSubLinkChange}
+          onSave={handleUpdateSubLink}
+          onPreview={triggerPreview}
+          savingKey={savingButtonSubLinkId}
+        />
+
+        {/* Section 5: Storage Explorer & File Manager */}
         <div className={styles.stagerCard}>
           <div
             className={styles.stagerHeader}
@@ -1033,7 +1087,7 @@ export default function FileUploadDemoPage() {
           >
             <div className={styles.stagerTitle}>
               <FolderTree className="w-4 h-4 text-[var(--interactive-orange)]" />
-              4. Storage Explorer & Hierarchical File Manager
+              5. Storage Explorer & Hierarchical File Manager
             </div>
             <button
               type="button"
