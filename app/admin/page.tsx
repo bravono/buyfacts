@@ -38,8 +38,21 @@ import {
   Lock,
   Upload,
   Crosshair,
+  FileUp,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import CubiconCoordinatePicker from "@/components/CubiconCoordinatePicker";
+import {
+  buildImportPreview,
+  buildTemplateCsv,
+  describeRequiredColumns,
+  getImportableFields,
+  ImportMode,
+  ImportPreview,
+} from "@/lib/admin/import";
+import { parseCsv } from "@/lib/admin/csv";
+import { isJsonUpload, parseJsonImport } from "@/lib/admin/jsonImport";
 import { normalizeQuestionType } from "@/lib/cubicon/coordinateHelper";
 
 interface UserSession {
@@ -100,11 +113,31 @@ export default function AdminDatabaseDashboard() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [availableSequences, setAvailableSequences] = useState<Array<{ id: number; title: string; slug: string }>>([]);
 
+  // Batch Import State
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFileName, setImportFileName] = useState("");
+  const [importHeaders, setImportHeaders] = useState<string[]>([]);
+  const [importRows, setImportRows] = useState<string[][]>([]);
+  const [importTypedRows, setImportTypedRows] = useState<Array<Record<string, unknown>> | undefined>(undefined);
+  const [importFormat, setImportFormat] = useState<"csv" | "json">("csv");
+  const [importMode, setImportMode] = useState<ImportMode>("create");
+  const [importError, setImportError] = useState("");
+  const [isParsingImport, setIsParsingImport] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<any | null>(null);
+  const importFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   // Active Model Metadata
   const currentModelMeta: ModelMetadata | null = useMemo(() => {
     if (activeTab === "overview") return null;
     return ADMIN_MODEL_REGISTRY[activeTab] || null;
   }, [activeTab]);
+
+  // Live validation of the uploaded file against the active model
+  const importPreview: ImportPreview | null = useMemo(() => {
+    if (!currentModelMeta || importHeaders.length === 0) return null;
+    return buildImportPreview(currentModelMeta, importHeaders, importRows, importMode, importTypedRows);
+  }, [currentModelMeta, importHeaders, importRows, importTypedRows, importMode]);
 
   // Check auth session
   const checkAuth = useCallback(async () => {
@@ -275,6 +308,7 @@ export default function AdminDatabaseDashboard() {
     setActiveTab(tabKey);
     setCurrentPage(1);
     setSearchQuery("");
+    resetImportState();
     if (ADMIN_MODEL_REGISTRY[tabKey]) {
       setSortBy(ADMIN_MODEL_REGISTRY[tabKey].defaultSortField);
       setSortOrder(ADMIN_MODEL_REGISTRY[tabKey].defaultSortOrder);
@@ -469,6 +503,139 @@ export default function AdminDatabaseDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // ---------------------------------------------------------------------------
+  // Batch Import
+  // ---------------------------------------------------------------------------
+  const resetImportState = () => {
+    setImportFileName("");
+    setImportHeaders([]);
+    setImportRows([]);
+    setImportTypedRows(undefined);
+    setImportFormat("csv");
+    setImportMode("create");
+    setImportError("");
+    setImportResult(null);
+    setIsParsingImport(false);
+    setIsImporting(false);
+    if (importFileInputRef.current) importFileInputRef.current.value = "";
+  };
+
+  const openImportModal = () => {
+    resetImportState();
+    setImportModalOpen(true);
+  };
+
+  const closeImportModal = () => {
+    setImportModalOpen(false);
+    resetImportState();
+  };
+
+  // Download a blank CSV template with the model's importable columns
+  const downloadImportTemplate = () => {
+    if (!currentModelMeta) return;
+    const csv = buildTemplateCsv(currentModelMeta);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${currentModelMeta.key}_import_template.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Read and parse the selected CSV file
+  const handleImportFile = async (file: File | null) => {
+    if (!file) return;
+    setIsParsingImport(true);
+    setImportError("");
+    setImportResult(null);
+
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File is larger than 5 MB. Split it into smaller files and import them one at a time.");
+      }
+
+      const text = await file.text();
+
+      if (isJsonUpload(file.name, file.type, text)) {
+        const parsedJson = parseJsonImport(text);
+        setImportFormat("json");
+        setImportTypedRows(parsedJson.typedRows);
+        setImportFileName(file.name);
+        setImportHeaders(parsedJson.headers);
+        setImportRows(parsedJson.rows);
+      } else {
+        const parsed = parseCsv(text);
+
+        if (parsed.headers.length === 0) {
+          throw new Error("The file appears to be empty.");
+        }
+        if (parsed.rows.length === 0) {
+          throw new Error("The file has a header row but no data rows.");
+        }
+        if (parsed.rows.length > 2000) {
+          throw new Error(`This file has ${parsed.rows.length} rows. Import at most 2,000 rows per file.`);
+        }
+
+        setImportFormat("csv");
+        setImportTypedRows(undefined);
+        setImportFileName(file.name);
+        setImportHeaders(parsed.headers);
+        setImportRows(parsed.rows);
+      }
+    } catch (err: any) {
+      setImportFileName("");
+      setImportHeaders([]);
+      setImportRows([]);
+      setImportTypedRows(undefined);
+      setImportFormat("csv");
+      setImportError(err?.message || "Could not read the selected file.");
+    } finally {
+      setIsParsingImport(false);
+    }
+  };
+
+  // Send the parsed rows to the bulk import endpoint
+  const handleImportSubmit = async () => {
+    if (!currentModelMeta || !importPreview) return;
+    setIsImporting(true);
+    setImportError("");
+    setImportResult(null);
+
+    try {
+      const res = await fetch("/api/admin/database", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "bulkCreate",
+          table: currentModelMeta.key,
+          headers: importHeaders,
+          rows: importRows,
+          mode: importMode,
+          format: importFormat,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok && !data?.importedCount) {
+        setImportError(data?.error || "Batch import failed.");
+        return;
+      }
+
+      setImportResult(data);
+      if (data.importedCount > 0) {
+        fetchTableData();
+        fetchSummary();
+      }
+    } catch (err: any) {
+      setImportError(err?.message || "Batch import failed.");
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   // Copy to clipboard helper
@@ -852,6 +1019,13 @@ export default function AdminDatabaseDashboard() {
                   )}
                   <button onClick={openCreateModal} className={styles.createBtn}>
                     <Plus size={16} /> Create Record
+                  </button>
+                  <button
+                    onClick={openImportModal}
+                    className={styles.importBtn}
+                    title="Batch import records from a CSV file"
+                  >
+                    <FileUp size={14} /> Import CSV
                   </button>
                   <button onClick={exportCSV} className={styles.exportBtn} title="Download CSV">
                     <Download size={14} /> Export CSV
@@ -1237,7 +1411,7 @@ export default function AdminDatabaseDashboard() {
                                   required
                                 />
                                 <span className={styles.formHelper} style={{ color: "var(--interactive-orange, #f59e0b)" }}>
-                                  Create a sequence first in 'Cubicon Sequences' to get an ID.
+                                  Create a sequence first in &apos;Cubicon Sequences&apos; to get an ID.
                                 </span>
                               </div>
                             )}
@@ -1412,7 +1586,7 @@ export default function AdminDatabaseDashboard() {
                                   required
                                 />
                                 <span className={styles.formHelper} style={{ color: "var(--interactive-orange, #f59e0b)" }}>
-                                  Create a sequence first in 'Cubicon Sequences' to get an ID.
+                                  Create a sequence first in &apos;Cubicon Sequences&apos; to get an ID.
                                 </span>
                               </div>
                             )}
@@ -1527,7 +1701,259 @@ export default function AdminDatabaseDashboard() {
         </div>
       )}
 
-      {/* MODAL 5: CUBICON COORDINATE PICKER */}
+      {/* MODAL 5: BATCH IMPORT */}
+      {importModalOpen && currentModelMeta && (
+        <div className={styles.modalBackdrop}>
+          <div className={`${styles.modalContent} ${styles.modalContentWide}`}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle}>Batch Import — {currentModelMeta.displayName}</h3>
+                <p className={styles.modalSubtitle}>
+                  Upload a CSV file to create many records at once. Columns are matched by field
+                  name or label.
+                </p>
+              </div>
+              <button onClick={closeImportModal} className={styles.modalCloseBtn} aria-label="Close">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              {importError && <div className={styles.errorBanner}>{importError}</div>}
+
+              {/* Upload controls */}
+              {!importResult && (
+                <>
+                  <div className={styles.importDropZone}>
+                    <FileUp size={26} color="var(--interactive-orange, #ff9900)" />
+                    <div>
+                      <div className={styles.importDropTitle}>
+                        {importFileName || "Choose a CSV or JSON file"}
+                        {importFileName && (
+                          <span className={styles.importFormatBadge}>{importFormat.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className={styles.formHelper}>
+                        CSV (comma or semicolon separated) or JSON (an array of records, or{" "}
+                        {"{ \"records\": [...] }"}), max 2,000 rows / 5 MB. Required columns:{" "}
+                        {describeRequiredColumns(currentModelMeta)}
+                      </div>
+                    </div>
+                    <div className={styles.importDropActions}>
+                      <input
+                        ref={importFileInputRef}
+                        type="file"
+                        accept=".csv,.json,text/csv,application/json,text/plain"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleImportFile(e.target.files?.[0] ?? null)}
+                      />
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        onClick={() => importFileInputRef.current?.click()}
+                        disabled={isParsingImport || isImporting}
+                      >
+                        <Upload size={14} /> {importFileName ? "Choose Another File" : "Choose File"}
+                      </button>
+                      <button type="button" className={styles.exportBtn} onClick={downloadImportTemplate}>
+                        <Download size={14} /> Download Template
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>If a row already exists</label>
+                    <select
+                      className={styles.formSelect}
+                      value={importMode}
+                      onChange={(e) => setImportMode(e.target.value === "upsert" ? "upsert" : "create")}
+                    >
+                      <option value="create">Insert only — skip rows whose key already exists</option>
+                      <option value="upsert">Update existing or insert new — match on email / slug</option>
+                    </select>
+                    <span className={styles.formHelper}>
+                      Importable columns: {getImportableFields(currentModelMeta).map((f) => f.name).join(", ")}
+                    </span>
+                  </div>
+
+                  {isParsingImport && (
+                    <p className={styles.formHelper}>
+                      <RefreshCw size={12} /> Reading file...
+                    </p>
+                  )}
+
+                  {importPreview && (
+                    <div className={styles.importSummary}>
+                      <div className={styles.importSummaryItem}>
+                        <span className={styles.importSummaryValue}>{importPreview.rows.length}</span>
+                        <span className={styles.importSummaryLabel}>Rows in file</span>
+                      </div>
+                      <div className={styles.importSummaryItem}>
+                        <span className={styles.importSummaryValue} style={{ color: "#2b8a3e" }}>
+                          {importPreview.validCount}
+                        </span>
+                        <span className={styles.importSummaryLabel}>Ready to import</span>
+                      </div>
+                      <div className={styles.importSummaryItem}>
+                        <span className={styles.importSummaryValue} style={{ color: "#c92a2a" }}>
+                          {importPreview.invalidCount}
+                        </span>
+                        <span className={styles.importSummaryLabel}>Rows with problems</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {importPreview && importPreview.missingRequired.length > 0 && (
+                    <div className={styles.errorBanner}>
+                      <AlertTriangle size={14} /> Missing required column(s):{" "}
+                      {importPreview.missingRequired.join(", ")}
+                    </div>
+                  )}
+
+                  {importPreview && importPreview.unmappedHeaders.length > 0 && (
+                    <div className={styles.warningBanner}>
+                      <AlertTriangle size={14} /> Ignored column(s) that match no field:{" "}
+                      {importPreview.unmappedHeaders.join(", ")}
+                    </div>
+                  )}
+
+                  {importPreview && importPreview.issues.length > 0 && (
+                    <div>
+                      <div className={styles.importIssueTitle}>
+                        <AlertTriangle size={14} /> Row issues (first {Math.min(importPreview.issues.length, 100)})
+                      </div>
+                      <div className={styles.importIssueList}>
+                        {importPreview.issues.slice(0, 100).map((issue, idx) => (
+                          <div key={`${issue.rowNumber}-${issue.field}-${idx}`} className={styles.importIssueRow}>
+                            <span className={styles.importIssueRowNo}>Row {issue.rowNumber}</span>
+                            <span>{issue.field}</span>
+                            <span className={styles.importIssueMessage}>{issue.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {importPreview && importPreview.rows.length > 0 && (
+                    <div>
+                      <div className={styles.importIssueTitle}>Preview</div>
+                      <div className={styles.tableScroll} style={{ maxHeight: "220px", border: "1px solid var(--border-color, #e6e6e6)", borderRadius: "8px" }}>
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th className={styles.tableTh}>#</th>
+                              {importPreview.headers.map((h, idx) => (
+                                <th key={`${h}-${idx}`} className={styles.tableTh}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {importPreview.rows.slice(0, 10).map((row) => (
+                              <tr
+                                key={row.rowNumber}
+                                className={styles.tableTr}
+                                style={row.errors.length > 0 ? { backgroundColor: "#fff5f6" } : undefined}
+                              >
+                                <td className={styles.tableTd}>{row.rowNumber}</td>
+                                {importRows[row.rowNumber - 1].map((cell, idx) => (
+                                  <td key={idx} className={styles.tableTd}>
+                                    {cell.length > 40 ? `${cell.substring(0, 40)}...` : cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {importPreview.rows.length > 10 && (
+                        <span className={styles.formHelper}>
+                          Showing the first 10 of {importPreview.rows.length} rows.
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Import result */}
+              {importResult && (
+                <div>
+                  <div className={importResult.failedCount === 0 ? styles.successBanner : styles.warningBanner}>
+                    {importResult.failedCount === 0 ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+                    {importResult.message}
+                  </div>
+
+                  <div className={styles.importSummary}>
+                    <div className={styles.importSummaryItem}>
+                      <span className={styles.importSummaryValue} style={{ color: "#2b8a3e" }}>
+                        {importResult.createdCount}
+                      </span>
+                      <span className={styles.importSummaryLabel}>Created</span>
+                    </div>
+                    <div className={styles.importSummaryItem}>
+                      <span className={styles.importSummaryValue} style={{ color: "#00507b" }}>
+                        {importResult.updatedCount}
+                      </span>
+                      <span className={styles.importSummaryLabel}>Updated</span>
+                    </div>
+                    <div className={styles.importSummaryItem}>
+                      <span className={styles.importSummaryValue} style={{ color: "#c92a2a" }}>
+                        {importResult.failedCount}
+                      </span>
+                      <span className={styles.importSummaryLabel}>Skipped</span>
+                    </div>
+                  </div>
+
+                  {importResult.failures?.length > 0 && (
+                    <div>
+                      <div className={styles.importIssueTitle}>
+                        <AlertTriangle size={14} /> Rows that could not be imported
+                      </div>
+                      <div className={styles.importIssueList}>
+                        {importResult.failures.map((f: any, idx: number) => (
+                          <div key={`${f.rowNumber}-${idx}`} className={styles.importIssueRow}>
+                            <span className={styles.importIssueRowNo}>Row {f.rowNumber}</span>
+                            <span className={styles.importIssueMessage}>{f.errors.join(" ")}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <span className={styles.formHelper}>
+                        Fix these rows in your spreadsheet and import the corrected file again.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button type="button" onClick={closeImportModal} className={styles.cancelBtn} disabled={isImporting}>
+                {importResult ? "Close" : "Cancel"}
+              </button>
+              {!importResult && (
+                <button
+                  type="button"
+                  onClick={handleImportSubmit}
+                  className={styles.submitBtn}
+                  disabled={
+                    isImporting ||
+                    isParsingImport ||
+                    !importPreview ||
+                    importPreview.missingRequired.length > 0 ||
+                    importPreview.rows.length === 0
+                  }
+                >
+                  {isImporting
+                    ? "Importing..."
+                    : `Import ${importPreview?.rows.length ?? 0} Row(s)`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: CUBICON COORDINATE PICKER */}
       <CubiconCoordinatePicker
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}

@@ -1002,6 +1002,191 @@
   cursor: not-allowed;
 }
 
+/* Batch Import */
+.importBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--interactive-blue, #00507b);
+  background-color: #ffffff;
+  color: var(--interactive-blue, #00507b);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.importBtn:hover {
+  background-color: var(--interactive-blue, #00507b);
+  color: #ffffff;
+}
+
+.modalContentWide {
+  max-width: 900px;
+}
+
+.modalSubtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6e6e73);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e6e6e6);
+  background-color: #ffffff;
+  color: var(--text-color, #1a1a1a);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.importDropZone {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  border: 1px dashed var(--border-color, #e6e6e6);
+  border-radius: 10px;
+  background-color: var(--bg-alt, #f8f8f8);
+}
+
+.importDropTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+  word-break: break-all;
+}
+
+.importFormatBadge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background-color: rgba(0, 80, 123, 0.08);
+  color: var(--interactive-blue, #00507b);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.importDropActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.importSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.importSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #e6e6e6);
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.importSummaryValue {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.importSummaryLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6e6e73);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.importIssueTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.importIssueList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color, #e6e6e6);
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.importIssueRow {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
+}
+
+.importIssueRow:last-child {
+  border-bottom: none;
+}
+
+.importIssueRowNo {
+  font-weight: 700;
+  color: var(--text-muted, #6e6e73);
+  flex-shrink: 0;
+  min-width: 62px;
+}
+
+.importIssueMessage {
+  color: #c92a2a;
+}
+
+.warningBanner {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fff9db;
+  border: 1px solid #ffe066;
+  color: #8a6d1a;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #ebfbee;
+  border: 1px solid #b2f2bb;
+  color: #2b8a3e;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
 /* Inspection Inspector */
 .jsonViewer {
   background-color: #1e1e1e;

@@ -13,6 +13,8 @@ export interface ModelFieldDefinition {
   type: ModelFieldType;
   required?: boolean;
   readOnly?: boolean;
+  /** Marks the column as a natural/business key so batch import can upsert on it. */
+  unique?: boolean;
   hiddenInTable?: boolean;
   defaultValue?: any;
   options?: string[];
@@ -50,7 +52,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     searchableFields: ["email", "name", "role"],
     fields: [
       { name: "id", label: "ID", type: "number", readOnly: true },
-      { name: "email", label: "Email Address", type: "string", required: true },
+      { name: "email", label: "Email Address", type: "string", required: true, unique: true },
       { name: "name", label: "Full Name", type: "string" },
       { name: "role", label: "Role", type: "string", defaultValue: "admin", options: ["admin", "user", "editor"] },
       { name: "password", label: "Password (Create or Change)", type: "masked", hiddenInTable: true },
@@ -115,7 +117,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     searchableFields: ["email"],
     fields: [
       { name: "id", label: "ID", type: "string", readOnly: true },
-      { name: "email", label: "Subscriber Email", type: "string", required: true },
+      { name: "email", label: "Subscriber Email", type: "string", required: true, unique: true },
       { name: "createdAt", label: "Subscribed At", type: "datetime", readOnly: true },
     ],
   },
@@ -225,7 +227,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     fields: [
       { name: "id", label: "ID", type: "string", readOnly: true },
       { name: "name", label: "Topic Name", type: "string", required: true },
-      { name: "slug", label: "URL Slug", type: "string", required: true },
+      { name: "slug", label: "URL Slug", type: "string", required: true, unique: true },
       { name: "category", label: "Category", type: "string", required: true },
       { name: "createdAt", label: "Created At", type: "datetime", readOnly: true },
     ],
@@ -245,7 +247,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
       { name: "id", label: "ID", type: "number", readOnly: true },
       { name: "orderIndex", label: "Sequence Order (1-8)", type: "number", required: true, defaultValue: 1 },
       { name: "title", label: "Article Title", type: "string", required: true },
-      { name: "slug", label: "Slug", type: "string", required: true },
+      { name: "slug", label: "Slug", type: "string", required: true, unique: true },
       { name: "tagline", label: "Tagline", type: "string" },
       { name: "description", label: "Description / Article Summary", type: "string" },
       { name: "readItUrl", label: "Document CDN URL (PDF / DOCX)", type: "string" },
@@ -272,7 +274,7 @@ export const ADMIN_MODEL_REGISTRY: Record<string, ModelMetadata> = {
     searchableFields: ["slug", "title", "description", "createdBy"],
     fields: [
       { name: "id", label: "ID", type: "number", readOnly: true },
-      { name: "slug", label: "Unique Slug", type: "string", required: true },
+      { name: "slug", label: "Unique Slug", type: "string", required: true, unique: true },
       { name: "title", label: "Sequence Title", type: "string", required: true },
       { name: "description", label: "Description", type: "string" },
       { name: "passThreshold", label: "Pass Threshold (0.0 - 1.0)", type: "float", defaultValue: 0.66 },

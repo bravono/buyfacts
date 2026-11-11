@@ -7,6 +7,12 @@ import {
   ModelMetadata,
   ModelFieldDefinition,
 } from "@/lib/admin/schemaRegistry";
+import {
+  buildImportPreview,
+  getImportableFields,
+  ImportMode,
+} from "@/lib/admin/import";
+import { parseJsonImport } from "@/lib/admin/jsonImport";
 
 /**
  * Helper to get Prisma client model delegate dynamically.
@@ -112,6 +118,290 @@ function sanitizeRecord(table: string, record: any): any {
   }
 
   return record;
+}
+
+/**
+ * Column a batch import can upsert on.
+ * Preference: explicit `unique` flag in the registry, then `email`/`slug` string columns.
+ */
+function resolveImportMatchField(meta: ModelMetadata): ModelFieldDefinition | null {
+  const importable = getImportableFields(meta);
+  const flagged = importable.find((f) => f.unique);
+  if (flagged) return flagged;
+  if (meta.idType === "string") {
+    const byEmail = importable.find((f) => f.name === "email");
+    if (byEmail) return byEmail;
+    const bySlug = importable.find((f) => f.name === "slug");
+    if (bySlug) return bySlug;
+  }
+  return null;
+}
+
+/**
+ * Fields a batch import may write. Read-only columns are excluded, plus the
+ * primary key on create (ids are generated) and write-only secrets.
+ */
+function resolveImportWriteFields(meta: ModelMetadata, mode: ImportMode): ModelFieldDefinition[] {
+  return getImportableFields(meta).filter((f) => {
+    if (f.type === "masked") return false;
+    if (mode === "create" && f.name === meta.idField) return false;
+    return true;
+  });
+}
+
+/**
+ * Sequence existence check shared by create, update and batch import.
+ */
+async function resolveSequenceId(
+  meta: ModelMetadata,
+  data: Record<string, any>
+): Promise<{ ok: true; sequenceId?: number | null } | { ok: false; error: string }> {
+  const hasSequenceId = meta.fields.some((f) => f.name === "sequenceId");
+  if (!hasSequenceId) return { ok: true };
+
+  const rawSeqId =
+    data.sequenceId !== undefined && data.sequenceId !== null && data.sequenceId !== ""
+      ? parseInt(String(data.sequenceId), 10)
+      : null;
+
+  if (rawSeqId === null || isNaN(rawSeqId) || rawSeqId <= 0) {
+    if (meta.key === "cubiconTask") {
+      return {
+        ok: false,
+        error:
+          "Sequence ID is required. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then assign tasks to that sequence.",
+      };
+    }
+    return { ok: true };
+  }
+
+  const existingSequence = await prisma.cubiconSequence.findUnique({
+    where: { id: rawSeqId },
+    select: { id: true },
+  });
+
+  if (!existingSequence) {
+    return {
+      ok: false,
+      error: `Sequence ID ${rawSeqId} does not exist. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then use that ID for new tasks.`,
+    };
+  }
+
+  return { ok: true, sequenceId: rawSeqId };
+}
+
+/**
+ * Batch import (action=bulkCreate)
+ *
+ * Accepts a parsed CSV payload (`headers` + `rows`), maps the columns to the
+ * registered model via lib/admin/import, and writes every valid row.
+ * Rows with problems are skipped and reported back with their row numbers so
+ * the admin can fix the spreadsheet and re-import only what failed.
+ */
+async function handleBulkCreate(body: any) {
+  const { table, mode: rawMode, dryRun } = body;
+  const mode: ImportMode = rawMode === "upsert" ? "upsert" : "create";
+  let { headers, rows } = body;
+  let typedRows: Array<Record<string, unknown>> | undefined;
+
+  // JSON payloads (array of records, or { records: [...] }) are flattened to
+  // the same header/row shape so the rest of the pipeline is unchanged.
+  if (typeof body?.json === "string" && body.json.trim() !== "") {
+    try {
+      const parsedJson = parseJsonImport(body.json);
+      headers = parsedJson.headers;
+      rows = parsedJson.rows;
+      typedRows = parsedJson.typedRows;
+    } catch (err: any) {
+      return NextResponse.json(
+        { success: false, error: err?.message || "Could not parse the JSON payload." },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (!table || !ADMIN_MODEL_REGISTRY[table]) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Invalid table '${table}'. Must be one of the registered models.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  if (!Array.isArray(headers) || headers.length === 0) {
+    return NextResponse.json(
+      { success: false, error: "CSV headers are required. Upload a file with a header row." },
+      { status: 400 }
+    );
+  }
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return NextResponse.json(
+      { success: false, error: "The uploaded file contains no data rows." },
+      { status: 400 }
+    );
+  }
+
+  const meta = ADMIN_MODEL_REGISTRY[table];
+  const delegate = getModelDelegate(table);
+  if (!delegate) {
+    return NextResponse.json(
+      { success: false, error: `No database model found for '${table}'.` },
+      { status: 400 }
+    );
+  }
+
+  const preview = buildImportPreview(meta, headers, rows, mode, typedRows);
+  const writeFields = resolveImportWriteFields(meta, mode);
+  const writeFieldNames = new Set(writeFields.map((f) => f.name));
+  const matchField = mode === "upsert" ? resolveImportMatchField(meta) : null;
+
+  const failures: Array<{ rowNumber: number; errors: string[] }> = [];
+  const created: Array<Record<string, any>> = [];
+  const updated: Array<Record<string, any>> = [];
+
+  if (preview.missingRequired.length > 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Missing required column(s): ${preview.missingRequired.join(", ")}. Add them to the header row and try again.`,
+        preview: summarizePreview(preview),
+      },
+      { status: 400 }
+    );
+  }
+
+  if (mode === "upsert" && !matchField) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `'${meta.displayName}' has no unique column to match on, so update-or-create import is not available for this table. Use 'Insert only'.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  for (const row of preview.rows) {
+    if (row.errors.length > 0) {
+      failures.push({ rowNumber: row.rowNumber, errors: row.errors });
+      continue;
+    }
+
+    // Keep only writable fields
+    const inputData: Record<string, any> = {};
+    for (const [key, value] of Object.entries(row.data)) {
+      if (writeFieldNames.has(key)) inputData[key] = value;
+    }
+
+    if (Object.keys(inputData).length === 0) {
+      failures.push({ rowNumber: row.rowNumber, errors: ["Row has no importable values."] });
+      continue;
+    }
+
+    const sequenceCheck = await resolveSequenceId(meta, inputData);
+    if (!sequenceCheck.ok) {
+      failures.push({ rowNumber: row.rowNumber, errors: [sequenceCheck.error] });
+      continue;
+    }
+    if (sequenceCheck.sequenceId) inputData.sequenceId = sequenceCheck.sequenceId;
+
+    let cleanedData: Record<string, any>;
+    try {
+      cleanedData = await cleanInputData(meta, inputData, mode === "upsert");
+    } catch (err: any) {
+      failures.push({
+        rowNumber: row.rowNumber,
+        errors: [err?.message || "Failed to normalize row values."],
+      });
+      continue;
+    }
+
+    if (dryRun) {
+      created.push(cleanedData);
+      continue;
+    }
+
+    try {
+      let existing: any = null;
+
+      if (matchField) {
+        const matchValue = cleanedData[matchField.name];
+        if (matchValue !== undefined && matchValue !== null && matchValue !== "") {
+          existing = await delegate.findFirst({ where: { [matchField.name]: matchValue } });
+        }
+      } else if (mode === "create") {
+        // Guard against duplicate primary keys when the CSV supplies ids
+        const idValue = cleanedData[meta.idField];
+        if (idValue !== undefined && idValue !== null && idValue !== "") {
+          existing = await delegate.findFirst({ where: { [meta.idField]: idValue } });
+          if (existing) {
+            failures.push({
+              rowNumber: row.rowNumber,
+              errors: [`A record with ${meta.idField} '${idValue}' already exists.`],
+            });
+            continue;
+          }
+        }
+      }
+
+      if (existing && matchField) {
+        const patch: Record<string, any> = { ...cleanedData };
+        delete patch[matchField.name];
+        const record = await delegate.update({
+          where: { [meta.idField]: existing[meta.idField] },
+          data: patch,
+        });
+        updated.push(sanitizeRecord(table, record));
+      } else {
+        const record = await delegate.create({ data: cleanedData });
+        created.push(sanitizeRecord(table, record));
+      }
+    } catch (err: any) {
+      failures.push({
+        rowNumber: row.rowNumber,
+        errors: [err?.message || "Failed to write this row."],
+      });
+    }
+  }
+
+  const failedCount = failures.length;
+  const writtenCount = created.length + updated.length;
+
+  return NextResponse.json({
+    success: failedCount === 0,
+    partial: failedCount > 0 && writtenCount > 0,
+    message:
+      failedCount === 0
+        ? `${writtenCount} row(s) imported into '${meta.displayName}'.`
+        : `${writtenCount} row(s) imported, ${failedCount} row(s) skipped in '${meta.displayName}'.`,
+    table,
+    mode,
+    matchField: matchField ? matchField.name : null,
+    importedCount: writtenCount,
+    createdCount: created.length,
+    updatedCount: updated.length,
+    failedCount,
+    failures,
+    preview: summarizePreview(preview),
+    sample: dryRun ? created.slice(0, 5) : [...created, ...updated].slice(0, 5),
+  });
+}
+
+/**
+ * Trim the preview payload sent back to the browser.
+ */
+function summarizePreview(preview: ReturnType<typeof buildImportPreview>) {
+  return {
+    headers: preview.headers,
+    totalRows: preview.rows.length,
+    validCount: preview.validCount,
+    invalidCount: preview.invalidCount,
+    unmappedHeaders: preview.unmappedHeaders,
+    missingRequired: preview.missingRequired,
+    issues: preview.issues.slice(0, 100),
+  };
 }
 
 /**
@@ -294,6 +584,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
+
+    // Batch import path: a CSV payload (headers + rows) instead of a single record.
+    if (body?.action === "bulkCreate" || (Array.isArray(body?.rows) && !body?.data)) {
+      return await handleBulkCreate(body);
+    }
+
     const { table, data } = body;
 
     if (!table || !ADMIN_MODEL_REGISTRY[table]) {
@@ -332,39 +628,15 @@ export async function POST(request: Request) {
 
     // Sequence ID verification and association:
     // When creating tasks or sessions, associate them with an existing sequence instead of auto-creating new sequence IDs.
-    const hasSequenceId = meta.fields.some((f) => f.name === "sequenceId");
-    if (hasSequenceId) {
-      const rawSeqId = data.sequenceId !== undefined && data.sequenceId !== null && data.sequenceId !== ""
-        ? parseInt(String(data.sequenceId), 10)
-        : null;
-
-      if (rawSeqId !== null && !isNaN(rawSeqId) && rawSeqId > 0) {
-        // Verify that the specified sequence actually exists
-        const existingSequence = await prisma.cubiconSequence.findUnique({
-          where: { id: rawSeqId },
-          select: { id: true, title: true },
-        });
-
-        if (!existingSequence) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: `Sequence ID ${rawSeqId} does not exist. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then use that ID for new tasks.`,
-            },
-            { status: 400 }
-          );
-        }
-
-        cleanedData.sequenceId = rawSeqId;
-      } else if (meta.key === "cubiconTask") {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Sequence ID is required. Please create a sequence first in 'Cubicon Sequences' to obtain an ID, then assign tasks to that sequence.",
-          },
-          { status: 400 }
-        );
-      }
+    const sequenceCheck = await resolveSequenceId(meta, data);
+    if (!sequenceCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: sequenceCheck.error },
+        { status: 400 }
+      );
+    }
+    if (sequenceCheck.sequenceId) {
+      cleanedData.sequenceId = sequenceCheck.sequenceId;
     }
 
     const created = await delegate.create({ data: cleanedData });
