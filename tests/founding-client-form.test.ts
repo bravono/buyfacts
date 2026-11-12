@@ -101,8 +101,8 @@ test("Founding Client Form and Anchor Navigation Test Suite", async (t) => {
 
     // Cubicon human verification modal must be present
     assert.ok(
-      cubiconContent.includes("/cubicon-app/index.html?sequence=contact_form"),
-      "Must include Cubicon verification modal"
+      cubiconContent.includes("/cubicon-app/index.html?mode=contact&sequence=contact_form"),
+      "Must include Cubicon verification modal with mode=contact"
     );
   });
 

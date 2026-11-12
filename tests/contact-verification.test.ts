@@ -348,9 +348,9 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
     });
 
     try {
-      // Simulate CUBICON_VERIFICATION_COMPLETE message event payload
+      // Simulate CUBICON_COMPLETED message event payload (new message type from Cubicon contact mode)
       const mockEventData = {
-        type: "CUBICON_VERIFICATION_COMPLETE",
+        type: "CUBICON_COMPLETED",
         passed: true,
         sessionId: autoPassedSessionId,
         heading: "Verification passed!",
@@ -388,7 +388,7 @@ test("Contact Form Cubicon Verification Test Suite", async (t) => {
 
   await t.test("12. Verification failure workflow prevents submission and preserves form state", () => {
     const mockFailedEvent = {
-      type: "CUBICON_VERIFICATION_COMPLETE",
+      type: "CUBICON_COMPLETED",
       passed: false,
       sessionId: "failed_session_123",
       description: "Did not achieve passing score of 60%.",

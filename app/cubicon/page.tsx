@@ -317,7 +317,10 @@ export default function CubiconPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
-      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+      if (
+        event.data.type === "CUBICON_VERIFICATION_COMPLETE" ||
+        event.data.type === "CUBICON_COMPLETED"
+      ) {
         const { sessionId, passed, heading, description } = event.data;
         if (passed) {
           setIsVerified(true);
@@ -1978,7 +1981,7 @@ export default function CubiconPage() {
           <div className={styles.modalIframeContainer}>
             <iframe
               key={verificationKey}
-              src="/cubicon-app/index.html?sequence=contact_form"
+              src="/cubicon-app/index.html?mode=contact&sequence=contact_form"
               title="Cubicon Registration Verification Puzzle"
               className={styles.modalIframe}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
