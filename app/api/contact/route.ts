@@ -4,7 +4,40 @@ import { prisma } from "@/lib/prisma";
 import { ContactInquirySchema } from "@/lib/validation/forms";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 import { sendVerificationEmail } from "@/lib/resend";
-import { evaluateSequencePass } from "@/app/api/cubicon-data/route";
+import {
+  SPENT_SESSION_RESULTS,
+  verifyAndConsumeContactSession,
+  type ContactVerificationDb,
+} from "@/lib/security/contact-verification";
+
+const contactVerificationDb: ContactVerificationDb = {
+  findSession: (sessionId) =>
+    prisma.cubiconSession.findUnique({
+      where: { sessionId },
+      select: {
+        id: true,
+        sequenceId: true,
+        passedPuzzles: true,
+        totalPuzzlesAttempted: true,
+        previousResult: true,
+        sequence: { select: { slug: true, passThreshold: true } },
+      },
+    }),
+  countScoredTasks: (sequenceId) =>
+    sequenceId === null
+      ? Promise.resolve(0)
+      : prisma.cubiconTask.count({ where: { sequenceId, isFinal: false } }),
+  consumeSession: async (id) => {
+    const { count } = await prisma.cubiconSession.updateMany({
+      where: {
+        id,
+        OR: [{ previousResult: null }, { previousResult: { notIn: [...SPENT_SESSION_RESULTS] } }],
+      },
+      data: { previousResult: "used" },
+    });
+    return count === 1;
+  },
+};
 
 export async function POST(request: Request) {
   try {
@@ -36,71 +69,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Human Anti-Bot Verification via Cubicon
-    // Bypass for standalone hold pipeline integration tests that provide x-forwarded-for without verificationSessionId
-    const isHoldPipelineTest = request.headers.get("x-forwarded-for") && body.verificationSessionId === undefined;
-
-    if (!isHoldPipelineTest) {
-      const { verificationSessionId } = body;
-      if (!verificationSessionId || typeof verificationSessionId !== "string" || !verificationSessionId.trim()) {
-        return NextResponse.json(
-          { error: "Validation error: Human verification required. Please complete the Cubicon puzzle before submitting." },
-          { status: 400 }
-        );
-      }
-
-      const session = await prisma.cubiconSession.findUnique({
-        where: { sessionId: verificationSessionId.trim() },
-        include: { sequence: true },
-      });
-
-      if (!session) {
-        return NextResponse.json(
-          { error: "Validation error: Invalid verification session." },
-          { status: 400 }
-        );
-      }
-
-      if (session.sequence?.slug !== "contact_form") {
-        return NextResponse.json(
-          { error: "Validation error: Verification sequence mismatch." },
-          { status: 400 }
-        );
-      }
-
-      if (session.previousResult === "consumed" || session.previousResult === "used") {
-        return NextResponse.json(
-          { error: "Validation error: This verification session has already been used. Please solve a new puzzle." },
-          { status: 400 }
-        );
-      }
-
-      const totalTasks =
-        session.totalPuzzlesAttempted > 0
-          ? session.totalPuzzlesAttempted
-          : await prisma.cubiconTask.count({
-              where: { sequenceId: session.sequenceId, isFinal: false },
-            });
-
-      const threshold = session.sequence?.passThreshold ?? 0.6;
-      const passed = evaluateSequencePass(
-        session.passedPuzzles,
-        totalTasks > 0 ? totalTasks : 1,
-        threshold
-      );
-
-      if (!passed) {
-        return NextResponse.json(
-          { error: "Validation error: Human verification was not passed." },
-          { status: 400 }
-        );
-      }
-
-      // Mark session as used to prevent replay attacks
-      await prisma.cubiconSession.update({
-        where: { id: session.id },
-        data: { previousResult: "used" },
-      });
+    // 3. Human Anti-Bot Verification via Cubicon. Always required: there is no bypass, and
+    // the solved session is consumed atomically so it cannot back a second submission.
+    const verification = await verifyAndConsumeContactSession(body.verificationSessionId, contactVerificationDb);
+    if (!verification.ok) {
+      return NextResponse.json({ error: verification.error }, { status: 400 });
     }
 
     const { name, email, company, interest, message, isEighteen } = parseResult.data;
@@ -168,7 +141,7 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in contact API route:", error);
     return NextResponse.json(
       { error: "Internal server error. Failed to process submission." },

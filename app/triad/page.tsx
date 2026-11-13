@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowLeft, Compass, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Compass, ExternalLink, GraduationCap, Sparkles, Triangle, TrendingUp } from "lucide-react";
+import { KNOW_YOUR_MAJOR_DEMO, TRIAD_STUDIO_DEMO, type DemoLink } from "@/lib/demoLinks";
 import styles from "./triad.module.css";
 
 export const metadata: Metadata = {
@@ -14,6 +15,53 @@ export const metadata: Metadata = {
 
 const TRIAD_VIDEO_CDN =
   "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
+
+const DEMONSTRATIONS: Array<{
+  id: string;
+  badge: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  link: DemoLink;
+}> = [
+  {
+    id: "triad-studio",
+    badge: "For marketers and researchers",
+    title: "TRIAD Studio",
+    description:
+      "Answer a TRIAD question the way a participant does: place the marker inside the triangle to show how the three corners compare, and see the practical and emotional drivers behind a choice take shape.",
+    icon: <Triangle size={24} />,
+    link: TRIAD_STUDIO_DEMO,
+  },
+  {
+    id: "know-your-major",
+    badge: "For students and parents",
+    title: "Know Your Major",
+    description:
+      "A five-minute TRIAD reflection for college-bound students and their parents: twenty quick triangle questions that end in a visual summary of what draws a student toward a field of study.",
+    icon: <GraduationCap size={24} />,
+    link: KNOW_YOUR_MAJOR_DEMO,
+  },
+];
+
+/** A hosted demo opens in a new tab; until one is published it offers a guided demo. */
+function DemoAction({ link, title }: { link: DemoLink; title: string }) {
+  if (link.external) {
+    return (
+      <a href={link.href} target="_blank" rel="noopener noreferrer" className={styles.demoAction}>
+        Try the {title} demonstration
+        <ExternalLink size={16} aria-hidden="true" />
+        <span className={styles.srOnly}> (opens in a new tab)</span>
+      </a>
+    );
+  }
+  return (
+    <Link href={link.href} className={styles.demoAction}>
+      Request a guided {title} demonstration
+      <ArrowRight size={16} aria-hidden="true" />
+    </Link>
+  );
+}
 
 export default function TriadPage() {
   return (
@@ -46,8 +94,26 @@ export default function TriadPage() {
             </p>
           </header>
 
+          {/* Demonstrations: where "Explore TRIAD" lands (the overview video is below) */}
+          <section id="demonstration" className={styles.demoSection} aria-labelledby="demonstration-title">
+            <h2 id="demonstration-title" className={styles.demoSectionTitle}>
+              Try TRIAD for Yourself
+            </h2>
+            <div className={styles.demoGrid}>
+              {DEMONSTRATIONS.map((demo) => (
+                <article key={demo.id} id={demo.id} className={styles.demoCard}>
+                  <div className={styles.pillarIcon}>{demo.icon}</div>
+                  <span className={styles.videoBadge}>{demo.badge}</span>
+                  <h3 className={styles.pillarHeading}>{demo.title}</h3>
+                  <p className={styles.pillarText}>{demo.description}</p>
+                  <DemoAction link={demo.link} title={demo.title} />
+                </article>
+              ))}
+            </div>
+          </section>
+
           {/* Video Showcase Section */}
-          <section className={styles.videoSection} aria-label="TRIAD Demonstration Video">
+          <section id="overview-video" className={styles.videoSection} aria-label="TRIAD Demonstration Video">
             <div className={styles.videoCard}>
               <div className={styles.videoHeader}>
                 <span className={styles.videoBadge}>Feature Demonstration</span>
@@ -115,6 +181,9 @@ export default function TriadPage() {
               <div className={styles.ctaActions}>
                 <Link href="/contact" className={styles.primaryBtn}>
                   Contact Our Research Team
+                </Link>
+                <Link href="#know-your-major" className={styles.secondaryBtn}>
+                  Know Your Major
                 </Link>
                 <Link href="/" className={styles.secondaryBtn}>
                   Explore All Tools
