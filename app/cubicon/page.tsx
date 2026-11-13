@@ -56,79 +56,57 @@ interface AreaDefinition {
 const CONTACT_AREAS: AreaDefinition[] = [
   {
     id: "interest",
-    name: "Interest",
+    name: "Primary Reason for Contact",
     weight: 45,
+
     options: [
-      { label: "Self-Help", factor: 0.5 },
-      { label: "Contribution", factor: 0.5 },
-      { label: "Access to Research", factor: 0.5 },
-      { label: "Confirmation", factor: 0.2 },
-      { label: "Topical Idea", factor: 0.0 },
+      { label: "Upcoming Survey", factor: 0.5 },
+      { label: "General Planning", factor: 0.5 },
+      { label: "Comparing Alternatives", factor: 0.5 },
+      { label: "Cubicon Trial", factor: 0.2 },
+      { label: "45-Minute Discussion", factor: 0.0 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "need",
-    name: "Need",
+    name: "Where Cubicon Could Help",
     weight: 20,
+
     options: [
-      { label: "Clarify", factor: 0.6 },
-      { label: "Simplify", factor: 0.7 },
-      { label: "Additional Detail", factor: 0.4 },
-      { label: "Best Practices", factor: 0.7 },
-      { label: "Become a Site Maven", factor: 0.5 },
+      { label: "Improve Sample", factor: 0.6 },
+      { label: "Clean Panel", factor: 0.7 },
+      { label: "Participant Quality", factor: 0.4 },
+      { label: "Validate Sample", factor: 0.7 },
+      { label: "Control Entry", factor: 0.5 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "source",
-    name: "Source",
-    weight: 5,
+    name: "Current Evaluation Stage",
+    weight: 15,
+
     options: [
-      { label: "Email Invite", factor: 0.1 },
-      { label: "Blog Posting", factor: 0.7 },
-      { label: "Peer Referral", factor: 0.3 },
-      { label: "Search Engine", factor: 0.2 },
-      { label: "Press Article", factor: 0.8 },
+      { label: "Just Saw the Preview", factor: 0.1 },
+      { label: "Early Exploration", factor: 0.7 },
+      { label: "Comparing Options", factor: 0.3 },
+      { label: "Considering a Pilot", factor: 0.2 },
+      { label: "Ready for Next-Step Conversation", factor: 0.8 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "profile",
-    name: "Profile",
-    weight: 5,
-    options: [
-      { label: "Self", factor: 0.6 },
-      { label: "Company", factor: 0.5 },
-      { label: "Publisher", factor: 0.2 },
-      { label: "Press", factor: 0.9 },
-      { label: "Consultant", factor: 0.2 },
-      { label: "Other", factor: 0.2 },
-    ],
-  },
-  {
-    id: "history",
-    name: "History",
-    weight: 5,
-    options: [
-      { label: "Experienced Researcher", factor: 0.7 },
-      { label: "Analytical Expertise", factor: 0.3 },
-      { label: "Survey Author", factor: 0.8 },
-      { label: "Member", factor: 0.3 },
-      { label: "Ongoing Conversation", factor: 0.3 },
-      { label: "Other", factor: 0.2 },
-    ],
-  },
-  {
-    id: "goal",
-    name: "Goal",
+    name: "My Role",
     weight: 20,
+
     options: [
-      { label: "Promote Idea", factor: 0.9 },
-      { label: "Sell Something", factor: 0.7 },
-      { label: "Add a Topic", factor: 0.2 },
-      { label: "Just Comment", factor: 0.4 },
-      { label: "Notify Us", factor: 0.2 },
+      { label: "Marketer", factor: 0.6 },
+      { label: "Researcher", factor: 0.5 },
+      { label: "Quality Control", factor: 0.2 },
+      { label: "Data Analytics", factor: 0.9 },
+      { label: "Project Management", factor: 0.2 },
       { label: "Other", factor: 0.2 },
     ],
   },
@@ -1113,7 +1091,6 @@ export default function CubiconPage() {
                   <span className={styles.liveIndicator}>
                     <span className={styles.pulseDot}></span> LIVE 3D ENGINE
                   </span>
-                  
                 </div>
                 <div className={styles.appControls}>
                   <button
@@ -1139,7 +1116,7 @@ export default function CubiconPage() {
                     )}
                     {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </button>
-                  
+
                   <Link
                     href="/feedback"
                     className={styles.controlBtn}
@@ -1220,7 +1197,10 @@ export default function CubiconPage() {
         style={{ padding: "2rem 0" }}
       >
         <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: "0", minWidth: "90vw"}}>
+          <div
+            className={styles.sectionHeader}
+            style={{ marginBottom: "0", minWidth: "90vw" }}
+          >
             <span className={styles.sectionTag}>EXCLUSIVE INVITATION</span>
             <h2 className={styles.sectionTitle}>
               Cubicon Founding Client Invitation
@@ -1235,7 +1215,8 @@ export default function CubiconPage() {
                 lineHeight: "1.5",
               }}
             >
-              Become a Founding client and experience the future of survey participant validation.
+              Become a Founding client and experience the future of survey
+              participant validation.
             </p>
             <p
               className={styles.sectionDesc}
@@ -1773,9 +1754,8 @@ export default function CubiconPage() {
                           marginBottom: "1.5rem",
                         }}
                       >
-                        Check all elements that apply to your organization.
-                        Multiple selections adjust factors automatically
-                        according to the BuyFacts weighting model.
+                        Check all elements that apply to your outreach.
+                        Multiple selections help us route and prioritize follow-up appropriately.
                       </p>
 
                       {CONTACT_AREAS.map((area) => (
@@ -1783,9 +1763,6 @@ export default function CubiconPage() {
                           <div className={styles.areaHeader}>
                             <span className={styles.areaTitle}>
                               {area.name}
-                            </span>
-                            <span className={styles.areaWeightBadge}>
-                              Area Weight: {area.weight}
                             </span>
                           </div>
 
@@ -1886,8 +1863,8 @@ export default function CubiconPage() {
                   </div>
 
                   <p className={styles.verificationHint}>
-                    <ShieldCheck size={15} /> Clicking register will open a
-                    full-screen 3D verification puzzle to confirm you are human.
+                    Clicking register will open a full-screen 3D verification
+                    puzzle to confirm you are human.
                   </p>
 
                   {formStatus.type && (
