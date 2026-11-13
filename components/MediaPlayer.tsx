@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import TransportControls from "./media/TransportControls";
+import { useMediaTransport } from "./media/useMediaTransport";
+import { useResponsiveVideoSrc } from "./media/useResponsiveVideoSrc";
 import {
   Play,
   Pause,
-  Volume2,
-  VolumeX,
   Maximize,
-  RotateCcw,
   ChevronRight,
   FileText,
   Download,
@@ -23,7 +23,6 @@ import {
 import Link from "next/link";
 import styles from "./MediaPlayer.module.css";
 import {
-  isPdfUrl,
   isDocxUrl,
   fetchAndConvertDocx,
   getDocumentProxyUrl,
@@ -50,6 +49,11 @@ export interface MediaPlayerProps {
   mediaUrl?: string;
   /** SEE IT: this button's own video. Independent of the other two links. */
   seeItUrl?: string;
+  /**
+   * Mobile portrait render of the SEE IT video, loaded at <= 768px. Without it the
+   * MOBILE_VIDEO_VARIANTS registry is consulted, then seeItUrl is used everywhere.
+   */
+  mobileSeeItUrl?: string;
   /** HEAR IT: this button's own audio. Independent of the other two links. */
   hearItUrl?: string;
   /** READ IT: this button's own document. Independent of the other two links. */
@@ -108,7 +112,22 @@ function getYouTubeEmbedUrl(url: string): string {
   return url;
 }
 
-export default function MediaPlayer({
+/**
+ * The dashboard media player. A different post, or a different link on the same post,
+ * remounts the screen: screen mode, playback, document state and notices all start fresh.
+ */
+export default function MediaPlayer(props: MediaPlayerProps) {
+  const resetKey = [
+    props.title,
+    props.seeItUrl,
+    props.mobileSeeItUrl,
+    props.hearItUrl,
+    props.readItUrl,
+  ].join("\u0000");
+  return <MediaPlayerScreen key={resetKey} {...props} />;
+}
+
+function MediaPlayerScreen({
   title,
   tagline,
   subtitle,
@@ -117,12 +136,9 @@ export default function MediaPlayer({
   welcomeTitle,
   welcomeTagline,
   welcomeParagraphs,
-  rightTitle,
-  rightSubtitle,
   seeItUrl,
+  mobileSeeItUrl,
   hearItUrl,
-  pdfUrl,
-  pdfLabel,
   moreDetailUrl,
   readItUrl,
   moreDetailIconUrl,
@@ -136,24 +152,22 @@ export default function MediaPlayer({
   onExploreClick,
   onNextMedia,
   showWelcome,
-  onShowWelcome,
   onDismissWelcome,
   initialScreenMode,
 }: MediaPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  // Custom transport (play/pause, stop, -10s/+10s, scrubber, volume) for the SEE IT video
+  // or HEAR IT audio on screen; only one of them is mounted at a time.
+  const { attach: attachMedia, ...transport } = useMediaTransport();
+  const { isPlaying } = transport;
   const [isWelcomeActive, setIsWelcomeActive] = useState<boolean>(
     showWelcome ?? true,
   );
-
-  useEffect(() => {
-    if (showWelcome !== undefined) {
-      setIsWelcomeActive(showWelcome);
-    }
-  }, [showWelcome]);
+  // Follow the parent's showWelcome (adjusting state during render, not in an effect).
+  const [syncedShowWelcome, setSyncedShowWelcome] = useState(showWelcome);
+  if (showWelcome !== syncedShowWelcome) {
+    setSyncedShowWelcome(showWelcome);
+    if (showWelcome !== undefined) setIsWelcomeActive(showWelcome);
+  }
 
   // Section 6: Video opening state and In Depth preview states
   const [videoMode, setVideoMode] = useState<"idle" | "opening" | "playing">(
@@ -174,22 +188,15 @@ export default function MediaPlayer({
     "auto" | "video" | "audio" | "document"
   >(initialScreenMode || "auto");
 
-  // Document state for DOCX client-side rendering
-  const [docxHtml, setDocxHtml] = useState<string | null>(null);
-  const [isLoadingDoc, setIsLoadingDoc] = useState(false);
-  const [docError, setDocError] = useState<string | null>(null);
-  /** READ IT document converted to HTML, shown on the player screen. */
-  const [modalDocxHtml, setModalDocxHtml] = useState<string | null>(null);
-  const [isLoadingModalDoc, setIsLoadingModalDoc] = useState(false);
   /**
-   * Which document the current state belongs to. A failure recorded for one post must never
-   * be shown for another, and pasting the same URL into a different post must trigger a
-   * fresh read — both used to depend on the URL alone.
+   * The READ IT document converted to HTML (or the error), tagged with the URL it belongs
+   * to. Anything for another URL is ignored, so a stale result is never shown.
    */
-  const [docKey, setDocKey] = useState<string | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [docResult, setDocResult] = useState<{
+    url: string;
+    html?: string;
+    error?: string;
+  } | null>(null);
   /** The player screen itself — this is what goes full screen, whatever it is showing. */
   const screenFrameRef = useRef<HTMLDivElement>(null);
 
@@ -213,6 +220,11 @@ export default function MediaPlayer({
   // There is no primary media link any more, so nothing here falls back from one link
   // to another: each action shows only its own asset, and shows nothing when it has none.
   const videoSrc = (seeItUrl || "").trim() || undefined;
+  /** The SEE IT render for this viewport: mobile portrait at <= 768px when one exists. */
+  const videoPlaybackSrc = useResponsiveVideoSrc({
+    desktopUrl: videoSrc,
+    mobileUrl: mobileSeeItUrl,
+  });
   const audioSrc = (hearItUrl || "").trim() || undefined;
   const documentSrc = (readItUrl || "").trim() || undefined;
 
@@ -232,7 +244,7 @@ export default function MediaPlayer({
 
   const screenMediaUrl =
     screenType === "video"
-      ? videoSrc
+      ? videoPlaybackSrc
       : screenType === "audio"
         ? audioSrc
         : screenType === "docx" || screenType === "pdf"
@@ -257,56 +269,38 @@ export default function MediaPlayer({
   const targetDocUrl = effectiveInDepthUrl || undefined;
 
   // Fetch and convert the DOCX that is on the player screen — always this post's READ IT document
+  const inlineDocxUrl = isScreenDocx ? screenMediaUrl : undefined;
   useEffect(() => {
-    const inlineDocxUrl = isScreenDocx ? screenMediaUrl : undefined;
-    if (!isScreenDocx || !inlineDocxUrl) {
-      setDocxHtml(null);
-      setIsLoadingDoc(false);
-      setDocError(null);
-      setDocKey(null);
-      return;
-    }
-
-    // Identify this read by post AND document, so switching posts always re-reads.
-    const thisKey = `${title || ""}|${displayTagline || ""}|${inlineDocxUrl}`;
+    if (!inlineDocxUrl) return;
     let isMounted = true;
-    setDocKey(thisKey);
-    setIsLoadingDoc(true);
-    setDocError(null);
-
     fetchAndConvertDocx(inlineDocxUrl)
       .then((result) => {
         if (!isMounted) return;
-        if (result.success && result.html) {
-          setDocxHtml(result.html);
-          setModalDocxHtml(result.html);
-          setDocError(null);
-        } else {
-          setDocxHtml(null);
-          setModalDocxHtml(null);
-          setDocError(
-            result.error || "Failed to convert Word document to HTML",
-          );
-        }
+        setDocResult(
+          result.success && result.html
+            ? { url: inlineDocxUrl, html: result.html }
+            : {
+                url: inlineDocxUrl,
+                error: result.error || "Failed to convert Word document to HTML",
+              },
+        );
       })
       .catch((err: unknown) => {
         if (!isMounted) return;
         const msg =
           err instanceof Error ? err.message : "Error reading document";
-        setDocxHtml(null);
-        setModalDocxHtml(null);
-        setDocError(msg);
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingDoc(false);
-        }
+        setDocResult({ url: inlineDocxUrl, error: msg });
       });
-
     return () => {
       isMounted = false;
     };
-  }, [isScreenDocx, screenMediaUrl, title, displayTagline]);
+  }, [inlineDocxUrl]);
+
+  const currentDoc =
+    inlineDocxUrl && docResult?.url === inlineDocxUrl ? docResult : null;
+  const isLoadingDoc = Boolean(inlineDocxUrl) && !currentDoc;
+  const docError = currentDoc?.error ?? null;
+  const modalDocxHtml = currentDoc?.html ?? null;
 
   // Escape closes full screen, whether the screen holds a video, audio or a document.
   useEffect(() => {
@@ -325,145 +319,7 @@ export default function MediaPlayer({
     onNextMedia?.();
   };
 
-  // Selecting another post puts the player back on that post's primary content:
-  // whatever SEE IT / HEAR IT / READ IT had swapped onto the screen is cleared.
-  useEffect(() => {
-    setScreenMode(initialScreenMode || "auto");
-    setIsPlaying(false);
-    setProgress(0);
-    setCurrentTime(0);
-    setDuration(0);
-    setVideoMode("idle");
-    setDownloadConfirmed(null);
-    setMissingNotice(null);
-    if (missingTimer.current) {
-      window.clearTimeout(missingTimer.current);
-      missingTimer.current = null;
-    }
 
-    // Drop any document state left over from the previous post.
-    setDocxHtml(null);
-    setModalDocxHtml(null);
-    setDocError(null);
-    setIsLoadingDoc(false);
-    setIsLoadingModalDoc(false);
-    setDocKey(null);
-  }, [seeItUrl, hearItUrl, readItUrl, title]);
-
-  // Reset playback states on media change
-  useEffect(() => {
-    setIsPlaying(false);
-    setProgress(0);
-    setCurrentTime(0);
-    setDuration(0);
-    setVideoMode("idle");
-    setDownloadConfirmed(null);
-
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      videoRef.current.load();
-    }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.load();
-    }
-  }, [screenMediaUrl, screenType]);
-
-  // A different button (or the welcome state) always starts on the description screen.
-  useEffect(() => {
-    setScreenMode(initialScreenMode || "auto");
-  }, [title]);
-
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLMediaElement>) => {
-    const el = e.currentTarget;
-    if (el.duration) {
-      setCurrentTime(el.currentTime);
-      setProgress((el.currentTime / el.duration) * 100);
-    }
-  };
-
-  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLMediaElement>) => {
-    setDuration(e.currentTarget.duration || 0);
-  };
-
-  const handleEnded = () => {
-    setIsPlaying(false);
-    setProgress(0);
-    setCurrentTime(0);
-  };
-
-  const togglePlay = () => {
-    // Ref access stays inside the handler so the lint rule about values used by effects
-    // does not flag these media elements.
-    const el =
-      screenType === "video"
-        ? videoRef.current
-        : screenType === "audio"
-          ? audioRef.current
-          : null;
-    if (el) {
-      if (isPlaying) {
-        el.pause();
-        setIsPlaying(false);
-      } else {
-        setVideoMode("playing");
-        el.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((err) => {
-            console.warn("Playback blocked or failed: ", err);
-          });
-      }
-    }
-  };
-
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextProgress = parseFloat(e.target.value);
-    const el =
-      screenType === "video"
-        ? videoRef.current
-        : screenType === "audio"
-          ? audioRef.current
-          : null;
-    if (el && el.duration) {
-      const nextTime = (nextProgress / 100) * el.duration;
-      el.currentTime = nextTime;
-      setCurrentTime(nextTime);
-      setProgress(nextProgress);
-    }
-  };
-
-  const resetPlayback = () => {
-    const el =
-      screenType === "video"
-        ? videoRef.current
-        : screenType === "audio"
-          ? audioRef.current
-          : null;
-    if (el) {
-      el.currentTime = 0;
-      el.pause();
-    }
-    setProgress(0);
-    setCurrentTime(0);
-    setIsPlaying(false);
-  };
-
-  const toggleMute = () => {
-    const el =
-      screenType === "video"
-        ? videoRef.current
-        : screenType === "audio"
-          ? audioRef.current
-          : null;
-    if (el) {
-      el.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
 
   /**
    * Full screen the player's screen frame, so whatever is on it (video, audio visualiser
@@ -471,24 +327,14 @@ export default function MediaPlayer({
    */
   const toggleFullscreen = () => {
     const frame = screenFrameRef.current;
-    if (frame?.requestFullscreen) {
-      frame.requestFullscreen().catch(() => {
-        videoRef.current?.requestFullscreen?.();
-      });
-      return;
-    }
-    videoRef.current?.requestFullscreen?.();
+    frame?.requestFullscreen?.().catch(() => {
+      console.warn("Full screen is not available here.");
+    });
   };
 
   // The Full Screen control is offered for whatever is on the screen: video, audio or document.
   const canFullscreen = Boolean(screenMediaUrl) && !isWelcomeActive;
 
-  const formatTime = (secs: number) => {
-    if (isNaN(secs) || !isFinite(secs) || secs <= 0) return "0:00";
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
 
   /** Transient notice shown when an action button has no asset of its own (auto-dismisses). */
   const [missingNotice, setMissingNotice] = useState<{
@@ -514,25 +360,16 @@ export default function MediaPlayer({
 
   /** Pause whatever the player is currently playing (used when the screen swaps source). */
   const pauseScreenMedia = () => {
-    if (videoRef.current) videoRef.current.pause();
-    if (audioRef.current) audioRef.current.pause();
-    setIsPlaying(false);
+    transport.pause();
   };
 
   /**
    * Play the media element that is already on screen, once React has rendered the new
    * source for the mode we just selected.
    */
-  const playScreenAfterSwitch = (next: "video" | "audio") => {
-    window.setTimeout(() => {
-      const el = next === "video" ? videoRef.current : audioRef.current;
-      if (!el) return;
-      el.muted = false;
-      setIsMuted(false);
-      el.play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => console.warn("Playback blocked or failed: ", err));
-    }, 60);
+  const playScreenAfterSwitch = () => {
+    transport.setMuted(false);
+    transport.playWhenReady();
   };
 
   // Section 6: Video Button Action (SEE IT)
@@ -543,12 +380,12 @@ export default function MediaPlayer({
     } else if (onExploreClick) {
       onExploreClick("video");
     } else if (videoSrc) {
-      if (screenType === "video" && videoRef.current) {
-        togglePlay();
+      if (screenType === "video") {
+        transport.togglePlay();
       } else {
         pauseScreenMedia();
         setScreenMode("video");
-        playScreenAfterSwitch("video");
+        playScreenAfterSwitch();
       }
     } else {
       // This post has no video of its own: the primary content stays on screen untouched.
@@ -568,18 +405,14 @@ export default function MediaPlayer({
     } else if (onExploreClick) {
       onExploreClick("audio");
     } else if (audioSrc) {
-      if (screenType === "audio" && audioRef.current) {
-        if (isMuted) {
-          setIsMuted(false);
-          audioRef.current.muted = false;
-          if (videoRef.current) videoRef.current.muted = false;
-        }
-        togglePlay();
+      if (screenType === "audio") {
+        if (transport.muted) transport.setMuted(false);
+        transport.togglePlay();
       } else {
         // Swap the player screen over to this post's audio, then play it there.
         pauseScreenMedia();
         setScreenMode("audio");
-        playScreenAfterSwitch("audio");
+        playScreenAfterSwitch();
       }
     } else {
       // This post has no audio of its own: the primary content stays on screen untouched.
@@ -593,23 +426,12 @@ export default function MediaPlayer({
 
   const handleStartVideo = () => {
     setVideoMode("playing");
-    setTimeout(() => {
-      if (videoRef.current) {
-        videoRef.current.play().catch((err) => {
-          console.warn("Video play interrupted:", err);
-        });
-        setIsPlaying(true);
-      }
-    }, 50);
+    transport.play();
   };
 
   const handleCancelVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
+    transport.stop();
     setVideoMode("idle");
-    setIsPlaying(false);
   };
 
   // Section 6: READ IT — the document is rendered inside the player, never in a modal.
@@ -692,6 +514,10 @@ export default function MediaPlayer({
           screenType === "video"
             ? styles.videoScreenFrame
             : styles.audioScreenFrame
+        } ${
+          screenType === "video" && screenMediaUrl && screenMediaUrl !== videoSrc
+            ? styles.portraitScreenFrame
+            : ""
         }`}
       >
         {/* Section 6: Opening Animation Overlay with Start Video & Cancel */}
@@ -749,25 +575,20 @@ export default function MediaPlayer({
             />
           ) : (
             <video
-              key={screenMediaUrl}
-              ref={videoRef}
-              /*
-               * The media resolved for the current screen: the button's SEE IT link
-               * (or the primary link when it is itself a video).
-               */
+              // Keyed by the post's video, so a desktop/mobile render swap on resize keeps
+              // the element and its position.
+              key={videoSrc}
+              ref={attachMedia}
+              /* This post's SEE IT video, in the render for this viewport. */
               src={screenMediaUrl}
               className={styles.realVideo}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onPlay={() => {
-                setIsPlaying(true);
-                setVideoMode("playing");
-              }}
-              onPause={() => setIsPlaying(false)}
-              onEnded={handleEnded}
-              onClick={togglePlay}
+              onPlay={() => setVideoMode("playing")}
+              onClick={transport.togglePlay}
               preload="metadata"
               playsInline
+              data-video-source={
+                screenMediaUrl === videoSrc ? "desktop" : "mobile"
+              }
             />
           ))}
 
@@ -817,13 +638,8 @@ export default function MediaPlayer({
         {screenType === "audio" && screenMediaUrl && (
           <audio
             key={screenMediaUrl}
-            ref={audioRef}
+            ref={attachMedia}
             src={screenMediaUrl}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={handleEnded}
           />
         )}
 
@@ -851,13 +667,13 @@ export default function MediaPlayer({
           <div className={styles.inlineDocViewer}>
             <div className={styles.inlineDocHeader}></div>
             <div className={styles.inlineDocBody}>
-              {isLoadingModalDoc && (
+              {isLoadingDoc && (
                 <div className={styles.inlineDocLoading}>
                   <Loader2 size={24} className={styles.docSpinnerIcon} />
                   <span>Rendering Word document...</span>
                 </div>
               )}
-              {!isLoadingModalDoc && docError && docKey && (
+              {!isLoadingDoc && docError && (
                 <div className={styles.inlineDocFallback}>
                   {isUnreachableForThirdParty(screenMediaUrl) ? (
                     <div className={styles.inlineDocErrorNotice}>
@@ -895,7 +711,7 @@ export default function MediaPlayer({
                   )}
                 </div>
               )}
-              {!isLoadingModalDoc && !docError && modalDocxHtml && (
+              {!isLoadingDoc && !docError && modalDocxHtml && (
                 <div className={styles.inlineDocxScroll}>
                   <div
                     className={styles.inlineDocxContent}
@@ -911,7 +727,7 @@ export default function MediaPlayer({
         {isPlayable && !isWelcomeActive && (
           <button
             className={`${styles.playButton} ${isPlaying ? styles.isPlayingBtn : ""} ${screenType === "video" && isPlaying ? styles.videoPlaying : ""}`}
-            onClick={togglePlay}
+            onClick={transport.togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
             id="mock-media-play-btn"
           >
@@ -1025,37 +841,38 @@ export default function MediaPlayer({
           controls (including Full Screen) so a document can still be enlarged. */}
       {(isPlayable || isScreenDocument) && !isWelcomeActive && (
         <div className={styles.controlPanel}>
-          {isPlayable && (
-            <div className={styles.sliderWrapper}>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="0.1"
-                value={progress}
-                onChange={handleSliderChange}
-                className={styles.seekBar}
-                id="mock-media-seek-bar"
-              />
-              <div
-                className={styles.seekFill}
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          )}
-
-          <div className={styles.controlsRow}>
-            {isPlayable ? (
-              <div className={styles.timeInfo}>
-                <span className={styles.timeText}>
-                  {formatTime(currentTime)}
-                </span>
-                <span className={styles.timeDivider}>/</span>
-                <span className={styles.timeText}>
-                  {duration > 0 ? formatTime(duration) : "Available on start"}
-                </span>
-              </div>
-            ) : (
+          {isPlayable ? (
+            <TransportControls
+              transport={transport}
+              label={`${displayTitle} ${screenType === "video" ? "video" : "audio"}`}
+              className={styles.transportBar}
+            >
+              {canFullscreen && (
+                <button
+                  type="button"
+                  className={styles.utilBtn}
+                  onClick={toggleFullscreen}
+                  title="Full Screen"
+                  aria-label="Full Screen"
+                  id="mock-media-fullscreen-btn"
+                >
+                  <Maximize size={16} />
+                </button>
+              )}
+              {screenType === "video" && (
+                <button
+                  type="button"
+                  className={`${styles.utilBtn} ${styles.closeVideoBtn}`}
+                  onClick={handleCancelVideo}
+                  title="Close Video"
+                  aria-label="Close video"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </TransportControls>
+          ) : (
+            <div className={styles.controlsRow}>
               <div className={styles.timeInfo}>
                 <div className={styles.inlineDocActions}>
                   <button
@@ -1069,50 +886,22 @@ export default function MediaPlayer({
                   </button>
                 </div>
               </div>
-            )}
-
-            <div className={styles.utilityBtns}>
-              {isPlayable && (
-                <button
-                  className={styles.utilBtn}
-                  onClick={resetPlayback}
-                  title="Reset"
-                >
-                  <RotateCcw size={16} />
-                </button>
-              )}
-              {isPlayable && (
-                <button
-                  className={styles.utilBtn}
-                  onClick={toggleMute}
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                </button>
-              )}
-              {canFullscreen && (
-                <button
-                  className={styles.utilBtn}
-                  onClick={toggleFullscreen}
-                  title="Full Screen"
-                  aria-label="Full Screen"
-                  id="mock-media-fullscreen-btn"
-                >
-                  <Maximize size={16} />
-                </button>
-              )}
-              {screenType === "video" && (
-                <button
-                  className={styles.utilBtn}
-                  onClick={handleCancelVideo}
-                  title="Close Video"
-                  style={{ marginLeft: "6px", color: "#f87171" }}
-                >
-                  <X size={16} />
-                </button>
-              )}
+              <div className={styles.utilityBtns}>
+                {canFullscreen && (
+                  <button
+                    type="button"
+                    className={styles.utilBtn}
+                    onClick={toggleFullscreen}
+                    title="Full Screen"
+                    aria-label="Full Screen"
+                    id="mock-media-fullscreen-btn"
+                  >
+                    <Maximize size={16} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

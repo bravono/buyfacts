@@ -96,6 +96,12 @@
   max-height: 480px;
 }
 
+/* The mobile portrait render (<= 768px) gets a portrait screen instead of a 16:9 letterbox. */
+.videoScreenFrame.portraitScreenFrame {
+  aspect-ratio: 9 / 16;
+  max-height: min(70dvh, 560px);
+}
+
 .videoBackground {
   position: absolute;
   top: 0;
@@ -254,59 +260,6 @@
   gap: 0.25rem;
 }
 
-.sliderWrapper {
-  position: relative;
-  width: 100%;
-  height: 14px;
-  display: flex;
-  align-items: center;
-}
-
-.seekBar {
-  width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-  height: 4px;
-  background: var(--border-color, #e2e8f0);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-  position: relative;
-  z-index: 5;
-}
-
-.seekFill {
-  position: absolute;
-  height: 4px;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: var(--interactive-blue, #00507b);
-  border-radius: 2px;
-  z-index: 4;
-  pointer-events: none;
-}
-
-.seekBar::-webkit-slider-thumb {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--interactive-blue, #00507b);
-  border: 2px solid white;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s;
-  z-index: 10;
-  position: relative;
-}
-
-.seekBar::-webkit-slider-thumb:hover {
-  transform: scale(1.25);
-  background: var(--primary-color, #ff9900);
-}
-
 .controlsRow {
   display: flex;
   justify-content: space-between;
@@ -320,10 +273,6 @@
   font-family: var(--font-sans);
   font-size: 0.76rem;
   color: var(--text-muted, #6d6d6d);
-}
-
-.timeDivider {
-  color: var(--text-dim, #9f9e9e);
 }
 
 .utilityBtns {
@@ -349,6 +298,25 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+/* Transport bar under the screen (components/media/TransportControls), themed for the
+   light player card. */
+.transportBar {
+  --transport-bg: transparent;
+  --transport-fg: var(--text-color, #1a1a1a);
+  --transport-muted: var(--text-muted, #6d6d6d);
+  --transport-track: var(--border-color, #e2e8f0);
+  --transport-accent: var(--interactive-blue, #00507b);
+  --transport-on-accent: #ffffff;
+  --transport-hover: rgba(0, 0, 0, 0.06);
+  --transport-focus: var(--interactive-blue, #00507b);
+  padding: 0.25rem 0 0;
+}
+
+.closeVideoBtn {
+  margin-left: 6px;
+  color: #dc2626;
+}
+
 /* Real Video element inside screenFrame */
 .realVideo {
   position: absolute;
@@ -356,7 +324,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   z-index: 3;
   background-color: #000;
   cursor: pointer;
