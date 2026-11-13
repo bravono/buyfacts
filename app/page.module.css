@@ -666,8 +666,12 @@
   letter-spacing: 0.02em;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: var(--transition-smooth);
-  color: #ffffff !important;
   cursor: default;
+}
+
+/* Scoped so it outranks the global `.section-light span` text color. */
+.badgeRow .badge {
+  color: #ffffff;
 }
 
 .badge:hover {
@@ -686,19 +690,16 @@
 
 .badgeNavy {
   background-color: var(--interactive-blue);
-  color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .badgeBlue {
   background-color: var(--interactive-orange);
-  color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .badgeTeal {
   background-color: #0d9488;
-  color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -2244,7 +2245,7 @@
   .videoModalDismissBtn { padding: 0.35rem 0.9rem; }
 }
 
-/* Section 2 Author Credit & Callout Heading */
+/* Section 2 Author Credit */
 .sectionAuthorLight {
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -2254,15 +2255,6 @@
   margin-bottom: 1.5rem;
   letter-spacing: 0.02em;
 }
-
-.calloutHeading {
-  display: block;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--interactive-blue, #00507b);
-  margin-bottom: 0.35rem;
-}
-
 /* Great Eight Interactive Card Clicks */
 .serviceCardClickable {
   cursor: pointer;
@@ -2292,136 +2284,3 @@
   transform: translateX(0);
 }
 
-/* Great Eight Modal Dialog */
-.greatEightModalOverlay {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  width: 100dvw !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  background: rgba(10, 15, 25, 0.88) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 99999 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(0.75rem, 2.5vw, 2rem);
-  animation: fadeInModal 0.25s ease-out forwards;
-}
-
-.greatEightModalDialog {
-  background: #ffffff;
-  border: 1px solid rgba(0, 80, 123, 0.15);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 980px;
-  max-height: calc(100dvh - 2rem);
-  overflow: hidden;
-  box-shadow:
-    0 25px 60px -10px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(0, 80, 123, 0.08);
-  display: flex;
-  flex-direction: column;
-}
-
-.greatEightModalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.1rem 1.5rem;
-  background: #f8fafc;
-  border-bottom: 1px solid rgba(0, 80, 123, 0.12);
-  gap: 1rem;
-}
-
-.greatEightModalHeaderInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
-}
-
-.greatEightSequenceBadge {
-  background: rgba(0, 80, 123, 0.1);
-  color: var(--interactive-blue);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.95rem;
-  padding: 0.35rem 0.65rem;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.greatEightModalTitle {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.greatEightModalSubtitle {
-  font-size: 0.82rem;
-  color: #64748b;
-  margin: 0.2rem 0 0 0;
-  line-height: 1.4;
-}
-
-.greatEightHeaderActions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.greatEightExternalBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--interactive-blue);
-  background: rgba(0, 80, 123, 0.06);
-  border: 1px solid rgba(0, 80, 123, 0.16);
-  border-radius: 8px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.greatEightExternalBtn:hover {
-  background: rgba(0, 80, 123, 0.12);
-  color: #003e60;
-}
-
-.greatEightModalCloseBtn {
-  background: rgba(0, 80, 123, 0.06);
-  border: 1px solid rgba(0, 80, 123, 0.15);
-  color: #475569;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.greatEightModalCloseBtn:hover {
-  background: rgba(239, 68, 68, 0.9);
-  border-color: rgba(239, 68, 68, 0.9);
-  color: #ffffff;
-  transform: scale(1.05);
-}
-
-.greatEightModalBody {
-  padding: 1.25rem;
-  overflow-y: auto;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-}
