@@ -1034,13 +1034,22 @@ export default function CubiconPage() {
                       interactive 3D spatial solver and validate your response
                       yourself.
                     </div>
-                    <button
-                      className={styles.tryItYourselfBtn}
-                      onClick={handleSeeLiveClick}
-                      title="Launch Interactive 3D Solver"
-                    >
-                      <Sparkles size={20} /> TRY IT YOURSELF NOW
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+                      <button
+                        className={styles.tryItYourselfBtn}
+                        onClick={handleSeeLiveClick}
+                        title="Launch Interactive 3D Solver"
+                      >
+                        TRY IT YOURSELF NOW
+                      </button>
+                      <button
+                        className={styles.leaveBtn}
+                        onClick={() => router.push("/")}
+                        title="Return to Home Page"
+                      >
+                        LEAVE
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
