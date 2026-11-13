@@ -1,0 +1,26 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #000000;
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  background: #000000;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  object-fit: contain;
+  background: #000000;
+  cursor: pointer;
+}
