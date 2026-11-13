@@ -424,9 +424,10 @@ describe("TripletButton Component Extended Capabilities Test Suite", () => {
       cssContent.includes("width: min(460px, 92vw)"),
       "hoverCard must use viewport-clamped width: min(460px, 92vw)"
     );
+    // Edge anchoring follows the grid's first and last column (3- or 4-column grids alike).
     assert.ok(
-      cssContent.includes('data-column="1"') && cssContent.includes('data-column="3"'),
-      "CSS must define edge-anchor overrides for data-column=1 and data-column=3"
+      cssContent.includes('data-edge="start"') && cssContent.includes('data-edge="end"'),
+      "CSS must define edge-anchor overrides for data-edge=start and data-edge=end"
     );
   });
 

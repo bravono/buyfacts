@@ -79,6 +79,84 @@
   margin: 0;
 }
 
+.demoSection {
+  margin-bottom: 3.5rem;
+  /* Clear the sticky navbar when arriving at /triad#demonstration. */
+  scroll-margin-top: 6rem;
+}
+
+.demoSectionTitle {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 1.25rem;
+}
+
+.demoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.demoCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 1.6rem;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  box-shadow: 0 8px 22px -10px rgba(88, 28, 135, 0.18);
+  scroll-margin-top: 6rem;
+}
+
+.demoCard .pillarHeading {
+  margin-top: 0.25rem;
+}
+
+.demoCard .pillarText {
+  margin-bottom: 1.4rem;
+}
+
+.demoAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  background: #581c87;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.demoAction:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(88, 28, 135, 0.28);
+}
+
+.demoAction:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .videoSection {
   margin-bottom: 3.5rem;
 }
@@ -251,6 +329,10 @@
 }
 
 @media (max-width: 820px) {
+  .demoGrid {
+    grid-template-columns: 1fr;
+  }
+
   .pillarsGrid {
     grid-template-columns: 1fr;
     gap: 1.25rem;

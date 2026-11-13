@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import styles from "./TripletButton.module.css";
+import { columnEdge, isExternalHref, type TripletColumns } from "../lib/tripletLayout";
+export { columnEdge, isExternalHref, type TripletColumns };
 
 export type TripletButtonTheme = "orange" | "blue" | "purple" | "teal";
 
@@ -41,6 +43,8 @@ export interface TripletButtonProps {
   className?: string;
   showCaption?: boolean;
   column?: number;
+  /** Columns in the grid this button sits in (for hover-card edge anchoring). */
+  columns?: TripletColumns;
   /** True when this card's hover information is revealed by the mobile collapsible. */
   isExpanded?: boolean;
   /** Toggles the mobile collapsible (mobile only). */
@@ -49,7 +53,7 @@ export interface TripletButtonProps {
 
 export interface TripletButtonGroupProps {
   items: TripletButtonItem[];
-  columns?: 1 | 2 | 3;
+  columns?: TripletColumns;
   className?: string;
   showCaption?: boolean;
   onHoverChange?: (isHovered: boolean) => void;
@@ -60,6 +64,7 @@ export function TripletButton({
   className = "",
   showCaption = false,
   column,
+  columns = 3,
   isExpanded = false,
   onToggleExpand,
 }: TripletButtonProps) {
@@ -94,10 +99,8 @@ export function TripletButton({
     }
   })();
 
-  const isExternal = Boolean(
-    item.external ||
-    (item.href && (item.href.startsWith("http://") || item.href.startsWith("https://")))
-  );
+  const href = item.href?.trim() || undefined;
+  const isExternal = Boolean(href && (item.external || isExternalHref(href)));
   const linkProps = isExternal
     ? { target: "_blank", rel: "noopener noreferrer" }
     : {};
@@ -146,6 +149,7 @@ export function TripletButton({
   };
 
   const canExpand = Boolean(item.hoverCard && onToggleExpand);
+  const hoverActionHref = item.hoverCard?.actionHref?.trim() || href;
 
   const handleToggleExpand = () => {
     onToggleExpand?.(item.id);
@@ -156,12 +160,18 @@ export function TripletButton({
       className={`${styles.tripletItem} ${className}`}
       id={`triplet-item-${item.id}`}
       data-column={column}
+      data-edge={columnEdge(column, columns)}
       data-expanded={canExpand ? (isExpanded ? "true" : "false") : undefined}
     >
       {item.badge && <span className={styles.itemBadge}>{item.badge}</span>}
 
       {/* Primary Pill Action Button */}
-      {item.onClick && !item.href ? (
+      {!href && !item.onClick ? (
+        // No destination configured: shown as information, not as a dead link.
+        <div className={`${styles.tripletBtn} ${themeClass}`} id={`triplet-btn-${item.id}`}>
+          {buttonContent}
+        </div>
+      ) : !href ? (
         <button
           type="button"
           onClick={item.onClick}
@@ -173,7 +183,7 @@ export function TripletButton({
         </button>
       ) : isExternal ? (
         <a
-          href={item.href || "#"}
+          href={href}
           draggable={false}
           className={`${styles.tripletBtn} ${themeClass}`}
           id={`triplet-btn-${item.id}`}
@@ -187,7 +197,7 @@ export function TripletButton({
         </a>
       ) : (
         <Link
-          href={item.href || "#"}
+          href={href!}
           draggable={false}
           className={`${styles.tripletBtn} ${themeClass}`}
           id={`triplet-btn-${item.id}`}
@@ -240,19 +250,38 @@ export function TripletButton({
               <p className={styles.hoverCalloutPrompt}>
                 {preventOrphanWords(item.hoverCard.prompt)}
               </p>
-              <Link
-                href={item.hoverCard.actionHref || item.href || "#"}
-                className={styles.hoverCalloutAction}
-                onClick={item.hoverCard.onActionClick}
-                aria-label={`${item.hoverCard.actionLabel || "Try It"} ${item.hoverCard.title}`}
-              >
-                <span>{item.hoverCard.actionLabel || "Try It"}</span>
-                <ArrowRight
-                  size={15}
-                  className={styles.hoverActionArrow}
-                  aria-hidden="true"
-                />
-              </Link>
+              {hoverActionHref ? (
+                <Link
+                  href={hoverActionHref}
+                  className={styles.hoverCalloutAction}
+                  onClick={item.hoverCard.onActionClick}
+                  aria-label={`${item.hoverCard.actionLabel || "Try It"} ${item.hoverCard.title}`}
+                  {...(isExternalHref(hoverActionHref)
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
+                  <span>{item.hoverCard.actionLabel || "Try It"}</span>
+                  <ArrowRight
+                    size={15}
+                    className={styles.hoverActionArrow}
+                    aria-hidden="true"
+                  />
+                </Link>
+              ) : item.hoverCard.onActionClick ? (
+                <button
+                  type="button"
+                  className={styles.hoverCalloutAction}
+                  onClick={item.hoverCard.onActionClick}
+                  aria-label={`${item.hoverCard.actionLabel || "Try It"} ${item.hoverCard.title}`}
+                >
+                  <span>{item.hoverCard.actionLabel || "Try It"}</span>
+                  <ArrowRight
+                    size={15}
+                    className={styles.hoverActionArrow}
+                    aria-hidden="true"
+                  />
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -533,6 +562,7 @@ export default function TripletButtonGroup({
             item={item}
             showCaption={showCaption}
             column={index + 1}
+            columns={columns}
             isExpanded={expandedId === item.id}
             onToggleExpand={toggleExpanded}
           />
