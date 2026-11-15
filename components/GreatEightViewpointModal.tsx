@@ -15,6 +15,39 @@ interface GreatEightViewpointModalProps {
 
 const FOCUSABLE = 'a[href], button:not([disabled]), audio[controls], iframe, [tabindex]:not([tabindex="-1"])';
 
+function sanitizeDocxHtml(rawHtml: string): string {
+  if (!rawHtml) return "";
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawHtml, "text/html");
+
+  doc.querySelectorAll("script, style, iframe, object, embed, svg, math, link, meta").forEach((node) => node.remove());
+
+  doc.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith("on") || name === "style" || name === "srcdoc") {
+        element.removeAttribute(attribute.name);
+        return;
+      }
+
+      if (["href", "src", "xlink:href"].includes(name)) {
+        const value = attribute.value.trim().toLowerCase();
+        if (
+          value.startsWith("javascript:") ||
+          value.startsWith("vbscript:") ||
+          value.startsWith("data:text/html") ||
+          value.startsWith("data:application/javascript")
+        ) {
+          element.removeAttribute(attribute.name);
+        }
+      }
+    });
+  });
+
+  return doc.body.innerHTML;
+}
+
 /** Renders the viewpoint article: an inline Word document, an embedded PDF, or a pending note. */
 function ArticleReader({ card }: { card: GreatEightCard }) {
   const url = card.articleUrl;
@@ -68,8 +101,8 @@ function ArticleReader({ card }: { card: GreatEightCard }) {
   if (current.error) {
     return <p className={styles.pending}>{current.error} Use Open in Reader to view it.</p>;
   }
-  // Same rendering path as /document-viewer: mammoth's HTML for a CDN document.
-  return <div className={styles.docxContent} dangerouslySetInnerHTML={{ __html: current.html ?? "" }} />;
+  const safeHtml = sanitizeDocxHtml(current.html ?? "");
+  return <div className={styles.docxContent} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
 }
 
 /**
