@@ -52,8 +52,13 @@ test("Dashboard Buttons Specification Test Suite (database-driven)", async (t) =
       const c = read(...file);
       assert.ok(!c.includes("DEFAULT_SERVICES_BUTTONS") && !c.includes("DEFAULT_TL_BUTTONS"));
       assert.ok(!c.includes("defaultFallback"), `${file.join("/")} must not use fallback content`);
-      assert.ok(c.includes("descriptionText"), `${file.join("/")} must read descriptionText from the DB`);
+      // Text comes from the DB rows; topics are matched to rows through the manifest.
+      assert.ok(c.includes('fetch("/api/buttons")'), `${file.join("/")} must load button text from the DB`);
+      assert.ok(c.includes("resolveDashboard("), `${file.join("/")} must resolve rows through the manifest`);
+      assert.ok(!c.includes(".category"), `${file.join("/")} must not match rows by category`);
     }
+    const manifest = read("lib", "dashboardTopicsManifest.ts");
+    assert.ok(manifest.includes("row?.descriptionText"), "manifest resolver must read descriptionText from the DB row");
     assert.ok(!read("components", "DashboardAnimation", "DashboardAnimation.tsx").includes("DEFAULT_BUTTONS"));
     assert.ok(!read("app", "api", "buttons", "route.ts").includes("DEFAULT_BUTTONS"), "API must not auto-seed defaults");
   });

@@ -27,12 +27,18 @@ test("The Great Eight Model, API, and Media Component Test Suite", async (t) => 
       assert.equal(item.orderIndex, i + 1, `Item ${i + 1} must have orderIndex ${i + 1}`);
       assert.equal(item.title, expectedTitles[i], `Item ${i + 1} title must match`);
       assert.ok(item.slug && item.slug.length > 0, `Item ${i + 1} must have slug`);
-      assert.ok(item.readItUrl && item.readItUrl.length > 0, `Item ${i + 1} must have readItUrl`);
-      assert.ok(
-        item.readItUrl.endsWith(".docx") || item.readItUrl.endsWith(".pdf"),
-        `Item ${i + 1} readItUrl must point to a CDN DOCX or PDF document`
-      );
+      // READ IT stays empty until Robert's viewpoint article for this card is on the CDN;
+      // when set it must be a CDN DOCX or PDF.
+      if (item.readItUrl) {
+        assert.ok(
+          item.readItUrl.startsWith("https://s3.buyfacts.com/") &&
+            (item.readItUrl.endsWith(".docx") || item.readItUrl.endsWith(".pdf")),
+          `Item ${i + 1} readItUrl must point to a CDN DOCX or PDF document`
+        );
+      }
     }
+    const links = DEFAULT_GREAT_EIGHT.map((item) => item.readItUrl).filter(Boolean);
+    assert.equal(new Set(links).size, links.length, "No two cards may share one article");
   });
 
   await t.test("2. GET /api/great-eight route returns valid payload", async () => {

@@ -17,7 +17,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
 
     await prisma.dashboardButton.create({
       data: {
-        label: "Research Planning",
+        label: "Research Planner",
         descriptionText: "Duplicate item test 2",
         subtitle: "Duplicate item test 2",
         category: "Products & Services",
@@ -99,7 +99,7 @@ test("Database Seed Replacement and Deduplication Test Suite", async (t) => {
       "TRIAD",
       "Research Libs",
       "Rule of Three",
-      "Research Planning",
+      "Research Planner",
       "Survey Improvement",
       "Survey Creation",
       "Survey Fieldwork",
