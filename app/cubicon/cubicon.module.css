@@ -391,10 +391,8 @@
   box-shadow: 0 6px 20px rgba(234, 66, 95, 0.4);
 }
 @media (max-width: 1280px) {
- 
 }
 @media (max-width: 768px) {
- 
   .appViewportSection {
     padding: 1.5rem 0 3rem 0;
     overflow-x: hidden;
@@ -1144,6 +1142,27 @@
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 12px 30px rgba(20, 163, 139, 0.6);
   background: linear-gradient(135deg, #20d5b5 0%, #14a38b 100%);
+}
+.leaveBtn {
+  background: linear-gradient(135deg, #ea425f 0%, #c92f49 100%);
+  color: #ffffff;
+  border: none;
+  padding: 1.1rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 24px rgba(234, 66, 95, 0.4);
+  transition: all 0.3s ease;
+}
+
+.leaveBtn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(234, 66, 95, 0.6);
+  background: linear-gradient(135deg, #f0647b 0%, #ea425f 100%);
 }
 
 .skipBtn {
