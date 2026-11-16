@@ -18,6 +18,22 @@ const nextConfig: NextConfig = {
         source: "/triad-app",
         destination: "/triad-app/index.html",
       },
+      {
+        source: "/rule-of-three-app/:path*",
+        destination: "/rule-of-three-app/index.html",
+      },
+      {
+        source: "/rule-of-three-app",
+        destination: "/rule-of-three-app/index.html",
+      },
+      {
+        source: "/r3-app",
+        destination: "/rule-of-three-app/index.html",
+      },
+      {
+        source: "/r3",
+        destination: "/rule-of-three",
+      },
     ];
   },
 };

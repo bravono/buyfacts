@@ -318,7 +318,21 @@ The embedded TRIAD application (`/triad` iframe viewer pointing to `/triad-app/i
   - **Major Browser & Comparison Dock**: Search, filter, and compare academic and career pathways side-by-side (`#/browse`).
 - **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
 - **Bundling & Synchronization Script**: `npm run embed-triad` builds `C:\Users\USER\TRIAD` with normalized relative asset paths and hash routing, then syncs the distribution bundle into `public/triad-app/`.
-- **Unified Tool Bundler**: `npm run embed-tools` builds and syncs all three tools (Cubicon, ResearchLib, and TRIAD) in sequence.
+- **Unified Tool Bundler**: `npm run embed-tools` builds and syncs all four tools (Cubicon, ResearchLib, TRIAD, and Rule of Three) in sequence.
+
+### Rule of Three (R3) Platform & Decision Engine
+
+The embedded Rule of Three application (`/rule-of-three` iframe viewer pointing to `/rule-of-three-app/index.html` or alias `/r3`) and the standalone repository (`C:\Users\USER\R3`) provide an active surveying, push marketing evaluation, and strategic synthesis engine:
+
+- **Core Capabilities**:
+  - **Welcome & Framework Introduction**: Overview of decision rules and research orientation (`/welcome`).
+  - **Active Survey Execution**: Interactive respondent querying with adaptive feedback (`/activemode`).
+  - **Push Marketing Resonance**: Outbound campaign message evaluation and verification (`/push-marketing`).
+  - **Social Media Sentiment**: Multi-channel social feed testing and response tracking (`/social-media`).
+  - **Top-Level Strategic Summary**: Executive vector synthesis and decision-ready recommendations (`/top-level`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-r3` builds `C:\Users\USER\R3` with base path `/rule-of-three-app/` and syncs the distribution bundle into `public/rule-of-three-app/`.
+- **Sub-Path URL Rewriting**: Catch-all rewrites in `next.config.ts` (`/rule-of-three-app/:path*` -> `/rule-of-three-app/index.html`) enable seamless internal routing with Vite's `BrowserRouter`.
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
