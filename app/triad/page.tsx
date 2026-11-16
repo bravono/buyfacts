@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowLeft, Compass, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Compass, TrendingUp, Sparkles } from "lucide-react";
+import TransportVideo from "@/components/media/TransportVideo";
 import styles from "./triad.module.css";
 
 export const metadata: Metadata = {
@@ -54,15 +55,11 @@ export default function TriadPage() {
                 <h2 className={styles.videoTitle}>Watch TRIAD in Action</h2>
               </div>
               <div className={styles.videoContainer}>
-                <video
+                <TransportVideo
                   src={TRIAD_VIDEO_CDN}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className={styles.videoElement}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                  title="TRIAD feature demonstration"
+                  videoClassName={styles.videoElement}
+                />
               </div>
             </div>
           </section>

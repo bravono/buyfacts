@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ExternalLink, FileText, Headphones, Loader2, X } from "lucide-react";
 import { GREAT_EIGHT_SECTION, type GreatEightCard } from "@/lib/greatEightManifest";
 import { fetchAndConvertDocx, isDocxUrl, isPdfUrl } from "@/lib/document-parser";
+import TransportControls from "./media/TransportControls";
+import { useMediaTransport } from "./media/useMediaTransport";
 import styles from "./GreatEightViewpointModal.module.css";
 
 interface GreatEightViewpointModalProps {
@@ -13,7 +15,7 @@ interface GreatEightViewpointModalProps {
   onClose: () => void;
 }
 
-const FOCUSABLE = 'a[href], button:not([disabled]), audio[controls], iframe, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
 
 function sanitizeDocxHtml(rawHtml: string): string {
   if (!rawHtml) return "";
@@ -114,6 +116,7 @@ export default function GreatEightViewpointModal({ card, onClose }: GreatEightVi
   const summaryId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { attach: attachAudio, ...audioTransport } = useMediaTransport();
 
   // Focus the dialog on open, keep Tab inside it, close on Escape, and hand focus back to
   // the card that opened it.
@@ -212,9 +215,12 @@ export default function GreatEightViewpointModal({ card, onClose }: GreatEightVi
               <Headphones size={16} aria-hidden="true" /> Audio Performance
             </h3>
             {card.audioUrl ? (
-              <audio className={styles.audioPlayer} controls preload="none" src={card.audioUrl}>
-                Your browser does not support audio playback.
-              </audio>
+              <>
+                <audio ref={attachAudio} preload="none" src={card.audioUrl}>
+                  Your browser does not support audio playback.
+                </audio>
+                <TransportControls transport={audioTransport} label={`${card.title} audio performance`} />
+              </>
             ) : (
               <p className={styles.pending}>The audio performance of this viewpoint is coming soon.</p>
             )}

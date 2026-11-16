@@ -27,6 +27,7 @@ import {
   X,
   Video,
 } from "lucide-react";
+import TransportVideo from "@/components/media/TransportVideo";
 import GreatEightViewpointModal from "@/components/GreatEightViewpointModal";
 import {
   GREAT_EIGHT_SECTION,
@@ -128,15 +129,14 @@ function HomeContent() {
   const [activeVideoModal, setActiveVideoModal] = useState<{
     isOpen: boolean;
     videoUrl: string;
+    /** Mobile portrait render (<= 768px); falls back to the MOBILE_VIDEO_VARIANTS registry. */
+    mobileVideoUrl?: string;
     title: string;
     tagline: string;
     destinationHref?: string;
     destinationLabel?: string;
   } | null>(null);
 
-  // URL of the video that finished playing; the end screen only shows for that video.
-  const [endedVideoUrl, setEndedVideoUrl] = useState<string | null>(null);
-  const videoEnded = Boolean(activeVideoModal?.isOpen) && endedVideoUrl === activeVideoModal?.videoUrl;
 
   // Hero Triplet Button Pathways
   const heroTripletButtons: TripletButtonItem[] = [
@@ -1922,64 +1922,54 @@ function HomeContent() {
             </div>
 
             <div className={styles.videoModalBody}>
-              <video
+              <TransportVideo
                 key={activeVideoModal.videoUrl}
                 src={activeVideoModal.videoUrl}
-                controls
+                mobileSrc={activeVideoModal.mobileVideoUrl}
+                title={activeVideoModal.title}
                 autoPlay
-                playsInline
                 preload="auto"
-                className={styles.videoModalPlayer}
-                aria-label={activeVideoModal.title}
-                onEnded={() => setEndedVideoUrl(activeVideoModal.videoUrl)}
-                onPlay={() => setEndedVideoUrl(null)}
-              >
-                Your browser does not support the video tag.
-              </video>
-              {videoEnded && (
-                <div className={styles.videoEndScreen}>
-                  <p className={styles.videoEndTitle}>Where to next?</p>
-                  <div className={styles.videoEndActions}>
-                    <Link
-                      href="/"
-                      className={styles.videoEndBtn}
-                      onClick={() => setActiveVideoModal(null)}
-                    >
-                      Back to Home
-                    </Link>
-                    <Link
-                      href="/products-services"
-                      className={styles.videoEndBtn}
-                      onClick={() => setActiveVideoModal(null)}
-                    >
-                      Products &amp; Services
-                    </Link>
-                    <Link
-                      href="/research-imperatives"
-                      className={styles.videoEndBtn}
-                      onClick={() => setActiveVideoModal(null)}
-                    >
-                      Research Innovation
-                    </Link>
-                    <button
-                      type="button"
-                      className={styles.videoEndBtnGhost}
-                      onClick={() => {
-                        setEndedVideoUrl(null);
-                        const v = document.querySelector<HTMLVideoElement>(
-                          "video[aria-label='" + activeVideoModal.title + "']",
-                        );
-                        if (v) {
-                          v.currentTime = 0;
-                          v.play();
-                        }
-                      }}
-                    >
-                      Replay
-                    </button>
+                className={styles.videoModalMedia}
+                videoClassName={styles.videoModalPlayer}
+                endScreen={(transport) => (
+                  <div className={styles.videoEndScreen}>
+                    <p className={styles.videoEndTitle}>Where to next?</p>
+                    <div className={styles.videoEndActions}>
+                      <Link
+                        href="/"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Back to Home
+                      </Link>
+                      <Link
+                        href="/products-services"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Products &amp; Services
+                      </Link>
+                      <Link
+                        href="/research-imperatives"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Research Innovation
+                      </Link>
+                      <button
+                        type="button"
+                        className={styles.videoEndBtnGhost}
+                        onClick={() => {
+                          transport.seek(0);
+                          transport.play();
+                        }}
+                      >
+                        Replay
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              />
             </div>
 
             <div className={styles.videoModalFooter}>
