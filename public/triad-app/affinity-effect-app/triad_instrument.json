@@ -1,0 +1,343 @@
+{
+  "version": "0.1-review",
+  "status": "illustrative_not_validated",
+  "categories": [
+    "Marketing Automation Platform"
+  ],
+  "point_maps": {
+    "positive": {
+      "ll": 33,
+      "lr": 66,
+      "apex": 99
+    },
+    "negative": {
+      "ll": 99,
+      "lr": 66,
+      "apex": 33
+    }
+  },
+  "groups": [
+    {
+      "area": "Perception",
+      "kind": "Emotive"
+    },
+    {
+      "area": "Perception",
+      "kind": "Practical"
+    },
+    {
+      "area": "Experience",
+      "kind": "Emotive"
+    },
+    {
+      "area": "Experience",
+      "kind": "Practical"
+    }
+  ],
+  "triads": [
+    {
+      "id": "perception_emotive_impression",
+      "area": "Perception",
+      "kind": "Emotive",
+      "driver": "Impression",
+      "corners": {
+        "ll": "Wary",
+        "lr": "Interested",
+        "apex": "Favorably Inclined"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_emotive_fit",
+      "area": "Perception",
+      "kind": "Emotive",
+      "driver": "Fit",
+      "corners": {
+        "ll": "Uneasy",
+        "lr": "Reassured",
+        "apex": "Confident in Fit"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_emotive_clarity",
+      "area": "Perception",
+      "kind": "Emotive",
+      "driver": "Clarity",
+      "corners": {
+        "ll": "Overwhelmed",
+        "lr": "At Ease",
+        "apex": "Ready to Explain"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_emotive_connection",
+      "area": "Perception",
+      "kind": "Emotive",
+      "driver": "Connection",
+      "corners": {
+        "ll": "Distant",
+        "lr": "Recognized",
+        "apex": "Personally Engaged"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_practical_impression",
+      "area": "Perception",
+      "kind": "Practical",
+      "driver": "Impression",
+      "corners": {
+        "ll": "Unnoticed",
+        "lr": "Worth Reviewing",
+        "apex": "Shortlist Ready"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_practical_fit",
+      "area": "Perception",
+      "kind": "Practical",
+      "driver": "Fit",
+      "corners": {
+        "ll": "Poor Fit",
+        "lr": "Partial Fit",
+        "apex": "Strong Fit"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_practical_clarity",
+      "area": "Perception",
+      "kind": "Practical",
+      "driver": "Clarity",
+      "corners": {
+        "ll": "Confusing",
+        "lr": "Understandable",
+        "apex": "Actionable"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "perception_practical_connection",
+      "area": "Perception",
+      "kind": "Practical",
+      "driver": "Connection",
+      "corners": {
+        "ll": "Unrelated",
+        "lr": "Applicable",
+        "apex": "Organizationally Aligned"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_emotive_evidence",
+      "area": "Experience",
+      "kind": "Emotive",
+      "driver": "Evidence",
+      "corners": {
+        "ll": "Doubtful",
+        "lr": "Reassured",
+        "apex": "Convinced"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_emotive_proven_results",
+      "area": "Experience",
+      "kind": "Emotive",
+      "driver": "Proven Results",
+      "corners": {
+        "ll": "Disappointed",
+        "lr": "Satisfied",
+        "apex": "Proud to Endorse"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_emotive_superior_performance",
+      "area": "Experience",
+      "kind": "Emotive",
+      "driver": "Superior Performance",
+      "corners": {
+        "ll": "Frustrated",
+        "lr": "Comfortable",
+        "apex": "Delighted"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_emotive_substantial_value",
+      "area": "Experience",
+      "kind": "Emotive",
+      "driver": "Substantial Value",
+      "corners": {
+        "ll": "Regretful",
+        "lr": "Comfortable Renewing",
+        "apex": "Ready to Recommend"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_practical_evidence",
+      "area": "Experience",
+      "kind": "Practical",
+      "driver": "Evidence",
+      "corners": {
+        "ll": "Unverified",
+        "lr": "Supported",
+        "apex": "Independently Validated"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_practical_proven_results",
+      "area": "Experience",
+      "kind": "Practical",
+      "driver": "Proven Results",
+      "corners": {
+        "ll": "Below Target",
+        "lr": "Meets Target",
+        "apex": "Exceeds Target"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_practical_superior_performance",
+      "area": "Experience",
+      "kind": "Practical",
+      "driver": "Superior Performance",
+      "corners": {
+        "ll": "Underperforms",
+        "lr": "Meets Standard",
+        "apex": "Outperforms"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    },
+    {
+      "id": "experience_practical_substantial_value",
+      "area": "Experience",
+      "kind": "Practical",
+      "driver": "Substantial Value",
+      "corners": {
+        "ll": "Poor Return",
+        "lr": "Justified Return",
+        "apex": "Exceptional Return"
+      },
+      "polarity": "positive",
+      "points": {
+        "ll": 33,
+        "lr": 66,
+        "apex": 99
+      },
+      "weight_min": 1,
+      "weight_max": 100
+    }
+  ]
+}

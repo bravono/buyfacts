@@ -1,0 +1,1 @@
+import{j as r,N as o}from"./vendor-react-B_v5Dw4Y.js";import{a}from"./index-CnNgSzI3.js";import"./vendor-query-FzfnKDZF.js";import"./vendor-antd-iVVxJW6O.js";const u=({children:t})=>{const{isAuthenticated:e}=a();return e?t:r.jsx(o,{to:"/parent/login",replace:!0})};export{u as default};

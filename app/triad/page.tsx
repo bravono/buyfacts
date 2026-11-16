@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Compass, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
 import styles from "./triad.module.css";
+import TriadInteractiveViewer from "@/components/triad/TriadInteractiveViewer";
 
 export const metadata: Metadata = {
   title: "TRIAD - Market Changes in Real Time | BuyFacts",
@@ -45,6 +46,11 @@ export default function TriadPage() {
               make better-informed decisions.
             </p>
           </header>
+
+          {/* Interactive TRIAD Application Embed */}
+          <section className={styles.interactiveSection} aria-label="Interactive TRIAD Tool Experience">
+            <TriadInteractiveViewer />
+          </section>
 
           {/* Video Showcase Section */}
           <section className={styles.videoSection} aria-label="TRIAD Demonstration Video">

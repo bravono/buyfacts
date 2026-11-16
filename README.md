@@ -307,6 +307,19 @@ Completion Screen: Directs respondent to directional measurement conclusion with
 - **Bundling & Synchronization Script**: `npm run embed-research-lib` builds the standalone app in `../narrative` and bundles output into `public/narrative-app/`.
 - **Database Seeding Script**: `npx tsx scripts/seed-research-lib-survey.ts` ensures all three database targets (PostgreSQL, BuyFacts SQLite `prisma/dev.db`, and Standalone `narrative.db`) are seeded synchronously.
 
+### TRIAD Interactive Platform & Sentiment Engine
+
+The embedded TRIAD application (`/triad` iframe viewer pointing to `/triad-app/index.html`) and the standalone repository (`C:\Users\USER\TRIAD`) provide a multi-role educational reflection and sentiment discovery platform:
+
+- **Core Capabilities**:
+  - **Role Discovery Portal**: Tailored pathways for Students, Parents, Educators, and Admins (`#/`).
+  - **20-Question Assessment**: Authoritative PLES-based Know Your Major assessment bank with discrete corner scoring and barycentric coordinates (`#/triad`).
+  - **3-Axis Major Matcher Quick Quiz**: Nuanced trade-off questioning revealing emerging directional patterns (`#/quiz`).
+  - **Major Browser & Comparison Dock**: Search, filter, and compare academic and career pathways side-by-side (`#/browse`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-triad` builds `C:\Users\USER\TRIAD` with normalized relative asset paths and hash routing, then syncs the distribution bundle into `public/triad-app/`.
+- **Unified Tool Bundler**: `npm run embed-tools` builds and syncs all three tools (Cubicon, ResearchLib, and TRIAD) in sequence.
+
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
 - `POST /admin/sequences`: Authenticated endpoint creating a new puzzle group with title, slug, threshold, rotation direction (`left` or `right`), rotation interval, and tasks.
