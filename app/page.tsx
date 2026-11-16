@@ -21,6 +21,7 @@ import {
   Users,
   ShieldCheck,
   TrendingUp,
+  Layers,
   ArrowRight,
   RotateCcw,
   AlertCircle,
@@ -37,6 +38,7 @@ import {
   type GreatEightSlug,
 } from "@/lib/greatEightManifest";
 import styles from "./page.module.css";
+import { RULE_OF_THREE_DEMO, TRIAD_DEMONSTRATION_HREF } from "@/lib/demoLinks";
 import TripletButtonGroup, {
   TripletButtonItem,
 } from "@/components/TripletButton";
@@ -225,7 +227,9 @@ function HomeContent() {
           title: "Market Changes in Real Time With TRIAD",
           tagline:
             "TRIAD brings earlier recognition of market changes to help marketers stay ahead of competitors and expand their competitive playbook.",
-          destinationHref: "/triad",
+          // The modal already played the overview video: send visitors on to the
+          // demonstrations (TRIAD Studio and Know Your Major), not back to that video.
+          destinationHref: TRIAD_DEMONSTRATION_HREF,
           destinationLabel: "Explore TRIAD",
         });
       },
@@ -237,6 +241,25 @@ function HomeContent() {
           "Experience how measuring practical and emotional drivers can help reveal emerging directional patterns.",
         actionLabel: "SEE MORE",
         actionHref: "/triad",
+      },
+    },
+    {
+      id: "rule-of-three",
+      title: "Rule of Three",
+      tagline:
+        "Rule of Three turns research-led knowledge into focused educational assets: three principles that bring clarity to everyday decisions.",
+      href: RULE_OF_THREE_DEMO.href,
+      external: RULE_OF_THREE_DEMO.external,
+      theme: "teal",
+      fallbackIcon: <Layers size={20} />,
+      hoverCard: {
+        title: "Rule of Three",
+        description:
+          "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention.",
+        prompt:
+          "See how three complementary principles can turn research into practical guidance.",
+        actionLabel: "SEE MORE",
+        actionHref: RULE_OF_THREE_DEMO.href,
       },
     },
   ];
@@ -548,6 +571,7 @@ function HomeContent() {
             {/* Reusable Vibrant Triplet Pill Cards with Navbar Collapse Coordination */}
             <TripletButtonGroup
               items={heroTripletButtons}
+              columns={4}
               onHoverChange={setIsNavHoverCollapsed}
             />
 

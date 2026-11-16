@@ -3,14 +3,36 @@ import assert from "node:assert/strict";
 import { POST } from "../app/api/contact/route";
 import { prisma } from "../lib/prisma";
 
+/**
+ * A Cubicon session solved on the contact_form sequence: the contact API requires one for
+ * every submission (there is no test bypass).
+ */
+async function solvedContactSession(created: string[]): Promise<string> {
+  const sequence = await prisma.cubiconSequence.upsert({
+    where: { slug: "contact_form" },
+    update: {},
+    create: { slug: "contact_form", title: "Contact Form Verification", passThreshold: 0.66 },
+  });
+  const sessionId = `contact-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  await prisma.cubiconSession.create({
+    data: { sessionId, sequenceId: sequence.id, passedPuzzles: 3, totalPuzzlesAttempted: 3 },
+  });
+  created.push(sessionId);
+  return sessionId;
+}
+
 test("Contact API Route - General Inquiry Hold Pipeline (Section 9.1)", async (t) => {
   const createdTokens: string[] = [];
+  const createdSessions: string[] = [];
 
   t.after(async () => {
     if (createdTokens.length > 0) {
       await prisma.emailVerification.deleteMany({
         where: { token: { in: createdTokens } },
       });
+    }
+    if (createdSessions.length > 0) {
+      await prisma.cubiconSession.deleteMany({ where: { sessionId: { in: createdSessions } } });
     }
   });
 
@@ -30,6 +52,7 @@ test("Contact API Route - General Inquiry Hold Pipeline (Section 9.1)", async (t
         message: "Hello, testing general contact submission with verification hold.",
         isEighteen: true,
         hp_website: "",
+        verificationSessionId: await solvedContactSession(createdSessions),
       }),
     });
 
@@ -68,6 +91,7 @@ test("Contact API Route - General Inquiry Hold Pipeline (Section 9.1)", async (t
         message: "We would like to discuss licensing BuyFacts data.",
         isEighteen: true,
         hp_website: "",
+        verificationSessionId: await solvedContactSession(createdSessions),
       }),
     });
 
