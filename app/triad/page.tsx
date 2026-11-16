@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft, ArrowRight, Compass, ExternalLink, GraduationCap, Sparkles, Triangle, TrendingUp } from "lucide-react";
 import { KNOW_YOUR_MAJOR_DEMO, TRIAD_STUDIO_DEMO, type DemoLink } from "@/lib/demoLinks";
+import TransportVideo from "@/components/media/TransportVideo";
 import styles from "./triad.module.css";
 
 export const metadata: Metadata = {
@@ -120,15 +121,11 @@ export default function TriadPage() {
                 <h2 className={styles.videoTitle}>Watch TRIAD in Action</h2>
               </div>
               <div className={styles.videoContainer}>
-                <video
+                <TransportVideo
                   src={TRIAD_VIDEO_CDN}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className={styles.videoElement}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                  title="TRIAD feature demonstration"
+                  videoClassName={styles.videoElement}
+                />
               </div>
             </div>
           </section>

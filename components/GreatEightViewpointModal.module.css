@@ -158,11 +158,6 @@
   background: rgba(0, 80, 123, 0.04);
 }
 
-.audioPlayer {
-  display: block;
-  width: 100%;
-}
-
 .article {
   display: flex;
   flex-direction: column;
