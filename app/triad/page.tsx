@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Compass, ExternalLink, GraduationCap, Sparkles, 
 import { KNOW_YOUR_MAJOR_DEMO, TRIAD_STUDIO_DEMO, type DemoLink } from "@/lib/demoLinks";
 import TransportVideo from "@/components/media/TransportVideo";
 import styles from "./triad.module.css";
+import TriadInteractiveViewer from "@/components/triad/TriadInteractiveViewer";
 
 export const metadata: Metadata = {
   title: "TRIAD - Market Changes in Real Time | BuyFacts",

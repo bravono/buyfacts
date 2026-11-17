@@ -307,6 +307,33 @@ Completion Screen: Directs respondent to directional measurement conclusion with
 - **Bundling & Synchronization Script**: `npm run embed-research-lib` builds the standalone app in `../narrative` and bundles output into `public/narrative-app/`.
 - **Database Seeding Script**: `npx tsx scripts/seed-research-lib-survey.ts` ensures all three database targets (PostgreSQL, BuyFacts SQLite `prisma/dev.db`, and Standalone `narrative.db`) are seeded synchronously.
 
+### TRIAD Interactive Platform & Sentiment Engine
+
+The embedded TRIAD application (`/triad` iframe viewer pointing to `/triad-app/index.html`) and the standalone repository (`C:\Users\USER\TRIAD`) provide a multi-role educational reflection and sentiment discovery platform:
+
+- **Core Capabilities**:
+  - **Role Discovery Portal**: Tailored pathways for Students, Parents, Educators, and Admins (`#/`).
+  - **20-Question Assessment**: Authoritative PLES-based Know Your Major assessment bank with discrete corner scoring and barycentric coordinates (`#/triad`).
+  - **3-Axis Major Matcher Quick Quiz**: Nuanced trade-off questioning revealing emerging directional patterns (`#/quiz`).
+  - **Major Browser & Comparison Dock**: Search, filter, and compare academic and career pathways side-by-side (`#/browse`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-triad` builds `C:\Users\USER\TRIAD` with normalized relative asset paths and hash routing, then syncs the distribution bundle into `public/triad-app/`.
+- **Unified Tool Bundler**: `npm run embed-tools` builds and syncs all four tools (Cubicon, ResearchLib, TRIAD, and Rule of Three) in sequence.
+
+### Rule of Three (R3) Platform & Decision Engine
+
+The embedded Rule of Three application (`/rule-of-three` iframe viewer pointing to `/rule-of-three-app/index.html` or alias `/r3`) and the standalone repository (`C:\Users\USER\R3`) provide an active surveying, push marketing evaluation, and strategic synthesis engine:
+
+- **Core Capabilities**:
+  - **Welcome & Framework Introduction**: Overview of decision rules and research orientation (`/welcome`).
+  - **Active Survey Execution**: Interactive respondent querying with adaptive feedback (`/activemode`).
+  - **Push Marketing Resonance**: Outbound campaign message evaluation and verification (`/push-marketing`).
+  - **Social Media Sentiment**: Multi-channel social feed testing and response tracking (`/social-media`).
+  - **Top-Level Strategic Summary**: Executive vector synthesis and decision-ready recommendations (`/top-level`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-r3` builds `C:\Users\USER\R3` with base path `/rule-of-three-app/` and syncs the distribution bundle into `public/rule-of-three-app/`.
+- **Sub-Path URL Rewriting**: Catch-all rewrites in `next.config.ts` (`/rule-of-three-app/:path*` -> `/rule-of-three-app/index.html`) enable seamless internal routing with Vite's `BrowserRouter`.
+
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
 - `POST /admin/sequences`: Authenticated endpoint creating a new puzzle group with title, slug, threshold, rotation direction (`left` or `right`), rotation interval, and tasks.

@@ -16,12 +16,12 @@ export const COMPLETION_MESSAGES = {
   success: {
     heading: "Congratulations! You are human.",
     description:
-      "Please use the navigation buttons on the right to take your next action, or select an option below.",
+      "Next we offer you a number of choices above. Please make a selection and we thank you for considering Cubicon and BuyFacts.",
   },
   rejection: {
     heading: "Thank you for participating",
     description:
-      "Please use the navigation buttons on the right to take your next action, or select an option below.",
+      "Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices above.",
   },
 };
 
