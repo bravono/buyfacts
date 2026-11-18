@@ -2,13 +2,11 @@
  * Where the live demonstrations are hosted.
  *
  * The interactive TRIAD tools (the B2B TRIAD Studio and Know Your Major) and the Rule of
- * Three app are separate deployments (github.com/MaestroDev-H/TRIAD and .../R3), not pages
- * of this site. Set their public base URLs at build time:
+ * Three app ship as static bundles inside this site (public/triad-app, public/rule-of-three-app).
+ * To point the links at a separate deployment instead, set its public base URL at build time:
  *
- *   NEXT_PUBLIC_TRIAD_APP_URL=https://<triad deployment>   (serves /affinity-effect, /know-your-major)
+ *   NEXT_PUBLIC_TRIAD_APP_URL=https://<triad deployment>   (serves /affinity-effect-app/index.html, /index.html)
  *   NEXT_PUBLIC_R3_APP_URL=https://<rule of three deployment>
- *
- * Until a URL is set, each demonstration falls back to an on-site page, so no link is dead.
  */
 
 /** Normalises a configured base URL: https (or http) only, no trailing slash. */
@@ -17,31 +15,32 @@ export function normaliseAppUrl(value: string | undefined | null): string | null
   return /^https?:\/\/[^\s/]+/i.test(url) ? url : null;
 }
 
-const TRIAD_APP_URL = normaliseAppUrl(process.env.NEXT_PUBLIC_TRIAD_APP_URL);
-const R3_APP_URL = normaliseAppUrl(process.env.NEXT_PUBLIC_R3_APP_URL);
+/** On-site homes of the embedded bundles, used when no deployment URL is configured. */
+export const EMBEDDED_TRIAD_BASE = "/triad-app";
+export const EMBEDDED_R3_BASE = "/rule-of-three-app";
 
-/** Contact section on the home page: where visitors can book a guided demonstration. */
-export const GUIDED_DEMO_HREF = "/#contact";
+const TRIAD_APP_URL = normaliseAppUrl(process.env.NEXT_PUBLIC_TRIAD_APP_URL) ?? EMBEDDED_TRIAD_BASE;
+const R3_APP_URL = normaliseAppUrl(process.env.NEXT_PUBLIC_R3_APP_URL) ?? EMBEDDED_R3_BASE;
 
 export interface DemoLink {
   href: string;
-  /** True when the link opens the hosted demonstration (a different site, new tab). */
+  /** True when the link opens a standalone demo app (plain anchor, new tab), not a Next page. */
   external: boolean;
 }
 
-/** Builds a demo link: the hosted app path when configured, otherwise the fallback. */
-export function demoLink(baseUrl: string | null, path: string, fallback: string): DemoLink {
-  return baseUrl ? { href: `${baseUrl}${path}`, external: true } : { href: fallback, external: false };
+/** Builds a demo link into an app; the bundles are static HTML, so it is always a plain new-tab link. */
+export function demoLink(baseUrl: string, path: string): DemoLink {
+  return { href: `${baseUrl}${path}`, external: true };
 }
 
-/** The B2B TRIAD Studio demonstration. */
-export const TRIAD_STUDIO_DEMO = demoLink(TRIAD_APP_URL, "/affinity-effect", GUIDED_DEMO_HREF);
+/** The B2B TRIAD Studio demonstration (The Affinity Effect). */
+export const TRIAD_STUDIO_DEMO = demoLink(TRIAD_APP_URL, "/affinity-effect-app/index.html");
 
-/** The Know Your Major TRIAD demonstration. */
-export const KNOW_YOUR_MAJOR_DEMO = demoLink(TRIAD_APP_URL, "/know-your-major", GUIDED_DEMO_HREF);
+/** The Know Your Major TRIAD demonstration; the TRIAD bundle uses a hash router. */
+export const KNOW_YOUR_MAJOR_DEMO = demoLink(TRIAD_APP_URL, "/index.html#/know-your-major");
 
-/** The Rule of Three app; falls back to its topic on the Innovations dashboard. */
-export const RULE_OF_THREE_DEMO = demoLink(R3_APP_URL, "/", "/products-services");
+/** The Rule of Three app. */
+export const RULE_OF_THREE_DEMO = demoLink(R3_APP_URL, "/");
 
 /** The TRIAD page's demonstrations section (target of "Explore TRIAD"). */
 export const TRIAD_DEMONSTRATION_HREF = "/triad#demonstration";
