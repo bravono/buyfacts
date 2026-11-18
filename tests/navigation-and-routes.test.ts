@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { columnEdge, isExternalHref } from "../lib/tripletLayout";
 import {
-  GUIDED_DEMO_HREF,
   KNOW_YOUR_MAJOR_DEMO,
   RULE_OF_THREE_DEMO,
   TRIAD_DEMONSTRATION_HREF,
@@ -152,23 +151,25 @@ test("Navigation, TRIAD Routing and Route Validity Suite", async (t) => {
     assert.ok(read("components", "Footer.tsx").includes('href="/triad#know-your-major"'), "Footer links Know Your Major");
   });
 
-  await t.test("5. Demo links: hosted app when configured, a working on-site page otherwise", () => {
+  await t.test("5. Demo links: embedded bundles by default, a configured deployment when set", () => {
     assert.equal(normaliseAppUrl("https://triad.example.com/"), "https://triad.example.com");
     assert.equal(normaliseAppUrl("  http://localhost:5173  "), "http://localhost:5173");
     for (const bad of [undefined, "", "   ", "triad.example.com", "javascript:alert(1)", "https://"]) {
       assert.equal(normaliseAppUrl(bad), null, `rejects ${String(bad)}`);
     }
-    assert.deepEqual(demoLink("https://triad.example.com", "/know-your-major", GUIDED_DEMO_HREF), {
-      href: "https://triad.example.com/know-your-major",
+    assert.deepEqual(demoLink("https://triad.example.com", "/index.html#/know-your-major"), {
+      href: "https://triad.example.com/index.html#/know-your-major",
       external: true,
     });
-    assert.deepEqual(demoLink(null, "/know-your-major", GUIDED_DEMO_HREF), { href: "/#contact", external: false });
 
-    // This test run has no NEXT_PUBLIC_*_APP_URL: every demo falls back to a real page.
-    const routes = appRoutes();
+    // This test run has no NEXT_PUBLIC_*_APP_URL: every demo opens its embedded bundle.
+    assert.equal(TRIAD_STUDIO_DEMO.href, "/triad-app/affinity-effect-app/index.html");
+    assert.equal(KNOW_YOUR_MAJOR_DEMO.href, "/triad-app/index.html#/know-your-major");
+    assert.equal(RULE_OF_THREE_DEMO.href, "/rule-of-three-app/");
     for (const link of [TRIAD_STUDIO_DEMO, KNOW_YOUR_MAJOR_DEMO, RULE_OF_THREE_DEMO]) {
-      if (link.external) continue;
-      assert.ok(routeExists(link.href.split("#")[0], routes), `${link.href} must exist`);
+      assert.equal(link.external, true, `${link.href} opens as a standalone app`);
+      const file = link.href.split("#")[0].replace(/\/$/, "/index.html");
+      assert.ok(fs.existsSync(path.join(process.cwd(), "public", file)), `public${file} must exist`);
     }
   });
 

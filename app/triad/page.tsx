@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowLeft, ArrowRight, Compass, ExternalLink, GraduationCap, Sparkles, Triangle, TrendingUp } from "lucide-react";
+import { ArrowLeft, Compass, ExternalLink, GraduationCap, Sparkles, Triangle, TrendingUp } from "lucide-react";
 import { KNOW_YOUR_MAJOR_DEMO, TRIAD_STUDIO_DEMO, type DemoLink } from "@/lib/demoLinks";
 import TransportVideo from "@/components/media/TransportVideo";
 import styles from "./triad.module.css";
@@ -46,22 +46,14 @@ const DEMONSTRATIONS: Array<{
   },
 ];
 
-/** A hosted demo opens in a new tab; until one is published it offers a guided demo. */
+/** Each demo is a standalone app, so it opens in a new tab. */
 function DemoAction({ link, title }: { link: DemoLink; title: string }) {
-  if (link.external) {
-    return (
-      <a href={link.href} target="_blank" rel="noopener noreferrer" className={styles.demoAction}>
-        Try the {title} demonstration
-        <ExternalLink size={16} aria-hidden="true" />
-        <span className={styles.srOnly}> (opens in a new tab)</span>
-      </a>
-    );
-  }
   return (
-    <Link href={link.href} className={styles.demoAction}>
-      Request a guided {title} demonstration
-      <ArrowRight size={16} aria-hidden="true" />
-    </Link>
+    <a href={link.href} target="_blank" rel="noopener noreferrer" className={styles.demoAction}>
+      Try the {title} demonstration
+      <ExternalLink size={16} aria-hidden="true" />
+      <span className={styles.srOnly}> (opens in a new tab)</span>
+    </a>
   );
 }
 
@@ -112,6 +104,11 @@ export default function TriadPage() {
                 </article>
               ))}
             </div>
+          </section>
+
+          {/* Interactive TRIAD Application Embed */}
+          <section className={styles.interactiveSection} aria-label="Interactive TRIAD Tool Experience">
+            <TriadInteractiveViewer />
           </section>
 
           {/* Video Showcase Section */}
