@@ -239,7 +239,7 @@ test("Cubicon Completion Buttons Message Handling Test Suite", async (t) => {
 
     // All nav destinations from the dock
     const navDestinations = [
-      { url: "/products-services", label: "TIME SAVING INNOVATION" },
+      { url: "/products-services", label: "Product and Services" },
       { url: "/research-imperatives", label: "RESEARCH IMPERATIVES" },
       { url: "/vault", label: "CONTENT VAULT" },
       { url: "/research-lib", label: "DIRECTIONAL MEASUREMENT" },
