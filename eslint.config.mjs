@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Prebuilt third-party app bundles served as static files (generated output, not source).
+    "public/cubicon-app/**",
+    "public/narrative-app/**",
   ]),
 ]);
 

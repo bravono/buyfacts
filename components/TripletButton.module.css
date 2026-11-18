@@ -23,6 +23,20 @@
   max-width: 800px;
 }
 
+/* Four pathways in one row on wide screens. */
+.tripletGrid[data-columns="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Four pills need more room than a text column gives them, so on wide screens the row
+   extends past its container, centred and never wider than the viewport. */
+@media (min-width: 1241px) {
+  .tripletGrid[data-columns="4"] {
+    width: min(1320px, calc(100vw - 3rem));
+    margin-inline: calc(50% - min(660px, 50vw - 1.5rem));
+  }
+}
+
 .tripletItem {
   display: flex;
   flex-direction: column;
@@ -249,8 +263,9 @@
  * Viewport-safety strategy:
  * - Width is min(460px, 92vw) so the card is never wider than the viewport.
  * - Default: horizontally centered above the button with left: 50% + translateX(-50%).
- * - Left column (data-column="1"): card anchors to its left edge so it never clips off the left side.
- * - Right column (data-column="3"): card anchors to its right edge so it never clips off the right side.
+ * - First column (data-edge="start"): card anchors to its left edge so it never clips off the left side.
+ * - Last column (data-edge="end"): card anchors to its right edge so it never clips off the right side.
+ *   (data-edge is computed from the column and the grid's column count, so this holds for 3 or 4 columns.)
  * This guarantees the card stays fully visible on all non-mobile viewports without JavaScript.
  */
 .hoverCard {
@@ -281,14 +296,14 @@
 }
 
 /* Left-column card: anchor to the left edge of the button to avoid viewport overflow */
-.tripletItem[data-column="1"] .hoverCard {
+.tripletItem[data-edge="start"] .hoverCard {
   left: 0;
   right: auto;
   transform: translateX(0) translateY(-8px);
 }
 
 /* Right-column card: anchor to the right edge of the button to avoid viewport overflow */
-.tripletItem[data-column="3"] .hoverCard {
+.tripletItem[data-edge="end"] .hoverCard {
   left: auto;
   right: 0;
   transform: translateX(0) translateY(-8px);
@@ -316,14 +331,14 @@
 }
 
 /* Left-column active state: no X-shift */
-.tripletItem[data-column="1"]:hover .hoverCard,
-.tripletItem[data-column="1"]:focus-within .hoverCard {
+.tripletItem[data-edge="start"]:hover .hoverCard,
+.tripletItem[data-edge="start"]:focus-within .hoverCard {
   transform: translateX(0) translateY(0);
 }
 
 /* Right-column active state: no X-shift */
-.tripletItem[data-column="3"]:hover .hoverCard,
-.tripletItem[data-column="3"]:focus-within .hoverCard {
+.tripletItem[data-edge="end"]:hover .hoverCard,
+.tripletItem[data-edge="end"]:focus-within .hoverCard {
   transform: translateX(0) translateY(0);
 }
 
@@ -551,6 +566,32 @@
   color: var(--interactive-blue);
 }
 
+/* Four pathways become two rows of two before the pills get too narrow. Edge anchoring
+   then follows the 2-up layout: odd cards sit on the left, even cards on the right.
+   (At <= 680px the mobile carousel below takes over, so these stop there.) */
+@media (min-width: 681px) and (max-width: 1240px) {
+  .tripletGrid[data-columns="4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tripletGrid[data-columns="4"] > .tripletItem:nth-child(odd) .hoverCard {
+    left: 0;
+    right: auto;
+    transform: translateX(0) translateY(-8px);
+  }
+
+  .tripletGrid[data-columns="4"] > .tripletItem:nth-child(even) .hoverCard {
+    left: auto;
+    right: 0;
+    transform: translateX(0) translateY(-8px);
+  }
+
+  .tripletGrid[data-columns="4"] > .tripletItem:hover .hoverCard,
+  .tripletGrid[data-columns="4"] > .tripletItem:focus-within .hoverCard {
+    transform: translateX(0) translateY(0);
+  }
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
   .tripletGrid {
@@ -590,7 +631,8 @@
   .tripletGrid,
   .tripletGrid[data-columns="1"],
   .tripletGrid[data-columns="2"],
-  .tripletGrid[data-columns="3"] {
+  .tripletGrid[data-columns="3"],
+  .tripletGrid[data-columns="4"] {
     display: flex;
     grid-template-columns: none;
     gap: 0;
@@ -626,8 +668,8 @@
    * hero never grows and nothing below it shifts.
    */
   .hoverCard,
-  .tripletItem[data-column="1"] .hoverCard,
-  .tripletItem[data-column="3"] .hoverCard {
+  .tripletItem[data-edge="start"] .hoverCard,
+  .tripletItem[data-edge="end"] .hoverCard {
     position: absolute;
     bottom: calc(100% + 10px);
     top: auto;
@@ -675,19 +717,19 @@
   /* Cancel the desktop hover/focus reveal so only the collapsible controls it. */
   .tripletItem:hover .hoverCard,
   .tripletItem:focus-within .hoverCard,
-  .tripletItem[data-column="1"]:hover .hoverCard,
-  .tripletItem[data-column="1"]:focus-within .hoverCard,
-  .tripletItem[data-column="3"]:hover .hoverCard,
-  .tripletItem[data-column="3"]:focus-within .hoverCard {
+  .tripletItem[data-edge="start"]:hover .hoverCard,
+  .tripletItem[data-edge="start"]:focus-within .hoverCard,
+  .tripletItem[data-edge="end"]:hover .hoverCard,
+  .tripletItem[data-edge="end"]:focus-within .hoverCard {
     transform: translateY(10px) scale(0.97);
   }
 
   .tripletItem[data-expanded="true"]:hover .hoverCard,
   .tripletItem[data-expanded="true"]:focus-within .hoverCard,
-  .tripletItem[data-column="1"][data-expanded="true"]:hover .hoverCard,
-  .tripletItem[data-column="1"][data-expanded="true"]:focus-within .hoverCard,
-  .tripletItem[data-column="3"][data-expanded="true"]:hover .hoverCard,
-  .tripletItem[data-column="3"][data-expanded="true"]:focus-within .hoverCard {
+  .tripletItem[data-edge="start"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-edge="start"][data-expanded="true"]:focus-within .hoverCard,
+  .tripletItem[data-edge="end"][data-expanded="true"]:hover .hoverCard,
+  .tripletItem[data-edge="end"][data-expanded="true"]:focus-within .hoverCard {
     transform: translateY(0) scale(1);
   }
 

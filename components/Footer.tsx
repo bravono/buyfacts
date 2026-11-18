@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import styles from "./Footer.module.css";
+import { RULE_OF_THREE_DEMO } from "@/lib/demoLinks";
 
 export default function Footer() {
   return (
@@ -39,8 +40,16 @@ export default function Footer() {
             <ul className={styles.linksList}>
               <li><Link href="/cubicon">Cubicon Validation</Link></li>
               <li><Link href="/research-lib">Research Libs</Link></li>
-              <li><Link href="/products-services">TRIAD Framework</Link></li>
-              <li><Link href="/#thought-leadership">Thought Leadership</Link></li>
+              <li><Link href="/triad">TRIAD Framework</Link></li>
+              <li><Link href="/triad#know-your-major">Know Your Major</Link></li>
+              <li>
+                {RULE_OF_THREE_DEMO.external ? (
+                  <a href={RULE_OF_THREE_DEMO.href} target="_blank" rel="noopener noreferrer">Rule of Three</a>
+                ) : (
+                  <Link href={RULE_OF_THREE_DEMO.href}>Rule of Three</Link>
+                )}
+              </li>
+              <li><Link href="/#portfolio">Thought Leadership</Link></li>
             </ul>
           </div>
         </div>
