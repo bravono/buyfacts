@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src data: https://fonts.gstatic.com; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>BuyFacts Security &amp; Super Admin Continuity Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+:root{color-scheme:light;--bg:#f6f7fb;--paper:#fff;--ink:#191b2e;--soft:#5d6079;--line:#dfe1ec;--tint:#ecebfc;--accent:#4a3fd1;--good:#1f6b3a;--good-tint:#e3f3e8;--warn:#8a5a00;--warn-tint:#fdf1d8;--bad:#b3261e;--bad-tint:#fbe9e7;--display:"Fraunces",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#12131f;--paper:#1a1c2c;--ink:#e8e9f4;--soft:#a0a3bd;--line:#2d3047;--tint:#2a2856;--accent:#a39cff;--good:#7fd49b;--good-tint:#17301f;--warn:#f2c063;--warn-tint:#36290f;--bad:#ff8a80;--bad-tint:#3a1d1d}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+.page{max-width:940px;margin-inline:auto;padding:32px max(16px,env(safe-area-inset-left,0px)) 64px;display:flex;flex-direction:column;gap:30px;min-width:0}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+h1{font:600 clamp(28px,4vw,38px)/1.15 var(--display);margin:0;text-wrap:balance}
+h2{font:600 21px/1.3 var(--display);margin:0;text-wrap:balance}
+h3{font:600 15px/1.35 var(--body);margin:0}
+p{margin:0;max-width:70ch}
+a{color:var(--accent)}
+img{max-width:100%;height:auto}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.lede{color:var(--ink)}
+.note{font-size:13.5px;color:var(--soft)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.stats{display:flex;flex-wrap:wrap;gap:10px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;min-width:150px;flex:1 1 150px}
+.stat b{font:600 22px/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--soft)}
+.bar{height:6px;background:var(--tint);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.table{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.grid{width:100%;border-collapse:collapse;font-size:14px}
+.grid th,.grid td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.grid th{font:500 12px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--soft)}
+.grid tr:last-child td{border-bottom:0}
+.grid .n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:500 11.5px/1 var(--mono);padding:4px 7px;border-radius:999px;white-space:nowrap;background:var(--tint);color:var(--accent)}
+.pill.good{background:var(--good-tint);color:var(--good)}
+.pill.warn{background:var(--warn-tint);color:var(--warn)}
+.pill.bad{background:var(--bad-tint);color:var(--bad)}
+.chart{display:block;width:100%;height:auto}
+.chart text{fill:var(--soft);font:11px var(--mono)}
+button,input,select,textarea{font:14px var(--body);color:var(--ink)}
+button{background:var(--accent);color:var(--paper);border:0;border-radius:6px;padding:7px 12px;cursor:pointer}
+input,select,textarea{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 10px;max-width:100%}
+input[type=range]{accent-color:var(--accent);width:100%;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+</style>
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BuyFacts Security & Super Admin Continuity Guide</title>
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --orange: #ea580c;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    header {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 40px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+    }
+    header h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    h2 {
+      color: var(--primary);
+      font-size: 20px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 {
+      font-size: 16px;
+      color: #334155;
+      margin-top: 20px;
+    }
+    ul, ol {
+      margin: 10px 0;
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+      color: #0f172a;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85em;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: #e0f2fe;
+      color: #0369a1;
+      margin-right: 6px;
+    }
+    .badge-super {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+    .callout-warning {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BuyFacts Security &amp; Super Admin Continuity Guide</h1>
+      <p>Robust Asset Protection, Role-Based Access Control, and Succession Planning</p>
+    </header>
+
+    <!-- Section 1 -->
+    <div class="card">
+      <h2>1. Robust Authentication &amp; Asset Protection</h2>
+      <p>To prevent unauthorized asset deletion or database corruption, the BuyFacts admin portal implements a strict multi-tier security model:</p>
+      <ul>
+        <li><span class="badge badge-super">Super Admin</span>: Full privileges, including record deletion, granting roles, and managing administrator accounts. Destructive actions trigger automatic audit logging.</li>
+        <li><span class="badge">Admin</span>: Can create and update database records and view analytics, but <strong>cannot delete</strong> records or modify user roles.</li>
+        <li><span class="badge">Editor / User</span>: Read-only access to the database explorer.</li>
+      </ul>
+      <div class="callout">
+        <strong>Automatic Protection:</strong> The database deletion API (<code>DELETE /api/admin/database</code>) rejects any deletion request from non-super-admin accounts with a <code>403 Forbidden</code>, and permanently preserves sensitive tables like <code>User</code> and <code>AuditLog</code> against hard deletion.
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="card">
+      <h2>2. Key Security Enhancements Added</h2>
+      <ul>
+        <li><strong>Strong Passwords:</strong> Minimum 12 characters, requiring uppercase, lowercase, and numbers via scrypt hashing.</li>
+        <li><strong>Brute-Force Lockout:</strong> Accounts automatically lock for 15 minutes after 5 consecutive failed login attempts.</li>
+        <li><strong>Two-Factor Authentication (2FA):</strong> Optional TOTP authenticator app support (Google Authenticator, Authy, 1Password) for all admins.</li>
+        <li><strong>Secure Password Reset:</strong> Single-use, time-limited tokens (hashed in DB) sent via Resend email.</li>
+        <li><strong>Comprehensive Audit Trail:</strong> Every sign-in, permission change, and deletion is recorded in the <code>AuditLog</code> table with actor ID, IP address, and timestamp.</li>
+      </ul>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="card">
+      <h2>3. Succession Planning: How to Create a New Super Admin When You Leave</h2>
+      <p>When you are no longer available at the company, continuity of super admin control is guaranteed through two secure mechanisms:</p>
+      
+      <h3>Option A: Promotion via an Existing Super Admin (Recommended Daily Operations)</h3>
+      <p>The company should maintain <strong>at least two active Super Admins</strong> at all times (e.g. founder + trusted lead engineer/CTO).</p>
+      <ol>
+        <li>Sign in to the Admin Portal as a Super Admin.</li>
+        <li>Navigate to the <strong>Security &amp; Access</strong> tab.</li>
+        <li>Under <strong>Administrator Accounts</strong>, click <strong>Add Administrator</strong> to create the new team member's account.</li>
+        <li>Change their role dropdown to <code>super_admin</code>.</li>
+        <li>The system protects against accidental lockout: it prevents removing the last super admin, ensuring continuity.</li>
+      </ol>
+
+      <h3>Option B: Break-Glass CLI Bootstrap (When All Existing Super Admins are Lost)</h3>
+      <p>If every existing super admin has left the company and no credentials remain, the deployment server has a secure recovery script built-in:</p>
+      <pre><code>npm run bootstrap-admin -- --email newadmin@company.com --name "New SuperAdmin"</code></pre>
+      <div class="callout callout-warning">
+        <strong>Security Safeguard:</strong> If active super admins already exist in the database, the script will refuse to run unless you supply the <code>BOOTSTRAP_ADMIN_FORCE_TOKEN</code> environment variable and <code>--force</code>. This prevents unauthorized privilege escalation attacks.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+</body>
+</html>

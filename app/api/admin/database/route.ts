@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateApiAuth } from "@/lib/auth/middleware";
 import { hashPassword } from "@/lib/auth/password";
+import { can, normalizeRole } from "@/lib/auth/roles";
+import {
+  capabilityForTableAction,
+  capabilityForTableRead,
+  guardUserTableWrite,
+} from "@/lib/auth/admin-guards";
+import { writeAudit } from "@/lib/auth/audit";
+import { getClientIp } from "@/lib/security/rate-limiter";
 import {
   ADMIN_MODEL_REGISTRY,
   ModelMetadata,
@@ -422,6 +430,21 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "summary";
 
+    // The user and audit tables carry account / security data: restrict them.
+    if (action === "table") {
+      const requestedTable = searchParams.get("table") || "";
+      const needed = capabilityForTableRead(requestedTable);
+      if (!can(auth.user?.role, needed)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Your role (${normalizeRole(auth.user?.role)}) cannot view '${requestedTable}'.`,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // 1. Summary action
     if (action === "summary") {
       const counts: Record<string, number> = {};
@@ -587,10 +610,56 @@ export async function POST(request: Request) {
 
     // Batch import path: a CSV payload (headers + rows) instead of a single record.
     if (body?.action === "bulkCreate" || (Array.isArray(body?.rows) && !body?.data)) {
+      const bulkTable = String(body?.table || "");
+      if (ADMIN_MODEL_REGISTRY[bulkTable]) {
+        const needed = capabilityForTableAction(bulkTable, "write");
+        if (!can(auth.user?.role, needed)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Your role (${normalizeRole(auth.user?.role)}) cannot import into '${bulkTable}'.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
       return await handleBulkCreate(body);
     }
 
     const { table, data } = body;
+
+    // Role gate: read-only roles cannot write at all; the user table needs manage_users.
+    if (table && ADMIN_MODEL_REGISTRY[table]) {
+      const needed = capabilityForTableAction(table, "write");
+      if (!can(auth.user?.role, needed)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Your role (${normalizeRole(auth.user?.role)}) cannot create records in '${table}'.`,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (table === "user") {
+        const guard = await guardUserTableWrite({
+          actorRole: auth.user?.role,
+          actorId: auth.user?.userId,
+          operation: "create",
+          data: data && typeof data === "object" ? data : {},
+        });
+        if (!guard.ok) {
+          return NextResponse.json({ success: false, error: guard.error }, { status: guard.status });
+        }
+      }
+
+      if (table === "auditLog") {
+        return NextResponse.json(
+          { success: false, error: "Audit entries are written by the system and cannot be created manually." },
+          { status: 403 }
+        );
+      }
+    }
 
     if (!table || !ADMIN_MODEL_REGISTRY[table]) {
       return NextResponse.json(
@@ -642,6 +711,18 @@ export async function POST(request: Request) {
     const created = await delegate.create({ data: cleanedData });
     const sanitized = sanitizeRecord(table, created);
 
+    await writeAudit({
+      action: table === "user" ? "user.create" : "record.create",
+      actorId: auth.user?.userId,
+      actorEmail: auth.user?.email,
+      actorRole: auth.user?.role,
+      target: table,
+      targetId: created?.[meta.idField] ?? null,
+      metadata: { fields: Object.keys(cleanedData) },
+      ip: getClientIp(request),
+      userAgent: request.headers.get("user-agent"),
+    });
+
     return NextResponse.json({
       success: true,
       message: `Record created successfully in '${meta.displayName}'.`,
@@ -672,6 +753,39 @@ export async function PUT(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const { table, id, data } = body;
+
+    if (table && ADMIN_MODEL_REGISTRY[table]) {
+      const needed = capabilityForTableAction(table, "write");
+      if (!can(auth.user?.role, needed)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Your role (${normalizeRole(auth.user?.role)}) cannot update records in '${table}'.`,
+          },
+          { status: 403 }
+        );
+      }
+
+      if (table === "auditLog") {
+        return NextResponse.json(
+          { success: false, error: "Audit entries are immutable." },
+          { status: 403 }
+        );
+      }
+
+      if (table === "user") {
+        const guard = await guardUserTableWrite({
+          actorRole: auth.user?.role,
+          actorId: auth.user?.userId,
+          operation: "update",
+          data: data && typeof data === "object" ? data : {},
+          targetId: id,
+        });
+        if (!guard.ok) {
+          return NextResponse.json({ success: false, error: guard.error }, { status: guard.status });
+        }
+      }
+    }
 
     if (!table || !ADMIN_MODEL_REGISTRY[table]) {
       return NextResponse.json(
@@ -726,6 +840,18 @@ export async function PUT(request: Request) {
 
     const sanitized = sanitizeRecord(table, updated);
 
+    await writeAudit({
+      action: table === "user" ? "user.update" : "record.update",
+      actorId: auth.user?.userId,
+      actorEmail: auth.user?.email,
+      actorRole: auth.user?.role,
+      target: table,
+      targetId: parsedId,
+      metadata: { fields: Object.keys(cleanedData) },
+      ip: getClientIp(request),
+      userAgent: request.headers.get("user-agent"),
+    });
+
     return NextResponse.json({
       success: true,
       message: `Record updated successfully in '${meta.displayName}'.`,
@@ -778,6 +904,25 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Append-only tables are refused before anything else is looked at.
+    if (table === "auditLog") {
+      return NextResponse.json(
+        { success: false, error: "Audit entries cannot be deleted." },
+        { status: 403 }
+      );
+    }
+
+    if (table === "user") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Administrator accounts cannot be deleted. Deactivate the account instead, so its history and audit trail stay intact.",
+        },
+        { status: 400 }
+      );
+    }
+
     if (id === undefined || id === null) {
       return NextResponse.json(
         { success: false, error: "Record 'id' is required for deletion." },
@@ -785,12 +930,79 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Only a super admin may destroy data.
+    const needed = capabilityForTableAction(table, "delete");
+    if (!can(auth.user?.role, needed)) {
+      await writeAudit({
+        action: "record.delete",
+        status: "failure",
+        actorId: auth.user?.userId,
+        actorEmail: auth.user?.email,
+        actorRole: auth.user?.role,
+        target: table,
+        targetId: id,
+        metadata: { reason: "insufficient_role" },
+        ip: getClientIp(request),
+        userAgent: request.headers.get("user-agent"),
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Deleting records requires the super admin role. Your role (${normalizeRole(
+            auth.user?.role
+          )}) can edit but not delete.`,
+        },
+        { status: 403 }
+      );
+    }
+
     const meta = ADMIN_MODEL_REGISTRY[table];
     const delegate = getModelDelegate(table);
     const parsedId = meta.idType === "int" ? parseInt(String(id), 10) : String(id);
 
+    // Accounts are never hard-deleted, and the audit trail is append-only.
+    if (table === "user") {
+      const guard = await guardUserTableWrite({
+        actorRole: auth.user?.role,
+        actorId: auth.user?.userId,
+        operation: "delete",
+        targetId: parsedId,
+      });
+      return NextResponse.json(
+        { success: false, error: guard.ok ? "Administrator accounts cannot be deleted." : guard.error },
+        { status: guard.ok ? 400 : guard.status }
+      );
+    }
+
+    if (table === "auditLog") {
+      return NextResponse.json(
+        { success: false, error: "Audit entries cannot be deleted." },
+        { status: 403 }
+      );
+    }
+
+    // Snapshot the record so the audit trail shows what was destroyed.
+    let snapshot: Record<string, unknown> | null = null;
+    try {
+      snapshot = await delegate.findUnique({ where: { [meta.idField]: parsedId } });
+    } catch {
+      snapshot = null;
+    }
+
     await delegate.delete({
       where: { [meta.idField]: parsedId },
+    });
+
+    await writeAudit({
+      action: "record.delete",
+      actorId: auth.user?.userId,
+      actorEmail: auth.user?.email,
+      actorRole: auth.user?.role,
+      target: table,
+      targetId: parsedId,
+      metadata: snapshot ? { deletedRecord: snapshot } : undefined,
+      ip: getClientIp(request),
+      userAgent: request.headers.get("user-agent"),
     });
 
     return NextResponse.json({

@@ -25,6 +25,7 @@ export const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   share: { maxRequests: 5, windowSeconds: 600 },
   feedback: { maxRequests: 10, windowSeconds: 600 },
   verify_resend: { maxRequests: 3, windowSeconds: 900 }, // 3 resends per 15 minutes
+  password_reset: { maxRequests: 5, windowSeconds: 900 }, // 5 reset requests per 15 minutes
 };
 
 /**

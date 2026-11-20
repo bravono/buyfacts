@@ -10,14 +10,52 @@ datasource db {
 }
 
 // 1. Core User Identity
+// Roles: "super_admin" (full control, incl. destructive actions),
+//        "admin" (manage records, no destructive actions),
+//        "editor" / "user" (read-only in the admin database).
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  name         String?
-  passwordHash String?
-  role         String   @default("admin") // e.g. "admin", "user"
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  name                String?
+  passwordHash        String?
+  role                String    @default("admin") // "super_admin" | "admin" | "editor" | "user"
+  isActive            Boolean   @default(true)
+  // TOTP second factor (base32 secret + enrolment state)
+  totpSecret          String?
+  totpEnabledAt       DateTime?
+  // Brute-force lockout
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  // Password reset (single-use hashed token)
+  resetTokenHash      String?
+  resetTokenExpiresAt DateTime?
+  passwordChangedAt   DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
+
+  @@index([resetTokenHash])
+  @@index([role])
+}
+
+// Audit trail for every administrative / destructive action
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  action     String // e.g. "auth.login", "record.delete", "user.role_change"
+  target     String? // table / resource touched
+  targetId   String?
+  status     String   @default("success") // "success" | "failure"
+  metadata   String? // JSON string with extra context
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([actorEmail])
 }
 
 // 2. Contact Form (Main Page & Contact Us)
