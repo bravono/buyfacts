@@ -41,6 +41,7 @@ import {
   FileUp,
   AlertTriangle,
   CheckCircle2,
+  KeyRound,
 } from "lucide-react";
 import CubiconCoordinatePicker from "@/components/CubiconCoordinatePicker";
 import {
@@ -54,12 +55,15 @@ import {
 import { parseCsv } from "@/lib/admin/csv";
 import { isJsonUpload, parseJsonImport } from "@/lib/admin/jsonImport";
 import { normalizeQuestionType } from "@/lib/cubicon/coordinateHelper";
+import AdminSecurityPanel from "@/components/admin/AdminSecurityPanel";
 
 interface UserSession {
   userId: string;
+  id?: number;
   email: string;
   name?: string;
   role?: string;
+  twoFactorEnabled?: boolean;
 }
 
 interface SummaryData {
@@ -83,6 +87,19 @@ export default function AdminDatabaseDashboard() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginNotice, setLoginNotice] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [requires2fa, setRequires2fa] = useState(false);
+
+  // Password reset (link arrives by email, token lands in ?reset=)
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState("");
+  const [resetMsg, setResetMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   // Dashboard Navigation State
   const [activeTab, setActiveTab] = useState<string>("overview"); // 'overview' | modelKey
@@ -129,7 +146,7 @@ export default function AdminDatabaseDashboard() {
 
   // Active Model Metadata
   const currentModelMeta: ModelMetadata | null = useMemo(() => {
-    if (activeTab === "overview") return null;
+    if (activeTab === "overview" || activeTab === "security") return null;
     return ADMIN_MODEL_REGISTRY[activeTab] || null;
   }, [activeTab]);
 
@@ -138,6 +155,25 @@ export default function AdminDatabaseDashboard() {
     if (!currentModelMeta || importHeaders.length === 0) return null;
     return buildImportPreview(currentModelMeta, importHeaders, importRows, importMode, importTypedRows);
   }, [currentModelMeta, importHeaders, importRows, importTypedRows, importMode]);
+
+  // A reset link lands on /admin?reset=<token>: show the "set new password" form.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("reset");
+    if (!token) return;
+
+    setResetToken(token);
+    fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.email) {
+          setResetEmail(data.email);
+        } else {
+          setResetMsg({ type: "err", text: data.error || "This reset link is invalid or has expired." });
+        }
+      })
+      .catch(() => setResetMsg({ type: "err", text: "Could not check this reset link." }));
+  }, []);
 
   // Check auth session
   const checkAuth = useCallback(async () => {
@@ -211,7 +247,7 @@ export default function AdminDatabaseDashboard() {
 
   // Fetch table records
   const fetchTableData = useCallback(async () => {
-    if (!session || activeTab === "overview") return;
+    if (!session || activeTab === "overview" || activeTab === "security") return;
     setIsLoadingTable(true);
     setTableError("");
 
@@ -250,7 +286,7 @@ export default function AdminDatabaseDashboard() {
   }, [session, activeTab, currentPage, pageSize, searchQuery, sortBy, sortOrder]);
 
   useEffect(() => {
-    if (activeTab !== "overview" && session) {
+    if (activeTab !== "overview" && activeTab !== "security" && session) {
       fetchTableData();
     }
   }, [activeTab, session, fetchTableData]);
@@ -265,7 +301,7 @@ export default function AdminDatabaseDashboard() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword, totp: totpCode || undefined }),
       });
 
       let data: any = {};
@@ -277,7 +313,12 @@ export default function AdminDatabaseDashboard() {
       if (res.ok && data.success && data.user) {
         setSession(data.user);
         setLoginPassword("");
+        setTotpCode("");
+        setRequires2fa(false);
       } else {
+        if (data.requires2fa) {
+          setRequires2fa(true);
+        }
         setLoginError(
           data.error ||
           (!res.ok
@@ -289,6 +330,70 @@ export default function AdminDatabaseDashboard() {
       setLoginError("An unexpected error occurred during login.");
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  // Request a password reset link
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginNotice("");
+    setLoginError("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail || loginEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        setLoginNotice(
+          data.message ||
+            "If that address belongs to an administrator account, a reset link is on its way."
+        );
+        setShowForgot(false);
+      } else {
+        setLoginError(data.error || "Could not send the reset link.");
+      }
+    } catch {
+      setLoginError("Could not send the reset link.");
+    }
+  };
+
+  // Complete a password reset from the emailed link
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetMsg(null);
+
+    if (resetPassword !== resetConfirm) {
+      setResetMsg({ type: "err", text: "The two passwords do not match." });
+      return;
+    }
+
+    setResetBusy(true);
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, password: resetPassword }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (data.success) {
+        setResetMsg({ type: "ok", text: data.message || "Password updated. You can sign in now." });
+        setLoginNotice("Your password has been updated. Sign in with your new password.");
+        setLoginEmail(resetEmail || loginEmail);
+        setResetPassword("");
+        setResetConfirm("");
+        // Drop the token from the address bar so it cannot be replayed or bookmarked.
+        window.history.replaceState({}, "", "/admin");
+        setTimeout(() => setResetToken(null), 2500);
+      } else {
+        setResetMsg({ type: "err", text: data.error || "Could not reset the password." });
+      }
+    } catch {
+      setResetMsg({ type: "err", text: "Could not reset the password." });
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -677,7 +782,71 @@ export default function AdminDatabaseDashboard() {
     );
   }
 
-  // 2. Unauthenticated Login Card
+  // 2a. Password reset form (arrived from an emailed reset link)
+  if (resetToken) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loginContainer}>
+          <div className={styles.loginCard}>
+            <div className={styles.loginHeader}>
+              <img src="/logo.png" alt="BuyFacts Logo" style={{ height: "48px", marginBottom: "0.5rem" }} />
+              <h1 className={styles.loginTitle}>Set a new password</h1>
+              <p className={styles.loginSubtitle}>
+                {resetEmail ? `Resetting the password for ${resetEmail}.` : "Choose a new password for your account."}
+              </p>
+            </div>
+
+            {resetMsg && (
+              <div className={resetMsg.type === "ok" ? styles.successBanner : styles.errorBanner}>
+                {resetMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleResetPassword} className={styles.loginForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>New password</label>
+                <input
+                  type="password"
+                  className={styles.formInput}
+                  placeholder="At least 12 characters, mixed case and a number"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Confirm new password</label>
+                <input
+                  type="password"
+                  className={styles.formInput}
+                  placeholder="Repeat the password"
+                  value={resetConfirm}
+                  onChange={(e) => setResetConfirm(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" className={styles.loginBtn} disabled={resetBusy}>
+                {resetBusy ? "Saving..." : "Save new password"}
+              </button>
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={() => {
+                  window.history.replaceState({}, "", "/admin");
+                  setResetToken(null);
+                  setResetMsg(null);
+                }}
+              >
+                Back to sign in
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2b. Unauthenticated Login Card
   if (!session) {
     return (
       <div className={styles.container}>
@@ -692,6 +861,7 @@ export default function AdminDatabaseDashboard() {
             </div>
 
             {loginError && <div className={styles.errorBanner}>{loginError}</div>}
+            {loginNotice && <div className={styles.successBanner}>{loginNotice}</div>}
 
             <form onSubmit={handleLogin} className={styles.loginForm}>
               <div className={styles.formGroup}>
@@ -702,6 +872,7 @@ export default function AdminDatabaseDashboard() {
                   placeholder="admin@buyfacts.com"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -714,13 +885,67 @@ export default function AdminDatabaseDashboard() {
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
+                  autoComplete="current-password"
                   required
                 />
               </div>
 
+              {requires2fa && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Authenticator code</label>
+                  <input
+                    className={styles.formInput}
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                  />
+                </div>
+              )}
+
               <button type="submit" className={styles.loginBtn} disabled={isLoggingIn}>
                 {isLoggingIn ? "Authenticating..." : "Sign In to Admin Dashboard"}
               </button>
+
+              {!showForgot ? (
+                <button
+                  type="button"
+                  className={styles.linkBtn}
+                  onClick={() => {
+                    setShowForgot(true);
+                    setForgotEmail(loginEmail);
+                    setLoginError("");
+                  }}
+                >
+                  Forgot password?
+                </button>
+              ) : (
+                <div className={styles.twoFactorBox}>
+                  <p className={styles.securityCardHint}>
+                    Enter your admin email. If it belongs to an account, we will send a single-use reset link
+                    that expires in one hour.
+                  </p>
+                  <input
+                    type="email"
+                    className={styles.formInput}
+                    placeholder="admin@buyfacts.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button type="button" className={styles.submitBtn} onClick={handleForgotPassword}>
+                      Email me a reset link
+                    </button>
+                    <button type="button" className={styles.cancelBtn} onClick={() => setShowForgot(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -794,6 +1019,16 @@ export default function AdminDatabaseDashboard() {
               <span className={`${styles.tabCountBadge} ${activeTab === "overview" ? styles.tabCountBadgeActive : ""}`}>
                 {summary?.totalRecords ?? 0}
               </span>
+            </button>
+
+            <button
+              onClick={() => handleTabSwitch("security")}
+              className={`${styles.tabBtn} ${activeTab === "security" ? styles.tabBtnActive : ""}`}
+            >
+              <div className={styles.tabBtnLeft}>
+                <ShieldCheck size={16} />
+                <span>Security & Access</span>
+              </div>
             </button>
           </div>
 
@@ -998,8 +1233,23 @@ export default function AdminDatabaseDashboard() {
             </div>
           )}
 
+          {/* SECURITY & ACCESS */}
+          {activeTab === "security" && (
+            <div>
+              <div className={styles.tableHeaderContainer}>
+                <div className={styles.tableTitleGroup}>
+                  <h2 className={styles.tableTitle}>
+                    Security &amp; Access
+                    <span className={styles.tableCategoryBadge}>Roles · 2FA · Audit</span>
+                  </h2>
+                </div>
+              </div>
+              <AdminSecurityPanel role={session.role || "admin"} currentUserId={String(session.id ?? session.userId)} />
+            </div>
+          )}
+
           {/* TAB 2: SPECIFIC MODEL TABLE EXPLORER */}
-          {activeTab !== "overview" && currentModelMeta && (
+          {activeTab !== "overview" && activeTab !== "security" && currentModelMeta && (
             <div>
               {/* Table Top Header */}
               <div className={styles.tableHeaderContainer}>

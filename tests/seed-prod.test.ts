@@ -9,11 +9,13 @@ import {
 import { verifyPassword } from "../lib/auth/password";
 
 describe("Production Seed Script (User & DashboardButton Only)", () => {
-  it("should define exactly 2 admin users and 20 canonical dashboard buttons", () => {
+  it("should define exactly 2 super admin users and 20 canonical dashboard buttons", () => {
     assert.equal(PRODUCTION_USERS.length, 2);
     assert.equal(PRODUCTION_USERS[0].email, "rmj@robertjohnson.com");
     assert.equal(PRODUCTION_USERS[1].email, "ahbideeny@gmail.com");
-    assert.ok(PRODUCTION_USERS.every((u) => u.role === "admin"));
+    // The company always needs two super admins: losing one person must not
+    // remove the ability to delete records or manage roles.
+    assert.ok(PRODUCTION_USERS.every((u) => u.role === "super_admin"));
 
     assert.equal(PRODUCTION_DASHBOARD_BUTTONS.length, 20);
     const services = PRODUCTION_DASHBOARD_BUTTONS.filter(

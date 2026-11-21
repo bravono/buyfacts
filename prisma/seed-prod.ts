@@ -78,12 +78,15 @@ export const PRODUCTION_USERS: ReadonlyArray<{
   {
     email: "rmj@robertjohnson.com",
     name: "Robert Johnson",
-    role: "admin",
+    // The owner account: only a super admin can delete records or manage roles.
+    role: "super_admin",
   },
   {
     email: "ahbideeny@gmail.com",
     name: "Ahbideen Yusuf",
-    role: "admin",
+    // Second super admin: the company always needs two, so losing one person
+    // never removes the ability to delete records or manage roles.
+    role: "super_admin",
   },
 ];
 
@@ -350,13 +353,16 @@ export async function seedProductionDatabase(
   const passwordHash = await hashPassword(password);
 
   for (const user of PRODUCTION_USERS) {
+    const isSuperAdmin = user.role === "super_admin";
+    const updateData = isSuperAdmin
+      ? { name: user.name, role: "super_admin" as const }
+      : { name: user.name };
     await client.user.upsert({
       where: { email: user.email },
       // Never reset the password of an existing account on a live database.
-      update: {
-        name: user.name,
-        role: user.role,
-      },
+      // Role is only *raised* to super_admin for the owner account, never lowered here,
+      // so a re-run of the seed cannot demote a super admin the company appointed.
+      update: updateData as { name: string; role: string },
       create: {
         email: user.email,
         name: user.name,

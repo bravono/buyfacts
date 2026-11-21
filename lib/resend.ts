@@ -639,6 +639,52 @@ export async function sendTestEmail(toEmail: string) {
   });
 }
 
+/**
+ * Password Reset Email (admin portal)
+ * Sends a single-use, time-limited link to set a new admin password.
+ */
+export async function sendPasswordResetEmail(data: {
+  email: string;
+  name?: string | null;
+  token: string;
+  expiresInMinutes: number;
+}) {
+  const resend = getResendClient();
+  const { email, name, token, expiresInMinutes } = data;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://buyfacts.com";
+  const resetUrl = `${baseUrl}/admin?reset=${encodeURIComponent(token)}`;
+  const safeName = escapeHtml(name || "there");
+
+  const emailRes = await resend.emails.send({
+    from: DEFAULT_FROM_EMAIL,
+    to: [email],
+    subject: "Reset your BuyFacts admin password",
+    html: `
+      <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #0f172a;">
+        <h2 style="margin: 0 0 16px; font-size: 20px;">Reset your admin password</h2>
+        <p style="margin: 0 0 16px; line-height: 1.6;">Hi ${safeName},</p>
+        <p style="margin: 0 0 24px; line-height: 1.6;">
+          A password reset was requested for your BuyFacts administrator account.
+          This link can be used once and expires in ${expiresInMinutes} minutes.
+        </p>
+        <p style="margin: 0 0 24px;">
+          <a href="${resetUrl}" style="display: inline-block; background: #0f172a; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">Set a new password</a>
+        </p>
+        <p style="margin: 0 0 8px; font-size: 13px; color: #475569; line-height: 1.6;">
+          If the button does not work, copy this address into your browser:<br />
+          <span style="word-break: break-all;">${resetUrl}</span>
+        </p>
+        <p style="margin: 24px 0 0; font-size: 13px; color: #64748b; line-height: 1.6;">
+          Did not request this? Ignore this email — your password stays unchanged. If you receive several
+          of these unexpectedly, tell your super admin.
+        </p>
+      </div>
+    `,
+  });
+
+  return emailRes;
+}
+
 function escapeHtml(str: string): string {
   if (!str) return "";
   return String(str)

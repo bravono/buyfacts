@@ -15,7 +15,8 @@
     "embed-r3": "node scripts/bundle-r3.js",
     "embed-tools": "npm run embed-cubicon && npm run embed-research-lib && npm run embed-triad && npm run embed-r3",
     "seed": "npx tsx prisma/seed.ts",
-    "seed:prod": "npx tsx prisma/seed-prod.ts"
+    "seed:prod": "npx tsx prisma/seed-prod.ts",
+    "bootstrap-admin": "npx tsx scripts/bootstrap-admin.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
