@@ -870,14 +870,14 @@ Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) pres
    - Trust Badges: Sleek pill badges with dot indicators ("Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data").
    - Callout Banner: Highlight banner with heading "Fresh Thinking, Practical Ideas, More Value from Your Findings" and descriptive copy "Eight perspectives on making research more useful, from designing the survey to putting what you learn to work."
 2. **8 Pillar Cards with Exact Updated Titles**:
-   - **Card 01**: "Targeting Your Survey" (Icon: `BuyFacts_Survey_Hosting.svg`, Teal)
+   - **Card 01**: "Target the Right Survey Length" (Icon: `BuyFacts_Survey_Hosting.svg`, Teal)
    - **Card 02**: "The Allure of Too Many Choices" (Icon: `BuyFacts_Early_Recognition.svg`, Gold)
-   - **Card 03**: "Stories Supported by Facts" (Icon: `BuyFacts_Research_Tools_Concept.svg`, Grey)
-   - **Card 04**: "The Top Ten Market Research Best Practices" (Icon: `BuyFacts_Best_Practices_Keystone.svg`, Sky Blue)
-   - **Card 05**: "The Art of Asking Great Survey Questions" (Icon: `BuyFacts_Question_Design.svg`, Lime Green)
-   - **Card 06**: "Executives Want Insight, Not Coffee Cards" (Icon: `BuyFacts_Value_Quantification.svg`, Coral)
+   - **Card 03**: "The Best of Both Worlds: Stories Supported by Facts" (Icon: `BuyFacts_Research_Tools_Concept.svg`, Grey)
+   - **Card 04**: "Survey Says..." (Icon: `BuyFacts_Best_Practices_Keystone.svg`, Sky Blue)
+   - **Card 05**: "Question Creation" (Icon: `BuyFacts_Question_Design.svg`, Lime Green)
+   - **Card 06**: "Executives Want Peer Comparison, Not Coffee Cards" (Icon: `BuyFacts_Value_Quantification.svg`, Coral)
    - **Card 07**: "Build Content Fast from Survey Findings" (Icon: `BuyFacts_Thought_Leadership_TL1.svg`, Teal)
-   - **Card 08**: "Avoid Death from Doubt" (Icon: `BuyFacts_Bot_Detection.svg`, Accent Gold)
+   - **Card 08**: "Inclusive Stakeholder Engagement: Avoid Death from Doubt" (Icon: `BuyFacts_Bot_Detection.svg`, Accent Gold)
 3. **Clickable Card Interactivity & Lightbox Modal**:
    - Every card is fully interactive (`role="button"`, `tabIndex={0}`, hover micro-interactions, keyboard Enter/Space support).
    - Clicking any card opens a dedicated **Great Eight Modal Lightbox** directly on the home page.

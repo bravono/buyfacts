@@ -3,16 +3,22 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ExternalLink, FileText, Headphones, Loader2, X } from "lucide-react";
+import { ExternalLink, FileText, Headphones, Loader2, Video, X } from "lucide-react";
 import { GREAT_EIGHT_SECTION, type GreatEightCard } from "@/lib/greatEightManifest";
 import { fetchAndConvertDocx, isDocxUrl, isPdfUrl } from "@/lib/document-parser";
 import TransportControls from "./media/TransportControls";
+import TransportVideo from "./media/TransportVideo";
 import { useMediaTransport } from "./media/useMediaTransport";
 import styles from "./GreatEightViewpointModal.module.css";
+
+/** Which card button opened the modal: SEE IT (video), HEAR IT (audio) or READ IT (text). */
+export type GreatEightMedia = "video" | "audio" | "text";
 
 interface GreatEightViewpointModalProps {
   card: GreatEightCard;
   onClose: () => void;
+  /** Section to scroll to and start on open; defaults to the text. */
+  initialMedia?: GreatEightMedia;
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
@@ -81,7 +87,16 @@ function ArticleReader({ card }: { card: GreatEightCard }) {
   }
 
   if (isPdfUrl(url)) {
-    return <iframe className={styles.pdfFrame} src={`${url}#view=FitH`} title={`${card.title} article`} />;
+    return (
+      <>
+        {/* Keep any fragment already on the URL; otherwise fit pages to width. */}
+        <iframe className={styles.pdfFrame} src={url.includes("#") ? url : `${url}#view=FitH`} title={`${card.title} article`} />
+        {/* Some mobile browsers show only the first page inline. */}
+        <a className={styles.pdfFallback} href={url} target="_blank" rel="noopener noreferrer" download>
+          Open or download the PDF (new tab)
+        </a>
+      </>
+    );
   }
 
   if (!isDocx) {
@@ -111,12 +126,22 @@ function ArticleReader({ card }: { card: GreatEightCard }) {
  * "The Great Eight" viewpoint article modal: number, title and byline; Robert's audio
  * performance; then the card's graphic, viewpoint text and full article.
  */
-export default function GreatEightViewpointModal({ card, onClose }: GreatEightViewpointModalProps) {
+export default function GreatEightViewpointModal({
+  card,
+  onClose,
+  initialMedia = "text",
+}: GreatEightViewpointModalProps) {
   const titleId = useId();
   const summaryId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const { attach: attachAudio, ...audioTransport } = useMediaTransport();
+  const sectionRefs = useRef<Partial<Record<GreatEightMedia, HTMLElement | null>>>({});
+
+  // Bring the section of the clicked button into view (its pending note when the media is not out yet).
+  useEffect(() => {
+    sectionRefs.current[initialMedia]?.scrollIntoView({ block: "start" });
+  }, [initialMedia, card.slug]);
 
   // Focus the dialog on open, keep Tab inside it, close on Escape, and hand focus back to
   // the card that opened it.
@@ -210,13 +235,41 @@ export default function GreatEightViewpointModal({ card, onClose }: GreatEightVi
         </header>
 
         <div className={styles.body}>
-          <section className={styles.audio} aria-label="Audio performance">
+          <section
+            ref={(el) => {
+              sectionRefs.current.video = el;
+            }}
+            className={styles.audio}
+            aria-label="Video"
+          >
+            <h3 className={styles.sectionLabel}>
+              <Video size={16} aria-hidden="true" /> Video
+            </h3>
+            {card.videoUrl ? (
+              <TransportVideo
+                src={card.videoUrl}
+                title={`${card.title} video`}
+                autoPlay={initialMedia === "video"}
+                preload={initialMedia === "video" ? "auto" : "none"}
+              />
+            ) : (
+              <p className={styles.pending}>The video of this viewpoint is coming soon.</p>
+            )}
+          </section>
+
+          <section
+            ref={(el) => {
+              sectionRefs.current.audio = el;
+            }}
+            className={styles.audio}
+            aria-label="Audio performance"
+          >
             <h3 className={styles.sectionLabel}>
               <Headphones size={16} aria-hidden="true" /> Audio Performance
             </h3>
             {card.audioUrl ? (
               <>
-                <audio ref={attachAudio} preload="none" src={card.audioUrl}>
+                <audio ref={attachAudio} preload="none" autoPlay={initialMedia === "audio"} src={card.audioUrl}>
                   Your browser does not support audio playback.
                 </audio>
                 <TransportControls transport={audioTransport} label={`${card.title} audio performance`} />
@@ -226,7 +279,12 @@ export default function GreatEightViewpointModal({ card, onClose }: GreatEightVi
             )}
           </section>
 
-          <article className={styles.article}>
+          <article
+            ref={(el) => {
+              sectionRefs.current.text = el;
+            }}
+            className={styles.article}
+          >
             {card.graphicUrl && (
               // External CDN graphic of unknown dimensions; next/image would need remotePatterns.
               // eslint-disable-next-line @next/next/no-img-element

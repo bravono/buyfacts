@@ -61,14 +61,14 @@ test("The Great Eight Section 2 Design and Interactivity Test Suite", async (t) 
 
   await t.test("3. All 8 Pillar Cards and Exact Updated Titles Preserved", () => {
     const expectedCards = [
-      { slug: "targeting-your-survey", title: "Targeting Your Survey", legacy: "Survey Design" },
+      { slug: "targeting-your-survey", title: "Target the Right Survey Length", legacy: "Survey Design" },
       { slug: "the-allure-of-too-many-choices", title: "The Allure of Too Many Choices", legacy: "Participant Insight Choices" },
-      { slug: "stories-supported-by-facts", title: "Stories Supported by Facts", legacy: "Traditional and Story-based Instruments" },
-      { slug: "the-top-ten-market-research-best-practices", title: "The Top Ten Market Research Best Practices", legacy: "Best Practices" },
-      { slug: "the-art-of-asking-great-survey-questions", title: "The Art of Asking Great Survey Questions", legacy: "Every Question Maps to Its Purpose" },
-      { slug: "executives-want-insight-not-coffee-cards", title: "Executives Want Insight, Not Coffee Cards", legacy: "Executives Get Peer Comparison Not Coffee Cards" },
+      { slug: "stories-supported-by-facts", title: "The Best of Both Worlds: Stories Supported by Facts", legacy: "Traditional and Story-based Instruments" },
+      { slug: "the-top-ten-market-research-best-practices", title: "Survey Says...", legacy: "Best Practices" },
+      { slug: "the-art-of-asking-great-survey-questions", title: "Question Creation", legacy: "Every Question Maps to Its Purpose" },
+      { slug: "executives-want-insight-not-coffee-cards", title: "Executives Want Peer Comparison, Not Coffee Cards", legacy: "Executives Get Peer Comparison Not Coffee Cards" },
       { slug: "build-content-fast-from-survey-findings", title: "Build Content Fast from Survey Findings", legacy: "A Dual Approach Delivers Stories Backed by Facts" },
-      { slug: "avoid-death-from-doubt", title: "Avoid Death from Doubt", legacy: "Inclusive Stakeholder Engagement Reduces Malicious Compliance" },
+      { slug: "avoid-death-from-doubt", title: "Inclusive Stakeholder Engagement: Avoid Death from Doubt", legacy: "Inclusive Stakeholder Engagement Reduces Malicious Compliance" },
     ];
 
     assert.ok(pageContent.includes("styles.servicesGrid"), "Section 2 must render servicesGrid container");
@@ -88,9 +88,8 @@ test("The Great Eight Section 2 Design and Interactivity Test Suite", async (t) 
     }
     assert.ok(pageContent.includes("{card.number}"), "Card index must show the manifest number (01 to 08)");
     assert.ok(manifestContent.includes('String(index + 1).padStart(2, "0")'), "numbers must be two digits");
-    assert.ok(pageContent.includes('role="button"') && pageContent.includes("tabIndex={0}"), "cards must be focusable buttons");
-    assert.ok(pageContent.includes('e.key === "Enter" || e.key === " "'), "cards must open with Enter and Space");
-    assert.ok(pageContent.includes("setActiveGreatEightSlug(card.slug)"), "cards must open their own viewpoint by slug");
+    assert.ok(pageContent.includes('setActiveGreatEight({ slug: card.slug, media: "text" })'), "clicking a card opens its own viewpoint text by slug");
+    assert.ok(pageContent.includes("setActiveGreatEight({ slug: card.slug, media: btn.media })"), "media buttons open their own card and media");
     assert.ok(pageContent.includes("<GreatEightViewpointModal"), "page must render the viewpoint modal");
     assert.ok(fs.existsSync(modalPath), "components/GreatEightViewpointModal.tsx must exist");
   });
