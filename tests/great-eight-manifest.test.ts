@@ -16,14 +16,14 @@ const ROOT = path.join(__dirname, "..");
 const read = (...p: string[]) => fs.readFileSync(path.join(ROOT, ...p), "utf-8");
 
 const EXPECTED_TITLES = [
-  "Targeting Your Survey",
+  "Target the Right Survey Length",
   "The Allure of Too Many Choices",
-  "Stories Supported by Facts",
-  "The Top Ten Market Research Best Practices",
-  "The Art of Asking Great Survey Questions",
-  "Executives Want Insight, Not Coffee Cards",
+  "The Best of Both Worlds: Stories Supported by Facts",
+  "Survey Says...",
+  "Question Creation",
+  "Executives Want Peer Comparison, Not Coffee Cards",
   "Build Content Fast from Survey Findings",
-  "Avoid Death from Doubt",
+  "Inclusive Stakeholder Engagement: Avoid Death from Doubt",
 ];
 
 test("The Great Eight Manifest Suite", async (t) => {

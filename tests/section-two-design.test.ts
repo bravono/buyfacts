@@ -61,14 +61,14 @@ test("The Great Eight Section 2 Design and Interactivity Test Suite", async (t) 
 
   await t.test("3. All 8 Pillar Cards and Exact Updated Titles Preserved", () => {
     const expectedCards = [
-      { slug: "targeting-your-survey", title: "Targeting Your Survey", legacy: "Survey Design" },
+      { slug: "targeting-your-survey", title: "Target the Right Survey Length", legacy: "Survey Design" },
       { slug: "the-allure-of-too-many-choices", title: "The Allure of Too Many Choices", legacy: "Participant Insight Choices" },
-      { slug: "stories-supported-by-facts", title: "Stories Supported by Facts", legacy: "Traditional and Story-based Instruments" },
-      { slug: "the-top-ten-market-research-best-practices", title: "The Top Ten Market Research Best Practices", legacy: "Best Practices" },
-      { slug: "the-art-of-asking-great-survey-questions", title: "The Art of Asking Great Survey Questions", legacy: "Every Question Maps to Its Purpose" },
-      { slug: "executives-want-insight-not-coffee-cards", title: "Executives Want Insight, Not Coffee Cards", legacy: "Executives Get Peer Comparison Not Coffee Cards" },
+      { slug: "stories-supported-by-facts", title: "The Best of Both Worlds: Stories Supported by Facts", legacy: "Traditional and Story-based Instruments" },
+      { slug: "the-top-ten-market-research-best-practices", title: "Survey Says...", legacy: "Best Practices" },
+      { slug: "the-art-of-asking-great-survey-questions", title: "Question Creation", legacy: "Every Question Maps to Its Purpose" },
+      { slug: "executives-want-insight-not-coffee-cards", title: "Executives Want Peer Comparison, Not Coffee Cards", legacy: "Executives Get Peer Comparison Not Coffee Cards" },
       { slug: "build-content-fast-from-survey-findings", title: "Build Content Fast from Survey Findings", legacy: "A Dual Approach Delivers Stories Backed by Facts" },
-      { slug: "avoid-death-from-doubt", title: "Avoid Death from Doubt", legacy: "Inclusive Stakeholder Engagement Reduces Malicious Compliance" },
+      { slug: "avoid-death-from-doubt", title: "Inclusive Stakeholder Engagement: Avoid Death from Doubt", legacy: "Inclusive Stakeholder Engagement Reduces Malicious Compliance" },
     ];
 
     assert.ok(pageContent.includes("styles.servicesGrid"), "Section 2 must render servicesGrid container");

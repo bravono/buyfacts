@@ -2,7 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { GREAT_EIGHT_CARDS, LEGACY_GREAT_EIGHT_URLS, resolveGreatEight } from "../lib/greatEightManifest";
+import {
+  GREAT_EIGHT_CARDS,
+  LEGACY_GREAT_EIGHT_SUMMARIES,
+  LEGACY_GREAT_EIGHT_URLS,
+  resolveGreatEight,
+} from "../lib/greatEightManifest";
+import { isPdfUrl } from "../lib/document-parser";
 import { DEFAULT_GREAT_EIGHT } from "../app/api/great-eight/route";
 
 const ROOT = path.join(__dirname, "..");
@@ -58,6 +64,28 @@ test("Great Eight SEE IT / HEAR IT / READ IT buttons", async (t) => {
     assert.ok(!/href=\{card\.(videoUrl|audioUrl)/.test(page), "buttons never link straight to a missing file");
     assert.ok(modal.includes("The video of this viewpoint is coming soon."));
     assert.ok(modal.includes("The audio performance of this viewpoint is coming soon."));
+  });
+
+  await t.test("7. Revised hooks win over taglines written by earlier seeds", () => {
+    const resolved = resolveGreatEight(
+      GREAT_EIGHT_CARDS.map((card, index) => ({ slug: card.slug, tagline: LEGACY_GREAT_EIGHT_SUMMARIES[index] }))
+    );
+    resolved.forEach((card, index) => assert.equal(card.summary, GREAT_EIGHT_CARDS[index].summary));
+    assert.equal(GREAT_EIGHT_CARDS[0].summary, "Nobody's figured out how to build a coffee break into a survey.");
+    const edited = resolveGreatEight([{ slug: GREAT_EIGHT_CARDS[0].slug, tagline: "Admin hook" }]);
+    assert.equal(edited[0].summary, "Admin hook", "a real /admin tagline still overrides");
+  });
+
+  await t.test("8. READ IT shows CDN PDFs inline, with an open/download fallback", () => {
+    for (const url of [
+      "https://s3.buyfacts.com/buyfacts-public-assets/uploads/01-Target.pdf",
+      "https://s3.buyfacts.com/x/Great%20Eight%2001.PDF?X-Amz-Expires=3600&sig=abc",
+      "https://s3.buyfacts.com/x/a.pdf#page=2",
+    ]) {
+      assert.ok(isPdfUrl(url), `${url} must be detected as a PDF`);
+    }
+    assert.ok(!isPdfUrl("https://s3.buyfacts.com/x/a.pdf.docx") && !isPdfUrl("https://s3.buyfacts.com/x/pdf"));
+    assert.ok(modal.includes("<iframe") && modal.includes("styles.pdfFallback") && modal.includes("download"));
   });
 
   await t.test("6. Modal plays the video and audio and scrolls to the clicked section", () => {

@@ -12,14 +12,14 @@ test("The Great Eight Model, API, and Media Component Test Suite", async (t) => 
     assert.equal(DEFAULT_GREAT_EIGHT.length, 8, "Must contain exactly 8 items");
 
     const expectedTitles = [
-      "Targeting Your Survey",
+      "Target the Right Survey Length",
       "The Allure of Too Many Choices",
-      "Stories Supported by Facts",
-      "The Top Ten Market Research Best Practices",
-      "The Art of Asking Great Survey Questions",
-      "Executives Want Insight, Not Coffee Cards",
+      "The Best of Both Worlds: Stories Supported by Facts",
+      "Survey Says...",
+      "Question Creation",
+      "Executives Want Peer Comparison, Not Coffee Cards",
       "Build Content Fast from Survey Findings",
-      "Avoid Death from Doubt",
+      "Inclusive Stakeholder Engagement: Avoid Death from Doubt",
     ];
 
     for (let i = 0; i < expectedTitles.length; i++) {
@@ -52,7 +52,7 @@ test("The Great Eight Model, API, and Media Component Test Suite", async (t) => 
 
     const first = data.items[0];
     assert.equal(first.orderIndex, 1);
-    assert.equal(first.title, "Targeting Your Survey");
+    assert.equal(first.title, "Target the Right Survey Length");
   });
 
   await t.test("3. Admin Model Registry GreatEightItem definition", () => {

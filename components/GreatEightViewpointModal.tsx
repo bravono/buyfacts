@@ -87,7 +87,16 @@ function ArticleReader({ card }: { card: GreatEightCard }) {
   }
 
   if (isPdfUrl(url)) {
-    return <iframe className={styles.pdfFrame} src={`${url}#view=FitH`} title={`${card.title} article`} />;
+    return (
+      <>
+        {/* Keep any fragment already on the URL; otherwise fit pages to width. */}
+        <iframe className={styles.pdfFrame} src={url.includes("#") ? url : `${url}#view=FitH`} title={`${card.title} article`} />
+        {/* Some mobile browsers show only the first page inline. */}
+        <a className={styles.pdfFallback} href={url} target="_blank" rel="noopener noreferrer" download>
+          Open or download the PDF (new tab)
+        </a>
+      </>
+    );
   }
 
   if (!isDocx) {
