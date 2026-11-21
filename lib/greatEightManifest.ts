@@ -10,10 +10,11 @@
  * - articleUrl  Robert's viewpoint article (Research Doc #N), a CDN .docx or .pdf
  * - graphicUrl  the card's custom graphic (Dropbox Graphic NN), a CDN image
  * - audioUrl    Robert's audio performance of the viewpoint, a CDN audio file
+ * - videoUrl    the viewpoint video (SEE IT), a CDN video file
  * None of these has been delivered yet: the Dropbox archive is not on the CDN, and none of
  * the 18 documents already on the CDN is a Great Eight article (they describe the two
  * dashboards' topics). So every slot is empty until Robert's files are uploaded. Fill a
- * slot here, or set the row's READ IT / HEAR IT link in /admin (GreatEightItem).
+ * slot here, or set the row's SEE IT / HEAR IT / READ IT link in /admin (GreatEightItem).
  *
  * `summary` and `viewpoint` are the interim text already shown on staging. Replace them
  * with Robert's text when Research Doc #N arrives.
@@ -70,6 +71,8 @@ export interface GreatEightCard {
   graphicUrl?: string;
   /** Robert's audio performance. */
   audioUrl?: string;
+  /** Viewpoint video (SEE IT). */
+  videoUrl?: string;
   /** Card icon (CDN SVG) and accent colors: the existing card design. */
   iconUrl: string;
   iconColor: string;
@@ -200,6 +203,7 @@ export interface GreatEightRow {
   description?: string | null;
   readItUrl?: string | null;
   hearItUrl?: string | null;
+  seeItUrl?: string | null;
 }
 
 const clean = (value: string | null | undefined): string => (value ?? "").trim();
@@ -213,7 +217,7 @@ const pickUrl = (rowUrl: string | null | undefined, manifestUrl: string | undefi
 /**
  * Merges the manifest with /api/great-eight rows, matched strictly by slug (never by
  * position). Number, title and card design always come from the manifest; a row can
- * supply the summary, viewpoint text, article and audio set through /admin.
+ * supply the summary, viewpoint text, article, audio and video set through /admin.
  */
 export function resolveGreatEight(rows: readonly GreatEightRow[] = []): GreatEightCard[] {
   const rowsBySlug = new Map(rows.map((row) => [row.slug, row]));
@@ -229,6 +233,7 @@ export function resolveGreatEight(rows: readonly GreatEightRow[] = []): GreatEig
         : card.viewpoint,
       articleUrl: pickUrl(row.readItUrl, card.articleUrl),
       audioUrl: pickUrl(row.hearItUrl, card.audioUrl),
+      videoUrl: pickUrl(row.seeItUrl, card.videoUrl),
     };
   });
 }

@@ -121,7 +121,7 @@ test("The Great Eight Manifest Suite", async (t) => {
       assert.ok(page.includes(`GREAT_EIGHT_SECTION.${field}`), `page must render GREAT_EIGHT_SECTION.${field}`);
     }
     assert.ok(page.includes('fetch("/api/great-eight")') && page.includes("resolveGreatEight("));
-    assert.ok(page.includes('role="button"') && page.includes("tabIndex={0}"), "cards must be keyboard accessible");
+    assert.ok(page.includes('type="button"') && page.includes("great-eight-${btn.media}-${card.slug}"), "cards must have keyboard-reachable media buttons");
     assert.ok(page.includes("<GreatEightViewpointModal"), "cards must open the viewpoint modal");
     for (const legacy of ["Peer Share for Real People", "No Cash Incentive Stigma", "Robert&apos;s Research"]) {
       assert.ok(!page.includes(legacy), `legacy copy "${legacy}" must be gone`);

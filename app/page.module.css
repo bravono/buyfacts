@@ -2266,21 +2266,59 @@
   outline-offset: 3px;
 }
 
-.cardClickIndicator {
+/* The Great Eight SEE IT / HEAR IT / READ IT buttons: dashboard (MediaPlayer) colors. */
+.cardMediaButtons {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--interactive-blue);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: all 0.2s ease;
-  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
 }
 
-.serviceCard:hover .cardClickIndicator {
-  opacity: 1;
-  transform: translateX(0);
+.cardMediaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.cardMediaBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
+.cardMediaBtn:focus-visible {
+  outline: 2px solid var(--interactive-blue);
+  outline-offset: 2px;
+}
+
+.cardMediaVideo {
+  background: linear-gradient(135deg, #ff9900 0%, #ff7700 100%);
+  color: #ffffff;
+  border-color: rgba(255, 153, 0, 0.3);
+}
+
+.cardMediaAudio {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.cardMediaText {
+  background-color: #dbe7f7;
+  color: #00507b;
+  border-color: rgba(0, 80, 123, 0.25);
+}
+
+/* Media not delivered yet: same as the dashboards' empty buttons. */
+.cardMediaPending {
+  opacity: 0.45;
+  border-style: dashed;
 }
 
