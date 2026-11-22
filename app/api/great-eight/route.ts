@@ -31,7 +31,7 @@ export const DEFAULT_GREAT_EIGHT: GreatEightData[] = GREAT_EIGHT_CARDS.map((card
   title: card.title,
   tagline: card.summary,
   description: card.viewpoint.join("\n\n"),
-  seeItUrl: "",
+  seeItUrl: card.videoUrl ?? "",
   hearItUrl: card.audioUrl ?? "",
   readItUrl: card.articleUrl ?? "",
   iconUrl: card.iconUrl,

@@ -16,14 +16,14 @@ const ROOT = path.join(__dirname, "..");
 const read = (...p: string[]) => fs.readFileSync(path.join(ROOT, ...p), "utf-8");
 
 const EXPECTED_TITLES = [
-  "Targeting Your Survey",
+  "Target the Right Survey Length",
   "The Allure of Too Many Choices",
-  "Stories Supported by Facts",
-  "The Top Ten Market Research Best Practices",
-  "The Art of Asking Great Survey Questions",
-  "Executives Want Insight, Not Coffee Cards",
+  "The Best of Both Worlds: Stories Supported by Facts",
+  "Survey Says...",
+  "Question Creation",
+  "Executives Want Peer Comparison, Not Coffee Cards",
   "Build Content Fast from Survey Findings",
-  "Avoid Death from Doubt",
+  "Inclusive Stakeholder Engagement: Avoid Death from Doubt",
 ];
 
 test("The Great Eight Manifest Suite", async (t) => {
@@ -121,7 +121,7 @@ test("The Great Eight Manifest Suite", async (t) => {
       assert.ok(page.includes(`GREAT_EIGHT_SECTION.${field}`), `page must render GREAT_EIGHT_SECTION.${field}`);
     }
     assert.ok(page.includes('fetch("/api/great-eight")') && page.includes("resolveGreatEight("));
-    assert.ok(page.includes('role="button"') && page.includes("tabIndex={0}"), "cards must be keyboard accessible");
+    assert.ok(page.includes('type="button"') && page.includes("great-eight-${btn.media}-${card.slug}"), "cards must have keyboard-reachable media buttons");
     assert.ok(page.includes("<GreatEightViewpointModal"), "cards must open the viewpoint modal");
     for (const legacy of ["Peer Share for Real People", "No Cash Incentive Stigma", "Robert&apos;s Research"]) {
       assert.ok(!page.includes(legacy), `legacy copy "${legacy}" must be gone`);
