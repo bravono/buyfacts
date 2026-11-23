@@ -229,6 +229,43 @@ Executes data retention policy. Call with `?purge=30d` to remove feedback record
 
 ---
 
+### Cubicon Panel System & Client Identification Architecture
+
+The Cubicon Panel infrastructure enables founding clients who complete the \$100 fee to integrate Cubicon as an external human-verification gate within their survey pipelines.
+
+#### 1. Client ID Issuance (`POST /api/payments/capture-venmo-order`)
+- **Trigger**: Upon successful capture of the \$100 founding client payment.
+- **Client ID Generation**: Issues a unique, cryptographically random identifier in `BF-XXXXXXXX` format (8 uppercase alphanumeric characters).
+- **Persistence**: Creates or updates a `FoundingClient` record in PostgreSQL with `paymentStatus = "paid"`, `isActive = true`, and links it to `CubiconRegistration`.
+- **Onboarding Delivery**: Automatically dispatches a dedicated onboarding email (`sendClientOnboardingEmail`) detailing the client's `clientId`, integration URL structure, parameter definitions, and callback signature verification guidelines.
+
+#### 2. Panel Entry Gateway & Validation (`GET /api/cubicon-panel/validate`)
+When respondents arrive at `/cubicon`, the application inspects the query string:
+- **Trial Mode vs Panel Mode**:
+  - **Trial Users**: If neither `clientId` nor `respondentId` are present in the URL, the user is treated as a trial explorer. They can play the 3D puzzle freely without submitting IDs.
+  - **Panel Respondents**: If `clientId` or `respondentId` is present, both are strictly required alongside a `callbackUrl`.
+- **Rejection Conditions**: A respondent is rejected and presented with an Access Rejected screen if:
+  - Either `clientId` or `respondentId` is missing.
+  - `callbackUrl` is missing or not a valid HTTP/HTTPS URL.
+  - `clientId` format does not match `BF-XXXXXXXX`.
+  - `respondentId` does not match the 8-digit numeric requirement.
+  - The client record does not exist, is not marked `isActive: true`, or `paymentStatus !== "paid"`.
+  - The client has configured `allowedCallbackDomains` and the `callbackUrl` domain does not match the approved list.
+- **Auto-Launch**: When credentials pass validation, the Cubicon 3D solver launches immediately in fullscreen mode without presenting the client registration form.
+
+#### 3. Panel Completion & Cryptographic Redirect (`POST /api/cubicon-panel/complete`)
+Once the respondent finishes the puzzle tasks:
+- **Evaluation**: The backend evaluates task attempts against sequence threshold and calculates a definitive `pass` or `fail` result.
+- **Session Tagging**: Stamps the `CubiconSession` with `sessionMode = "panel"`, `clientId`, `respondentId`, and `previousResult = "panel_pass"` or `"panel_fail"`.
+- **HMAC-SHA256 Signing**: Computes an HMAC signature over `${respondentId}|${result}|${timestamp}` using `PANEL_HMAC_SECRET` to prevent tampering or spoofing by respondents seeking rewards.
+- **Redirect Construction**: Redirects the respondent's browser to the client's `callbackUrl` with appended query parameters:
+  ```
+  {callbackUrl}?respondentId={8_DIGIT_ID}&result=pass|fail&ts={UNIX_TIMESTAMP}&sig={HMAC_SIGNATURE}
+  ```
+- **Verification Utility**: Clients can verify the authenticity of incoming results using `verifyPanelResult` or standard HMAC-SHA256 libraries on their own server.
+
+---
+
 ### User Feedback Feature & Post-Puzzle Completion Actions
 
 #### `/feedback` (Frontend Route)
@@ -606,6 +643,43 @@ Returns feedback submissions. Supports `?export=csv` for executive CSV download.
 
 #### `DELETE /api/cubicon-feedback`
 Executes data retention policy. Call with `?purge=30d` to remove feedback records older than 30 days.
+
+---
+
+### Cubicon Panel System & Client Identification Architecture
+
+The Cubicon Panel infrastructure enables founding clients who complete the \$100 fee to integrate Cubicon as an external human-verification gate within their survey pipelines.
+
+#### 1. Client ID Issuance (`POST /api/payments/capture-venmo-order`)
+- **Trigger**: Upon successful capture of the \$100 founding client payment.
+- **Client ID Generation**: Issues a unique, cryptographically random identifier in `BF-XXXXXXXX` format (8 uppercase alphanumeric characters).
+- **Persistence**: Creates or updates a `FoundingClient` record in PostgreSQL with `paymentStatus = "paid"`, `isActive = true`, and links it to `CubiconRegistration`.
+- **Onboarding Delivery**: Automatically dispatches a dedicated onboarding email (`sendClientOnboardingEmail`) detailing the client's `clientId`, integration URL structure, parameter definitions, and callback signature verification guidelines.
+
+#### 2. Panel Entry Gateway & Validation (`GET /api/cubicon-panel/validate`)
+When respondents arrive at `/cubicon`, the application inspects the query string:
+- **Trial Mode vs Panel Mode**:
+  - **Trial Users**: If neither `clientId` nor `respondentId` are present in the URL, the user is treated as a trial explorer. They can play the 3D puzzle freely without submitting IDs.
+  - **Panel Respondents**: If `clientId` or `respondentId` is present, both are strictly required alongside a `callbackUrl`.
+- **Rejection Conditions**: A respondent is rejected and presented with an Access Rejected screen if:
+  - Either `clientId` or `respondentId` is missing.
+  - `callbackUrl` is missing or not a valid HTTP/HTTPS URL.
+  - `clientId` format does not match `BF-XXXXXXXX`.
+  - `respondentId` does not match the 8-digit numeric requirement.
+  - The client record does not exist, is not marked `isActive: true`, or `paymentStatus !== "paid"`.
+  - The client has configured `allowedCallbackDomains` and the `callbackUrl` domain does not match the approved list.
+- **Auto-Launch**: When credentials pass validation, the Cubicon 3D solver launches immediately in fullscreen mode without presenting the client registration form.
+
+#### 3. Panel Completion & Cryptographic Redirect (`POST /api/cubicon-panel/complete`)
+Once the respondent finishes the puzzle tasks:
+- **Evaluation**: The backend evaluates task attempts against sequence threshold and calculates a definitive `pass` or `fail` result.
+- **Session Tagging**: Stamps the `CubiconSession` with `sessionMode = "panel"`, `clientId`, `respondentId`, and `previousResult = "panel_pass"` or `"panel_fail"`.
+- **HMAC-SHA256 Signing**: Computes an HMAC signature over `${respondentId}|${result}|${timestamp}` using `PANEL_HMAC_SECRET` to prevent tampering or spoofing by respondents seeking rewards.
+- **Redirect Construction**: Redirects the respondent's browser to the client's `callbackUrl` with appended query parameters:
+  ```
+  {callbackUrl}?respondentId={8_DIGIT_ID}&result=pass|fail&ts={UNIX_TIMESTAMP}&sig={HMAC_SIGNATURE}
+  ```
+- **Verification Utility**: Clients can verify the authenticity of incoming results using `verifyPanelResult` or standard HMAC-SHA256 libraries on their own server.
 
 ---
 
