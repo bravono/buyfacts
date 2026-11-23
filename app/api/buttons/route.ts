@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateApiAuth } from "@/lib/auth/middleware";
+import { findInvalidMediaUrl } from "@/lib/validateMediaUrl";
 
 /**
  * GET Handler: Returns list of all interactive buttons from database.
@@ -37,6 +38,11 @@ export async function POST(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: "Button ID is required" }, { status: 400 });
+    }
+
+    const urlError = findInvalidMediaUrl({ seeItUrl, hearItUrl, readItUrl });
+    if (urlError) {
+      return NextResponse.json({ error: urlError }, { status: 400 });
     }
 
     const updateData: Record<string, any> = {};

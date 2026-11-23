@@ -56,6 +56,7 @@ import { parseCsv } from "@/lib/admin/csv";
 import { isJsonUpload, parseJsonImport } from "@/lib/admin/jsonImport";
 import { normalizeQuestionType } from "@/lib/cubicon/coordinateHelper";
 import AdminSecurityPanel from "@/components/admin/AdminSecurityPanel";
+import { findInvalidMediaUrl } from "@/lib/validateMediaUrl";
 
 interface UserSession {
   userId: string;
@@ -477,6 +478,8 @@ export default function AdminDatabaseDashboard() {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentModelMeta) return;
+    const urlError = findInvalidMediaUrl(formData);
+    if (urlError) return setFormError(urlError);
     setIsSubmitting(true);
     setFormError("");
 
@@ -509,6 +512,8 @@ export default function AdminDatabaseDashboard() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentModelMeta || !editRecord) return;
+    const urlError = findInvalidMediaUrl(formData);
+    if (urlError) return setFormError(urlError);
     setIsSubmitting(true);
     setFormError("");
 

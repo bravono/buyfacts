@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/admin-guards";
 import { writeAudit } from "@/lib/auth/audit";
 import { getClientIp } from "@/lib/security/rate-limiter";
+import { findInvalidMediaUrl } from "@/lib/validateMediaUrl";
 import {
   ADMIN_MODEL_REGISTRY,
   ModelMetadata,
@@ -305,6 +306,12 @@ async function handleBulkCreate(body: any) {
 
     if (Object.keys(inputData).length === 0) {
       failures.push({ rowNumber: row.rowNumber, errors: ["Row has no importable values."] });
+      continue;
+    }
+
+    const urlError = findInvalidMediaUrl(inputData);
+    if (urlError) {
+      failures.push({ rowNumber: row.rowNumber, errors: [urlError] });
       continue;
     }
 
@@ -678,6 +685,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const urlError = findInvalidMediaUrl(data);
+    if (urlError) {
+      return NextResponse.json({ success: false, error: urlError }, { status: 400 });
+    }
+
     const meta = ADMIN_MODEL_REGISTRY[table];
     const delegate = getModelDelegate(table);
 
@@ -809,6 +821,11 @@ export async function PUT(request: Request) {
         { success: false, error: "Record data object is required." },
         { status: 400 }
       );
+    }
+
+    const urlError = findInvalidMediaUrl(data);
+    if (urlError) {
+      return NextResponse.json({ success: false, error: urlError }, { status: 400 });
     }
 
     const meta = ADMIN_MODEL_REGISTRY[table];

@@ -50,6 +50,8 @@ interface GreatEightSectionProps {
   onPreview: (url: string, label: string) => void;
   /** Key of the row currently being saved, e.g. "btn-srv-001-seeItUrl". */
   savingKey: string | null;
+  /** Validation/save error per "<buttonId>-<field>" key, shown under the input. */
+  errors?: Record<string, string>;
 }
 
 type Field = "seeItUrl" | "hearItUrl" | "readItUrl" | "descriptionText";
@@ -75,6 +77,7 @@ export default function GreatEightSection({
   onSave,
   onPreview,
   savingKey,
+  errors = {},
 }: GreatEightSectionProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -269,9 +272,15 @@ export default function GreatEightSection({
                               onBlur={(e) => onSave(btn.id, row.field, e.target.value)}
                               placeholder={row.placeholder}
                               className={styles.subLinkInput}
+                              aria-invalid={Boolean(errors[`${btn.id}-${row.field}`])}
                             />
                           )}
                         </div>
+                        {errors[`${btn.id}-${row.field}`] && (
+                          <p role="alert" className="text-xs text-red-500 font-semibold">
+                            {errors[`${btn.id}-${row.field}`]}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -14,6 +14,7 @@ import {
   sanitizeFolderPrefix,
 } from "@/lib/minio";
 import styles from "./page.module.css";
+import { validateMediaUrl } from "@/lib/validateMediaUrl";
 import {
   Database,
   Upload,
@@ -420,6 +421,8 @@ export default function FileUploadDemoPage() {
   };
 
   const [savingButtonSubLinkId, setSavingButtonSubLinkId] = useState<string | null>(null);
+  // Validation/save error per "<buttonId>-<field>" key; empty string = no error.
+  const [subLinkErrors, setSubLinkErrors] = useState<Record<string, string>>({});
   // Collapsible state for the Interactive Component Grid cards (null = all collapsed).
   const [expandedGridButtonId, setExpandedGridButtonId] = useState<string | null>(null);
 
@@ -429,6 +432,9 @@ export default function FileUploadDemoPage() {
     url: string
   ) => {
     const key = `${buttonId}-${field}`;
+    const urlError = field === "descriptionText" ? null : validateMediaUrl(url);
+    setSubLinkErrors((prev) => ({ ...prev, [key]: urlError ?? "" }));
+    if (urlError) return;
     setSavingButtonSubLinkId(key);
     try {
       const res = await fetch("/api/buttons", {
@@ -445,6 +451,8 @@ export default function FileUploadDemoPage() {
         setMockButtons((prev) =>
           prev.map((btn) => (btn.id === buttonId ? { ...btn, [field]: url } : btn))
         );
+      } else {
+        setSubLinkErrors((prev) => ({ ...prev, [key]: data.error || `Failed to save ${field}.` }));
       }
     } catch (err) {
       console.error(`Failed to update ${field} on button:`, err);
@@ -933,8 +941,12 @@ export default function FileUploadDemoPage() {
                                 }
                                 placeholder="Paste or type video link (e.g. .mp4, YouTube, S3)..."
                                 className={styles.subLinkInput}
+                                aria-invalid={Boolean(subLinkErrors[`${btn.id}-seeItUrl`])}
                               />
                             </div>
+                            {subLinkErrors[`${btn.id}-seeItUrl`] && (
+                              <p role="alert" className="text-xs text-red-500 font-semibold">{subLinkErrors[`${btn.id}-seeItUrl`]}</p>
+                            )}
                           </div>
 
                           {/* 3. HEAR IT (Audio) */}
@@ -993,8 +1005,12 @@ export default function FileUploadDemoPage() {
                                 }
                                 placeholder="Paste or type audio link (e.g. .mp3, S3)..."
                                 className={styles.subLinkInput}
+                                aria-invalid={Boolean(subLinkErrors[`${btn.id}-hearItUrl`])}
                               />
                             </div>
+                            {subLinkErrors[`${btn.id}-hearItUrl`] && (
+                              <p role="alert" className="text-xs text-red-500 font-semibold">{subLinkErrors[`${btn.id}-hearItUrl`]}</p>
+                            )}
                           </div>
 
                           {/* 4. READ IT (Text / Document) */}
@@ -1052,8 +1068,12 @@ export default function FileUploadDemoPage() {
                                 }
                                 placeholder="Paste or type text/document link (e.g. .pdf, doc)..."
                                 className={styles.subLinkInput}
+                                aria-invalid={Boolean(subLinkErrors[`${btn.id}-readItUrl`])}
                               />
                             </div>
+                            {subLinkErrors[`${btn.id}-readItUrl`] && (
+                              <p role="alert" className="text-xs text-red-500 font-semibold">{subLinkErrors[`${btn.id}-readItUrl`]}</p>
+                            )}
                           </div>
                         </div>
                         )}
@@ -1074,6 +1094,7 @@ export default function FileUploadDemoPage() {
           onSave={handleUpdateSubLink}
           onPreview={triggerPreview}
           savingKey={savingButtonSubLinkId}
+          errors={subLinkErrors}
         />
 
         {/* Section 5: Storage Explorer & File Manager */}

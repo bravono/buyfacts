@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateApiAuth } from "@/lib/auth/middleware";
 import { GREAT_EIGHT_CARDS } from "@/lib/greatEightManifest";
+import { findInvalidMediaUrl } from "@/lib/validateMediaUrl";
 import type { Prisma } from "@prisma/client";
 
 export interface GreatEightData {
@@ -93,6 +94,11 @@ export async function POST(req: NextRequest) {
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
+    const urlError = findInvalidMediaUrl({ readItUrl, seeItUrl, hearItUrl });
+    if (urlError) {
+      return NextResponse.json({ error: urlError }, { status: 400 });
     }
 
     const targetSlug =
