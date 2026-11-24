@@ -27,6 +27,7 @@ import {
   fetchAndConvertDocx,
   getDocumentProxyUrl,
   isUnreachableForThirdParty,
+  sanitizeDocxHtml,
 } from "../lib/document-parser";
 
 export interface MediaPlayerProps {
@@ -278,7 +279,7 @@ function MediaPlayerScreen({
         if (!isMounted) return;
         setDocResult(
           result.success && result.html
-            ? { url: inlineDocxUrl, html: result.html }
+            ? { url: inlineDocxUrl, html: sanitizeDocxHtml(result.html) }
             : {
                 url: inlineDocxUrl,
                 error: result.error || "Failed to convert Word document to HTML",

@@ -88,8 +88,7 @@ test("The Great Eight Section 2 Design and Interactivity Test Suite", async (t) 
     }
     assert.ok(pageContent.includes("{card.number}"), "Card index must show the manifest number (01 to 08)");
     assert.ok(manifestContent.includes('String(index + 1).padStart(2, "0")'), "numbers must be two digits");
-    assert.ok(pageContent.includes('setActiveGreatEight({ slug: card.slug, media: "text" })'), "clicking a card opens its own viewpoint text by slug");
-    assert.ok(pageContent.includes("setActiveGreatEight({ slug: card.slug, media: btn.media })"), "media buttons open their own card and media");
+    assert.ok(pageContent.includes("setActiveGreatEightSlug(card.slug)"), "clicking a card opens its own viewpoint by slug");
     assert.ok(pageContent.includes("<GreatEightViewpointModal"), "page must render the viewpoint modal");
     assert.ok(fs.existsSync(modalPath), "components/GreatEightViewpointModal.tsx must exist");
   });

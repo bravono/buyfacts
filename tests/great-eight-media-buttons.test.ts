@@ -18,6 +18,7 @@ test("Great Eight SEE IT / HEAR IT / READ IT buttons", async (t) => {
   const page = read("app", "page.tsx");
   const modal = read("components", "GreatEightViewpointModal.tsx");
   const css = read("app", "page.module.css");
+  const player = read("components", "MediaPlayer.tsx");
 
   await t.test("1. /admin SEE IT, HEAR IT and READ IT links override the manifest by slug", () => {
     const [first, second] = GREAT_EIGHT_CARDS;
@@ -49,21 +50,20 @@ test("Great Eight SEE IT / HEAR IT / READ IT buttons", async (t) => {
     DEFAULT_GREAT_EIGHT.forEach((row, index) => assert.equal(row.seeItUrl, GREAT_EIGHT_CARDS[index].videoUrl ?? ""));
   });
 
-  await t.test("4. Every card renders the three dashboard buttons", () => {
-    for (const label of ['label: "SEE IT"', 'label: "HEAR IT"', 'label: "READ IT"']) {
-      assert.ok(page.includes(label), `card must render ${label}`);
+  await t.test("4. Cards open the shared dashboard MediaPlayer, not their own buttons", () => {
+    assert.ok(!page.includes('label: "SEE IT"') && !page.includes("styles.cardMediaBtn"), "no duplicate pill buttons on the cards");
+    assert.ok(!css.includes(".cardMediaBtn"), "the pill button CSS is gone");
+    assert.ok(page.includes('role="button"') && page.includes("tabIndex={0}") && page.includes('e.key === "Enter"'), "cards are keyboard-reachable");
+    assert.ok(page.includes("setActiveGreatEightSlug(card.slug)"), "a card opens its own viewpoint");
+    assert.ok(modal.includes('import MediaPlayer from "./MediaPlayer"') && modal.includes("<MediaPlayer"));
+    for (const prop of ["seeItUrl={card.videoUrl}", "hearItUrl={card.audioUrl}", "readItUrl={card.articleUrl}"]) {
+      assert.ok(modal.includes(prop), `modal must pass ${prop}`);
     }
-    assert.ok(page.includes("url: card.videoUrl") && page.includes("url: card.audioUrl"), "buttons read the resolved card media");
-    assert.ok(page.includes("e.stopPropagation()"), "a button must not also trigger the card click");
-    assert.ok(page.includes("initialMedia={activeGreatEight?.media}"), "the modal opens on the clicked media");
   });
 
-  await t.test("5. Pending media: dimmed button, labelled coming soon, never a broken link", () => {
-    assert.ok(page.includes("styles.cardMediaPending") && css.includes(".cardMediaPending {"));
-    assert.ok(page.includes('" (coming soon)"'), "pending buttons announce coming soon");
-    assert.ok(!/href=\{card\.(videoUrl|audioUrl)/.test(page), "buttons never link straight to a missing file");
-    assert.ok(modal.includes("The video of this viewpoint is coming soon."));
-    assert.ok(modal.includes("The audio performance of this viewpoint is coming soon."));
+  await t.test("5. Missing media is flagged by the player, never a broken link", () => {
+    assert.ok(player.includes("styles.btnEmpty") && player.includes("No video is attached to"));
+    assert.ok(!/href=\{card\.(videoUrl|audioUrl)/.test(page + modal), "nothing links straight to a missing file");
   });
 
   await t.test("7. Revised hooks win over taglines written by earlier seeds", () => {
@@ -85,13 +85,14 @@ test("Great Eight SEE IT / HEAR IT / READ IT buttons", async (t) => {
       assert.ok(isPdfUrl(url), `${url} must be detected as a PDF`);
     }
     assert.ok(!isPdfUrl("https://s3.buyfacts.com/x/a.pdf.docx") && !isPdfUrl("https://s3.buyfacts.com/x/pdf"));
-    assert.ok(modal.includes("<iframe") && modal.includes("styles.pdfFallback") && modal.includes("download"));
+    assert.ok(player.includes("<iframe") && player.includes("getDocumentProxyUrl(screenMediaUrl)"), "PDF renders inline via the proxy");
+    assert.ok(player.includes("handleDownloadDocument") && player.includes("link.download"), "download fallback");
+    assert.ok(player.includes("sanitizeDocxHtml(result.html)"), "Word articles are sanitized before injection");
   });
 
-  await t.test("6. Modal plays the video and audio and scrolls to the clicked section", () => {
-    assert.ok(modal.includes("<TransportVideo") && modal.includes("src={card.videoUrl}"));
-    assert.ok(modal.includes('autoPlay={initialMedia === "video"}'));
-    assert.ok(modal.includes('autoPlay={initialMedia === "audio"}'));
-    assert.ok(modal.includes("scrollIntoView"));
+  await t.test("6. Modal opens on the article and keeps Open in Reader", () => {
+    assert.ok(modal.includes('initialScreenMode={card.articleUrl ? "document" : "auto"}'));
+    assert.ok(modal.includes("Open in Reader") && modal.includes("/document-viewer?url="));
+    assert.ok(modal.includes("onContactClick={onClose}"), "CONTACT US closes the modal on the way to #contact");
   });
 });

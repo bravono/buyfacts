@@ -139,85 +139,22 @@
   overflow-y: auto;
 }
 
-.sectionLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin: 0 0 0.6rem;
-  color: var(--interactive-blue);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 
-.audio {
-  padding: 1rem 1.1rem;
-  border: 1px solid rgba(0, 80, 123, 0.12);
-  border-radius: var(--radius-md);
-  background: rgba(0, 80, 123, 0.04);
-}
 
-.article {
-  display: flex;
-  flex-direction: column;
-}
 
 .graphic {
   display: block;
   width: 100%;
   height: auto;
-  margin-bottom: 1.25rem;
   border-radius: var(--radius-md);
 }
 
-.summary {
-  margin: 0 0 0.75rem;
-  color: var(--color-blue-4);
-  font-size: 1.08rem;
-  font-weight: 600;
-  line-height: 1.5;
-}
 
-.paragraph {
-  margin: 0 0 1.5rem;
-  color: var(--text-color);
-  font-size: 1rem;
-  line-height: 1.7;
-}
 
-.pending {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  font-style: italic;
-}
 
-.spinner {
-  animation: spin 1s linear infinite;
-}
 
-.pdfFrame {
-  width: 100%;
-  height: 60vh;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
 
-.docxContent {
-  color: var(--text-color);
-  font-size: 0.98rem;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
 
-.docxContent img {
-  max-width: 100%;
-  height: auto;
-}
 
 .srOnly {
   position: absolute;
@@ -234,10 +171,6 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 640px) {
@@ -262,16 +195,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .overlay,
-  .spinner {
+  .overlay {
     animation: none;
   }
-}
-
-.pdfFallback {
-  display: inline-block;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--interactive-blue);
 }

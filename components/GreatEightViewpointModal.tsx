@@ -1,147 +1,28 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ExternalLink, FileText, Headphones, Loader2, Video, X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { GREAT_EIGHT_SECTION, type GreatEightCard } from "@/lib/greatEightManifest";
-import { fetchAndConvertDocx, isDocxUrl, isPdfUrl } from "@/lib/document-parser";
-import TransportControls from "./media/TransportControls";
-import TransportVideo from "./media/TransportVideo";
-import { useMediaTransport } from "./media/useMediaTransport";
+import MediaPlayer from "./MediaPlayer";
 import styles from "./GreatEightViewpointModal.module.css";
-
-/** Which card button opened the modal: SEE IT (video), HEAR IT (audio) or READ IT (text). */
-export type GreatEightMedia = "video" | "audio" | "text";
 
 interface GreatEightViewpointModalProps {
   card: GreatEightCard;
   onClose: () => void;
-  /** Section to scroll to and start on open; defaults to the text. */
-  initialMedia?: GreatEightMedia;
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
 
-function sanitizeDocxHtml(rawHtml: string): string {
-  if (!rawHtml) return "";
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(rawHtml, "text/html");
-
-  doc.querySelectorAll("script, style, iframe, object, embed, svg, math, link, meta").forEach((node) => node.remove());
-
-  doc.querySelectorAll("*").forEach((element) => {
-    Array.from(element.attributes).forEach((attribute) => {
-      const name = attribute.name.toLowerCase();
-      if (name.startsWith("on") || name === "style" || name === "srcdoc") {
-        element.removeAttribute(attribute.name);
-        return;
-      }
-
-      if (["href", "src", "xlink:href"].includes(name)) {
-        const value = attribute.value.trim().toLowerCase();
-        if (
-          value.startsWith("javascript:") ||
-          value.startsWith("vbscript:") ||
-          value.startsWith("data:text/html") ||
-          value.startsWith("data:application/javascript")
-        ) {
-          element.removeAttribute(attribute.name);
-        }
-      }
-    });
-  });
-
-  return doc.body.innerHTML;
-}
-
-/** Renders the viewpoint article: an inline Word document, an embedded PDF, or a pending note. */
-function ArticleReader({ card }: { card: GreatEightCard }) {
-  const url = card.articleUrl;
-  const isDocx = Boolean(url && isDocxUrl(url));
-  const [docx, setDocx] = useState<{ url: string; html?: string; error?: string } | null>(null);
-
-  useEffect(() => {
-    if (!url || !isDocx) return;
-    let active = true;
-    fetchAndConvertDocx(url).then((result) => {
-      if (!active) return;
-      setDocx(
-        result.success && result.html
-          ? { url, html: result.html }
-          : { url, error: result.error || "The article could not be displayed." }
-      );
-    });
-    return () => {
-      active = false;
-    };
-  }, [url, isDocx]);
-
-  if (!url) {
-    return (
-      <p className={styles.pending}>
-        The full viewpoint article for this perspective will be published here.
-      </p>
-    );
-  }
-
-  if (isPdfUrl(url)) {
-    return (
-      <>
-        {/* Keep any fragment already on the URL; otherwise fit pages to width. */}
-        <iframe className={styles.pdfFrame} src={url.includes("#") ? url : `${url}#view=FitH`} title={`${card.title} article`} />
-        {/* Some mobile browsers show only the first page inline. */}
-        <a className={styles.pdfFallback} href={url} target="_blank" rel="noopener noreferrer" download>
-          Open or download the PDF (new tab)
-        </a>
-      </>
-    );
-  }
-
-  if (!isDocx) {
-    return (
-      <p className={styles.pending}>
-        This article opens in the document reader.
-      </p>
-    );
-  }
-
-  const current = docx?.url === url ? docx : null;
-  if (!current) {
-    return (
-      <p className={styles.pending} role="status">
-        <Loader2 size={16} className={styles.spinner} aria-hidden="true" /> Loading article
-      </p>
-    );
-  }
-  if (current.error) {
-    return <p className={styles.pending}>{current.error} Use Open in Reader to view it.</p>;
-  }
-  const safeHtml = sanitizeDocxHtml(current.html ?? "");
-  return <div className={styles.docxContent} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
-}
-
 /**
- * "The Great Eight" viewpoint article modal: number, title and byline; Robert's audio
- * performance; then the card's graphic, viewpoint text and full article.
+ * "The Great Eight" viewpoint modal: number, title and byline, then the shared dashboard
+ * MediaPlayer with its SEE IT (video), HEAR IT (audio) and READ IT (article) buttons.
  */
-export default function GreatEightViewpointModal({
-  card,
-  onClose,
-  initialMedia = "text",
-}: GreatEightViewpointModalProps) {
+export default function GreatEightViewpointModal({ card, onClose }: GreatEightViewpointModalProps) {
   const titleId = useId();
-  const summaryId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const { attach: attachAudio, ...audioTransport } = useMediaTransport();
-  const sectionRefs = useRef<Partial<Record<GreatEightMedia, HTMLElement | null>>>({});
-
-  // Bring the section of the clicked button into view (its pending note when the media is not out yet).
-  useEffect(() => {
-    sectionRefs.current[initialMedia]?.scrollIntoView({ block: "start" });
-  }, [initialMedia, card.slug]);
 
   // Focus the dialog on open, keep Tab inside it, close on Escape, and hand focus back to
   // the card that opened it.
@@ -150,7 +31,8 @@ export default function GreatEightViewpointModal({
     closeRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      // Escape leaves a full-screen player first (MediaPlayer handles that); close only otherwise.
+      if (event.key === "Escape" && !document.fullscreenElement) {
         event.preventDefault();
         onClose();
         return;
@@ -193,7 +75,6 @@ export default function GreatEightViewpointModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={summaryId}
         data-great-eight-slug={card.slug}
       >
         <header className={styles.header}>
@@ -235,75 +116,23 @@ export default function GreatEightViewpointModal({
         </header>
 
         <div className={styles.body}>
-          <section
-            ref={(el) => {
-              sectionRefs.current.video = el;
-            }}
-            className={styles.audio}
-            aria-label="Video"
-          >
-            <h3 className={styles.sectionLabel}>
-              <Video size={16} aria-hidden="true" /> Video
-            </h3>
-            {card.videoUrl ? (
-              <TransportVideo
-                src={card.videoUrl}
-                title={`${card.title} video`}
-                autoPlay={initialMedia === "video"}
-                preload={initialMedia === "video" ? "auto" : "none"}
-              />
-            ) : (
-              <p className={styles.pending}>The video of this viewpoint is coming soon.</p>
-            )}
-          </section>
-
-          <section
-            ref={(el) => {
-              sectionRefs.current.audio = el;
-            }}
-            className={styles.audio}
-            aria-label="Audio performance"
-          >
-            <h3 className={styles.sectionLabel}>
-              <Headphones size={16} aria-hidden="true" /> Audio Performance
-            </h3>
-            {card.audioUrl ? (
-              <>
-                <audio ref={attachAudio} preload="none" autoPlay={initialMedia === "audio"} src={card.audioUrl}>
-                  Your browser does not support audio playback.
-                </audio>
-                <TransportControls transport={audioTransport} label={`${card.title} audio performance`} />
-              </>
-            ) : (
-              <p className={styles.pending}>The audio performance of this viewpoint is coming soon.</p>
-            )}
-          </section>
-
-          <article
-            ref={(el) => {
-              sectionRefs.current.text = el;
-            }}
-            className={styles.article}
-          >
-            {card.graphicUrl && (
-              // External CDN graphic of unknown dimensions; next/image would need remotePatterns.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className={styles.graphic} src={card.graphicUrl} alt="" />
-            )}
-            <p id={summaryId} className={styles.summary}>
-              {card.summary}
-            </p>
-            {card.viewpoint.map((paragraph) => (
-              <p key={paragraph} className={styles.paragraph}>
-                {paragraph}
-              </p>
-            ))}
-
-            <h3 className={styles.sectionLabel}>
-              <FileText size={16} aria-hidden="true" /> Viewpoint Article
-            </h3>
-            <ArticleReader card={card} />
-          </article>
+          <MediaPlayer
+            title={card.title}
+            tagline={card.summary}
+            description={[card.summary, ...card.viewpoint].join("\n")}
+            seeItUrl={card.videoUrl}
+            hearItUrl={card.audioUrl}
+            readItUrl={card.articleUrl}
+            // Open on the article (inline PDF/Word), as on Yousuf's original Great Eight player.
+            initialScreenMode={card.articleUrl ? "document" : "auto"}
+            showWelcome={false}
+            onContactClick={onClose}
+          />
+          {card.graphicUrl && (
+            // External CDN graphic of unknown dimensions; next/image would need remotePatterns.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className={styles.graphic} src={card.graphicUrl} alt="" />
+          )}
         </div>
       </div>
     </div>,

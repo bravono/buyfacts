@@ -143,6 +143,42 @@ export async function convertDocxBufferToHtml(
 }
 
 /**
+ * Strips scripts, event handlers, inline styles and script URLs from converted DOCX HTML
+ * before it is injected into the page. Browser only (uses DOMParser).
+ */
+export function sanitizeDocxHtml(rawHtml: string): string {
+  if (!rawHtml) return "";
+
+  const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+
+  doc.querySelectorAll("script, style, iframe, object, embed, svg, math, link, meta").forEach((node) => node.remove());
+
+  doc.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith("on") || name === "style" || name === "srcdoc") {
+        element.removeAttribute(attribute.name);
+        return;
+      }
+
+      if (["href", "src", "xlink:href"].includes(name)) {
+        const value = attribute.value.trim().toLowerCase();
+        if (
+          value.startsWith("javascript:") ||
+          value.startsWith("vbscript:") ||
+          value.startsWith("data:text/html") ||
+          value.startsWith("data:application/javascript")
+        ) {
+          element.removeAttribute(attribute.name);
+        }
+      }
+    });
+  });
+
+  return doc.body.innerHTML;
+}
+
+/**
  * Fetches a DOCX file and converts it into HTML.
  *
  * Cross-origin documents are fetched through our own /api/document-proxy route so the

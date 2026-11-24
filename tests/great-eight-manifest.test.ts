@@ -121,19 +121,19 @@ test("The Great Eight Manifest Suite", async (t) => {
       assert.ok(page.includes(`GREAT_EIGHT_SECTION.${field}`), `page must render GREAT_EIGHT_SECTION.${field}`);
     }
     assert.ok(page.includes('fetch("/api/great-eight")') && page.includes("resolveGreatEight("));
-    assert.ok(page.includes('type="button"') && page.includes("great-eight-${btn.media}-${card.slug}"), "cards must have keyboard-reachable media buttons");
+    assert.ok(page.includes('role="button"') && page.includes("tabIndex={0}"), "cards must be keyboard-reachable");
     assert.ok(page.includes("<GreatEightViewpointModal"), "cards must open the viewpoint modal");
     for (const legacy of ["Peer Share for Real People", "No Cash Incentive Stigma", "Robert&apos;s Research"]) {
       assert.ok(!page.includes(legacy), `legacy copy "${legacy}" must be gone`);
     }
   });
 
-  await t.test("8. Viewpoint modal: header, audio slot, article reader, no !important", () => {
+  await t.test("8. Viewpoint modal: header, shared MediaPlayer, no !important", () => {
     const modal = read("components", "GreatEightViewpointModal.tsx");
     const css = read("components", "GreatEightViewpointModal.module.css");
     assert.ok(modal.includes('role="dialog"') && modal.includes('aria-modal="true"'));
     assert.ok(modal.includes("card.number") && modal.includes("card.title") && modal.includes("GREAT_EIGHT_SECTION.byline"));
-    assert.ok(modal.includes("card.audioUrl") && modal.includes("<audio"), "modal must have the audio performance slot");
+    assert.ok(modal.includes("<MediaPlayer") && modal.includes("card.audioUrl"), "modal must play the audio through MediaPlayer");
     assert.ok(modal.includes("card.articleUrl") && modal.includes("card.graphicUrl"), "modal must read article and graphic");
     assert.ok(!css.includes("!important"), "modal CSS must not use !important");
   });

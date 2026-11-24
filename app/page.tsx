@@ -12,7 +12,6 @@ import {
   User,
   MessageSquare,
   FileText,
-  Headphones,
   ChevronDown,
   Compass,
   Award,
@@ -30,7 +29,7 @@ import {
   Video,
 } from "lucide-react";
 import TransportVideo from "@/components/media/TransportVideo";
-import GreatEightViewpointModal, { type GreatEightMedia } from "@/components/GreatEightViewpointModal";
+import GreatEightViewpointModal from "@/components/GreatEightViewpointModal";
 import {
   GREAT_EIGHT_SECTION,
   resolveGreatEight,
@@ -323,9 +322,9 @@ function HomeContent() {
   // The Great Eight: cards from lib/greatEightManifest.ts, merged with any /admin edits
   // (GreatEightItem rows) matched by slug.
   const [greatEightCards, setGreatEightCards] = useState<GreatEightCard[]>(() => resolveGreatEight());
-  const [activeGreatEight, setActiveGreatEight] = useState<{ slug: GreatEightSlug; media: GreatEightMedia } | null>(null);
-  const activeGreatEightCard = greatEightCards.find((card) => card.slug === activeGreatEight?.slug) ?? null;
-  const closeGreatEight = React.useCallback(() => setActiveGreatEight(null), []);
+  const [activeGreatEightSlug, setActiveGreatEightSlug] = useState<GreatEightSlug | null>(null);
+  const activeGreatEightCard = greatEightCards.find((card) => card.slug === activeGreatEightSlug) ?? null;
+  const closeGreatEight = React.useCallback(() => setActiveGreatEightSlug(null), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -821,13 +820,23 @@ function HomeContent() {
           {/* 8 Pillar Cards Grid */}
           <div className={styles.servicesGrid}>
             {greatEightCards.map((card) => (
-              // Clicking the card opens the text; the SEE IT / HEAR IT / READ IT buttons are the
-              // keyboard-reachable controls (no nested interactive roles).
+              // The whole card opens the shared MediaPlayer, whose SEE IT / HEAR IT / READ IT
+              // buttons live inside the modal.
               <div
                 key={card.slug}
                 className={`${styles.serviceCard} ${styles.serviceCardClickable}`}
                 id={`great-eight-card-${card.slug}`}
-                onClick={() => setActiveGreatEight({ slug: card.slug, media: "text" })}
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                aria-label={`${card.number} ${card.title}: watch, listen or read`}
+                onClick={() => setActiveGreatEightSlug(card.slug)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveGreatEightSlug(card.slug);
+                  }
+                }}
               >
                 {/* Card Header Row: Icon + Sequence Number */}
                 <div className={styles.cardHeaderRow}>
@@ -845,34 +854,6 @@ function HomeContent() {
                 </div>
 
                 <h3 className={styles.cardTitle}>{card.title}</h3>
-
-                <div className={styles.cardMediaButtons} role="group" aria-label={`${card.number} ${card.title} media`}>
-                  {(
-                    [
-                      { media: "video", label: "SEE IT", kind: "Video", icon: <Video size={13} aria-hidden="true" />, url: card.videoUrl, cls: styles.cardMediaVideo },
-                      { media: "audio", label: "HEAR IT", kind: "Audio", icon: <Headphones size={13} aria-hidden="true" />, url: card.audioUrl, cls: styles.cardMediaAudio },
-                      // Text is always available: the viewpoint text ships with every card.
-                      { media: "text", label: "READ IT", kind: "Text", icon: <FileText size={13} aria-hidden="true" />, url: "text", cls: styles.cardMediaText },
-                    ] as const
-                  ).map((btn) => (
-                    <button
-                      key={btn.media}
-                      type="button"
-                      className={`${styles.cardMediaBtn} ${btn.cls} ${btn.url ? "" : styles.cardMediaPending}`}
-                      id={`great-eight-${btn.media}-${card.slug}`}
-                      aria-haspopup="dialog"
-                      aria-label={`${btn.label}: ${card.title} ${btn.kind}${btn.url ? "" : " (coming soon)"}`}
-                      title={btn.url ? `${btn.kind}` : `${btn.kind} coming soon`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveGreatEight({ slug: card.slug, media: btn.media });
-                      }}
-                    >
-                      {btn.icon}
-                      <span>{btn.label}</span>
-                    </button>
-                  ))}
-                </div>
 
                 <div
                   className={styles.cardAccentBar}
@@ -1924,7 +1905,6 @@ function HomeContent() {
         <GreatEightViewpointModal
           card={activeGreatEightCard}
           onClose={closeGreatEight}
-          initialMedia={activeGreatEight?.media}
         />
       )}
 
