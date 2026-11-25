@@ -275,6 +275,31 @@ export default function CubiconPage() {
   const totalSteps = 3;
   const [showForm, setShowForm] = useState(true);
 
+  // Panel mode state (for respondents sent by founding clients)
+  const [panelMode, setPanelMode] = useState<"loading" | "trial" | "panel" | "rejected">("loading");
+  const [panelClientId, setPanelClientId] = useState<string | null>(null);
+  const [panelRespondentId, setPanelRespondentId] = useState<string | null>(null);
+  const [panelCallbackUrl, setPanelCallbackUrl] = useState<string | null>(null);
+  const [panelError, setPanelError] = useState<string>("");
+  const [panelAutoLaunch, setPanelAutoLaunch] = useState(false);
+  const [panelRedirecting, setPanelRedirecting] = useState(false);
+
+  const panelDataRef = useRef({
+    mode: panelMode,
+    clientId: panelClientId,
+    respondentId: panelRespondentId,
+    callbackUrl: panelCallbackUrl,
+  });
+
+  useEffect(() => {
+    panelDataRef.current = {
+      mode: panelMode,
+      clientId: panelClientId,
+      respondentId: panelRespondentId,
+      callbackUrl: panelCallbackUrl,
+    };
+  }, [panelMode, panelClientId, panelRespondentId, panelCallbackUrl]);
+
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
   const [verificationSessionId, setVerificationSessionId] = useState<
@@ -292,6 +317,67 @@ export default function CubiconPage() {
     async () => {},
   );
 
+  // Initialize panel mode vs trial mode from URL query parameters
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const cId = params.get("clientId")?.trim() || null;
+    const rId = params.get("respondentId")?.trim() || null;
+    const cbUrl = params.get("callbackUrl")?.trim() || null;
+
+    // Distinguish between trial users and client panel respondents:
+    // If NO client/respondent params are present -> trial user!
+    if (!cId && !rId) {
+      setPanelMode("trial");
+      return;
+    }
+
+    // If one of the required IDs is missing -> reject the respondent immediately
+    if (!cId || !rId || !cbUrl) {
+      setPanelMode("rejected");
+      if (!cId && rId) {
+        setPanelError("Access Rejected: Client ID is missing. Both Client ID and Respondent ID are required.");
+      } else if (cId && !rId) {
+        setPanelError("Access Rejected: Respondent ID is missing. Both Client ID and Respondent ID are required.");
+      } else {
+        setPanelError("Access Rejected: Missing required query parameters (clientId, respondentId, callbackUrl).");
+      }
+      return;
+    }
+
+    setPanelClientId(cId);
+    setPanelRespondentId(rId);
+    setPanelCallbackUrl(cbUrl);
+
+    // Validate with backend API
+    fetch(
+      `/api/cubicon-panel/validate?clientId=${encodeURIComponent(cId)}&respondentId=${encodeURIComponent(rId)}&callbackUrl=${encodeURIComponent(cbUrl)}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.valid) {
+          setPanelMode("panel");
+          setPanelAutoLaunch(true);
+        } else {
+          setPanelMode("rejected");
+          setPanelError(data.error || "Your client or respondent credentials could not be verified.");
+        }
+      })
+      .catch(() => {
+        setPanelMode("rejected");
+        setPanelError("Unable to verify panel credentials due to a network error. Please try again.");
+      });
+  }, []);
+
+  // Auto-launch 3D Cubicon solver directly when validated in panel mode
+  useEffect(() => {
+    if (panelAutoLaunch) {
+      handleSeeLiveClick();
+      setPanelAutoLaunch(false);
+    }
+  }, [panelAutoLaunch]);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
@@ -300,6 +386,39 @@ export default function CubiconPage() {
         event.data.type === "CUBICON_COMPLETED"
       ) {
         const { sessionId, passed, heading, description } = event.data;
+
+        // Check if current user is an authenticated panel respondent
+        const currentPanel = panelDataRef.current;
+        if (currentPanel.mode === "panel" && currentPanel.callbackUrl) {
+          setPanelRedirecting(true);
+          fetch("/api/cubicon-panel/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              clientId: currentPanel.clientId,
+              respondentId: currentPanel.respondentId,
+              callbackUrl: currentPanel.callbackUrl,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              } else {
+                setPanelError(data.error || "Failed to complete panel redirect.");
+                setPanelRedirecting(false);
+              }
+            })
+            .catch((err) => {
+              console.error("[Panel Complete Error]", err);
+              setPanelError("Network error occurred while submitting results.");
+              setPanelRedirecting(false);
+            });
+          return;
+        }
+
+        // Trial / standard verification mode
         if (passed) {
           setIsVerified(true);
           setVerificationSessionId(sessionId);
@@ -839,7 +958,169 @@ export default function CubiconPage() {
         }}
       >
         <div className={styles.container}>
-          {!showLiveApp && !showVideo ? (
+          {/* Panel Redirecting Screen */}
+          {panelRedirecting && (
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                background: "rgba(10, 15, 30, 0.95)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 99999,
+                color: "#ffffff",
+                padding: "24px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  border: "4px solid rgba(56, 189, 248, 0.2)",
+                  borderTopColor: "#38bdf8",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "1.5rem",
+                }}
+              />
+              <h2
+                style={{
+                  color: "#38bdf8",
+                  fontSize: "1.8rem",
+                  fontWeight: 700,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Puzzle Completed!
+              </h2>
+              <p style={{ color: "#cbd5e1", fontSize: "1.1rem" }}>
+                Returning you to your survey provider with your verified result...
+              </p>
+            </div>
+          )}
+
+          {/* Panel Initializing / Loading Screen */}
+          {panelMode === "loading" && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "4rem 1rem",
+                color: "#94a3b8",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-block",
+                  width: "36px",
+                  height: "36px",
+                  border: "3px solid rgba(56, 189, 248, 0.2)",
+                  borderTopColor: "#38bdf8",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "1rem",
+                }}
+              />
+              <h3 style={{ color: "#f8fafc", fontSize: "1.25rem", margin: 0 }}>
+                Verifying Access Credentials...
+              </h3>
+              <p
+                style={{
+                  color: "#94a3b8",
+                  fontSize: "0.95rem",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Validating client and respondent identity
+              </p>
+            </div>
+          )}
+
+          {/* Panel Rejected Screen */}
+          {panelMode === "rejected" && (
+            <div
+              style={{
+                maxWidth: "600px",
+                margin: "2rem auto",
+                padding: "2.5rem",
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                borderRadius: "16px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  color: "#ef4444",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 1.5rem auto",
+                }}
+              >
+                <AlertCircle size={36} />
+              </div>
+              <h2
+                style={{
+                  color: "#ef4444",
+                  fontSize: "1.6rem",
+                  fontWeight: 700,
+                  marginBottom: "1rem",
+                }}
+              >
+                Access Rejected
+              </h2>
+              <p
+                style={{
+                  color: "#cbd5e1",
+                  fontSize: "1.05rem",
+                  lineHeight: 1.6,
+                  marginBottom: "2rem",
+                }}
+              >
+                {panelError ||
+                  "You cannot access this survey session because required client or respondent credentials are missing or unverified."}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPanelMode("trial");
+                    setPanelError("");
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: "0.8rem 1.6rem", fontSize: "0.95rem" }}
+                >
+                  Try Qubicorn Demo Mode
+                </button>
+                <Link
+                  href="/"
+                  className="btn btn-secondary"
+                  style={{ padding: "0.8rem 1.6rem", fontSize: "0.95rem" }}
+                >
+                  Return to Home
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {panelMode !== "rejected" && panelMode !== "loading" && !showLiveApp && !showVideo ? (
             <div className={styles.slideshowWrapper}>
               <div
                 key={slideAnimationKey}
@@ -1199,12 +1480,14 @@ export default function CubiconPage() {
         </div>
       </section>
 
-      {/* CUBICON FOUNDING CLIENT INVITATION */}
-      <section
-        className="section-brand-bg"
-        id="founding-client-invitation"
-        style={{ padding: "2rem 0" }}
-      >
+      {/* CUBICON FOUNDING CLIENT INVITATION & APPLICATION */}
+      {panelMode !== "panel" && (
+        <>
+          <section
+            className="section-brand-bg"
+            id="founding-client-invitation"
+            style={{ padding: "2rem 0" }}
+          >
         <div className={styles.container}>
           <div
             className={styles.sectionHeader}
@@ -1893,6 +2176,8 @@ export default function CubiconPage() {
           )}
         </div>
       </section>
+        </>
+      )}
 
       {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
       {isVerificationModalOpen && (

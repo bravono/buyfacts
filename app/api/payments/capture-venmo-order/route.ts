@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { sendPaymentReceiptEmail } from "@/lib/resend";
+import { sendPaymentReceiptEmail, sendClientOnboardingEmail } from "@/lib/resend";
+import { generateClientId } from "@/lib/panel/client-id";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -116,12 +118,68 @@ export async function POST(request: Request) {
       }).catch(err => console.error("Failed to send receipt email:", err));
     }
 
+    // Issue Client ID for founding client panel access
+    let issuedClientId: string | null = null;
+    if (registrationId) {
+      try {
+        // Look up the registration to get name/email/company
+        const registration = await prisma.cubiconRegistration.findUnique({
+          where: { id: registrationId },
+        });
+
+        if (registration) {
+          // Generate a unique Client ID (retry up to 5 times on collision)
+          let clientId = generateClientId();
+          let attempts = 0;
+          while (attempts < 5) {
+            const existing = await prisma.foundingClient.findUnique({
+              where: { clientId },
+            });
+            if (!existing) break;
+            clientId = generateClientId();
+            attempts++;
+          }
+
+          const foundingClient = await prisma.foundingClient.create({
+            data: {
+              clientId,
+              registrationId,
+              name: registration.name,
+              email: registration.email,
+              company: registration.company || "",
+              allowedCallbackDomains: "[]",
+              paymentStatus: "paid",
+              paymentTransactionId: captureTransactionId,
+              paidAt: paidTimestamp,
+              isActive: true,
+            },
+          });
+
+          issuedClientId = foundingClient.clientId;
+
+          // Send onboarding email with Client ID (non-blocking)
+          sendClientOnboardingEmail({
+            clientId: foundingClient.clientId,
+            name: registration.name,
+            email: registration.email,
+            company: registration.company || undefined,
+          }).catch((err) =>
+            console.error("[Panel] Failed to send onboarding email:", err)
+          );
+        }
+      } catch (err) {
+        console.error("[Panel] Failed to issue Client ID:", err);
+        // Non-fatal: payment succeeded, Client ID issuance failure is logged
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Payment captured successfully!",
       transactionId: captureTransactionId,
       amount: 100.00,
       paidAt: paidTimestamp.toISOString(),
+      clientId: issuedClientId,
     });
 
   } catch (error: any) {
