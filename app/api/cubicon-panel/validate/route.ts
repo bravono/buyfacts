@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidClientId, isValidRespondentId } from "@/lib/panel/client-id";
+import { withRequestLogging } from "@/lib/observability/request";
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId")?.trim();
@@ -102,3 +103,6 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// Every request is logged with an id, status and duration (see lib/observability).
+export const GET = withRequestLogging(GETHandler, { route: "/api/cubicon-panel/validate" });

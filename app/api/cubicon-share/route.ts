@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { sendCubiconShareEmail } from "@/lib/resend";
 import { ShareSchema } from "@/lib/validation/forms";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { withRequestLogging } from "@/lib/observability/request";
 
-export async function GET() {
+async function GETHandler() {
   try {
     const shares = await prisma.cubiconShare.findMany({
       orderBy: { createdAt: "desc" },
@@ -19,7 +20,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   try {
     // 1. IP Rate Limiting (Section 13)
     const ip = getClientIp(request);
@@ -144,3 +145,7 @@ function corsHeaders() {
     },
   };
 }
+
+// Every request is logged with an id, status and duration (see lib/observability).
+export const GET = withRequestLogging(GETHandler, { route: "/api/cubicon-share" });
+export const POST = withRequestLogging(POSTHandler, { route: "/api/cubicon-share" });
