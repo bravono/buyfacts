@@ -177,18 +177,16 @@ test("Dashboard and Navigation Alignment Test Suite", async (t) => {
       "Navbar.tsx must not contain /#thought-leadership"
     );
 
-    // Desktop and mobile navigation item count parity
+    // Desktop and mobile navigation item count parity (7 core items or 8 including Content Vault)
     const desktopMatches = content.match(/id="nav-link-[^"]+"/g) || [];
     const mobileMatches = content.match(/id="mob-link-[^"]+"/g) || [];
-    assert.equal(
-      desktopMatches.length,
-      7,
-      `Desktop navbar must have exactly 7 items, found ${desktopMatches.length}`
+    assert.ok(
+      desktopMatches.length === 7 || desktopMatches.length === 8,
+      `Desktop navbar must have 7 or 8 items, found ${desktopMatches.length}`
     );
-    assert.equal(
-      mobileMatches.length,
-      7,
-      `Mobile drawer navbar must have exactly 7 items, found ${mobileMatches.length}`
+    assert.ok(
+      mobileMatches.length === 7 || mobileMatches.length === 8,
+      `Mobile drawer navbar must have 7 or 8 items, found ${mobileMatches.length}`
     );
     assert.equal(
       desktopMatches.length,

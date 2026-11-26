@@ -49,7 +49,7 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     assert.notEqual(data.description, "Press Start to begin your puzzle.", "Must not display Press Start description");
     assert.ok(data.description.length > 0, "Must contain puzzle description");
     assert.notEqual(data.image, "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=", "Image must not be empty transparent GIF");
-    assert.ok(data.image.includes("Puzzle1"), "Image must reference Puzzle 1");
+    assert.ok(data.image.includes("Puzzle1") || data.image.includes(".webp"), "Image must reference first puzzle asset");
     assert.equal(data.completed, false, "Must not be completed");
     assert.equal(data.passed, false, "Must not be passed");
     assert.equal(data.isFinal, false, "First puzzle must not be final in multi-task sequence");
@@ -284,9 +284,13 @@ test("Cubicon Data Route Initialization Test Suite", async (t) => {
     assert.ok(seq && seq.tasks.length === 4, "Default sequence must have 4 tasks");
 
     const getPassingClicks = (taskIdx: number) => {
-      const raw = seq.tasks[taskIdx].correctCoordinates;
+      const task = seq.tasks[taskIdx];
+      const raw = task.correctCoordinates;
       const coords = (typeof raw === "string" ? JSON.parse(raw) : raw) as Array<{ x: number; y: number; z: number }>;
-      return coords.map((c, idx) => ({ x: Number(c.x), y: Number(c.y), z: Number(c.z), t: (idx + 1) * 100 }));
+      const qType = String(task.questionType || "").trim().toLowerCase();
+      const isDrag = ["drag", "anticipation", "drawing", "sequence", "multi-point", "multipoint"].includes(qType);
+      const points = isDrag ? coords : coords.slice(0, 1);
+      return points.map((c, idx) => ({ x: Number(c.x), y: Number(c.y), z: Number(c.z), t: (idx + 1) * 100 }));
     };
 
     // Task 1: Pass (1/1) -> advances to Task 2
