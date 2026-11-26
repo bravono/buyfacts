@@ -56,6 +56,7 @@ import { parseCsv } from "@/lib/admin/csv";
 import { isJsonUpload, parseJsonImport } from "@/lib/admin/jsonImport";
 import { normalizeQuestionType } from "@/lib/cubicon/coordinateHelper";
 import AdminSecurityPanel from "@/components/admin/AdminSecurityPanel";
+import ObservabilityPanel from "@/components/admin/ObservabilityPanel";
 
 interface UserSession {
   userId: string;
@@ -146,7 +147,7 @@ export default function AdminDatabaseDashboard() {
 
   // Active Model Metadata
   const currentModelMeta: ModelMetadata | null = useMemo(() => {
-    if (activeTab === "overview" || activeTab === "security") return null;
+    if (activeTab === "overview" || activeTab === "security" || activeTab === "observability") return null;
     return ADMIN_MODEL_REGISTRY[activeTab] || null;
   }, [activeTab]);
 
@@ -247,7 +248,7 @@ export default function AdminDatabaseDashboard() {
 
   // Fetch table records
   const fetchTableData = useCallback(async () => {
-    if (!session || activeTab === "overview" || activeTab === "security") return;
+    if (!session || activeTab === "overview" || activeTab === "security" || activeTab === "observability") return;
     setIsLoadingTable(true);
     setTableError("");
 
@@ -286,7 +287,12 @@ export default function AdminDatabaseDashboard() {
   }, [session, activeTab, currentPage, pageSize, searchQuery, sortBy, sortOrder]);
 
   useEffect(() => {
-    if (activeTab !== "overview" && activeTab !== "security" && session) {
+    if (
+      activeTab !== "overview" &&
+      activeTab !== "security" &&
+      activeTab !== "observability" &&
+      session
+    ) {
       fetchTableData();
     }
   }, [activeTab, session, fetchTableData]);
@@ -1030,6 +1036,16 @@ export default function AdminDatabaseDashboard() {
                 <span>Security & Access</span>
               </div>
             </button>
+
+            <button
+              onClick={() => handleTabSwitch("observability")}
+              className={`${styles.tabBtn} ${activeTab === "observability" ? styles.tabBtnActive : ""}`}
+            >
+              <div className={styles.tabBtnLeft}>
+                <Activity size={16} />
+                <span>Observability</span>
+              </div>
+            </button>
           </div>
 
           {ADMIN_CATEGORIES.map((category) => {
@@ -1248,8 +1264,23 @@ export default function AdminDatabaseDashboard() {
             </div>
           )}
 
+          {/* OBSERVABILITY: centralized log feed, error rate and latency */}
+          {activeTab === "observability" && (
+            <div>
+              <div className={styles.tableHeaderContainer}>
+                <div className={styles.tableTitleGroup}>
+                  <h2>Centralized Logging &amp; Observability</h2>
+                </div>
+              </div>
+              <ObservabilityPanel role={session.role || "admin"} />
+            </div>
+          )}
+
           {/* TAB 2: SPECIFIC MODEL TABLE EXPLORER */}
-          {activeTab !== "overview" && activeTab !== "security" && currentModelMeta && (
+          {activeTab !== "overview" &&
+            activeTab !== "security" &&
+            activeTab !== "observability" &&
+            currentModelMeta && (
             <div>
               {/* Table Top Header */}
               <div className={styles.tableHeaderContainer}>
