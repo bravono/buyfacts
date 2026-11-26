@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logError, logInfo } from "@/lib/observability/logger";
 
 /**
  * Lazy initialization of Resend client
@@ -124,11 +125,14 @@ export async function sendContactEmails(data: ContactSubmissionData) {
     }
 
     const [userRes, adminRes] = await Promise.allSettled([userEmailPromise, adminEmailPromise]);
-    console.log("[Resend] Contact emails result:", { userRes, adminRes });
+    logInfo("mail.send.succeeded", "Contact notification emails dispatched", {
+      category: "mail",
+      context: { userRes, adminRes },
+    });
 
     return { userRes, adminRes };
   } catch (error) {
-    console.error("[Resend] Error sending contact emails:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending contact emails" } });
     return null;
   }
 }
@@ -231,11 +235,14 @@ export async function sendCubiconRegistrationEmails(data: CubiconRegistrationDat
     }
 
     const [userRes, adminRes] = await Promise.allSettled([userEmailPromise, adminEmailPromise]);
-    console.log("[Resend] Cubicon registration emails result:", { userRes, adminRes });
+    logInfo("mail.send.succeeded", "Cubicon registration emails dispatched", {
+      category: "mail",
+      context: { userRes, adminRes },
+    });
 
     return { userRes, adminRes };
   } catch (error) {
-    console.error("[Resend] Error sending Cubicon registration emails:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending Cubicon registration emails" } });
     return null;
   }
 }
@@ -311,10 +318,10 @@ export async function sendPaymentReceiptEmail(data: PaymentReceiptData) {
       `,
     });
 
-    console.log("[Resend] Payment receipt email sent to", email, emailRes);
+    logInfo("mail.send.succeeded", "Payment receipt email dispatched", { category: "mail", context: { email } });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending payment receipt email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending payment receipt email" } });
     return null;
   }
 }
@@ -395,10 +402,13 @@ export async function sendCubiconShareEmail(data: CubiconShareData) {
       `,
     });
 
-    console.log("[Resend] Cubicon share invitation sent to", receiverEmail, emailRes);
+    logInfo("mail.send.succeeded", "Cubicon share invitation dispatched", {
+      category: "mail",
+      context: { email: receiverEmail },
+    });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending Cubicon share email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending Cubicon share email" } });
     return null;
   }
 }
@@ -486,10 +496,10 @@ export async function sendVerificationEmail(data: {
       `,
     });
 
-    console.log("[Resend] Verification email dispatched to", email);
+    logInfo("mail.send.succeeded", "Verification email dispatched", { category: "mail", context: { email } });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending verification email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending verification email" } });
     return null;
   }
 }
@@ -568,7 +578,7 @@ export async function sendVerificationReminderEmail(data: {
 
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending reminder email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending reminder email" } });
     return null;
   }
 }
@@ -612,10 +622,13 @@ export async function deliverVerifiedInquiry(data: {
       `,
     });
 
-    console.log("[Resend] Verified inquiry delivered to internal staff mailbox:", staffEmail);
+    logInfo("mail.send.succeeded", "Verified inquiry delivered to internal staff mailbox", {
+      category: "mail",
+      context: { email: staffEmail },
+    });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error delivering verified inquiry:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error delivering verified inquiry" } });
     return null;
   }
 }
@@ -778,10 +791,10 @@ export async function sendClientOnboardingEmail(data: {
       `,
     });
 
-    console.log("[Resend] Client onboarding email dispatched to", email);
+    logInfo("mail.send.succeeded", "Client onboarding email dispatched", { category: "mail", context: { email } });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending client onboarding email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending client onboarding email" } });
     return null;
   }
 }

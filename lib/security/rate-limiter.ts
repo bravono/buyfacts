@@ -8,6 +8,8 @@
  * - Verification link resends
  */
 
+import { logWarn } from "@/lib/observability/logger";
+
 interface RateLimitEntry {
   timestamps: number[];
 }
@@ -26,6 +28,7 @@ export const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   feedback: { maxRequests: 10, windowSeconds: 600 },
   verify_resend: { maxRequests: 3, windowSeconds: 900 }, // 3 resends per 15 minutes
   password_reset: { maxRequests: 5, windowSeconds: 900 }, // 5 reset requests per 15 minutes
+  client_error: { maxRequests: 20, windowSeconds: 600 }, // 20 browser error reports per 10 minutes
 };
 
 /**
@@ -53,6 +56,16 @@ export function checkRateLimit(
   if (entry.timestamps.length >= config.maxRequests) {
     const oldestTimestamp = entry.timestamps[0];
     const resetSeconds = Math.ceil((oldestTimestamp + config.windowSeconds * 1000 - now) / 1000);
+    logWarn("security.rate_limit.exceeded", `Rate limit hit for "${action}" from ${identifier}`, {
+      category: "security",
+      ip: identifier,
+      context: {
+        action,
+        maxRequests: config.maxRequests,
+        windowSeconds: config.windowSeconds,
+        resetSeconds: Math.max(1, resetSeconds),
+      },
+    });
     return {
       allowed: false,
       remaining: 0,
