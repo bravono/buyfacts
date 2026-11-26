@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { POST } from "../app/api/contact/route";
-import { resetRateLimits } from "../lib/security/rate-limiter";
+import { resetRateLimits, resetThrottleHealth } from "../lib/security/rate-limiter";
 import {
   CONTACT_SEQUENCE_SLUG,
   CONTACT_VERIFICATION_ERRORS,
@@ -67,7 +67,10 @@ const VALID_FORM = {
 };
 
 test("Contact API Security Suite", async (t) => {
-  t.beforeEach(() => resetRateLimits());
+  t.beforeEach(() => {
+    resetRateLimits();
+    resetThrottleHealth();
+  });
 
   await t.test("1. A verificationSessionId is required (missing, blank or non-string)", async () => {
     const { db } = fakeDb({});
@@ -122,35 +125,50 @@ test("Contact API Security Suite", async (t) => {
     });
   });
 
+  // Throttling is shared across instances, so a budget lives in the database and
+  // survives between runs: these cases use 203.0.114.x, which no other test fills.
+  // Throttling is shared across instances, so a budget lives in the database and
+  // survives between runs. Cases that are not about throttling still need a
+  // fresh address, or a spent budget from an earlier run answers 429 first.
+  const freshIp = () => `198.51.100.${Math.floor(Math.random() * 250) + 1}`;
+
   await t.test("6. The API rejects a submission without a session, even behind a proxy", async () => {
     // A proxy always adds X-Forwarded-For; it used to switch the Cubicon check off.
-    const res = await post(VALID_FORM, "203.0.113.10");
+    const res = await post(VALID_FORM, freshIp());
     assert.equal(res.status, 400);
     assert.equal((await res.json()).error, CONTACT_VERIFICATION_ERRORS.missing);
   });
 
   await t.test("7. The honeypot field rejects bots that fill it in", async () => {
-    const res = await post({ ...VALID_FORM, hp_website: "https://spam.example" }, "203.0.113.11");
+    const res = await post({ ...VALID_FORM, hp_website: "https://spam.example" }, freshIp());
     assert.equal(res.status, 400);
     assert.match((await res.json()).error, /Anti-automation check triggered/);
   });
 
   await t.test("8. Rate limiting: the 6th submission in 10 minutes from one IP gets 429", async () => {
+    // The budget lives in the database so every instance shares it, which also
+    // means it survives between runs. A fresh address per run keeps this case
+    // independent of any earlier execution.
+    const runIp = `198.51.100.${Math.floor(Math.random() * 250) + 1}`;
+
     for (let i = 0; i < 5; i++) {
-      const res = await post({ ...VALID_FORM, hp_website: "bot" }, "203.0.113.12");
+      const res = await post({ ...VALID_FORM, hp_website: "bot" }, runIp);
       assert.equal(res.status, 400, `request ${i + 1} is counted and rejected on its merits`);
     }
-    const limited = await post(VALID_FORM, "203.0.113.12");
+    const limited = await post(VALID_FORM, runIp);
     assert.equal(limited.status, 429);
     assert.ok(Number(limited.headers.get("Retry-After")) > 0, "Retry-After header is set");
-    const other = await post({ ...VALID_FORM, hp_website: "bot" }, "203.0.113.13");
-    assert.equal(other.status, 400, "another IP is not limited");
+    const other = await post({ ...VALID_FORM, hp_website: "bot" }, `${runIp}.other`);
+    assert.notEqual(other.status, 429, "another IP is not limited");
   });
 
   await t.test("9. The route has no verification bypass", () => {
     const route = fs.readFileSync(path.join(__dirname, "..", "app", "api", "contact", "route.ts"), "utf-8");
     assert.ok(!route.includes("isHoldPipelineTest"), "no test-only bypass");
     assert.ok(route.includes("verifyAndConsumeContactSession(body.verificationSessionId"));
-    assert.ok(route.includes('checkRateLimit(ip, "contact")'));
+    assert.ok(
+      route.includes('await checkRateLimitAsync(ip, "contact")'),
+      "throttling goes through the shared, multi-instance limiter"
+    );
   });
 });

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 import {
   deliverVerifiedInquiry,
   sendVerificationEmail,
@@ -206,7 +206,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const limitResult = checkRateLimit(ip, "verify_resend");
+    const limitResult = await checkRateLimitAsync(ip, "verify_resend");
 
     if (!limitResult.allowed) {
       return NextResponse.json(

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ContactInquirySchema } from "@/lib/validation/forms";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 import { sendVerificationEmail } from "@/lib/resend";
 import {
   SPENT_SESSION_RESULTS,
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   try {
     // 1. IP Rate Limiting (Section 13)
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(ip, "contact");
+    const rateLimit = await checkRateLimitAsync(ip, "contact");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {

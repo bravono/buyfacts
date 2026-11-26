@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/observability/logger";
 import { withRequestLogging } from "@/lib/observability/request";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 
 /**
  * Receives render/runtime errors from the browser (app/error.tsx and
@@ -9,7 +9,7 @@ import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
  */
 async function handler(request: Request): Promise<Response> {
   const ip = getClientIp(request);
-  const limit = checkRateLimit(ip, "client_error");
+  const limit = await checkRateLimitAsync(ip, "client_error");
   if (!limit.allowed) {
     return NextResponse.json(
       { success: false, error: "Too many error reports." },

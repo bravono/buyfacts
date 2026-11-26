@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendCubiconShareEmail } from "@/lib/resend";
 import { ShareSchema } from "@/lib/validation/forms";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 import { withRequestLogging } from "@/lib/observability/request";
 
 async function GETHandler() {
@@ -24,7 +24,7 @@ async function POSTHandler(request: Request) {
   try {
     // 1. IP Rate Limiting (Section 13)
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(ip, "share");
+    const rateLimit = await checkRateLimitAsync(ip, "share");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {

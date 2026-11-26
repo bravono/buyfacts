@@ -369,3 +369,17 @@ model GreatEightItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
+
+// Shared throttle counters (Section 13: distributed / multi-instance rate limiting).
+// One row per (key, window); the route handler increments it with a single
+// INSERT ... ON CONFLICT DO UPDATE, so every instance counts against one budget.
+model ThrottleCounter {
+  key           String   // "<namespace>:<action>:<identifier>"
+  windowStart   DateTime // fixed bucket start; identical on every instance
+  windowSeconds Int
+  count         Int      @default(0)
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+}

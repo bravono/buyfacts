@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { FeedbackSchema } from "@/lib/validation/forms";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 import { withRequestLogging } from "@/lib/observability/request";
 
 async function GETHandler(request: Request) {
@@ -51,7 +51,7 @@ async function POSTHandler(request: Request) {
   try {
     // 1. Rate Limiting (Section 13)
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(ip, "feedback");
+    const rateLimit = await checkRateLimitAsync(ip, "feedback");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
