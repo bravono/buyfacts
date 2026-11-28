@@ -793,7 +793,7 @@ Runs directly on the `/cubicon` viewport without navigating away:
 - **Non-Anonymous Feedback**: All feedback submissions mandate full name and valid email address.
 - **Anti-Abuse Protections**:
   - Hidden honeypot fields (`website`, `company_url`) across all public forms.
-  - Sliding-window in-memory IP rate limiter (`lib/security/rate-limiter.ts`) protecting form endpoints from bot flood attacks.
+  - Sliding-window IP rate limiter (`lib/security/rate-limiter.ts`) protecting form endpoints from bot flood attacks. The counter lives in PostgreSQL (`ThrottleCounter`), so every instance shares one budget — see section 11.7.
 
 ---
 
@@ -1382,3 +1382,75 @@ All assets stored in the MinIO object bucket maintain canonical database identit
   - The Coordinate Picker thumbnail strip loads compact 160px WebP thumbnails via `/api/cubicon/thumbnail?url=...&w=160` instead of downloading multi-megabyte full-resolution assets (such as 71MB PNGs) for thumbnail cards.
   - The thumbnail endpoint resizes images on the fly using `sharp`, validates host safety to prevent SSRF, and caches generated thumbnails on disk with long-term immutable cache headers (`Cache-Control: public, max-age=31536000, immutable`).
   - Selecting an image continues to assign the full-resolution `publicUrl` to the 3D model screen texture and 2D target coordinate surface.
+
+---
+
+## 11. Centralized Logging & Observability
+
+Every operational event the application emits — HTTP requests, email dispatch, storage operations, panel verification, rate-limit hits and unhandled errors — is recorded in one place and readable from one dashboard. Logging is self-hosted: events live in the project's own PostgreSQL database (`LogEvent` table) with no external observability vendor and no extra npm dependency.
+
+### 11.1 Two trails, two purposes
+| Trail | Table | Purpose |
+|---|---|---|
+| Security audit | `AuditLog` (`lib/auth/audit.ts` → `writeAudit()`) | Who did what: sign-ins, role changes, deletions. Unchanged by this work. |
+| Operational log | `LogEvent` (`lib/observability/logger.ts`) | What the system did: requests, latency, mail, storage, errors, client crashes. |
+
+### 11.2 Emitting an event
+```ts
+import { logError, logWarn, logInfo } from "@/lib/observability/logger";
+
+logError("contact.error", err, { category: "http", route: "/api/contact" });
+logWarn("security.rate_limit.exceeded", "Rate limit hit", { category: "security", ip });
+logInfo("mail.send.succeeded", "Verification email dispatched", { category: "mail" });
+```
+- **Levels**: `debug` → `info` → `warn` → `error` → `fatal`. Minimum level is `LOG_LEVEL` (`info` in production, `debug` otherwise).
+- **Categories**: `http`, `auth`, `db`, `mail`, `storage`, `panel`, `cubicon`, `security`, `system`.
+- **Naming**: dotted, `area.what_happened` (`http.request.end`, `mail.send.failed`, `system.client_error`).
+- **Never throws**: a logging failure falls back to `console` and never breaks the request it records.
+- **Never blocks**: writes go through a bounded in-process queue and are flushed in the background (`flushLogs()` awaits them, used by tests).
+- **Never stores secrets**: every row passes through `lib/observability/redact.ts` — passwords, tokens, `sig`, API keys, cookies and card fields become `[redacted]`; strings are truncated.
+
+### 11.3 Request correlation
+Routes are wrapped with `withRequestLogging` (`lib/observability/request.ts`):
+```ts
+export const POST = withRequestLogging(handler, { route: "/api/contact" });
+```
+Each request gets a request id (an inbound `x-request-id` is reused, otherwise a UUID), which is
+- echoed in the `x-request-id` response header,
+- attached to the `http.request.end` / `http.request.failed` / `http.request.error` event with method, route, status and duration,
+- available inside the handler via `currentRequestId()` and `requestLogContext()`, so mail/storage logs made during the request carry the same id,
+- returned to the caller as `requestId` when the handler throws (the wrapper answers with a JSON 500 instead of an unhandled crash).
+
+Numeric and UUID path segments are collapsed (`/api/admin/users/42` → `/api/admin/users/[id]`) so route latency groups correctly.
+
+### 11.4 What is instrumented
+- **HTTP**: routes wrapped with `withRequestLogging` (contact, cubicon-share, cubicon-feedback, cubicon-panel/validate, observability endpoints — extend the same way).
+- **Mail**: every `lib/resend.ts` dispatch site logs `mail.send.succeeded` / `mail.send.failed`.
+- **Rate limits**: `lib/security/rate-limiter.ts` logs `security.rate_limit.exceeded` with the IP, action and window.
+- **Browser crashes**: `app/error.tsx` and `app/global-error.tsx` post to `/api/observability/client-error` (rate-limited, redacted) → `system.client_error`.
+- **Process-level crashes**: `instrumentation.ts` records `system.unhandled_rejection`, `system.uncaught_exception` and `system.node_warning`. That file is compiled for both runtimes, so it stays Node-free and lazily imports `instrumentation.node.ts` (which holds the `process.on` listeners) only when `NEXT_RUNTIME === "nodejs"`.
+
+### 11.5 Reading the log
+`/admin` → **Observability** tab (super admin only), backed by `GET /api/admin/observability`:
+- requests, error rate and p50/p95 latency for the last 24 hours,
+- volume by level and category, clickable as filters,
+- per-route latency table (count, errors, p50/p95/p99, max); click a route to filter the feed,
+- the event feed with level, category, timestamp, route, status, duration, actor, IP, and expandable JSON context/stack,
+- auto-refresh (15s), text search (event, message, route, request id), CSV export and a purge button.
+
+`DELETE /api/admin/observability?purge=30d` applies the retention window (30 days is the default in the UI). Both endpoints require the `manage_super_admins` capability, matching `/api/admin/audit`.
+
+### 11.6 Tests
+`tests/observability-logging.test.ts` covers redaction, level filtering, row building, a failing sink never throwing, request-id reuse and propagation, 4xx/5xx classification, the 500-on-throw path, route-label normalisation and rate-limit events.
+
+### 11.7 Distributed / Multi-Instance Throttling
+
+Rate limits are shared by every instance through PostgreSQL, so running behind a load balancer with several app servers no longer multiplies the allowance.
+
+- **One counter row per (key, window)** in `ThrottleCounter` (`prisma/schema.prisma`): `key` = `<namespace>:<action>:<identifier>`, `windowStart` is the fixed window start, plus `count` and `windowSeconds`. `RATE_LIMIT_NAMESPACE` (default `buyfacts`) lets several deployments share a database.
+- **The window comes from the database clock.** `checkRateLimitAsync` asks `currentWindow()` for `to_timestamp(floor(epoch / windowSeconds) * windowSeconds)` — the one clock every instance agrees on — so clock skew between servers can never open a second budget mid-window.
+- **The decision is one atomic statement.** `INSERT … ON CONFLICT ("key","windowStart") DO UPDATE SET count = count + 1 WHERE count < max RETURNING count`. No row returned means over the limit; a row means the caller was counted, and its value gives `remaining`. PostgreSQL serialises contending instances on the primary key, so concurrent requests cannot overshoot.
+- **Never fails a request.** If the database cannot answer (or `ThrottleCounter` has not been migrated), the limiter logs `security.throttle.degraded`, falls back to the in-process store for that instance for 30 seconds, and reports `degraded: true` / `store: "memory"` on the result.
+- **Housekeeping.** Expired windows are pruned at most once an hour, by whichever instance gets there first (`security.throttle.pruned`).
+- **Calling it.** Route handlers use `await checkRateLimitAsync(ip, "contact")`. `checkRateLimit` remains as the synchronous single-process limiter for tests and non-async callers.
+- **Tests.** `tests/distributed-throttling.test.ts` simulates two instances sharing a fake store, fires 20 concurrent requests at a limit of 5 (exactly 5 pass), covers the outage path, and exercises the real PostgreSQL store (skipped when no database is reachable).

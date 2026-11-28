@@ -58,6 +58,37 @@ model AuditLog {
   @@index([actorEmail])
 }
 
+// Centralized operational log: every structured event the app emits (HTTP requests,
+// email dispatch, storage, panel verification, rate-limit hits, unhandled errors).
+// AuditLog above stays the security trail ("who did what"); LogEvent is telemetry.
+model LogEvent {
+  id           String   @id @default(uuid())
+  ts           DateTime @default(now())
+  level        String // "debug" | "info" | "warn" | "error" | "fatal"
+  category     String // "http" | "auth" | "db" | "mail" | "storage" | "panel" | "cubicon" | "security" | "system"
+  event        String // dotted name, e.g. "http.request.error", "mail.send.failed"
+  message      String?
+  requestId    String?
+  route        String?
+  method       String?
+  status       Int?
+  durationMs   Int?
+  actorEmail   String?
+  ip           String?
+  userAgent    String?
+  entityId     String? // session id, client id, record id the event is about
+  errorName    String?
+  errorMessage String?
+  stack        String?
+  context      String? // JSON string with extra redacted context
+
+  @@index([ts])
+  @@index([level, ts])
+  @@index([category, ts])
+  @@index([requestId])
+  @@index([route])
+}
+
 // 2. Contact Form (Main Page & Contact Us)
 model ContactInquiry {
   id         String   @id @default(uuid())
@@ -337,4 +368,18 @@ model GreatEightItem {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+}
+
+// Shared throttle counters (Section 13: distributed / multi-instance rate limiting).
+// One row per (key, window); the route handler increments it with a single
+// INSERT ... ON CONFLICT DO UPDATE, so every instance counts against one budget.
+model ThrottleCounter {
+  key           String   // "<namespace>:<action>:<identifier>"
+  windowStart   DateTime // fixed bucket start; identical on every instance
+  windowSeconds Int
+  count         Int      @default(0)
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@id([key, windowStart])
+  @@index([windowStart])
 }

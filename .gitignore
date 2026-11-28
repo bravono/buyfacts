@@ -55,3 +55,6 @@ next-env.d.ts
 
 # others
 subscribers.json
+
+# agent edit backups
+.abacusai-bot/

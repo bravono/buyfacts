@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { issueResetToken, RESET_TOKEN_TTL_MINUTES } from "@/lib/auth/reset-token";
 import { sendPasswordResetEmail } from "@/lib/resend";
 import { writeAudit } from "@/lib/auth/audit";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 
 /**
  * Always answers the same way, whether or not the address belongs to an account,
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const ip = getClientIp(request);
 
   try {
-    const limit = checkRateLimit(ip, "password_reset");
+    const limit = await checkRateLimitAsync(ip, "password_reset");
     if (!limit.allowed) {
       return NextResponse.json(
         {
