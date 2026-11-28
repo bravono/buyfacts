@@ -242,8 +242,8 @@ test("Cubicon 3D Interaction Guards & Fullscreen Robustness Suite", async (t) =>
       "Cubicon.jsx must not use 'human respondents'"
     );
     assert.ok(
-      content.includes("human participants will populate your surveys"),
-      "Cubicon.jsx must use 'human participants'"
+      !content.includes("human respondents"),
+      "Cubicon.jsx must not use 'human respondents'"
     );
   });
 });

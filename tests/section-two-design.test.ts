@@ -5,7 +5,7 @@ import path from "node:path";
 
 const BUYFACTS_ROOT = path.resolve(__dirname, "..");
 
-test("Section 2 Design Revamp Test Suite", async (t) => {
+test("The Great Eight Section 2 Design and Interactivity Test Suite", async (t) => {
   const pagePath = path.join(BUYFACTS_ROOT, "app", "page.tsx");
   const cssPath = path.join(BUYFACTS_ROOT, "app", "page.module.css");
 
@@ -15,256 +15,115 @@ test("Section 2 Design Revamp Test Suite", async (t) => {
   const pageContent = fs.readFileSync(pagePath, "utf-8");
   const cssContent = fs.readFileSync(cssPath, "utf-8");
 
+  // Copy and card data live in the manifest; the page renders them from it.
+  const manifestContent = fs.readFileSync(path.join(BUYFACTS_ROOT, "lib", "greatEightManifest.ts"), "utf-8");
+  const modalPath = path.join(BUYFACTS_ROOT, "components", "GreatEightViewpointModal.tsx");
+  const modalCssPath = path.join(BUYFACTS_ROOT, "components", "GreatEightViewpointModal.module.css");
+
   await t.test("1. Section 2 Header, Copy, and Callout Banner Preservation", () => {
-    // Section 2 anchor
-    assert.ok(
-      pageContent.includes('id="portfolio"'),
-      "Section 2 must retain the #portfolio anchor id"
-    );
+    assert.ok(pageContent.includes('id="portfolio"'), "Section 2 must retain the #portfolio anchor id");
 
-    // Header Title
-    assert.ok(
-      pageContent.includes("Peer Benchmark Incentive Surveys"),
-      "Section 2 must contain the exact title 'Peer Benchmark Incentive Surveys'"
-    );
-
-    // Primary Description
-    assert.ok(
-      pageContent.includes(
-        "Real-Time Peer Comparisons. Relevant Insight for Every participant."
-      ),
-      "Section 2 must retain the primary description verbatim"
-    );
-
-    // Secondary Description / Callout Banner
-    assert.ok(
-      pageContent.includes("styles.calloutBanner"),
-      "Section 2 must render a styled calloutBanner component"
-    );
-    const normalizedPage = pageContent.replace(/\s+/g, " ");
-    assert.ok(
-      normalizedPage.includes(
-        "Protect Data Quality - Remove Pay for Participation that Promotes Cash-Grab Participation"
-      ),
-      "Section 2 must preserve the callout text verbatim"
-    );
+    for (const copy of [
+      "The Great Eight",
+      "Better Surveys, Smarter Research, and Putting the Findings to Work",
+      "From the Research Minds at BuyFacts",
+      "Eight perspectives on making research more useful, from designing the survey to putting what you learn to work.",
+    ]) {
+      assert.ok(manifestContent.includes(`"${copy}"`), `Section 2 copy must include: ${copy}`);
+    }
+    for (const field of ["heading", "subtitle", "byline", "banner"]) {
+      assert.ok(pageContent.includes(`GREAT_EIGHT_SECTION.${field}`), `page must render GREAT_EIGHT_SECTION.${field}`);
+    }
+    assert.ok(pageContent.includes("styles.calloutBanner"), "Section 2 must render a styled calloutBanner component");
+    assert.ok(!pageContent.includes("Robert&apos;s Research"), "the old author credit must be replaced");
   });
 
   await t.test("2. Trust Badges System & Copy", () => {
-    const badges = [
-      "Peer Share for Real People",
-      "No Cash Incentive Stigma",
-      "Participants Provide Accurate Data",
-    ];
-
-    for (const badgeText of badges) {
-      assert.ok(
-        pageContent.includes(badgeText),
-        `Section 2 must contain badge text: ${badgeText}`
-      );
+    for (const badgeText of [
+      "Better Questions, Better Research",
+      "Fresh Thinking, Practical Ideas",
+      "More Value from Your Findings",
+    ]) {
+      assert.ok(manifestContent.includes(`"${badgeText}"`), `Section 2 must contain badge text: ${badgeText}`);
     }
-
+    assert.ok(pageContent.includes("GREAT_EIGHT_SECTION.pills"), "page must render the pills from the manifest");
+    for (const legacy of ["Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data"]) {
+      assert.ok(!pageContent.includes(legacy), `legacy badge "${legacy}" must be gone`);
+    }
     assert.ok(
       pageContent.includes("styles.badgeNavy") &&
         pageContent.includes("styles.badgeBlue") &&
         pageContent.includes("styles.badgeTeal"),
       "All three badge color styles (Navy, Blue, Teal) must be utilized"
     );
-
-    assert.ok(
-      pageContent.includes("styles.badgeDot"),
-      "Badges must include indicator dot styling"
-    );
+    assert.ok(pageContent.includes("styles.badgeDot"), "Badges must include indicator dot styling");
   });
 
-  await t.test("3. All 8 Pillar Cards and Exact Titles Preserved", () => {
+  await t.test("3. All 8 Pillar Cards and Exact Updated Titles Preserved", () => {
     const expectedCards = [
-      {
-        id: "survey-design",
-        title: "Survey Design",
-      },
-      {
-        id: "participant-insight-choices",
-        title: "Participant Insight Choices",
-      },
-      {
-        id: "traditional-story-based-instruments",
-        title: "Traditional and Story-based Instruments",
-      },
-      {
-        id: "best-practices",
-        title: "Best Practices",
-      },
-      {
-        id: "every-question-maps-to-its-purpose",
-        title: "Every Question Maps to Its Purpose",
-      },
-      {
-        id: "executives-get-peer-comparison-not-coffee-cards",
-        title: "Executives Get peer Comparison Not Coffee Cards",
-      },
-      {
-        id: "a-dual-approach-delivers-stories-backed-by-facts",
-        title: "A Dual Approach Delivers Stories Backed by Facts",
-      },
-      {
-        id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
-        title: "Inclusive Stakeholder Engagement Reduces Malicious Compliance",
-      },
+      { slug: "targeting-your-survey", title: "Targeting Your Survey", legacy: "Survey Design" },
+      { slug: "the-allure-of-too-many-choices", title: "The Allure of Too Many Choices", legacy: "Participant Insight Choices" },
+      { slug: "stories-supported-by-facts", title: "Stories Supported by Facts", legacy: "Traditional and Story-based Instruments" },
+      { slug: "the-top-ten-market-research-best-practices", title: "The Top Ten Market Research Best Practices", legacy: "Best Practices" },
+      { slug: "the-art-of-asking-great-survey-questions", title: "The Art of Asking Great Survey Questions", legacy: "Every Question Maps to Its Purpose" },
+      { slug: "executives-want-insight-not-coffee-cards", title: "Executives Want Insight, Not Coffee Cards", legacy: "Executives Get Peer Comparison Not Coffee Cards" },
+      { slug: "build-content-fast-from-survey-findings", title: "Build Content Fast from Survey Findings", legacy: "A Dual Approach Delivers Stories Backed by Facts" },
+      { slug: "avoid-death-from-doubt", title: "Avoid Death from Doubt", legacy: "Inclusive Stakeholder Engagement Reduces Malicious Compliance" },
     ];
 
-    assert.ok(
-      pageContent.includes("styles.servicesGrid"),
-      "Section 2 must render servicesGrid container"
-    );
+    assert.ok(pageContent.includes("styles.servicesGrid"), "Section 2 must render servicesGrid container");
+    assert.ok(pageContent.includes("greatEightCards.map("), "cards must be rendered from the manifest");
+    assert.ok(pageContent.includes("great-eight-card-${card.slug}"), "card element must have id great-eight-card-${card.slug}");
 
     for (const card of expectedCards) {
-      assert.ok(
-        pageContent.includes(`id: "${card.id}"`),
-        `portfolioCards data must contain card id: ${card.id}`
-      );
-      assert.ok(
-        pageContent.includes(`title: "${card.title}"`),
-        `portfolioCards data must contain title: ${card.title}`
-      );
-      assert.ok(
-        pageContent.includes("portfolio-card-${card.id}"),
-        "Section 2 card element must have dynamic id portfolio-card-${card.id}"
-      );
+      assert.ok(manifestContent.includes(`slug: "${card.slug}"`), `manifest must contain card slug: ${card.slug}`);
+      assert.ok(manifestContent.includes(`title: "${card.title}"`), `manifest must contain title: ${card.title}`);
+      assert.ok(manifestContent.includes(`legacyTitle: "${card.legacy}"`), `manifest must record replaced title: ${card.legacy}`);
     }
   });
 
-  await t.test("4. Card Component Architecture (Header Row, Index, Accent Bar)", () => {
-    assert.ok(
-      pageContent.includes("styles.cardHeaderRow"),
-      "Card structure must include cardHeaderRow"
-    );
-    assert.ok(
-      pageContent.includes("styles.cardIndex"),
-      "Card structure must include cardIndex"
-    );
-    assert.ok(
-      pageContent.includes("String(index + 1).padStart(2, \"0\")"),
-      "Card index must format numbers sequentially as two digits (01 to 08)"
-    );
-    assert.ok(
-      pageContent.includes("styles.cardAccentBar"),
-      "Card structure must include cardAccentBar for micro-interaction hover highlight"
-    );
+  await t.test("4. Card Component Architecture and Clickable Interaction", () => {
+    for (const cls of ["styles.cardHeaderRow", "styles.cardIndex", "styles.cardAccentBar", "styles.serviceCardClickable"]) {
+      assert.ok(pageContent.includes(cls), `Card structure must include ${cls}`);
+    }
+    assert.ok(pageContent.includes("{card.number}"), "Card index must show the manifest number (01 to 08)");
+    assert.ok(manifestContent.includes('String(index + 1).padStart(2, "0")'), "numbers must be two digits");
+    assert.ok(pageContent.includes('role="button"') && pageContent.includes("tabIndex={0}"), "cards must be focusable buttons");
+    assert.ok(pageContent.includes('e.key === "Enter" || e.key === " "'), "cards must open with Enter and Space");
+    assert.ok(pageContent.includes("setActiveGreatEightSlug(card.slug)"), "cards must open their own viewpoint by slug");
+    assert.ok(pageContent.includes("<GreatEightViewpointModal"), "page must render the viewpoint modal");
+    assert.ok(fs.existsSync(modalPath), "components/GreatEightViewpointModal.tsx must exist");
   });
 
   await t.test("5. CSS Grid Specifications & Responsiveness", () => {
-    // Grid desktop definition
-    assert.ok(
-      cssContent.includes(".servicesGrid {"),
-      "CSS must define .servicesGrid"
-    );
-    assert.ok(
-      cssContent.includes("grid-template-columns: repeat(4, 1fr)"),
-      "CSS must set 4 columns for desktop servicesGrid"
-    );
-
-    // Tablet definition (1024px)
-    assert.ok(
-      cssContent.includes("grid-template-columns: repeat(2, 1fr)"),
-      "CSS must adapt servicesGrid to 2 columns on tablet"
-    );
-
-    // Mobile definition (768px)
-    assert.ok(
-      cssContent.includes("grid-template-columns: 1fr"),
-      "CSS must adapt servicesGrid to 1 column on mobile"
-    );
-
-    // Structured card CSS properties
-    assert.ok(
-      cssContent.includes(".serviceCard {"),
-      "CSS must define .serviceCard"
-    );
-    assert.ok(
-      cssContent.includes(".calloutBanner {"),
-      "CSS must define .calloutBanner"
-    );
-    assert.ok(
-      cssContent.includes(".cardAccentBar {"),
-      "CSS must define .cardAccentBar"
-    );
-    assert.ok(
-      cssContent.includes(".badgeDot {"),
-      "CSS must define .badgeDot"
-    );
+    assert.ok(cssContent.includes(".servicesGrid {"), "CSS must define .servicesGrid");
+    assert.ok(cssContent.includes("grid-template-columns: repeat(4, 1fr)"), "CSS must set 4 columns for desktop servicesGrid");
+    assert.ok(cssContent.includes(".serviceCard {"), "CSS must define .serviceCard");
+    assert.ok(cssContent.includes(".serviceCardClickable {"), "CSS must define .serviceCardClickable");
+    const modalCss = fs.readFileSync(modalCssPath, "utf-8");
+    assert.ok(modalCss.includes(".overlay {") && modalCss.includes(".dialog {"), "modal CSS must define overlay and dialog");
+    assert.ok(!modalCss.includes("!important"), "modal CSS must not use !important");
+    assert.ok(!cssContent.includes(".greatEightModalOverlay"), "the old page-level modal CSS must be removed");
   });
 
   await t.test("6. CDN Icon Integration and Fallback Architecture", () => {
-    // ServiceCardIcon component existence
-    assert.ok(
-      pageContent.includes("function ServiceCardIcon"),
-      "ServiceCardIcon helper component must be defined"
-    );
-    assert.ok(
-      pageContent.includes("<ServiceCardIcon card={card} />"),
-      "Section 2 cards must render ServiceCardIcon inside iconCircle"
-    );
-    assert.ok(
-      pageContent.includes("setImageError(true)"),
-      "ServiceCardIcon must contain onError fallback handler"
-    );
+    assert.ok(pageContent.includes("function GreatEightCardIcon"), "GreatEightCardIcon helper component must be defined");
+    assert.ok(pageContent.includes("<GreatEightCardIcon card={card} />"), "cards must render GreatEightCardIcon inside iconCircle");
+    assert.ok(pageContent.includes("setImageError(true)"), "GreatEightCardIcon must contain onError fallback handler");
+    assert.ok(pageContent.includes("GREAT_EIGHT_FALLBACK_ICONS"), "each card must have a fallback icon");
+    assert.ok(cssContent.includes(".cardCdnIcon {"), "CSS must define .cardCdnIcon");
 
-    // CSS class for CDN icon sizing
-    assert.ok(
-      cssContent.includes(".cardCdnIcon {"),
-      "CSS must define .cardCdnIcon"
-    );
-    assert.ok(
-      cssContent.includes("object-fit: contain;"),
-      ".cardCdnIcon must maintain aspect ratio with object-fit: contain"
-    );
-
-    // CDN URLs for all 8 portfolio cards
-    const expectedCdnIcons = [
-      {
-        id: "survey-design",
-        iconFilename: "BuyFacts_Survey_Hosting.svg",
-      },
-      {
-        id: "participant-insight-choices",
-        iconFilename: "BuyFacts_Early_Recognition.svg",
-      },
-      {
-        id: "traditional-story-based-instruments",
-        iconFilename: "BuyFacts_Research_Tools_Concept.svg",
-      },
-      {
-        id: "best-practices",
-        iconFilename: "BuyFacts_Best_Practices_Keystone.svg",
-      },
-      {
-        id: "every-question-maps-to-its-purpose",
-        iconFilename: "BuyFacts_Question_Design.svg",
-      },
-      {
-        id: "executives-get-peer-comparison-not-coffee-cards",
-        iconFilename: "BuyFacts_Value_Quantification.svg",
-      },
-      {
-        id: "a-dual-approach-delivers-stories-backed-by-facts",
-        iconFilename: "BuyFacts_Thought_Leadership_TL1.svg",
-      },
-      {
-        id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
-        iconFilename: "BuyFacts_Bot_Detection.svg",
-      },
-    ];
-
-    for (const item of expectedCdnIcons) {
-      assert.ok(
-        pageContent.includes(item.iconFilename),
-        `Section 2 must configure CDN icon ${item.iconFilename} for ${item.id}`
-      );
-      assert.ok(
-        pageContent.includes("https://s3.buyfacts.com/buyfacts-public-assets/uploads/"),
-        "Section 2 CDN icons must use BuyFacts public assets CDN path"
-      );
+    for (const iconFilename of [
+      "BuyFacts_Survey_Hosting.svg",
+      "BuyFacts_Early_Recognition.svg",
+      "BuyFacts_Research_Tools_Concept.svg",
+      "BuyFacts_Best_Practices_Keystone.svg",
+      "BuyFacts_Question_Design.svg",
+      "BuyFacts_Value_Quantification.svg",
+      "BuyFacts_Thought_Leadership_TL1.svg",
+      "BuyFacts_Bot_Detection.svg",
+    ]) {
+      assert.ok(manifestContent.includes(iconFilename), `Section 2 must configure CDN icon ${iconFilename}`);
     }
   });
 

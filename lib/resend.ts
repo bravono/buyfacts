@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logError, logInfo } from "@/lib/observability/logger";
 
 /**
  * Lazy initialization of Resend client
@@ -124,11 +125,14 @@ export async function sendContactEmails(data: ContactSubmissionData) {
     }
 
     const [userRes, adminRes] = await Promise.allSettled([userEmailPromise, adminEmailPromise]);
-    console.log("[Resend] Contact emails result:", { userRes, adminRes });
+    logInfo("mail.send.succeeded", "Contact notification emails dispatched", {
+      category: "mail",
+      context: { userRes, adminRes },
+    });
 
     return { userRes, adminRes };
   } catch (error) {
-    console.error("[Resend] Error sending contact emails:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending contact emails" } });
     return null;
   }
 }
@@ -231,11 +235,14 @@ export async function sendCubiconRegistrationEmails(data: CubiconRegistrationDat
     }
 
     const [userRes, adminRes] = await Promise.allSettled([userEmailPromise, adminEmailPromise]);
-    console.log("[Resend] Cubicon registration emails result:", { userRes, adminRes });
+    logInfo("mail.send.succeeded", "Cubicon registration emails dispatched", {
+      category: "mail",
+      context: { userRes, adminRes },
+    });
 
     return { userRes, adminRes };
   } catch (error) {
-    console.error("[Resend] Error sending Cubicon registration emails:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending Cubicon registration emails" } });
     return null;
   }
 }
@@ -311,10 +318,10 @@ export async function sendPaymentReceiptEmail(data: PaymentReceiptData) {
       `,
     });
 
-    console.log("[Resend] Payment receipt email sent to", email, emailRes);
+    logInfo("mail.send.succeeded", "Payment receipt email dispatched", { category: "mail", context: { email } });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending payment receipt email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending payment receipt email" } });
     return null;
   }
 }
@@ -395,10 +402,13 @@ export async function sendCubiconShareEmail(data: CubiconShareData) {
       `,
     });
 
-    console.log("[Resend] Cubicon share invitation sent to", receiverEmail, emailRes);
+    logInfo("mail.send.succeeded", "Cubicon share invitation dispatched", {
+      category: "mail",
+      context: { email: receiverEmail },
+    });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending Cubicon share email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending Cubicon share email" } });
     return null;
   }
 }
@@ -486,10 +496,10 @@ export async function sendVerificationEmail(data: {
       `,
     });
 
-    console.log("[Resend] Verification email dispatched to", email);
+    logInfo("mail.send.succeeded", "Verification email dispatched", { category: "mail", context: { email } });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending verification email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending verification email" } });
     return null;
   }
 }
@@ -568,7 +578,7 @@ export async function sendVerificationReminderEmail(data: {
 
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error sending reminder email:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending reminder email" } });
     return null;
   }
 }
@@ -612,10 +622,13 @@ export async function deliverVerifiedInquiry(data: {
       `,
     });
 
-    console.log("[Resend] Verified inquiry delivered to internal staff mailbox:", staffEmail);
+    logInfo("mail.send.succeeded", "Verified inquiry delivered to internal staff mailbox", {
+      category: "mail",
+      context: { email: staffEmail },
+    });
     return emailRes;
   } catch (error) {
-    console.error("[Resend] Error delivering verified inquiry:", error);
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error delivering verified inquiry" } });
     return null;
   }
 }
@@ -637,6 +650,153 @@ export async function sendTestEmail(toEmail: string) {
       </div>
     `,
   });
+}
+
+/**
+ * Password Reset Email (admin portal)
+ * Sends a single-use, time-limited link to set a new admin password.
+ */
+export async function sendPasswordResetEmail(data: {
+  email: string;
+  name?: string | null;
+  token: string;
+  expiresInMinutes: number;
+}) {
+  const resend = getResendClient();
+  const { email, name, token, expiresInMinutes } = data;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://buyfacts.com";
+  const resetUrl = `${baseUrl}/admin?reset=${encodeURIComponent(token)}`;
+  const safeName = escapeHtml(name || "there");
+
+  const emailRes = await resend.emails.send({
+    from: DEFAULT_FROM_EMAIL,
+    to: [email],
+    subject: "Reset your BuyFacts admin password",
+    html: `
+      <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #0f172a;">
+        <h2 style="margin: 0 0 16px; font-size: 20px;">Reset your admin password</h2>
+        <p style="margin: 0 0 16px; line-height: 1.6;">Hi ${safeName},</p>
+        <p style="margin: 0 0 24px; line-height: 1.6;">
+          A password reset was requested for your BuyFacts administrator account.
+          This link can be used once and expires in ${expiresInMinutes} minutes.
+        </p>
+        <p style="margin: 0 0 24px;">
+          <a href="${resetUrl}" style="display: inline-block; background: #0f172a; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">Set a new password</a>
+        </p>
+        <p style="margin: 0 0 8px; font-size: 13px; color: #475569; line-height: 1.6;">
+          If the button does not work, copy this address into your browser:<br />
+          <span style="word-break: break-all;">${resetUrl}</span>
+        </p>
+        <p style="margin: 24px 0 0; font-size: 13px; color: #64748b; line-height: 1.6;">
+          Did not request this? Ignore this email — your password stays unchanged. If you receive several
+          of these unexpectedly, tell your super admin.
+        </p>
+      </div>
+    `,
+  });
+
+  return emailRes;
+}
+
+/**
+ * Send founding client onboarding email with their Client ID and integration guide.
+ */
+export async function sendClientOnboardingEmail(data: {
+  clientId: string;
+  name: string;
+  email: string;
+  company?: string;
+}) {
+  try {
+    const resend = getResendClient();
+    const { clientId, name, email, company } = data;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://buyfacts.com";
+
+    const emailRes = await resend.emails.send({
+      from: DEFAULT_FROM_EMAIL,
+      to: [email],
+      subject: "Welcome to the Qubicorn Panel — Your Client ID is Inside",
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Qubicorn Panel — Client Onboarding</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0d1117; color: #e6edf3; margin: 0; padding: 24px;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden;">
+              <tr>
+                <td style="padding: 32px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #8b5cf6;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">BuyFacts&reg; Qubicorn</h1>
+                  <p style="margin: 4px 0 0 0; color: #a78bfa; font-size: 14px;">Founding Client Panel — Onboarding</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 32px;">
+                  <h2 style="margin: 0 0 16px 0; color: #f8fafc; font-size: 20px;">Welcome, ${escapeHtml(name)}!</h2>
+                  <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                    Your payment has been confirmed and your Qubicorn Founding Client panel access is now active${company ? ` for <strong>${escapeHtml(company)}</strong>` : ""}.
+                  </p>
+
+                  <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Your Client ID</p>
+                  <div style="background-color: #0d1117; border: 2px solid #8b5cf6; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 28px; font-weight: 700; color: #a78bfa; letter-spacing: 4px;">${escapeHtml(clientId)}</span>
+                  </div>
+
+                  <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 14px; font-weight: 600;">How to send respondents to Qubicorn</p>
+                  <p style="margin: 0 0 16px 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+                    When directing a respondent from your survey platform to Qubicorn, construct a URL with these three query parameters:
+                  </p>
+                  <div style="background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 24px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #38bdf8; word-break: break-all;">
+                    ${escapeHtml(baseUrl)}/cubicon?clientId=${escapeHtml(clientId)}&amp;respondentId={RESPONDENT_ID}&amp;callbackUrl={YOUR_REDIRECT_URL}
+                  </div>
+
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+                    <tr>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #21262d; color: #a78bfa; font-size: 13px; font-weight: 600; width: 160px;">clientId</td>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #21262d; color: #cbd5e1; font-size: 13px;">Your unique panel identifier — always <strong>${escapeHtml(clientId)}</strong></td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #21262d; color: #a78bfa; font-size: 13px; font-weight: 600;">respondentId</td>
+                      <td style="padding: 8px 0; border-bottom: 1px solid #21262d; color: #cbd5e1; font-size: 13px;">An 8-digit numeric identifier you assign to each respondent in your system</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #a78bfa; font-size: 13px; font-weight: 600;">callbackUrl</td>
+                      <td style="padding: 8px 0; color: #cbd5e1; font-size: 13px;">The URL we redirect the respondent to after the puzzle completes, with their result appended</td>
+                    </tr>
+                  </table>
+
+                  <p style="margin: 0 0 16px 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+                    After the respondent completes the Qubicorn puzzle, they will be redirected to your <code style="background:#0d1117; padding:2px 6px; border-radius:4px; font-size:13px; color:#38bdf8;">callbackUrl</code> with these parameters appended:
+                  </p>
+                  <div style="background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 24px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #38bdf8; word-break: break-all;">
+                    {callbackUrl}?respondentId={ID}&amp;result=pass&amp;ts={timestamp}&amp;sig={hmac_signature}
+                  </div>
+
+                  <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0 0 8px 0; color: #f8fafc; font-size: 14px; font-weight: 600;">Expect a call from us</p>
+                    <p style="margin: 0; color: #94a3b8; font-size: 13px; line-height: 1.6;">Our team will be reaching out shortly to welcome you personally, answer any questions, and walk you through integration with your specific survey platform.</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 20px 32px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center; color: #64748b; font-size: 12px;">
+                  &copy; ${new Date().getFullYear()} BuyFacts, Inc. All rights reserved. &bull; Keep your Client ID confidential.
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    logInfo("mail.send.succeeded", "Client onboarding email dispatched", { category: "mail", context: { email } });
+    return emailRes;
+  } catch (error) {
+    logError("mail.send.failed", error, { category: "mail", context: { op: "Error sending client onboarding email" } });
+    return null;
+  }
 }
 
 function escapeHtml(str: string): string {

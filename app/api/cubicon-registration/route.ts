@@ -3,14 +3,14 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/resend";
 import { FoundingClientSchema } from "@/lib/validation/forms";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
 import { evaluateSequencePass } from "@/app/api/cubicon-data/route";
 
 export async function POST(request: Request) {
   try {
     // 1. IP Rate Limiting (Section 13)
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(ip, "founding_client");
+    const rateLimit = await checkRateLimitAsync(ip, "founding_client");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -75,9 +75,12 @@ export async function POST(request: Request) {
         );
       }
 
-      const totalTasks = await prisma.cubiconTask.count({
-        where: { sequenceId: session.sequenceId },
-      });
+      const totalTasks =
+        session.totalPuzzlesAttempted > 0
+          ? session.totalPuzzlesAttempted
+          : await prisma.cubiconTask.count({
+              where: { sequenceId: session.sequenceId, isFinal: false },
+            });
 
       const threshold = session.sequence?.passThreshold ?? 0.6;
       const passed = evaluateSequencePass(

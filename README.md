@@ -229,6 +229,43 @@ Executes data retention policy. Call with `?purge=30d` to remove feedback record
 
 ---
 
+### Cubicon Panel System & Client Identification Architecture
+
+The Cubicon Panel infrastructure enables founding clients who complete the \$100 fee to integrate Cubicon as an external human-verification gate within their survey pipelines.
+
+#### 1. Client ID Issuance (`POST /api/payments/capture-venmo-order`)
+- **Trigger**: Upon successful capture of the \$100 founding client payment.
+- **Client ID Generation**: Issues a unique, cryptographically random identifier in `BF-XXXXXXXX` format (8 uppercase alphanumeric characters).
+- **Persistence**: Creates or updates a `FoundingClient` record in PostgreSQL with `paymentStatus = "paid"`, `isActive = true`, and links it to `CubiconRegistration`.
+- **Onboarding Delivery**: Automatically dispatches a dedicated onboarding email (`sendClientOnboardingEmail`) detailing the client's `clientId`, integration URL structure, parameter definitions, and callback signature verification guidelines.
+
+#### 2. Panel Entry Gateway & Validation (`GET /api/cubicon-panel/validate`)
+When respondents arrive at `/cubicon`, the application inspects the query string:
+- **Trial Mode vs Panel Mode**:
+  - **Trial Users**: If neither `clientId` nor `respondentId` are present in the URL, the user is treated as a trial explorer. They can play the 3D puzzle freely without submitting IDs.
+  - **Panel Respondents**: If `clientId` or `respondentId` is present, both are strictly required alongside a `callbackUrl`.
+- **Rejection Conditions**: A respondent is rejected and presented with an Access Rejected screen if:
+  - Either `clientId` or `respondentId` is missing.
+  - `callbackUrl` is missing or not a valid HTTP/HTTPS URL.
+  - `clientId` format does not match `BF-XXXXXXXX`.
+  - `respondentId` does not match the 8-digit numeric requirement.
+  - The client record does not exist, is not marked `isActive: true`, or `paymentStatus !== "paid"`.
+  - The client has configured `allowedCallbackDomains` and the `callbackUrl` domain does not match the approved list.
+- **Auto-Launch**: When credentials pass validation, the Cubicon 3D solver launches immediately in fullscreen mode without presenting the client registration form.
+
+#### 3. Panel Completion & Cryptographic Redirect (`POST /api/cubicon-panel/complete`)
+Once the respondent finishes the puzzle tasks:
+- **Evaluation**: The backend evaluates task attempts against sequence threshold and calculates a definitive `pass` or `fail` result.
+- **Session Tagging**: Stamps the `CubiconSession` with `sessionMode = "panel"`, `clientId`, `respondentId`, and `previousResult = "panel_pass"` or `"panel_fail"`.
+- **HMAC-SHA256 Signing**: Computes an HMAC signature over `${respondentId}|${result}|${timestamp}` using `PANEL_HMAC_SECRET` to prevent tampering or spoofing by respondents seeking rewards.
+- **Redirect Construction**: Redirects the respondent's browser to the client's `callbackUrl` with appended query parameters:
+  ```
+  {callbackUrl}?respondentId={8_DIGIT_ID}&result=pass|fail&ts={UNIX_TIMESTAMP}&sig={HMAC_SIGNATURE}
+  ```
+- **Verification Utility**: Clients can verify the authenticity of incoming results using `verifyPanelResult` or standard HMAC-SHA256 libraries on their own server.
+
+---
+
 ### User Feedback Feature & Post-Puzzle Completion Actions
 
 #### `/feedback` (Frontend Route)
@@ -268,8 +305,71 @@ The database schema is standardized on PascalCase table names (matching Prisma m
 - **`CubiconRegistration`**: Founding client registration submissions (`id`, `firstName`, `lastName`, `email`, `phone`, `company`, `role`, `interest`, `notes`, `isUsBased`, `status`, `createdAt`, `updatedAt`).
 - **`CubiconShare`**: Invitation records (`id`, `senderName`, `senderEmail`, `receiverName`, `receiverEmail`, `sharePlatform`, `shareUrl`, `sessionId`, `status`, `createdAt`).
 - **`FeedbackSubmission`**: User star ratings and feedback commentary (`id`, `userId`, `userEmail`, `sessionId`, `feedbackText`, `rating`, `createdAt`).
-- **`ResearchLibSurvey`**: Research library survey definitions linked to `userId` (`id`, `userId`, `title`, `description`, `category`, `status`, `createdAt`, `updatedAt`).
-- **`ResearchLibResponse`**: Research survey responses linked to `surveyId` and `userId` (`id`, `surveyId`, `userId`, `answers`, `completed`, `submittedAt`).
+- **`ResearchLibSurvey`**: Research library narrative survey top-level configuration (`id`, `userId`, `title`, `timeCounter`, `pauseDuration`, `durationInMin`, `combo`, `tasks`, `createdAt`). Configured with the canonical 6-task AI Marketing Directional Measurement survey.
+- **`ResearchLibTask`**: Research library individual survey task items linked to `ResearchLibSurvey` (`id`, `surveyId`, `taskIndex`, `heading`, `instruction`, `widget`, `question`, `story`, `blanks`, `isFollowup`, `createdAt`). Intermediate tasks have `isFollowup = 1` (`true`); the final task has `isFollowup = 0` (`false`).
+- **`ResearchLibResponse`**: Participant narrative survey responses and choices (`id`, `userId`, `surveyId`, `answers`, `story`, `createdAt`).
+- **`ResearchLibTimer`**: Session and pause timer state per user.
+- **`ResearchLibElement`**: Interactive UI element positions and state.
+- **`ResearchLibAppState`**: Application runtime recording and participant state.
+
+### ResearchLib & Narrative Survey Platform
+
+The embedded Narrative app (`/research-lib` iframe wrapper pointing to `/narrative-app/index.html`) and the standalone repository (`../narrative`) use a unified survey and task architecture:
+
+- **Top-Level Survey Elements**:
+  - **Time Direction** (`timeCounter`): `down`, `up`
+  - **Pause Duration** (`pauseDuration`): default `3` minutes
+  - **Duration** (`durationInMin`): default `30` minutes
+  - **Combination Rule** (`combo`): Approved modes include `narWid`, `tradWid`, `narList`, `tradList`
+
+- **Task-Level Elements**:
+  - **Heading** & **Instruction**: Task-specific headers and directions
+  - **Widget Type** (`widget`): Approved widgets include `triad`, `bar`, `ring`, `barrel`
+  - **Question / Story Chunk** (`story` / `question`): Segment of the progressive story containing fill-in-the-blank markers
+  - **Blanks & Choices** (`blanks`): JSON array of choices with approved **QuestionType** values:
+    `scale`, `multipleChoice`, `checkbox`, `rank`, `singleChoice`, `radio`, `number`, `text`, `ring`, `rate`, `slider`, `triad`
+  - **Follow-up Rule** (`isFollowup`): intermediate tasks have `isFollowup = 1` (`true`), while the **final task** has `isFollowup = 0` (`false`) to trigger completion.
+
+The canonical 6-part sequential survey:
+
+1. **Question 1 (Blank a)**: *Organizational Function* - Triad with choices `Marketing`, `Sales`, `Operations`.
+2. **Question 2 (Blank b)**: *AI Adoption Rate* - Triad with choices `Slow`, `Moderate`, `Rapid`.
+3. **Question 3 (Blank c)**: *AI Momentum* - Triad with choices `Hidden Momentum (Internal Work and Programs)`, `Visible Momentum (With Other Functions/Customers)`, `Network Momentum (In the Market)`.
+4. **Question 4 (Blank d)**: *External AI Commitment* - Triad with choices `No Commitment`, `Some Promise`, `Strong Commitment`.
+5. **Question 5 (Blank e)**: *Leadership Dialogue* - Triad with choices `Never Spoke`, `Had Spoken`, `Often Spoke`.
+6. **Question 6 (Blank f)**: *Primary Success Factor* - Triad with choices `The People`, `The Way They Work`, `Leadership`.
+
+Completion Screen: Directs respondent to directional measurement conclusion with action options for results download (SEND IT), peer comparison (SEND IT), user feedback (ASK ME), and session exit (EXIT).
+
+- **Bundling & Synchronization Script**: `npm run embed-research-lib` builds the standalone app in `../narrative` and bundles output into `public/narrative-app/`.
+- **Database Seeding Script**: `npx tsx scripts/seed-research-lib-survey.ts` ensures all three database targets (PostgreSQL, BuyFacts SQLite `prisma/dev.db`, and Standalone `narrative.db`) are seeded synchronously.
+
+### TRIAD Interactive Platform & Sentiment Engine
+
+The embedded TRIAD application (`/triad` iframe viewer pointing to `/triad-app/index.html`) and the standalone repository (`C:\Users\USER\TRIAD`) provide a multi-role educational reflection and sentiment discovery platform:
+
+- **Core Capabilities**:
+  - **Role Discovery Portal**: Tailored pathways for Students, Parents, Educators, and Admins (`#/`).
+  - **20-Question Assessment**: Authoritative PLES-based Know Your Major assessment bank with discrete corner scoring and barycentric coordinates (`#/triad`).
+  - **3-Axis Major Matcher Quick Quiz**: Nuanced trade-off questioning revealing emerging directional patterns (`#/quiz`).
+  - **Major Browser & Comparison Dock**: Search, filter, and compare academic and career pathways side-by-side (`#/browse`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-triad` builds `C:\Users\USER\TRIAD` with normalized relative asset paths and hash routing, then syncs the distribution bundle into `public/triad-app/`.
+- **Unified Tool Bundler**: `npm run embed-tools` builds and syncs all four tools (Cubicon, ResearchLib, TRIAD, and Rule of Three) in sequence.
+
+### Rule of Three (R3) Platform & Decision Engine
+
+The embedded Rule of Three application (`/rule-of-three` iframe viewer pointing to `/rule-of-three-app/index.html` or alias `/r3`) and the standalone repository (`C:\Users\USER\R3`) provide an active surveying, push marketing evaluation, and strategic synthesis engine:
+
+- **Core Capabilities**:
+  - **Welcome & Framework Introduction**: Overview of decision rules and research orientation (`/welcome`).
+  - **Active Survey Execution**: Interactive respondent querying with adaptive feedback (`/activemode`).
+  - **Push Marketing Resonance**: Outbound campaign message evaluation and verification (`/push-marketing`).
+  - **Social Media Sentiment**: Multi-channel social feed testing and response tracking (`/social-media`).
+  - **Top-Level Strategic Summary**: Executive vector synthesis and decision-ready recommendations (`/top-level`).
+- **Interactive Viewer Controls**: Includes responsive container, route tabs, session reset (`RotateCcw`), external tab launcher (`ExternalLink`), and full-viewport overlay mode (`Maximize2` / `Minimize2` / `Escape`).
+- **Bundling & Synchronization Script**: `npm run embed-r3` builds `C:\Users\USER\R3` with base path `/rule-of-three-app/` and syncs the distribution bundle into `public/rule-of-three-app/`.
+- **Sub-Path URL Rewriting**: Catch-all rewrites in `next.config.ts` (`/rule-of-three-app/:path*` -> `/rule-of-three-app/index.html`) enable seamless internal routing with Vite's `BrowserRouter`.
 
 ### Sequence & Admin Endpoints
 - `GET /api/admin/sequences`: Authenticated endpoint returning all configured sequences with task definitions and usage counts.
@@ -307,7 +407,7 @@ npm run dev
 Open [http://localhost:3000/cubicon/analytics](http://localhost:3000/cubicon/analytics) in your browser to view the Executive Analytics Dashboard.
 
 ### Database Seeding & Replacement Behavior
-The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks, the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
+The standard development seed script (`npm run seed` or `npx tsx prisma/seed.ts`) is designed to replace existing records cleanly rather than appending on top of them. Prior to inserting the canonical admin users, 18 dashboard buttons (9 Products & Services, 9 Research Imperatives), media assets, and 3D Cubicon sequences/tasks (12 tasks across 3 sequences), the script clears prior entries in those tables to avoid duplicate rows or orphaned records.
 
 ### Production Seeding (User and DashboardButton Only)
 For staging or production environments where destructive table resets and placeholder media/vault assets are not desired, use the non-destructive production seed script:
@@ -317,7 +417,7 @@ npm run seed:prod
 npx tsx prisma/seed-prod.ts
 ```
 This script executes upsert operations strictly on:
-1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback `AdminPass123!`.
+1. **User table**: Upserts the authorized administrator accounts (`rmj@robertjohnson.com` and `ahbideeny@gmail.com`) using `DEFAULT_ADMIN_PASSWORD` or fallback.
 2. **DashboardButton table**: Upserts the 18 canonical dashboard buttons (9 Products & Services, 9 Research Imperatives).
 
 It performs no `deleteMany()` calls and does not insert dummy `MediaAsset` or `VaultAsset` records.
@@ -355,7 +455,7 @@ Located within the About section (`id="about"`) on the homepage, the "What Sets 
 - **Zero-Emoji Compliance**: Adheres to strict corporate design and zero-emoji standards across all UI layers and metadata.
 
 ### Dashboard & Media Player Model
-The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MockMediaPlayer.tsx)) renders dynamic media associated with the active dashboard selection:
+The dashboard media player ([`components/MediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MediaPlayer.tsx)) renders dynamic media associated with the active dashboard selection:
 - **Direct Video Playability**: When an active button is associated with a video link (`mediaType: "video"`), the video element is directly loaded and playable. A prominent central Play button is rendered on the screen frame.
 - **Enlarged Media Player Dimensions**: With the description moved inside the canvas frame, the player card max-width is expanded to 860px and screen frame max-height to 480px (with 340px on compact screens), providing a substantially larger viewing surface.
 - **Getting Started Welcome Overlay**: When users land on `/products-services` or `/research-imperatives`, the media player presents the "Getting Started" guide across the entirety of the media display area. When the welcome overlay is active, media controls (central play button, right next chevron button, seek control panel, audio visualizer, and opening card) are automatically hidden. To avoid duplication with the top banner ("Getting Started" title and "Welcome to your Marketers tool workspace!" subtitle), the display area focuses cleanly on the actionable onboarding steps ("Here are the basics:") and bullet items. Includes a header toggle button to review the guide at any time and a prominent dismissal action to begin exploring topics immediately.
@@ -376,6 +476,9 @@ The dashboard media player ([`components/MockMediaPlayer.tsx`](file:///c:/Users/
   - **Navigation Bar Auto-Hiding**: When the document reader modal is opened, the top site navigation bar automatically hides (`document-reader-open` state) so it never gets in the way of reading. The navigation bar smoothly restores the moment the modal is closed.
   - **Top-Level Portal Rendering**: The reader modal is mounted at the root of `document.body` via `createPortal` with `z-index: 99999`, preventing stacking context trapping by lower section wrappers.
   - **File Upload & Asset Preview Integration**: Uploaded `.docx` and `.pdf` documents on `/file-upload` also leverage the document parser ([`lib/document-parser.ts`](file:///c:/Users/USER/BuyFacts/lib/document-parser.ts)) to render inline previews via [`components/FilePreview.tsx`](file:///c:/Users/USER/BuyFacts/components/FilePreview.tsx).
+- **No Media Found State & Clean Fallbacks**: When a button has no associated mediaUrl in the database (or during initial load), the player window cleanly displays a "No Media Found" state with an icon and contextual item title instead of rendering broken media or random placeholder URLs. Default static button configurations maintain empty strings for mediaUrl, preventing unwanted third-party media leaks.
+- **Detailed Descriptions**: The `DashboardButton` schema model includes a `description` column storing detailed explanatory text for each button, surfaced within the media player description overlay and in-depth document reader.
+- **Separation of Primary Media and In-Depth Assets**: The primary player media asset (`mediaUrl`) is strictly distinct from the in-depth technical documentation (`readItUrl`). The In-Depth ("READ IT") action button explicitly renders and downloads the comprehensive `.docx` document containing full technical specifications and deep content, while the primary screen displays the selected button's multimedia asset (videos, audios, images).
 - **Format Flexibility**: Supports direct HTML5 video formats (MP4, WebM) with metadata preloading, as well as YouTube/Vimeo embed detection. Includes public S3 video streaming integration (`Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4`) wired to the "Pattern Insights" and "Early Recognition" dashboard buttons with byte-range streaming and responsive controls.
 - **Four Consistent Action Buttons**:
   Always consistent and positioned below the media player window with uniform dimensions (120px width, 36px height on desktop and across viewports, equal sizes, and 12px gap between buttons) and uppercase labels with icons:
@@ -543,6 +646,43 @@ Executes data retention policy. Call with `?purge=30d` to remove feedback record
 
 ---
 
+### Cubicon Panel System & Client Identification Architecture
+
+The Cubicon Panel infrastructure enables founding clients who complete the \$100 fee to integrate Cubicon as an external human-verification gate within their survey pipelines.
+
+#### 1. Client ID Issuance (`POST /api/payments/capture-venmo-order`)
+- **Trigger**: Upon successful capture of the \$100 founding client payment.
+- **Client ID Generation**: Issues a unique, cryptographically random identifier in `BF-XXXXXXXX` format (8 uppercase alphanumeric characters).
+- **Persistence**: Creates or updates a `FoundingClient` record in PostgreSQL with `paymentStatus = "paid"`, `isActive = true`, and links it to `CubiconRegistration`.
+- **Onboarding Delivery**: Automatically dispatches a dedicated onboarding email (`sendClientOnboardingEmail`) detailing the client's `clientId`, integration URL structure, parameter definitions, and callback signature verification guidelines.
+
+#### 2. Panel Entry Gateway & Validation (`GET /api/cubicon-panel/validate`)
+When respondents arrive at `/cubicon`, the application inspects the query string:
+- **Trial Mode vs Panel Mode**:
+  - **Trial Users**: If neither `clientId` nor `respondentId` are present in the URL, the user is treated as a trial explorer. They can play the 3D puzzle freely without submitting IDs.
+  - **Panel Respondents**: If `clientId` or `respondentId` is present, both are strictly required alongside a `callbackUrl`.
+- **Rejection Conditions**: A respondent is rejected and presented with an Access Rejected screen if:
+  - Either `clientId` or `respondentId` is missing.
+  - `callbackUrl` is missing or not a valid HTTP/HTTPS URL.
+  - `clientId` format does not match `BF-XXXXXXXX`.
+  - `respondentId` does not match the 8-digit numeric requirement.
+  - The client record does not exist, is not marked `isActive: true`, or `paymentStatus !== "paid"`.
+  - The client has configured `allowedCallbackDomains` and the `callbackUrl` domain does not match the approved list.
+- **Auto-Launch**: When credentials pass validation, the Cubicon 3D solver launches immediately in fullscreen mode without presenting the client registration form.
+
+#### 3. Panel Completion & Cryptographic Redirect (`POST /api/cubicon-panel/complete`)
+Once the respondent finishes the puzzle tasks:
+- **Evaluation**: The backend evaluates task attempts against sequence threshold and calculates a definitive `pass` or `fail` result.
+- **Session Tagging**: Stamps the `CubiconSession` with `sessionMode = "panel"`, `clientId`, `respondentId`, and `previousResult = "panel_pass"` or `"panel_fail"`.
+- **HMAC-SHA256 Signing**: Computes an HMAC signature over `${respondentId}|${result}|${timestamp}` using `PANEL_HMAC_SECRET` to prevent tampering or spoofing by respondents seeking rewards.
+- **Redirect Construction**: Redirects the respondent's browser to the client's `callbackUrl` with appended query parameters:
+  ```
+  {callbackUrl}?respondentId={8_DIGIT_ID}&result=pass|fail&ts={UNIX_TIMESTAMP}&sig={HMAC_SIGNATURE}
+  ```
+- **Verification Utility**: Clients can verify the authenticity of incoming results using `verifyPanelResult` or standard HMAC-SHA256 libraries on their own server.
+
+---
+
 ## 5. Database Schema
 
 The database schema is standardized on PascalCase table names (matching Prisma model names directly) and camelCase column names across both the SQLite database and Prisma Client models:
@@ -653,7 +793,7 @@ Runs directly on the `/cubicon` viewport without navigating away:
 - **Non-Anonymous Feedback**: All feedback submissions mandate full name and valid email address.
 - **Anti-Abuse Protections**:
   - Hidden honeypot fields (`website`, `company_url`) across all public forms.
-  - Sliding-window in-memory IP rate limiter (`lib/security/rate-limiter.ts`) protecting form endpoints from bot flood attacks.
+  - Sliding-window IP rate limiter (`lib/security/rate-limiter.ts`) protecting form endpoints from bot flood attacks. The counter lives in PostgreSQL (`ThrottleCounter`), so every instance shares one budget — see section 11.7.
 
 ---
 
@@ -710,31 +850,71 @@ The interactive 3D spatial solver is embedded via an `iframe` at `/cubicon` from
 The `TripletButtonGroup` and `TripletButton` components (`components/TripletButton.tsx`, `components/TripletButton.module.css`) provide high-vitality, tactile interactive pathways for key site destinations.
 
 ### Key Features
-1. **Clear Button Affordance**:
-   - Distinct rounded pill button container with subtle 3D top-shimmer, active click press response (`translateY(2px) scale(0.985)`), and directional action arrows.
-   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-rotation.
-2. **Brief Text Below**:
-   - Descriptive captions sit directly below each button, answering stakeholder usability requirements so visitors immediately understand both the destination purpose and interactive affordance.
-3. **CDN Icon Support & Fallbacks**:
+1. **Self-Contained Pill Card Affordance & Orphan Word Prevention**:
+   - Distinct rounded pill card container (`border-radius: 999px`) featuring a circular logo badge on the left, a vertical divider line (`.btnDivider`), left-aligned pathway title text inside the card, and a directional action arrow on the right.
+   - **Orphan Word Elimination Across All Screen Sizes**: Combines typography and CSS techniques to guarantee that a single isolated word never appears alone on a line:
+     - `preventOrphanWords()` utility (`lib/orphan-prevention.ts`) enforces intelligent grouping so no single word ever appears alone:
+       - 3-word titles ("Validate Survey Participants") bind all 3 words with non-breaking spaces (`\u00A0`) so they stay unified on a single line.
+       - 4-word titles ("Faster Digital Asset Creation") pair words 1+2 and 3+4 (`Faster\u00A0Digital Asset\u00A0Creation`) so any line wrap cleanly splits as 2 words and 2 words.
+       - 5-word titles ("Market Changes in Real Time") pair words 1+2 and 3+4+5 (`Market\u00A0Changes in\u00A0Real\u00A0Time`) ensuring balanced 2-and-3 wrapping.
+     - Fluid responsive font sizing using CSS `clamp(0.82rem, 0.95vw, 0.98rem)` on `.btnLabel`.
+     - Compact responsive icon sizing (`clamp(3.2rem, 4.2vw, 4rem)`) and divider spacing (`clamp(0.55rem, 0.75vw, 0.8rem)`) to maximize horizontal text width.
+     - Modern CSS text balancing via `text-wrap: balance;` and `text-wrap: pretty;` across supporting browsers.
+   - Hover states feature an elevation lift (`translateY(-4px)`), intensified radial glow flare, and icon micro-scaling.
+2. **Interactive Hover Card Overlays & Dedicated Tool Navigation**:
+   - Hovering over any triplet button reveals an information card positioned strictly above the button (`bottom: calc(100% + 14px)`), ensuring the pill button remains completely visible and eliminating page scrolling or parent container clipping issues.
+   - **Viewport-Safe Dimensions & Edge Overflow Prevention**:
+     - Hover cards use `width: min(460px, 92vw)` so they never exceed viewport boundaries.
+     - Column-aware CSS positioning prevents edge clipping: column 1 (`data-column="1"`) anchors to its left edge, column 3 (`data-column="3"`) anchors to its right edge, and column 2 centers horizontally above the button.
+     - Compact typography (`1.4rem` title, `0.88rem` description) and streamlined padding prevent cards from overflowing the top of the viewport.
+   - **Navbar Auto-Collapse on Hover**: Hovering over the triplet buttons automatically triggers a graceful upward slide of the fixed navbar (`transform: translateY(-100% - 30px); opacity: 0;`), providing unobstructed headroom for the cards. When the mouse leaves the triplet area, the navbar smoothly slides back down. Hover cards also utilize `z-index: 1100` to ensure smooth rendering during transitions.
+   - An invisible bridge (`.hoverCard::before`) spans the 14px gap at the bottom so moving the mouse into the hover card maintains active hover state without flickering.
+   - Each hover card includes:
+     - A downward-pointing triangle caret (`.hoverPointer`) pointing directly to the pill button below.
+     - Large bold pathway title (`Cubicon`, `Research Libs`, `TRIAD`) in the theme color with orphan word protection.
+     - Detailed explanatory narrative.
+     - Bottom callout sub-card retaining the existing product logo in a circular badge, vertical divider line, callout prompt with orphan prevention, and a bold "SEE MORE ->" link that takes users to the dedicated tool pages:
+       - **Cubicon**: `/cubicon` (with automated `/cubion` rewrite in `next.config.ts`)
+       - **Research Libs**: `/research-lib`
+       - **TRIAD**: `/triad` (dedicated showcase page with video demo and methodology breakdown)
+3. **Hero Section Screen Fit (Non-Mobile) & 3 Core Value Pillars**:
+   - **Screen Height and Width Fit on Current Non-Mobile Devices**: The hero section uses `min-height: 100svh` combined with fluid vertical `clamp()` expressions on section padding, eyebrow margins, main heading font and margins, lead paragraph spacing, triplet button min-heights, and value pillar spacing. This guarantees that all key elements (eyebrow, title, lead, triplet buttons, and 3 value pillars) fit within the screen of the device on desktop, laptop, and tablet viewports without forcing vertical scrolling.
+   - Mobile viewports (≤680px) automatically revert to vertical scroll flow with `min-height: auto`.
+   - Displays the brand eyebrow (`THE EARLY RECOGNITION COMPANY™`), primary heading (`BuyFacts Gives Marketers Earlier Recognition, Better Choices, and More Time.`), and directional buyer research lead statement above the 3 triplet pill cards.
+   - Directly beneath the triplet pill cards sits a 3-column value pillar row separated by vertical dividers:
+     - **Recognize Earlier**: "See meaningful changes before they become obvious."
+     - **Understand Choices**: "Gain time to consider possibilities and choose a direction."
+     - **Act for Impact**: "Turn informed decisions into meaningful results."
+   - Optional external captions below each button remain supported via the `showCaption` prop (`default: false`).
+4. **CDN Icon Support & Fallbacks**:
    - Accepts direct CDN icon URLs (`iconUrl`) with automated image error fallback (`onError`) to high-resolution Lucide React vector icons.
-4. **Vibrant Color Tokens**:
+5. **Vibrant Color Tokens**:
    - Expanded global CSS color system in `app/globals.css`:
      - `--vibrant-orange-gradient` and `--vibrant-orange-glow` (warm sunset amber for Early Recognition)
      - `--vibrant-blue-gradient` and `--vibrant-blue-glow` (electric azure/cyan for Story-Based Research)
      - `--vibrant-purple-gradient` and `--vibrant-purple-glow` (electric violet/fuchsia for TRIAD)
      - `--vibrant-teal-gradient` and `--vibrant-teal-glow` (radiant emerald/teal)
-5. **CDN Video Playback Plumbing & Lightbox Modal**:
+6. **CDN Video Playback Plumbing & Lightbox Modal**:
    - All three hero triplet buttons in `app/page.tsx` are plumbed with dedicated CDN video constants (`CUBICON_VIDEO_CDN`, `RESEARCH_LIB_VIDEO_CDN`, `TRIAD_VIDEO_CDN`). When a constant is populated with a CDN URL string, pressing the corresponding button launches the video modal lightbox; when left empty (`""`), pressing the button navigates directly to its pathway destination (`/cubicon`, `/research-lib`, or `/triad`).
-   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`: `https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4`.
+   - The middle triplet button ("Faster Digital Asset Creation") is configured with `RESEARCH_LIB_VIDEO_CDN`.
    - Activating a video-enabled button displays a modal lightbox overlay with autoplay, fullscreen video controls, background backdrop blur, escape key dismissal, and an action link to further explore the pathway destination.
-6. **Component API**:
+7. **Component API**:
    ```typescript
+   export interface TripletHoverCardData {
+     title: string;
+     description: string;
+     prompt: string;
+     actionLabel?: string;
+     actionHref?: string;
+     onActionClick?: (e: React.MouseEvent<HTMLElement>) => void;
+   }
+
    export interface TripletButtonItem {
      id: string;
      title: string;
-     tagline: string; // Brief text below the button
+     tagline: string;
      href?: string;
-     iconUrl?: string; // Optional CDN icon URL
+     iconUrl?: string;
      fallbackIcon?: React.ReactNode;
      iconAlt?: string;
      theme?: "orange" | "blue" | "purple" | "teal";
@@ -743,46 +923,52 @@ The `TripletButtonGroup` and `TripletButton` components (`components/TripletButt
      actionHint?: string;
      onClick?: (e: React.MouseEvent<HTMLElement>) => void;
      videoUrl?: string;
+     hoverCard?: TripletHoverCardData;
    }
    ```
-7. **Automated Test Coverage**:
-   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, link security, and layout defaults.
+8. **Automated Test Coverage**:
+   - Complete verification suite located in `tests/triplet-button.test.ts` and `tests/triplet-video-and-navbar-tagline.test.ts` validating specs, CDN fallbacks, video playback wiring, modal accessibility attributes, hover card placement, orphan word prevention, and layout defaults.
 
 ---
 
-## 12. Homepage Section 2: Peer Benchmark Incentive Surveys
+## 12. Homepage Section 2: The Great Eight
 
 ### Component Overview
-Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) presents the core value pillars of BuyFacts' peer benchmark methodology.
+Section 2 (`#portfolio` in `app/page.tsx`, styled in `app/page.module.css`) presents **The Great Eight**: eight core perspectives on making market research more useful, from designing the survey to putting what you learn to work.
 
 ### Architecture & Design Elements
 1. **Section Header**:
-   - Primary Title: "Peer Benchmark Incentive Surveys"
-   - Primary Description: "Real-Time Peer Comparisons. Relevant Insight for Eery participant."
+   - Primary Title: "The Great Eight"
+   - Primary Subtitle: "Better Surveys, Smarter Research, and Putting the Findings to Work"
+   - Author Attribution: "From Robert's Research and Robert's Way"
    - Trust Badges: Sleek pill badges with dot indicators ("Peer Share for Real People", "No Cash Incentive Stigma", "Participants Provide Accurate Data").
-   - Callout Banner: Integrated highlight banner emphasizing data quality and removing payola incentives.
-2. **8-Pillar Card Grid & CDN Asset Architecture**:
-   - Card Architecture: Structured white card tiles with subtle brand borders, shadows, and smooth hover elevation.
-   - Header Row: Dual-tone rounded icon container alongside two-digit sequential index numerals (`01` through `08`).
-   - CDN Icon Delivery: High-resolution vector SVGs hosted on the BuyFacts public assets S3 CDN (`https://s3.buyfacts.com/buyfacts-public-assets/uploads/`).
-     - Card 01 (Survey Design): `BuyFacts_Survey_Hosting.svg`
-     - Card 02 (Perticipant Insight Choices): `BuyFacts_Early_Recognition.svg`
-     - Card 03 (Traditional and Story-based Instruments): `BuyFacts_Research_Tools_Concept.svg`
-     - Card 04 (Best Practices): `BuyFacts_Best_Practices_Keystone.svg`
-     - Card 05 (Every Question Maps to Its Purspose): `BuyFacts_Question_Design.svg`
-     - Card 06 (Executives Get peer Comparison Not Coffee Cards): `BuyFacts_Value_Quantification.svg`
-     - Card 07 (A Dual Approach Delivers Stories Backed by Facts): `BuyFacts_Thought_Leadership_TL1.svg`
-     - Card 08 (Inclusive Stakeholder Engagement Reduces Malicious Compliance): `BuyFacts_Bot_Detection.svg`
-   - Resilient Fallback: `ServiceCardIcon` component handles asset loading and falls back seamlessly to Lucide vector icons on error (`onError`).
-   - Sizing and Containment: `.cardCdnIcon` class enforces `34px x 34px` dimensions with `object-fit: contain` inside the 54px icon container.
-   - Typography: Left-aligned display titles tailored for variable length headlines.
-   - Hover Feedback: Micro-interaction accent bar expanding on card hover.
-3. **Responsive Grid**:
-   - Desktop (>= 1024px): 4-column x 2-row grid.
-   - Tablet (768px - 1023px): 2-column x 4-row grid.
-   - Mobile (< 768px): Single-column stack with adjusted card gap.
-4. **Automated Verification**:
-   - Test suite in `tests/section-two-design.test.ts` validating anchor preservation, exact copy retention, badge system, CDN asset endpoints, image fallback mechanics, CSS grid rules, and zero-emoji compliance.
+   - Callout Banner: Highlight banner with heading "Fresh Thinking, Practical Ideas, More Value from Your Findings" and descriptive copy "Eight perspectives on making research more useful, from designing the survey to putting what you learn to work."
+2. **8 Pillar Cards with Exact Updated Titles**:
+   - **Card 01**: "Targeting Your Survey" (Icon: `BuyFacts_Survey_Hosting.svg`, Teal)
+   - **Card 02**: "The Allure of Too Many Choices" (Icon: `BuyFacts_Early_Recognition.svg`, Gold)
+   - **Card 03**: "Stories Supported by Facts" (Icon: `BuyFacts_Research_Tools_Concept.svg`, Grey)
+   - **Card 04**: "The Top Ten Market Research Best Practices" (Icon: `BuyFacts_Best_Practices_Keystone.svg`, Sky Blue)
+   - **Card 05**: "The Art of Asking Great Survey Questions" (Icon: `BuyFacts_Question_Design.svg`, Lime Green)
+   - **Card 06**: "Executives Want Insight, Not Coffee Cards" (Icon: `BuyFacts_Value_Quantification.svg`, Coral)
+   - **Card 07**: "Build Content Fast from Survey Findings" (Icon: `BuyFacts_Thought_Leadership_TL1.svg`, Teal)
+   - **Card 08**: "Avoid Death from Doubt" (Icon: `BuyFacts_Bot_Detection.svg`, Accent Gold)
+3. **Clickable Card Interactivity & Lightbox Modal**:
+   - Every card is fully interactive (`role="button"`, `tabIndex={0}`, hover micro-interactions, keyboard Enter/Space support).
+   - Clicking any card opens a dedicated **Great Eight Modal Lightbox** directly on the home page.
+   - The modal embeds the renamed [`components/MediaPlayer.tsx`](file:///c:/Users/USER/BuyFacts/components/MediaPlayer.tsx) component, giving users immediate access to:
+     - **READ IT**: Formatted document reading directly in the player for PDF and DOCX files hosted on CDN.
+     - **SEE IT**: Video demonstrations and visual presentations.
+     - **HEAR IT**: Audio performances and commentary.
+     - **CONTACT US**: Direct pathway to initiate discussions with the team.
+   - Modal header includes card sequence index, title, subtitle, a direct **Open in Reader** link to open the document in [`app/document-viewer/page.tsx`](file:///c:/Users/USER/BuyFacts/app/document-viewer/page.tsx) in a new tab, and a close button with Escape key dismissal.
+4. **Database Table & Content Decoupling (`GreatEightItem`)**:
+   - The Great Eight articles and media are backed by the `GreatEightItem` Prisma model in `prisma/schema.prisma`.
+   - Modifying article CDN URLs, titles, descriptions, video links, or audio links requires **zero codebase changes**.
+   - Backed by the REST API endpoint `GET /api/great-eight` (and authenticated `POST /api/great-eight`).
+   - Integrated into the Admin Database Dashboard at `/admin` via `ADMIN_MODEL_REGISTRY.greatEightItem` for complete CRUD management.
+5. **Automated Verification**:
+   - Test suite in `tests/section-two-design.test.ts` verifying updated titles, badges, copy, clickable card interaction, and modal integration.
+   - Test suite in `tests/great-eight.test.ts` verifying data integrity, API contract, admin registry mapping, and zero-emoji compliance.
 
 ---
 
@@ -976,7 +1162,7 @@ The dashboard organizes all 17 Prisma database models into five primary domains:
    - `NotificationSubscription`: Newsletter and product launch subscribers.
    - `FeedbackSubmission`: Customer feedback, reviews, and star ratings.
 3. **Content & Media**:
-   - `DashboardButton`: Interactive media trigger buttons, categories, and URLs.
+   - `DashboardButton`: Interactive media trigger buttons, categories, asset URLs, and detailed descriptions (`description`).
    - `MediaAsset`: Storage upload logs for images, videos, audio, and documents.
 4. **Cubicon 3D Platform**:
    - `CubiconSequence`: Multi-step 3D validation puzzle sequences.
@@ -1145,4 +1331,126 @@ Recursively deletes a folder prefix and all objects inside it.
 - **Payload**: `{ "folderPath": "cubicon/models/scenarios" }`
 - **Response**: `{ "success": true, "deletedCount": 3, "message": "..." }`
 
+### 9.4 Client-Side Image Optimization & WebP Conversion
+- **In-Memory Conversion**: JPG, JPEG, PNG, and BMP image assets are automatically converted to modern WebP format directly in browser memory before network upload begins.
+- **Toggle Control**: Users can toggle auto-conversion on or off via the `Auto-WebP: ON (85% Quality)` control in `FileUploader.tsx`.
+- **Bandwidth & Storage Savings**: Cuts image byte sizes by up to 80% without noticeable visual fidelity degradation.
+- **Fidelity Preservation**: SVGs (vector graphics) and animated GIFs are automatically preserved in their native formats without canvas rasterization.
+- **Hierarchy Retention**: File extensions in relative paths (e.g. `assets/images/header.jpg` -> `assets/images/header.webp`) are automatically updated and tracked.
+- **Visual Feedback**: Queue items display clear savings metrics (e.g. `WebP (-68%)`) and tooltip comparisons with original file sizes.
 
+### 9.5 Persistent MediaAsset Registry & Database Asset IDs
+All assets stored in the MinIO object bucket maintain canonical database identity in PostgreSQL:
+- **`MediaAsset` Table Schema**:
+  - `id`: Unique identifier (UUID string, primary key).
+  - `objectKey`: S3/MinIO object key path (e.g. `cubicon/1788505108337-1zkn2t-Puzzle1.webp`). Indexed for high-speed queries (`@@index([objectKey])`).
+  - `folder`: Storage folder prefix (e.g. `cubicon`, `products-services`). Indexed (`@@index([folder])`).
+  - `fileName`: Original file basename.
+  - `fileType`: MIME content type string (e.g. `image/webp`, `video/mp4`, `application/pdf`).
+  - `fileSize`: File byte length.
+  - `publicUrl`: Full public CDN access URL.
+  - `uploadedAt`: Upload timestamp (`DateTime @default(now())`).
+  - `updatedAt`: Auto-updating modification timestamp (`DateTime @updatedAt`).
+
+- **Automated Lifecycle Synchronization**:
+  1. **Upload Ingestion (`POST /api/media-assets`)**: Both single-file and batch uploads automatically write database records with generated asset UUIDs. When an `objectKey` already exists, an upsert is performed to prevent duplicate records.
+  2. **Storage Move Tracking (`POST /api/storage/move`)**: Relocating an asset from one folder to another updates the `objectKey`, `folder`, and `publicUrl` fields in `MediaAsset` (matching by existing `objectKey`, with fallback to `publicUrl`).
+  3. **Storage Deletion Cleanup (`DELETE /api/storage/files`)**: Deleting a file from MinIO automatically purges matching `MediaAsset` records by `objectKey` (with fallback to `publicUrl` for legacy records).
+  4. **Targeted Asset Record Deletion (`DELETE /api/media-assets`)**: Supports granular deletion by `{ "objectKey": "..." }` or `{ "id": "..." }`, as well as full history purge when no filter is supplied.
+
+- **Bulk Storage Synchronization Script**:
+  - Run `npx tsx scripts/sync-minio-assets.ts` to crawl all existing objects in the MinIO bucket, backfill missing `objectKey` and `folder` fields on legacy records, and insert canonical `MediaAsset` rows for any untracked bucket files. Empty directory placeholders (`.keep`) are automatically skipped.
+
+- **Visual Asset ID Badging**:
+  - The Media Console (`/file-upload`) surfaces the database asset `id` directly within both the Upload History log and the Storage Explorer item details, enabling administrators to easily cross-reference database IDs with storage files.
+
+
+---
+
+## 10. Cubicon Visual Coordinate Picker & Bidirectional Data Synchronization
+
+- **Moveable & Collapsible 3D Picker HUD**: In 3D coordinate picker mode (`?picker=true&admin=true`), the overlay panel is draggable via its header bar (`:: PICKER`) and collapsible into a compact pill so it never blocks the 3D cube face.
+- **Complete Bidirectional Task Data Synchronization**:
+  - Full two-way live data synchronization connects the form modals (`/admin` and `/cubicon/analytics`), the `CubiconCoordinatePicker` modal, and the embedded 3D Cubicon iframe across all task parameters:
+    1. **`questionType`**: Normalized via `normalizeQuestionType` (`"Selection"` for single-click tasks and `"Anticipation"` for multi-point drag tasks). Changing the type in the form modal, the picker toolbar, or the 3D HUD immediately synchronizes across all layers and clears stale points.
+    2. **`screen`**: Changing the face in the form modal (`Active_front`, `Active_side_r`, `Active_back`, `Active_side_l`, `Active_top`, `Active_bottom`), the picker toolbar, or the 3D HUD buttons immediately updates the active face without reloading the iframe.
+    3. **`image`**: Selecting a texture from the CDN gallery, custom URL input, or 3D HUD buttons immediately updates the texture in the form record, picker surface, and 3D cube model.
+    4. **`correctCoordinates` and Waypoints**: Capturing clicks/drags in 2D or 3D live-updates `correctCoordinates`, `startPoint`, `midPoint`, and `endPoint` in the parent form data via `onDataChange`, with final persistence on `onApply`.
+  - Echo loops and state wiping on re-render are prevented by reference tracking (`wasOpenRef`, `prevInitial*Ref`), ensuring active coordinate plotting is never reset prematurely.
+
+- **Thumbnail Optimization & Fast Gallery Loading (`/api/cubicon/thumbnail`)**:
+  - The Coordinate Picker thumbnail strip loads compact 160px WebP thumbnails via `/api/cubicon/thumbnail?url=...&w=160` instead of downloading multi-megabyte full-resolution assets (such as 71MB PNGs) for thumbnail cards.
+  - The thumbnail endpoint resizes images on the fly using `sharp`, validates host safety to prevent SSRF, and caches generated thumbnails on disk with long-term immutable cache headers (`Cache-Control: public, max-age=31536000, immutable`).
+  - Selecting an image continues to assign the full-resolution `publicUrl` to the 3D model screen texture and 2D target coordinate surface.
+
+---
+
+## 11. Centralized Logging & Observability
+
+Every operational event the application emits — HTTP requests, email dispatch, storage operations, panel verification, rate-limit hits and unhandled errors — is recorded in one place and readable from one dashboard. Logging is self-hosted: events live in the project's own PostgreSQL database (`LogEvent` table) with no external observability vendor and no extra npm dependency.
+
+### 11.1 Two trails, two purposes
+| Trail | Table | Purpose |
+|---|---|---|
+| Security audit | `AuditLog` (`lib/auth/audit.ts` → `writeAudit()`) | Who did what: sign-ins, role changes, deletions. Unchanged by this work. |
+| Operational log | `LogEvent` (`lib/observability/logger.ts`) | What the system did: requests, latency, mail, storage, errors, client crashes. |
+
+### 11.2 Emitting an event
+```ts
+import { logError, logWarn, logInfo } from "@/lib/observability/logger";
+
+logError("contact.error", err, { category: "http", route: "/api/contact" });
+logWarn("security.rate_limit.exceeded", "Rate limit hit", { category: "security", ip });
+logInfo("mail.send.succeeded", "Verification email dispatched", { category: "mail" });
+```
+- **Levels**: `debug` → `info` → `warn` → `error` → `fatal`. Minimum level is `LOG_LEVEL` (`info` in production, `debug` otherwise).
+- **Categories**: `http`, `auth`, `db`, `mail`, `storage`, `panel`, `cubicon`, `security`, `system`.
+- **Naming**: dotted, `area.what_happened` (`http.request.end`, `mail.send.failed`, `system.client_error`).
+- **Never throws**: a logging failure falls back to `console` and never breaks the request it records.
+- **Never blocks**: writes go through a bounded in-process queue and are flushed in the background (`flushLogs()` awaits them, used by tests).
+- **Never stores secrets**: every row passes through `lib/observability/redact.ts` — passwords, tokens, `sig`, API keys, cookies and card fields become `[redacted]`; strings are truncated.
+
+### 11.3 Request correlation
+Routes are wrapped with `withRequestLogging` (`lib/observability/request.ts`):
+```ts
+export const POST = withRequestLogging(handler, { route: "/api/contact" });
+```
+Each request gets a request id (an inbound `x-request-id` is reused, otherwise a UUID), which is
+- echoed in the `x-request-id` response header,
+- attached to the `http.request.end` / `http.request.failed` / `http.request.error` event with method, route, status and duration,
+- available inside the handler via `currentRequestId()` and `requestLogContext()`, so mail/storage logs made during the request carry the same id,
+- returned to the caller as `requestId` when the handler throws (the wrapper answers with a JSON 500 instead of an unhandled crash).
+
+Numeric and UUID path segments are collapsed (`/api/admin/users/42` → `/api/admin/users/[id]`) so route latency groups correctly.
+
+### 11.4 What is instrumented
+- **HTTP**: routes wrapped with `withRequestLogging` (contact, cubicon-share, cubicon-feedback, cubicon-panel/validate, observability endpoints — extend the same way).
+- **Mail**: every `lib/resend.ts` dispatch site logs `mail.send.succeeded` / `mail.send.failed`.
+- **Rate limits**: `lib/security/rate-limiter.ts` logs `security.rate_limit.exceeded` with the IP, action and window.
+- **Browser crashes**: `app/error.tsx` and `app/global-error.tsx` post to `/api/observability/client-error` (rate-limited, redacted) → `system.client_error`.
+- **Process-level crashes**: `instrumentation.ts` records `system.unhandled_rejection`, `system.uncaught_exception` and `system.node_warning`. That file is compiled for both runtimes, so it stays Node-free and lazily imports `instrumentation.node.ts` (which holds the `process.on` listeners) only when `NEXT_RUNTIME === "nodejs"`.
+
+### 11.5 Reading the log
+`/admin` → **Observability** tab (super admin only), backed by `GET /api/admin/observability`:
+- requests, error rate and p50/p95 latency for the last 24 hours,
+- volume by level and category, clickable as filters,
+- per-route latency table (count, errors, p50/p95/p99, max); click a route to filter the feed,
+- the event feed with level, category, timestamp, route, status, duration, actor, IP, and expandable JSON context/stack,
+- auto-refresh (15s), text search (event, message, route, request id), CSV export and a purge button.
+
+`DELETE /api/admin/observability?purge=30d` applies the retention window (30 days is the default in the UI). Both endpoints require the `manage_super_admins` capability, matching `/api/admin/audit`.
+
+### 11.6 Tests
+`tests/observability-logging.test.ts` covers redaction, level filtering, row building, a failing sink never throwing, request-id reuse and propagation, 4xx/5xx classification, the 500-on-throw path, route-label normalisation and rate-limit events.
+
+### 11.7 Distributed / Multi-Instance Throttling
+
+Rate limits are shared by every instance through PostgreSQL, so running behind a load balancer with several app servers no longer multiplies the allowance.
+
+- **One counter row per (key, window)** in `ThrottleCounter` (`prisma/schema.prisma`): `key` = `<namespace>:<action>:<identifier>`, `windowStart` is the fixed window start, plus `count` and `windowSeconds`. `RATE_LIMIT_NAMESPACE` (default `buyfacts`) lets several deployments share a database.
+- **The window comes from the database clock.** `checkRateLimitAsync` asks `currentWindow()` for `to_timestamp(floor(epoch / windowSeconds) * windowSeconds)` — the one clock every instance agrees on — so clock skew between servers can never open a second budget mid-window.
+- **The decision is one atomic statement.** `INSERT … ON CONFLICT ("key","windowStart") DO UPDATE SET count = count + 1 WHERE count < max RETURNING count`. No row returned means over the limit; a row means the caller was counted, and its value gives `remaining`. PostgreSQL serialises contending instances on the primary key, so concurrent requests cannot overshoot.
+- **Never fails a request.** If the database cannot answer (or `ThrottleCounter` has not been migrated), the limiter logs `security.throttle.degraded`, falls back to the in-process store for that instance for 30 seconds, and reports `degraded: true` / `store: "memory"` on the result.
+- **Housekeeping.** Expired windows are pruned at most once an hour, by whichever instance gets there first (`security.throttle.pruned`).
+- **Calling it.** Route handlers use `await checkRateLimitAsync(ip, "contact")`. `checkRateLimit` remains as the synchronous single-process limiter for tests and non-async callers.
+- **Tests.** `tests/distributed-throttling.test.ts` simulates two instances sharing a fake store, fires 20 concurrent requests at a limit of 5 (exactly 5 pass), covers the outage path, and exercises the real PostgreSQL store (skipped when no database is reachable).

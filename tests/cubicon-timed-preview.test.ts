@@ -14,7 +14,9 @@ test("Cubicon 1-Minute Video Preview and Interactive Player Suite", async (t) =>
 
     // Must clearly state the duration before beginning
     assert.ok(
-      content.includes("1-MINUTE PREVIEW") || content.includes("1-Minute Preview"),
+      content.includes("1-MINUTE PREVIEW") ||
+      content.includes("1-Minute Preview") ||
+      content.includes("One Minute Preview"),
       "Cubicon page must display 1-minute duration badge before preview starts"
     );
     assert.ok(
@@ -22,7 +24,8 @@ test("Cubicon 1-Minute Video Preview and Interactive Player Suite", async (t) =>
       "START button must initiate video playback directly"
     );
     assert.ok(
-      content.includes("handleSeeLiveClick") && content.includes("See It Live!"),
+      content.includes("handleSeeLiveClick") &&
+      (content.includes("See It Live!") || content.includes("TRY CUBICON LIVE!") || content.includes("TRY IT YOURSELF NOW")),
       "Must provide secondary See It Live button to jump directly to 3D solver"
     );
   });
@@ -31,21 +34,24 @@ test("Cubicon 1-Minute Video Preview and Interactive Player Suite", async (t) =>
     const pagePath = path.join(BUYFACTS_ROOT, "app", "cubicon", "page.tsx");
     const content = fs.readFileSync(pagePath, "utf-8");
 
-    // State 1: Spatial Orientation
+    // State 1: Spatial Orientation / Puzzle 1
     assert.ok(
-      content.includes("Spatial Orientation") && content.includes("concerned by howling"),
+      (content.includes("Spatial Orientation") || content.includes("Puzzle 1")) &&
+      content.includes("concerned by howling"),
       "Must include State 1 (Spatial Orientation)"
     );
 
-    // State 2: Multi-Angle Alignment
+    // State 2: Multi-Angle Alignment / Puzzle 2
     assert.ok(
-      content.includes("Multi-Angle Alignment") && content.includes("change of shirt"),
+      (content.includes("Multi-Angle Alignment") || content.includes("Puzzle 2")) &&
+      content.includes("change of shirt"),
       "Must include State 2 (Multi-Angle Alignment)"
     );
 
-    // State 3: 3D Object Verification
+    // State 3: 3D Object Verification / Puzzle 3
     assert.ok(
-      content.includes("3D Object Verification") && content.includes("Where does his next go"),
+      (content.includes("3D Object Verification") || content.includes("Puzzle 3")) &&
+      content.includes("Where does his next go"),
       "Must include State 3 (3D Object Verification)"
     );
   });

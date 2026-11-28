@@ -21,14 +21,24 @@ import {
   Users,
   ShieldCheck,
   TrendingUp,
+  Layers,
   ArrowRight,
   RotateCcw,
   AlertCircle,
   X,
   Video,
-  Sparkles,
 } from "lucide-react";
+import TransportVideo from "@/components/media/TransportVideo";
+import GreatEightViewpointModal from "@/components/GreatEightViewpointModal";
+import {
+  GREAT_EIGHT_SECTION,
+  resolveGreatEight,
+  type GreatEightCard,
+  type GreatEightRow,
+  type GreatEightSlug,
+} from "@/lib/greatEightManifest";
 import styles from "./page.module.css";
+import { RULE_OF_THREE_DEMO, TRIAD_DEMONSTRATION_HREF } from "@/lib/demoLinks";
 import TripletButtonGroup, {
   TripletButtonItem,
 } from "@/components/TripletButton";
@@ -49,45 +59,53 @@ const APART_VIDEO_2_FALLBACK =
 const CUBICON_VIDEO_CDN = "";
 
 const RESEARCH_LIB_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792093688513-7zjffs-Faster_Digital_Asset_Creation_With_ResearchLib.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4";
 
 const TRIAD_VIDEO_CDN =
-  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792160756094-3m50lb-Market_Changes_in_Real_Time_Triad.mp4";
+  "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle Coming Soon mode.
 // Set to false (and set COMING_SOON=false in middleware.ts) to show the full site.
 // ─────────────────────────────────────────────────────────────────────────────
-const COMING_SOON = true;
+const COMING_SOON = false;
 
-interface ServiceCardData {
-  id: string;
-  title: string;
-  icon?: React.ReactNode;
-  iconUrl?: string;
-  iconColor: string;
-  bgColor: string;
-}
+// Fallback icon per card when its CDN icon fails to load.
+const GREAT_EIGHT_FALLBACK_ICONS: Record<GreatEightSlug, React.ReactNode> = {
+  "targeting-your-survey": <Compass size={32} />,
+  "the-allure-of-too-many-choices": <Award size={32} />,
+  "stories-supported-by-facts": <Search size={32} />,
+  "the-top-ten-market-research-best-practices": <Target size={32} />,
+  "the-art-of-asking-great-survey-questions": <Edit3 size={32} />,
+  "executives-want-insight-not-coffee-cards": <Users size={32} />,
+  "build-content-fast-from-survey-findings": <ShieldCheck size={32} />,
+  "avoid-death-from-doubt": <TrendingUp size={32} />,
+};
 
-function ServiceCardIcon({ card }: { card: ServiceCardData }) {
+const GREAT_EIGHT_PILL_STYLES = [styles.badgeNavy, styles.badgeBlue, styles.badgeTeal];
+
+function GreatEightCardIcon({ card }: { card: GreatEightCard }) {
   const [imageError, setImageError] = useState(false);
 
   if (card.iconUrl && !imageError) {
     return (
       <img
         src={card.iconUrl}
-        alt={card.title}
+        alt=""
         className={styles.cardCdnIcon}
         onError={() => setImageError(true)}
       />
     );
   }
 
-  return <>{card.icon}</>;
+  return <>{GREAT_EIGHT_FALLBACK_ICONS[card.slug]}</>;
 }
 
 export default function Home() {
-  if (COMING_SOON) return <ComingSoon />;
+  return COMING_SOON ? <ComingSoon /> : <HomeContent />;
+}
+
+function HomeContent() {
   const [formState, setFormState] = useState({
     firstName: "",
     lastName: "",
@@ -113,11 +131,14 @@ export default function Home() {
   const [activeVideoModal, setActiveVideoModal] = useState<{
     isOpen: boolean;
     videoUrl: string;
+    /** Mobile portrait render (<= 768px); falls back to the MOBILE_VIDEO_VARIANTS registry. */
+    mobileVideoUrl?: string;
     title: string;
     tagline: string;
     destinationHref?: string;
     destinationLabel?: string;
   } | null>(null);
+
 
   // Hero Triplet Button Pathways
   const heroTripletButtons: TripletButtonItem[] = [
@@ -144,6 +165,15 @@ export default function Home() {
           destinationLabel: "Explore Cubicon",
         });
       },
+      hoverCard: {
+        title: "Cubicon",
+        description:
+          "Research is only as reliable as the people providing the answers. Cubicon uses short, engaging puzzle challenges designed to distinguish human respondents from automated bots. It aims to reduce fraudulent participation and protect the quality of the data marketers depend on.",
+        prompt:
+          "Experience one of the puzzle challenges designed to distinguish humans from automated bots.",
+        actionLabel: "SEE MORE",
+        actionHref: "/cubicon",
+      },
     },
     {
       id: "faster-digital-asset-creation",
@@ -168,6 +198,15 @@ export default function Home() {
           destinationLabel: "Explore Research Libs",
         });
       },
+      hoverCard: {
+        title: "Research Libs",
+        description:
+          "Research Libs turns one survey into two valuable marketing resources: research findings that guide decisions and authentic stories that people remember. By transforming survey participants into storytellers, Research Libs brings facts to life and gives marketers compelling material for digital content while reducing the time and effort required to create it.",
+        prompt:
+          "Experience how survey answers can become engaging stories and useful marketing content.",
+        actionLabel: "SEE MORE",
+        actionHref: "/research-lib",
+      },
     },
     {
       id: "market-changes-in-real-time",
@@ -188,12 +227,45 @@ export default function Home() {
           title: "Market Changes in Real Time With TRIAD",
           tagline:
             "TRIAD brings earlier recognition of market changes to help marketers stay ahead of competitors and expand their competitive playbook.",
-          destinationHref: "/triad",
+          // The modal already played the overview video: send visitors on to the
+          // demonstrations (TRIAD Studio and Know Your Major), not back to that video.
+          destinationHref: TRIAD_DEMONSTRATION_HREF,
           destinationLabel: "Explore TRIAD",
         });
       },
+      hoverCard: {
+        title: "TRIAD",
+        description:
+          "Markets change before those changes become obvious. TRIAD is designed to measure shifts in buyer sentiment through focused research repeated over time. By revealing emerging patterns and the practical and emotional drivers behind them, it can help marketers recognize change earlier and make better-informed decisions.",
+        prompt:
+          "Experience how measuring practical and emotional drivers can help reveal emerging directional patterns.",
+        actionLabel: "SEE MORE",
+        actionHref: "/triad",
+      },
+    },
+    {
+      id: "rule-of-three",
+      title: "Rule of Three",
+      tagline:
+        "Rule of Three turns research-led knowledge into focused educational assets: three principles that bring clarity to everyday decisions.",
+      href: RULE_OF_THREE_DEMO.href,
+      external: RULE_OF_THREE_DEMO.external,
+      theme: "teal",
+      fallbackIcon: <Layers size={20} />,
+      hoverCard: {
+        title: "Rule of Three",
+        description:
+          "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention.",
+        prompt:
+          "See how three complementary principles can turn research into practical guidance.",
+        actionLabel: "SEE MORE",
+        actionHref: RULE_OF_THREE_DEMO.href,
+      },
     },
   ];
+
+  // Navigation collapse state when hovering over hero triplet pathway cards
+  const [isNavHoverCollapsed, setIsNavHoverCollapsed] = useState(false);
 
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
@@ -215,7 +287,10 @@ export default function Home() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
-      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+      if (
+        event.data.type === "CUBICON_VERIFICATION_COMPLETE" ||
+        event.data.type === "CUBICON_COMPLETED"
+      ) {
         const { sessionId, passed, heading, description } = event.data;
         if (passed) {
           setIsVerified(true);
@@ -244,15 +319,39 @@ export default function Home() {
     };
   }, []);
 
+  // The Great Eight: cards from lib/greatEightManifest.ts, merged with any /admin edits
+  // (GreatEightItem rows) matched by slug.
+  const [greatEightCards, setGreatEightCards] = useState<GreatEightCard[]>(() => resolveGreatEight());
+  const [activeGreatEightSlug, setActiveGreatEightSlug] = useState<GreatEightSlug | null>(null);
+  const activeGreatEightCard = greatEightCards.find((card) => card.slug === activeGreatEightSlug) ?? null;
+  const closeGreatEight = React.useCallback(() => setActiveGreatEightSlug(null), []);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/great-eight")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.items)) {
+          setGreatEightCards(resolveGreatEight(data.items as GreatEightRow[]));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Lock body scroll and listen for Escape key when any modal is open
   useEffect(() => {
     const isAnyModalOpen =
-      isVerificationModalOpen || Boolean(activeVideoModal?.isOpen);
+      isVerificationModalOpen || Boolean(activeVideoModal?.isOpen) || Boolean(activeGreatEightCard);
 
     if (isAnyModalOpen) {
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
+          // The Great Eight modal handles its own Escape key.
+          if (activeGreatEightCard) return;
           if (activeVideoModal?.isOpen) {
             setActiveVideoModal(null);
           } else if (isVerificationModalOpen && !isSubmitting) {
@@ -268,7 +367,7 @@ export default function Home() {
     } else {
       document.body.style.overflow = "";
     }
-  }, [isVerificationModalOpen, isSubmitting, activeVideoModal]);
+  }, [isVerificationModalOpen, isSubmitting, activeVideoModal, activeGreatEightCard]);
 
   const handleResetVerification = () => {
     setIsVerified(false);
@@ -276,82 +375,6 @@ export default function Home() {
     setVerificationStatus({ status: "idle", message: "" });
     setVerificationKey((prev) => prev + 1);
   };
-
-  // The 8 Portfolio Cards matching Section 2 of the mockup image
-  const portfolioCards: ServiceCardData[] = [
-    {
-      id: "survey-design",
-      title: "Survey Design",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315274750-bri2xa-BuyFacts_Survey_Hosting.svg",
-      icon: <Compass size={32} />,
-      iconColor: "#14a38b", // Teal
-      bgColor: "rgba(20, 163, 139, 0.08)",
-    },
-    {
-      id: "participant-insight-choices",
-      title: "Participant Insight Choices",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259736-v7irdo-BuyFacts_Early_Recognition.svg",
-      icon: <Award size={32} />,
-      iconColor: "#e6a100", // Gold/Amber
-      bgColor: "rgba(230, 161, 0, 0.08)",
-    },
-    {
-      id: "traditional-story-based-instruments",
-      title: "Traditional and Story-based Instruments",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269875-46dt5y-BuyFacts_Research_Tools_Concept.svg",
-      icon: <Search size={32} />,
-      iconColor: "#6d6d6d", // Grey
-      bgColor: "rgba(109, 109, 109, 0.08)",
-    },
-    {
-      id: "best-practices",
-      title: "Best Practices",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259493-khokty-BuyFacts_Best_Practices_Keystone.svg",
-      icon: <Target size={32} />,
-      iconColor: "#0089d2", // Sky Blue
-      bgColor: "rgba(0, 137, 210, 0.08)",
-    },
-    {
-      id: "every-question-maps-to-its-purpose",
-      title: "Every Question Maps to Its Purpose",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315269426-66lkh2-BuyFacts_Question_Design.svg",
-      icon: <Edit3 size={32} />,
-      iconColor: "#7cb342", // Lime Green
-      bgColor: "rgba(124, 179, 66, 0.08)",
-    },
-    {
-      id: "executives-get-peer-comparison-not-coffee-cards",
-      title: "Executives Get peer Comparison Not Coffee Cards",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315281029-irb8ll-BuyFacts_Value_Quantification.svg",
-      icon: <Users size={32} />,
-      iconColor: "#e57a45", // Coral
-      bgColor: "rgba(229, 122, 69, 0.08)",
-    },
-    {
-      id: "a-dual-approach-delivers-stories-backed-by-facts",
-      title: "A Dual Approach Delivers Stories Backed by Facts",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315275105-urqpqf-BuyFacts_Thought_Leadership_TL1.svg",
-      icon: <ShieldCheck size={32} />,
-      iconColor: "#14a38b", // Teal
-      bgColor: "rgba(20, 163, 139, 0.08)",
-    },
-    {
-      id: "inclusive-stakeholder-engagement-reduces-malicious-compliance",
-      title: "Inclusive Stakeholder Engagement Reduces Malicious Compliance",
-      iconUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1791315259585-6u4ucb-BuyFacts_Bot_Detection.svg",
-      icon: <TrendingUp size={32} />,
-      iconColor: "#ffb039", // Accent Gold
-      bgColor: "rgba(255, 176, 57, 0.08)",
-    },
-  ];
 
   // Validate required contact form fields before launching verification puzzle
   const validateForm = () => {
@@ -518,7 +541,7 @@ export default function Home() {
       <div className="glow-blob blob-green"></div>
       <div className="glow-blob blob-blue"></div>
 
-      <Navbar />
+      <Navbar isCollapsed={isNavHoverCollapsed} />
 
       {/* SECTION 1: Hero Section */}
       <section className={styles.hero} id="hero">
@@ -527,14 +550,233 @@ export default function Home() {
 
         <div className={styles.container}>
           <div className={`${styles.heroContent} animate-fade-in-up`}>
+            <p className={styles.heroCompanyEyebrow}>
+              THE EARLY RECOGNITION COMPANY™
+            </p>
+
             <h1 className={styles.heroTitle}>
-              Marketers Need Earlier{" "}
-              <span className={styles.heroHighlight}>Recognition,</span> Better
-              Choices, and More Time
+              BuyFacts Gives Marketers Earlier
+              <br />
+              Recognition, Better Choices, and More Time.
             </h1>
 
-            {/* Reusable Vibrant Triplet Button Group with brief text below */}
-            <TripletButtonGroup items={heroTripletButtons} />
+            <p className={styles.heroLead}>
+              More information isn&apos;t the answer. BuyFacts believes that
+              focused, directional buyer research repeated over time can reveal
+              emerging patterns in wants, needs, attitudes, and experiences,
+              helping marketers decide where to focus, what to do, and when to
+              act.
+            </p>
+
+            {/* Reusable Vibrant Triplet Pill Cards with Navbar Collapse Coordination */}
+            <TripletButtonGroup
+              items={heroTripletButtons}
+              columns={4}
+              onHoverChange={setIsNavHoverCollapsed}
+            />
+
+            {/* 3 Hero Value Pillars */}
+            <div
+              className={styles.heroPillarsGrid}
+              id="hero-value-pillars"
+              aria-label="Core value pillars"
+            >
+              <div
+                className={styles.heroPillarItem}
+                id="pillar-recognize-earlier"
+              >
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line
+                      x1="24"
+                      y1="6"
+                      x2="24"
+                      y2="11"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="16"
+                      y1="8"
+                      x2="18"
+                      y2="12.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="32"
+                      y1="8"
+                      x2="30"
+                      y2="12.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="9.5"
+                      y1="12.5"
+                      x2="12.5"
+                      y2="16"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="38.5"
+                      y1="12.5"
+                      x2="35.5"
+                      y2="16"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M6 27C10.5 19.5 16.8 16 24 16C31.2 16 37.5 19.5 42 27C37.5 34.5 31.2 38 24 38C16.8 38 10.5 34.5 6 27Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="24"
+                      cy="27"
+                      r="6.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx="24"
+                      cy="27"
+                      r="2.5"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Recognize Earlier</h2>
+                <p className={styles.heroPillarDesc}>
+                  See meaningful changes before they become obvious.
+                </p>
+              </div>
+
+              <div
+                className={styles.heroPillarItem}
+                id="pillar-understand-choices"
+              >
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line
+                      x1="24"
+                      y1="7"
+                      x2="24"
+                      y2="41"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M24 10H38L34.5 15.5L38 21H24V10Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M24 22H10L13.5 27.5L10 33H24V22Z"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Understand Choices</h2>
+                <p className={styles.heroPillarDesc}>
+                  Gain time to consider possibilities and choose a direction.
+                </p>
+              </div>
+
+              <div className={styles.heroPillarItem} id="pillar-act-for-impact">
+                <div className={styles.heroPillarIcon}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <line
+                      x1="8"
+                      y1="40"
+                      x2="40"
+                      y2="40"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <rect
+                      x="12"
+                      y="29"
+                      width="5.5"
+                      height="11"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="21.25"
+                      y="23"
+                      width="5.5"
+                      height="17"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="30.5"
+                      y="16"
+                      width="5.5"
+                      height="24"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M11 22L19 14L24 17.5L34 8"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M28 8H34V14"
+                      stroke="#00507b"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2 className={styles.heroPillarTitle}>Act for Impact</h2>
+                <p className={styles.heroPillarDesc}>
+                  Turn informed decisions into meaningful results.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -549,7 +791,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION 2: Peer Benchmark Incentive Surveys (8 Cards Grid) */}
+      {/* SECTION 2: The Great Eight (8 Cards Grid) */}
       <section
         className="section-light"
         id="portfolio"
@@ -557,46 +799,42 @@ export default function Home() {
       >
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitleLight}>
-              Peer Benchmark Incentive Surveys
-            </h2>
-            <p className={styles.sectionDescLight}>
-              Real-Time Peer Comparisons. Relevant Insight for Every
-              participant.
-            </p>
+            <h2 className={styles.sectionTitleLight}>{GREAT_EIGHT_SECTION.heading}</h2>
+            <p className={styles.sectionDescLight}>{GREAT_EIGHT_SECTION.subtitle}</p>
+            <p className={styles.sectionAuthorLight}>{GREAT_EIGHT_SECTION.byline}</p>
 
-            {/* Accent Badges matching Mockup image */}
             <div className={styles.badgeRow}>
-              <span className={`${styles.badge} ${styles.badgeNavy}`}>
-                <span className={styles.badgeDot} />
-                Peer Share for Real People
-              </span>
-              <span className={`${styles.badge} ${styles.badgeBlue}`}>
-                <span className={styles.badgeDot} />
-                No Cash Incentive Stigma
-              </span>
-              <span className={`${styles.badge} ${styles.badgeTeal}`}>
-                <span className={styles.badgeDot} />
-                Participants Provide Accurate Data
-              </span>
+              {GREAT_EIGHT_SECTION.pills.map((pill, index) => (
+                <span key={pill} className={`${styles.badge} ${GREAT_EIGHT_PILL_STYLES[index]}`}>
+                  <span className={styles.badgeDot} />
+                  {pill}
+                </span>
+              ))}
             </div>
 
             <div className={styles.calloutBanner}>
-              <ShieldCheck size={20} className={styles.calloutIcon} />
-              <span className={styles.calloutText}>
-                Protect Data Quality - Remove Pay for Participation that
-                Promotes Cash-Grab Participation
-              </span>
+              <span className={styles.calloutText}>{GREAT_EIGHT_SECTION.banner}</span>
             </div>
           </div>
 
           {/* 8 Pillar Cards Grid */}
           <div className={styles.servicesGrid}>
-            {portfolioCards.map((card, index) => (
+            {greatEightCards.map((card) => (
               <div
-                key={card.id}
-                className={styles.serviceCard}
-                id={`portfolio-card-${card.id}`}
+                key={card.slug}
+                className={`${styles.serviceCard} ${styles.serviceCardClickable}`}
+                id={`great-eight-card-${card.slug}`}
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                aria-label={`${card.number} ${card.title}: open viewpoint`}
+                onClick={() => setActiveGreatEightSlug(card.slug)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveGreatEightSlug(card.slug);
+                  }
+                }}
               >
                 {/* Card Header Row: Icon + Sequence Number */}
                 <div className={styles.cardHeaderRow}>
@@ -608,14 +846,18 @@ export default function Home() {
                       borderColor: card.iconColor,
                     }}
                   >
-                    <ServiceCardIcon card={card} />
+                    <GreatEightCardIcon card={card} />
                   </div>
-                  <span className={styles.cardIndex}>
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+                  <span className={styles.cardIndex}>{card.number}</span>
                 </div>
 
                 <h3 className={styles.cardTitle}>{card.title}</h3>
+
+                <div className={styles.cardClickIndicator}>
+                  <span>Read Viewpoint</span>
+                  <ArrowRight size={14} />
+                </div>
+
                 <div
                   className={styles.cardAccentBar}
                   style={{ backgroundColor: card.iconColor }}
@@ -1457,8 +1699,8 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-guduspa">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/guduspa.jpg"
-                  alt="Guduspa Kumar"
+                  src="/gunduspa.jpg"
+                  alt="Gunduspa Kumar"
                   className={styles.memberImg}
                 />
               </div>
@@ -1470,7 +1712,7 @@ export default function Home() {
                   Analysis and Analytics
                 </span>
                 <p className={styles.memberBio}>
-                  Guduspa translates raw data patterns into predictive models.
+                  Gunduspa translates raw data patterns into predictive models.
                   He designs quantitative Super Intelligence (SI) scoring
                   mechanisms to visualize B2B buyer intent.
                 </p>
@@ -1480,7 +1722,7 @@ export default function Home() {
             <div className={styles.memberCard} id="team-member-robert">
               <div className={styles.imageWrapper}>
                 <img
-                  src="/robert.jpg"
+                  src="/robert2.png"
                   alt="Robert M Johnson"
                   className={styles.memberImg}
                 />
@@ -1514,6 +1756,49 @@ export default function Home() {
                   Bernie pioneers many survey participant data quality
                   safeguards to manage survey hosting for More Than One Hundred
                   Marketing Teams
+                </p>
+              </div>
+            </div>
+            <div className={styles.memberCard} id="team-member-bernie">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/yusuf2.png"
+                  alt="Ahbideen"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Ahbideen Yusuf</h3>
+                <span className={styles.memberRole}>
+                  Interactive 3D & Web Development
+                </span>
+                <p className={styles.memberBio}>
+                  Ahbideen works in interactive 3D, web and software — using
+                  Three.js and WebGL to build experiences people can explore,
+                  move through and use. His skill areas include 3D modelling and
+                  animation, interactive interfaces, and full-stack web
+                  development.
+                </p>
+              </div>
+            </div>
+            <div className={styles.memberCard} id="team-member-bernie">
+              <div className={styles.imageWrapper}>
+                <img
+                  src="/rahel.png"
+                  alt="Rahel"
+                  className={styles.memberImg}
+                />
+              </div>
+              <div className={styles.memberInfo}>
+                <h3 className={styles.memberName}>Rahel</h3>
+                <span className={styles.memberRole}>
+                  Full-Stack Web Development
+                </span>
+                <p className={styles.memberBio}>
+                  Rahel is a full-stack web developer and software engineer with
+                  a focus on building scalable and efficient web applications.
+                  He has experience in front-end and back-end development,
+                  database management, and cloud services.
                 </p>
               </div>
             </div>
@@ -1597,7 +1882,7 @@ export default function Home() {
           <div className={styles.modalIframeContainer}>
             <iframe
               key={verificationKey}
-              src="/cubicon-app/index.html?sequence=contact_form"
+              src="/cubicon-app/index.html?mode=contact&sequence=contact_form"
               title="Cubicon Contact Verification Puzzle"
               className={styles.modalIframe}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1616,6 +1901,11 @@ export default function Home() {
             )}
           </div>
         </div>
+      )}
+
+      {/* The Great Eight viewpoint article modal */}
+      {activeGreatEightCard && (
+        <GreatEightViewpointModal card={activeGreatEightCard} onClose={closeGreatEight} />
       )}
 
       {/* Video Modal Lightbox for Hero Pathway Demonstrations */}
@@ -1656,18 +1946,54 @@ export default function Home() {
             </div>
 
             <div className={styles.videoModalBody}>
-              <video
+              <TransportVideo
                 key={activeVideoModal.videoUrl}
                 src={activeVideoModal.videoUrl}
-                controls
+                mobileSrc={activeVideoModal.mobileVideoUrl}
+                title={activeVideoModal.title}
                 autoPlay
-                playsInline
                 preload="auto"
-                className={styles.videoModalPlayer}
-                aria-label={activeVideoModal.title}
-              >
-                Your browser does not support the video tag.
-              </video>
+                className={styles.videoModalMedia}
+                videoClassName={styles.videoModalPlayer}
+                endScreen={(transport) => (
+                  <div className={styles.videoEndScreen}>
+                    <p className={styles.videoEndTitle}>Where to next?</p>
+                    <div className={styles.videoEndActions}>
+                      <Link
+                        href="/"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Back to Home
+                      </Link>
+                      <Link
+                        href="/products-services"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Products &amp; Services
+                      </Link>
+                      <Link
+                        href="/research-imperatives"
+                        className={styles.videoEndBtn}
+                        onClick={() => setActiveVideoModal(null)}
+                      >
+                        Research Innovation
+                      </Link>
+                      <button
+                        type="button"
+                        className={styles.videoEndBtnGhost}
+                        onClick={() => {
+                          transport.seek(0);
+                          transport.play();
+                        }}
+                      >
+                        Replay
+                      </button>
+                    </div>
+                  </div>
+                )}
+              />
             </div>
 
             <div className={styles.videoModalFooter}>

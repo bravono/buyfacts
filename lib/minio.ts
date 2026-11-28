@@ -15,6 +15,7 @@ import {
   CompletedPart,
   PutObjectCommand,
   ListObjectsV2CommandOutput,
+  GetBucketCorsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -81,8 +82,37 @@ export function getMinioBucket(): string {
 /**
  * Applies a permissive CORS policy to the MinIO bucket to allow direct browser PUT uploads.
  */
+/**
+ * Origins the browser is allowed to read bucket objects from.
+ *
+ * This list used to be hard-coded to ['*'] while the bucket actually ran an explicit list
+ * (localhost + production). That mismatch is why documents rendered locally but failed on
+ * staging. Every origin that runs the app must appear here.
+ *
+ * Override/extend with MINIO_ALLOWED_ORIGINS (comma separated), e.g.
+ *   MINIO_ALLOWED_ORIGINS=https://staging.buyfacts.com,https://buyfacts.com
+ */
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'https://buyfacts.com',
+  'https://www.buyfacts.com',
+];
+
+export function getAllowedOrigins(): string[] {
+  const fromEnv = (process.env.MINIO_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...fromEnv]));
+}
+
 export async function applyBucketCorsPolicy(s3Client: S3Client, bucketName: string) {
   try {
+    const allowedOrigins = getAllowedOrigins();
+
     await s3Client.send(
       new PutBucketCorsCommand({
         Bucket: bucketName,
@@ -91,7 +121,7 @@ export async function applyBucketCorsPolicy(s3Client: S3Client, bucketName: stri
             {
               AllowedHeaders: ['*'],
               AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD', 'DELETE'],
-              AllowedOrigins: ['*'],
+              AllowedOrigins: allowedOrigins,
               ExposeHeaders: ['ETag', 'Content-Type', 'Content-Length'],
               MaxAgeSeconds: 3600,
             },
@@ -99,9 +129,43 @@ export async function applyBucketCorsPolicy(s3Client: S3Client, bucketName: stri
         },
       })
     );
-    console.log(`Bucket "${bucketName}" CORS policy applied successfully.`);
+    console.log(
+      `Bucket "${bucketName}" CORS policy applied for origins: ${allowedOrigins.join(', ')}`
+    );
   } catch (corsErr: any) {
+    const code = corsErr?.name || "";
+    if (code === "NotImplemented") {
+      console.warn(
+        `Bucket "${bucketName}" storage does not implement a CORS policy (or the credentials ` +
+          `may not set one). Documents are still readable: the app fetches them through its own ` +
+          `same-origin /api/document-proxy route, so bucket CORS is not required.`
+      );
+      return;
+    }
     console.warn(`Warning applying CORS policy to bucket "${bucketName}":`, corsErr?.message || corsErr);
+  }
+}
+
+/**
+ * Reads the bucket's current CORS rules so a misconfiguration can be diagnosed instead of
+ * guessed at. Returns null when the policy cannot be read.
+ */
+export async function getBucketCorsPolicy(
+  s3Client: S3Client,
+  bucketName: string
+): Promise<Array<{ origins: string[]; methods: string[] }> | null> {
+  try {
+    const res = await s3Client.send(new GetBucketCorsCommand({ Bucket: bucketName }));
+    return (res.CORSRules || []).map((rule) => ({
+      origins: rule.AllowedOrigins || [],
+      methods: rule.AllowedMethods || [],
+    }));
+  } catch (err: any) {
+    if (err?.name === "NoSuchCORSConfiguration" || err?.name === "NotImplemented") {
+      // No policy set — which is fine: documents are read through the same-origin proxy.
+      return [];
+    }
+    return null;
   }
 }
 

@@ -39,7 +39,9 @@ dev.db-journal
 prisma/dev.db
 prisma/dev.db-journal
 prisma/migrations_sqlite_backup
-/scripts
+/scripts/*
+!/scripts/*.ts
+!/scripts/bundle-*.js
 /data
 
 # vercel
@@ -53,3 +55,6 @@ next-env.d.ts
 
 # others
 subscribers.json
+
+# agent edit backups
+.abacusai-bot/

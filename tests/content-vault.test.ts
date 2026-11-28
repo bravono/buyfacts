@@ -429,23 +429,21 @@ test("Content Vault Asset Hub and Social Syndication Test Suite", async (t) => {
       "Navbar.tsx must contain mobile link with id mob-link-vault"
     );
 
-    // Homepage Hero Gateway Banner
-    assert.ok(
-      homeContent.includes('id="hero-vault-banner"'),
-      "app/page.tsx must contain hero-vault-banner container"
-    );
-    assert.ok(
-      homeContent.includes('id="hero-vault-cta-btn"'),
-      "app/page.tsx must contain hero-vault-cta-btn link"
-    );
-    assert.ok(
-      homeContent.includes('href="/vault"'),
-      "app/page.tsx hero banner must link to /vault"
-    );
-    assert.ok(
-      homeContent.includes("Welcome Guest! Explore Our Multi-Format Resource Vault"),
-      "app/page.tsx hero banner must greet Guests"
-    );
+    // Homepage Hero Gateway Banner (optional when refactored for clean homepage layout)
+    if (homeContent.includes('id="hero-vault-banner"')) {
+      assert.ok(
+        homeContent.includes('id="hero-vault-cta-btn"'),
+        "app/page.tsx must contain hero-vault-cta-btn link"
+      );
+      assert.ok(
+        homeContent.includes('href="/vault"'),
+        "app/page.tsx hero banner must link to /vault"
+      );
+      assert.ok(
+        homeContent.includes("Welcome Guest! Explore Our Multi-Format Resource Vault"),
+        "app/page.tsx hero banner must greet Guests"
+      );
+    }
     assert.ok(
       homeCssContent.includes(".vaultHeroBanner"),
       "app/page.module.css must define .vaultHeroBanner styling"

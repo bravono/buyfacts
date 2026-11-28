@@ -1,0 +1,20 @@
+{
+  "geometry": "equilateral",
+  "side_ratio": [
+    1,
+    1,
+    1
+  ],
+  "apex_formula": "apexY = baseY - (sqrt(3)/2) * (rightX-leftX)",
+  "initial_puck": "centroid",
+  "initial_puck_is_scored": false,
+  "available_destinations": [
+    "ll",
+    "lr",
+    "apex"
+  ],
+  "corner_only_submissions": true,
+  "puck_display_diameter_as_percent_of_base": 20,
+  "notes": "The visible puck is tangent to BOTH inside edges at the selected corner. Its filled shape never intersects the border stroke; see TRIAD_Corner_Tangency_Specification.json.",
+  "geometry_rule": "center=vertex + unit(vertex_to_centroid)*(2*puck_radius+triangle_stroke_width)"
+}

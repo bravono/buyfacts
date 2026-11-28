@@ -6,11 +6,18 @@ import { ADMIN_MODEL_REGISTRY } from "../lib/admin/schemaRegistry";
 import { prisma } from "../lib/prisma";
 import { shouldHideBorderFrame } from "../lib/admin/navigation";
 
+/**
+ * Most admin operations now require a live super_admin account: the middleware
+ * re-reads the account from the database, and destructive actions are reserved
+ * for the super admin role.
+ */
+const SUPER_ADMIN_ID = "73";
+
 async function createAdminAuthHeader(): Promise<Record<string, string>> {
   const token = await signJWT({
-    userId: "1",
+    userId: SUPER_ADMIN_ID,
     email: "rmj@robertjohnson.com",
-    role: "admin",
+    role: "super_admin",
   });
   return {
     Authorization: `Bearer ${token}`,
@@ -50,7 +57,7 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.ok(data.error.includes("Invalid table"));
   });
 
-  test("Summary Action: should return counts for all 17 registered models", async () => {
+  test("Summary Action: should return counts for all registered models", async () => {
     const headers = await createAdminAuthHeader();
     const req = new Request("http://localhost/api/admin/database?action=summary", {
       headers,
@@ -61,7 +68,7 @@ describe("Admin Database Dashboard API Suite", () => {
     const data = await res.json();
     assert.equal(data.success, true);
     assert.ok(data.summary);
-    assert.equal(data.summary.modelCount, 20);
+    assert.equal(data.summary.modelCount, Object.keys(ADMIN_MODEL_REGISTRY).length);
 
     const registryKeys = Object.keys(ADMIN_MODEL_REGISTRY);
     for (const key of registryKeys) {
@@ -223,7 +230,7 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.equal(verifyDeleted, null, "Deleted record must not exist in database");
   });
 
-  test("User Management: Create user with hashed password and delete", async () => {
+  test("User Management: Create user with hashed password, and refuse hard delete", async () => {
     const headers = await createAdminAuthHeader();
     const testAdminEmail = `temp_admin_${Date.now()}@example.com`;
 
@@ -258,7 +265,7 @@ describe("Admin Database Dashboard API Suite", () => {
     assert.ok(dbUser?.passwordHash, "Database record must have hashed password");
     assert.notEqual(dbUser?.passwordHash, "SecureTestPassword123!");
 
-    // Clean up
+    // Accounts must never be hard-deleted: the API refuses even for a super admin.
     const deleteReq = new Request("http://localhost/api/admin/database", {
       method: "DELETE",
       headers,
@@ -268,7 +275,44 @@ describe("Admin Database Dashboard API Suite", () => {
       }),
     });
     const deleteRes = await DELETE(deleteReq);
-    assert.equal(deleteRes.status, 200);
+    assert.equal(deleteRes.status, 400);
+    const deleteData = await deleteRes.json();
+    assert.equal(deleteData.success, false);
+    assert.match(String(deleteData.error), /deleted|deactivate/i);
+
+    // The account still exists; clean up directly so the test leaves nothing behind.
+    assert.ok(await prisma.user.findUnique({ where: { id: newUserId } }));
+    await prisma.user.delete({ where: { id: newUserId } });
+  });
+
+  test("Authorization: a plain admin cannot delete records (super admin only)", async () => {
+    const token = await signJWT(
+      { userId: "74", email: "ahbideeny@gmail.com", role: "admin" },
+      undefined,
+      600
+    );
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+    const req = new Request("http://localhost/api/admin/database?table=dashboardButton&id=does-not-exist", {
+      method: "DELETE",
+      headers,
+    });
+    const res = await DELETE(req);
+    assert.equal(res.status, 403);
+    const data = await res.json();
+    assert.equal(data.success, false);
+    assert.match(String(data.error), /super admin/i);
+  });
+
+  test("Authorization: the audit trail is read-only for everyone", async () => {
+    const headers = await createAdminAuthHeader();
+    const req = new Request("http://localhost/api/admin/database", {
+      method: "DELETE",
+      headers,
+      body: JSON.stringify({ table: "auditLog", id: "any" }),
+    });
+    const res = await DELETE(req);
+    assert.equal(res.status, 403);
   });
 
   test("BorderFrame Navigation: should hide borders on admin routes and preserve on public pages", () => {

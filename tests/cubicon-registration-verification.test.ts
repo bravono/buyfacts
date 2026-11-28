@@ -428,8 +428,8 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
 
     // Full-screen modal and verification puzzle elements must be present
     assert.ok(
-      content.includes("/cubicon-app/index.html?sequence=contact_form"),
-      "Cubicon verification iframe must use contact_form sequence"
+      content.includes("/cubicon-app/index.html?mode=contact&sequence=contact_form"),
+      "Cubicon verification iframe must use mode=contact with contact_form sequence"
     );
     assert.ok(
       content.includes("COMPLETE PUZZLE TO REGISTER"),
@@ -444,8 +444,8 @@ test("Cubicon Founding Client Registration Email Verification & Template Suite",
       "Must render full-screen modal overlay container"
     );
     assert.ok(
-      content.includes("CUBICON_VERIFICATION_COMPLETE"),
-      "Must listen for CUBICON_VERIFICATION_COMPLETE message event"
+      (content.includes("CUBICON_VERIFICATION_COMPLETE") || content.includes("CUBICON_COMPLETED")),
+      "Must listen for CUBICON_VERIFICATION_COMPLETE or CUBICON_COMPLETED message events"
     );
   });
 

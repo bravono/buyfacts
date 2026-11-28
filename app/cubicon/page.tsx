@@ -13,7 +13,6 @@ import {
   Zap,
   Gift,
   Star,
-  CheckCircle2,
   Send,
   AlertCircle,
   FileCheck,
@@ -35,7 +34,6 @@ import {
   X,
   LogOut,
   BarChart3,
-  Video,
   FastForward,
   ArrowRight,
 } from "lucide-react";
@@ -58,79 +56,57 @@ interface AreaDefinition {
 const CONTACT_AREAS: AreaDefinition[] = [
   {
     id: "interest",
-    name: "Interest",
+    name: "Primary Reason for Contact",
     weight: 45,
+
     options: [
-      { label: "Self-Help", factor: 0.5 },
-      { label: "Contribution", factor: 0.5 },
-      { label: "Access to Research", factor: 0.5 },
-      { label: "Confirmation", factor: 0.2 },
-      { label: "Topical Idea", factor: 0.0 },
+      { label: "Upcoming Survey", factor: 0.5 },
+      { label: "General Planning", factor: 0.5 },
+      { label: "Comparing Alternatives", factor: 0.5 },
+      { label: "Cubicon Trial", factor: 0.2 },
+      { label: "45-Minute Discussion", factor: 0.0 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "need",
-    name: "Need",
+    name: "Where Cubicon Could Help",
     weight: 20,
+
     options: [
-      { label: "Clarify", factor: 0.6 },
-      { label: "Simplify", factor: 0.7 },
-      { label: "Additional Detail", factor: 0.4 },
-      { label: "Best Practices", factor: 0.7 },
-      { label: "Become a Site Maven", factor: 0.5 },
+      { label: "Improve Sample", factor: 0.6 },
+      { label: "Clean Panel", factor: 0.7 },
+      { label: "Participant Quality", factor: 0.4 },
+      { label: "Validate Sample", factor: 0.7 },
+      { label: "Control Entry", factor: 0.5 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "source",
-    name: "Source",
-    weight: 5,
+    name: "Current Evaluation Stage",
+    weight: 15,
+
     options: [
-      { label: "Email Invite", factor: 0.1 },
-      { label: "Blog Posting", factor: 0.7 },
-      { label: "Peer Referral", factor: 0.3 },
-      { label: "Search Engine", factor: 0.2 },
-      { label: "Press Article", factor: 0.8 },
+      { label: "Just Saw the Preview", factor: 0.1 },
+      { label: "Early Exploration", factor: 0.7 },
+      { label: "Comparing Options", factor: 0.3 },
+      { label: "Considering a Pilot", factor: 0.2 },
+      { label: "Ready for Next-Step Conversation", factor: 0.8 },
       { label: "Other", factor: 0.2 },
     ],
   },
   {
     id: "profile",
-    name: "Profile",
-    weight: 5,
-    options: [
-      { label: "Self", factor: 0.6 },
-      { label: "Company", factor: 0.5 },
-      { label: "Publisher", factor: 0.2 },
-      { label: "Press", factor: 0.9 },
-      { label: "Consultant", factor: 0.2 },
-      { label: "Other", factor: 0.2 },
-    ],
-  },
-  {
-    id: "history",
-    name: "History",
-    weight: 5,
-    options: [
-      { label: "Experienced Researcher", factor: 0.7 },
-      { label: "Analytical Expertise", factor: 0.3 },
-      { label: "Survey Author", factor: 0.8 },
-      { label: "Member", factor: 0.3 },
-      { label: "Ongoing Conversation", factor: 0.3 },
-      { label: "Other", factor: 0.2 },
-    ],
-  },
-  {
-    id: "goal",
-    name: "Goal",
+    name: "My Role",
     weight: 20,
+
     options: [
-      { label: "Promote Idea", factor: 0.9 },
-      { label: "Sell Something", factor: 0.7 },
-      { label: "Add a Topic", factor: 0.2 },
-      { label: "Just Comment", factor: 0.4 },
-      { label: "Notify Us", factor: 0.2 },
+      { label: "Marketer", factor: 0.6 },
+      { label: "Researcher", factor: 0.5 },
+      { label: "Quality Control", factor: 0.2 },
+      { label: "Data Analytics", factor: 0.9 },
+      { label: "Project Management", factor: 0.2 },
       { label: "Other", factor: 0.2 },
     ],
   },
@@ -197,8 +173,6 @@ const SLIDE_FALLBACK_IMAGES: Record<number, string> = {
 
 const CUBICON_VIDEO_CDN_URL =
   "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788942125069-um5o95-Cubicon_self_running.mp4";
-const CUBICON_VIDEO_CDN_FALLBACK =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
 export default function CubiconPage() {
   const router = useRouter();
@@ -210,7 +184,8 @@ export default function CubiconPage() {
   const [showVideo, setShowVideo] = useState(false);
   const [isVideoStarted, setIsVideoStarted] = useState(false);
   const [isVideoCompleted, setIsVideoCompleted] = useState(false);
-  const [videoSrc, setVideoSrc] = useState(CUBICON_VIDEO_CDN_URL);
+  const [videoReloadKey, setVideoReloadKey] = useState(0);
+  const [videoError, setVideoError] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideAnimationKey, setSlideAnimationKey] = useState(0);
 
@@ -300,6 +275,31 @@ export default function CubiconPage() {
   const totalSteps = 3;
   const [showForm, setShowForm] = useState(true);
 
+  // Panel mode state (for respondents sent by founding clients)
+  const [panelMode, setPanelMode] = useState<"loading" | "trial" | "panel" | "rejected">("loading");
+  const [panelClientId, setPanelClientId] = useState<string | null>(null);
+  const [panelRespondentId, setPanelRespondentId] = useState<string | null>(null);
+  const [panelCallbackUrl, setPanelCallbackUrl] = useState<string | null>(null);
+  const [panelError, setPanelError] = useState<string>("");
+  const [panelAutoLaunch, setPanelAutoLaunch] = useState(false);
+  const [panelRedirecting, setPanelRedirecting] = useState(false);
+
+  const panelDataRef = useRef({
+    mode: panelMode,
+    clientId: panelClientId,
+    respondentId: panelRespondentId,
+    callbackUrl: panelCallbackUrl,
+  });
+
+  useEffect(() => {
+    panelDataRef.current = {
+      mode: panelMode,
+      clientId: panelClientId,
+      respondentId: panelRespondentId,
+      callbackUrl: panelCallbackUrl,
+    };
+  }, [panelMode, panelClientId, panelRespondentId, panelCallbackUrl]);
+
   // Cubicon Anti-Bot Human Verification State
   const [isVerified, setIsVerified] = useState(false);
   const [verificationSessionId, setVerificationSessionId] = useState<
@@ -317,11 +317,108 @@ export default function CubiconPage() {
     async () => {},
   );
 
+  // Initialize panel mode vs trial mode from URL query parameters
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const cId = params.get("clientId")?.trim() || null;
+    const rId = params.get("respondentId")?.trim() || null;
+    const cbUrl = params.get("callbackUrl")?.trim() || null;
+
+    // Distinguish between trial users and client panel respondents:
+    // If NO client/respondent params are present -> trial user!
+    if (!cId && !rId) {
+      setPanelMode("trial");
+      return;
+    }
+
+    // If one of the required IDs is missing -> reject the respondent immediately
+    if (!cId || !rId || !cbUrl) {
+      setPanelMode("rejected");
+      if (!cId && rId) {
+        setPanelError("Access Rejected: Client ID is missing. Both Client ID and Respondent ID are required.");
+      } else if (cId && !rId) {
+        setPanelError("Access Rejected: Respondent ID is missing. Both Client ID and Respondent ID are required.");
+      } else {
+        setPanelError("Access Rejected: Missing required query parameters (clientId, respondentId, callbackUrl).");
+      }
+      return;
+    }
+
+    setPanelClientId(cId);
+    setPanelRespondentId(rId);
+    setPanelCallbackUrl(cbUrl);
+
+    // Validate with backend API
+    fetch(
+      `/api/cubicon-panel/validate?clientId=${encodeURIComponent(cId)}&respondentId=${encodeURIComponent(rId)}&callbackUrl=${encodeURIComponent(cbUrl)}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.valid) {
+          setPanelMode("panel");
+          setPanelAutoLaunch(true);
+        } else {
+          setPanelMode("rejected");
+          setPanelError(data.error || "Your client or respondent credentials could not be verified.");
+        }
+      })
+      .catch(() => {
+        setPanelMode("rejected");
+        setPanelError("Unable to verify panel credentials due to a network error. Please try again.");
+      });
+  }, []);
+
+  // Auto-launch 3D Cubicon solver directly when validated in panel mode
+  useEffect(() => {
+    if (panelAutoLaunch) {
+      handleSeeLiveClick();
+      setPanelAutoLaunch(false);
+    }
+  }, [panelAutoLaunch]);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
-      if (event.data.type === "CUBICON_VERIFICATION_COMPLETE") {
+      if (
+        event.data.type === "CUBICON_VERIFICATION_COMPLETE" ||
+        event.data.type === "CUBICON_COMPLETED"
+      ) {
         const { sessionId, passed, heading, description } = event.data;
+
+        // Check if current user is an authenticated panel respondent
+        const currentPanel = panelDataRef.current;
+        if (currentPanel.mode === "panel" && currentPanel.callbackUrl) {
+          setPanelRedirecting(true);
+          fetch("/api/cubicon-panel/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              clientId: currentPanel.clientId,
+              respondentId: currentPanel.respondentId,
+              callbackUrl: currentPanel.callbackUrl,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              } else {
+                setPanelError(data.error || "Failed to complete panel redirect.");
+                setPanelRedirecting(false);
+              }
+            })
+            .catch((err) => {
+              console.error("[Panel Complete Error]", err);
+              setPanelError("Network error occurred while submitting results.");
+              setPanelRedirecting(false);
+            });
+          return;
+        }
+
+        // Trial / standard verification mode
         if (passed) {
           setIsVerified(true);
           setVerificationSessionId(sessionId);
@@ -788,6 +885,13 @@ export default function CubiconPage() {
           ? `/feedback?sessionId=${encodeURIComponent(sessId)}`
           : "/feedback";
         router.push(targetUrl);
+      } else if (event.data?.type === "CUBICON_NAVIGATE" && event.data?.url) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        notifyIframeFullscreen(false);
+        router.push(event.data.url);
       }
     };
 
@@ -854,7 +958,169 @@ export default function CubiconPage() {
         }}
       >
         <div className={styles.container}>
-          {!showLiveApp && !showVideo ? (
+          {/* Panel Redirecting Screen */}
+          {panelRedirecting && (
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                background: "rgba(10, 15, 30, 0.95)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 99999,
+                color: "#ffffff",
+                padding: "24px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  border: "4px solid rgba(56, 189, 248, 0.2)",
+                  borderTopColor: "#38bdf8",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "1.5rem",
+                }}
+              />
+              <h2
+                style={{
+                  color: "#38bdf8",
+                  fontSize: "1.8rem",
+                  fontWeight: 700,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Puzzle Completed!
+              </h2>
+              <p style={{ color: "#cbd5e1", fontSize: "1.1rem" }}>
+                Returning you to your survey provider with your verified result...
+              </p>
+            </div>
+          )}
+
+          {/* Panel Initializing / Loading Screen */}
+          {panelMode === "loading" && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "4rem 1rem",
+                color: "#94a3b8",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-block",
+                  width: "36px",
+                  height: "36px",
+                  border: "3px solid rgba(56, 189, 248, 0.2)",
+                  borderTopColor: "#38bdf8",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "1rem",
+                }}
+              />
+              <h3 style={{ color: "#f8fafc", fontSize: "1.25rem", margin: 0 }}>
+                Verifying Access Credentials...
+              </h3>
+              <p
+                style={{
+                  color: "#94a3b8",
+                  fontSize: "0.95rem",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Validating client and respondent identity
+              </p>
+            </div>
+          )}
+
+          {/* Panel Rejected Screen */}
+          {panelMode === "rejected" && (
+            <div
+              style={{
+                maxWidth: "600px",
+                margin: "2rem auto",
+                padding: "2.5rem",
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                borderRadius: "16px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  color: "#ef4444",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 1.5rem auto",
+                }}
+              >
+                <AlertCircle size={36} />
+              </div>
+              <h2
+                style={{
+                  color: "#ef4444",
+                  fontSize: "1.6rem",
+                  fontWeight: 700,
+                  marginBottom: "1rem",
+                }}
+              >
+                Access Rejected
+              </h2>
+              <p
+                style={{
+                  color: "#cbd5e1",
+                  fontSize: "1.05rem",
+                  lineHeight: 1.6,
+                  marginBottom: "2rem",
+                }}
+              >
+                {panelError ||
+                  "You cannot access this survey session because required client or respondent credentials are missing or unverified."}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPanelMode("trial");
+                    setPanelError("");
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: "0.8rem 1.6rem", fontSize: "0.95rem" }}
+                >
+                  Try Qubicorn Demo Mode
+                </button>
+                <Link
+                  href="/"
+                  className="btn btn-secondary"
+                  style={{ padding: "0.8rem 1.6rem", fontSize: "0.95rem" }}
+                >
+                  Return to Home
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {panelMode !== "rejected" && panelMode !== "loading" && !showLiveApp && !showVideo ? (
             <div className={styles.slideshowWrapper}>
               <div
                 key={slideAnimationKey}
@@ -964,14 +1230,6 @@ export default function CubiconPage() {
             <div className={styles.videoWrapper}>
               <div className={styles.videoHeader}>
                 <div className={styles.videoTitleGroup}>
-                  <span
-                    className={`${styles.videoBadge} ${
-                      isVideoCompleted ? styles.videoCompletedBadge : ""
-                    }`}
-                  >
-                    <Video size={14} />{" "}
-                    {isVideoCompleted ? "PREVIEW COMPLETE" : "VIDEO DEMO"}
-                  </span>
                   <span className={styles.videoTitle}>
                     Cubicon Self-Running Demonstration
                   </span>
@@ -989,11 +1247,8 @@ export default function CubiconPage() {
                   <button
                     className={styles.controlBtn}
                     onClick={() => {
-                      setVideoSrc((prev) =>
-                        prev === CUBICON_VIDEO_CDN_URL
-                          ? CUBICON_VIDEO_CDN_FALLBACK
-                          : CUBICON_VIDEO_CDN_URL,
-                      );
+                      setVideoError(false);
+                      setVideoReloadKey((prev) => prev + 1);
                       setIsVideoCompleted(false);
                       setIsVideoStarted(true);
                     }}
@@ -1022,29 +1277,35 @@ export default function CubiconPage() {
                   </button>
                 )}
 
-                <video
-                  key={videoSrc}
-                  className={styles.videoElement}
-                  controls
-                  autoPlay
-                  playsInline
-                  src={videoSrc}
-                  onEnded={() => setIsVideoCompleted(true)}
-                  onError={() => {
-                    if (videoSrc !== CUBICON_VIDEO_CDN_FALLBACK) {
-                      setVideoSrc(CUBICON_VIDEO_CDN_FALLBACK);
-                    }
-                  }}
-                />
+                {videoError ? (
+                  <div
+                    className={styles.videoElement}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      padding: "2rem",
+                    }}
+                  >
+                    Unable to load video. Please click Reload Video.
+                  </div>
+                ) : (
+                  <video
+                    key={`${CUBICON_VIDEO_CDN_URL}-${videoReloadKey}`}
+                    className={styles.videoElement}
+                    controls
+                    autoPlay
+                    playsInline
+                    src={CUBICON_VIDEO_CDN_URL}
+                    onEnded={() => setIsVideoCompleted(true)}
+                    onError={() => setVideoError(true)}
+                  />
+                )}
 
                 {isVideoCompleted && (
                   <div className={styles.videoCompletionOverlay}>
-                    <span
-                      className={styles.videoBadge}
-                      style={{ marginBottom: "0.2rem" }}
-                    >
-                      <CheckCircle2 size={14} /> NEXT STEP INSTRUCTION
-                    </span>
                     <div className={styles.videoCompletionTitle}>
                       Automated Video Demonstration Complete
                     </div>
@@ -1054,13 +1315,22 @@ export default function CubiconPage() {
                       interactive 3D spatial solver and validate your response
                       yourself.
                     </div>
-                    <button
-                      className={styles.tryItYourselfBtn}
-                      onClick={handleSeeLiveClick}
-                      title="Launch Interactive 3D Solver"
-                    >
-                      <Sparkles size={20} /> TRY IT YOURSELF NOW
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+                      <button
+                        className={styles.tryItYourselfBtn}
+                        onClick={handleSeeLiveClick}
+                        title="Launch Interactive 3D Solver"
+                      >
+                        TRY IT YOURSELF NOW
+                      </button>
+                      <button
+                        className={styles.leaveBtn}
+                        onClick={() => router.push("/")}
+                        title="Return to Home Page"
+                      >
+                        LEAVE
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1111,7 +1381,6 @@ export default function CubiconPage() {
                   <span className={styles.liveIndicator}>
                     <span className={styles.pulseDot}></span> LIVE 3D ENGINE
                   </span>
-                  
                 </div>
                 <div className={styles.appControls}>
                   <button
@@ -1137,7 +1406,7 @@ export default function CubiconPage() {
                     )}
                     {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   </button>
-                  
+
                   <Link
                     href="/feedback"
                     className={styles.controlBtn}
@@ -1211,14 +1480,19 @@ export default function CubiconPage() {
         </div>
       </section>
 
-      {/* CUBICON FOUNDING CLIENT INVITATION */}
-      <section
-        className="section-brand-bg"
-        id="founding-client-invitation"
-        style={{ padding: "6rem 0" }}
-      >
+      {/* CUBICON FOUNDING CLIENT INVITATION & APPLICATION */}
+      {panelMode !== "panel" && (
+        <>
+          <section
+            className="section-brand-bg"
+            id="founding-client-invitation"
+            style={{ padding: "2rem 0" }}
+          >
         <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: "0" }}>
+          <div
+            className={styles.sectionHeader}
+            style={{ marginBottom: "0", minWidth: "90vw" }}
+          >
             <span className={styles.sectionTag}>EXCLUSIVE INVITATION</span>
             <h2 className={styles.sectionTitle}>
               Cubicon Founding Client Invitation
@@ -1233,7 +1507,8 @@ export default function CubiconPage() {
                 lineHeight: "1.5",
               }}
             >
-              Become a Founding client and experience the future of survey participant validation.
+              Become a Founding client and experience the future of survey
+              participant validation.
             </p>
             <p
               className={styles.sectionDesc}
@@ -1318,7 +1593,7 @@ export default function CubiconPage() {
       </section>
 
       {/* WHY WE CREATED CUBICON */}
-      <section className="section-light" style={{ padding: "6rem 0" }}>
+      <section className="section-light" style={{ padding: "2rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>RATIONALE &amp; MISSION</span>
@@ -1394,7 +1669,7 @@ export default function CubiconPage() {
       <section
         className="section-brand-bg"
         id="founding-client-benefits"
-        style={{ padding: "6rem 0" }}
+        style={{ padding: "2rem 0" }}
       >
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -1464,7 +1739,7 @@ export default function CubiconPage() {
       </section>
 
       {/* FOUNDATION CLIENT REQUIREMENTS */}
-      <section className="section-light" style={{ padding: "6rem 0" }}>
+      <section className="section-light" style={{ padding: "2rem 0" }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTag}>QUALIFICATION CRITERIA</span>
@@ -1516,7 +1791,7 @@ export default function CubiconPage() {
       <section
         className="section-brand-bg"
         id="founding-client"
-        style={{ padding: "6rem 0" }}
+        style={{ padding: "2rem 0" }}
       >
         <div id="register-form" />
         <div id="founding-client-form" />
@@ -1771,9 +2046,8 @@ export default function CubiconPage() {
                           marginBottom: "1.5rem",
                         }}
                       >
-                        Check all elements that apply to your organization.
-                        Multiple selections adjust factors automatically
-                        according to the BuyFacts weighting model.
+                        Check all elements that apply to your outreach.
+                        Multiple selections help us route and prioritize follow-up appropriately.
                       </p>
 
                       {CONTACT_AREAS.map((area) => (
@@ -1781,9 +2055,6 @@ export default function CubiconPage() {
                           <div className={styles.areaHeader}>
                             <span className={styles.areaTitle}>
                               {area.name}
-                            </span>
-                            <span className={styles.areaWeightBadge}>
-                              Area Weight: {area.weight}
                             </span>
                           </div>
 
@@ -1884,8 +2155,8 @@ export default function CubiconPage() {
                   </div>
 
                   <p className={styles.verificationHint}>
-                    <ShieldCheck size={15} /> Clicking register will open a
-                    full-screen 3D verification puzzle to confirm you are human.
+                    Clicking register will open a full-screen 3D verification
+                    puzzle to confirm you are human.
                   </p>
 
                   {formStatus.type && (
@@ -1905,6 +2176,8 @@ export default function CubiconPage() {
           )}
         </div>
       </section>
+        </>
+      )}
 
       {/* Fullscreen Cubicon Anti-Bot Verification Modal */}
       {isVerificationModalOpen && (
@@ -1979,7 +2252,7 @@ export default function CubiconPage() {
           <div className={styles.modalIframeContainer}>
             <iframe
               key={verificationKey}
-              src="/cubicon-app/index.html?sequence=contact_form"
+              src="/cubicon-app/index.html?mode=contact&sequence=contact_form"
               title="Cubicon Registration Verification Puzzle"
               className={styles.modalIframe}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

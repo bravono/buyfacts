@@ -75,15 +75,21 @@ export async function DELETE(req: NextRequest) {
 
     const publicUrl = getPublicUrl(objectKey);
 
-    // Clean up corresponding database record
+    // Clean up corresponding database record - prefer objectKey match, fall back to URL substring
     try {
-      await prisma.mediaAsset.deleteMany({
-        where: {
-          publicUrl: {
-            contains: objectKey,
-          },
-        },
+      const deleted = await prisma.mediaAsset.deleteMany({
+        where: { objectKey },
       });
+      if (deleted.count === 0) {
+        // Legacy records without objectKey: match by URL substring
+        await prisma.mediaAsset.deleteMany({
+          where: {
+            publicUrl: {
+              contains: objectKey,
+            },
+          },
+        });
+      }
     } catch (dbErr) {
       console.warn('Could not delete corresponding DB asset record:', dbErr);
     }

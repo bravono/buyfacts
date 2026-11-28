@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { FeedbackSchema } from "@/lib/validation/forms";
-import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { checkRateLimitAsync, getClientIp } from "@/lib/security/rate-limiter";
+import { withRequestLogging } from "@/lib/observability/request";
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const exportFormat = searchParams.get("export")?.toLowerCase();
@@ -46,11 +47,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   try {
     // 1. Rate Limiting (Section 13)
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(ip, "feedback");
+    const rateLimit = await checkRateLimitAsync(ip, "feedback");
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+async function DELETEHandler(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const purge = searchParams.get("purge");
@@ -197,3 +198,8 @@ function corsHeaders() {
     },
   };
 }
+
+// Every request is logged with an id, status and duration (see lib/observability).
+export const GET = withRequestLogging(GETHandler, { route: "/api/cubicon-feedback" });
+export const POST = withRequestLogging(POSTHandler, { route: "/api/cubicon-feedback" });
+export const DELETE = withRequestLogging(DELETEHandler, { route: "/api/cubicon-feedback" });

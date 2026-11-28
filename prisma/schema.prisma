@@ -10,14 +10,83 @@ datasource db {
 }
 
 // 1. Core User Identity
+// Roles: "super_admin" (full control, incl. destructive actions),
+//        "admin" (manage records, no destructive actions),
+//        "editor" / "user" (read-only in the admin database).
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  name         String?
-  passwordHash String?
-  role         String   @default("admin") // e.g. "admin", "user"
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  name                String?
+  passwordHash        String?
+  role                String    @default("admin") // "super_admin" | "admin" | "editor" | "user"
+  isActive            Boolean   @default(true)
+  // TOTP second factor (base32 secret + enrolment state)
+  totpSecret          String?
+  totpEnabledAt       DateTime?
+  // Brute-force lockout
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  // Password reset (single-use hashed token)
+  resetTokenHash      String?
+  resetTokenExpiresAt DateTime?
+  passwordChangedAt   DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
+
+  @@index([resetTokenHash])
+  @@index([role])
+}
+
+// Audit trail for every administrative / destructive action
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  action     String // e.g. "auth.login", "record.delete", "user.role_change"
+  target     String? // table / resource touched
+  targetId   String?
+  status     String   @default("success") // "success" | "failure"
+  metadata   String? // JSON string with extra context
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([actorEmail])
+}
+
+// Centralized operational log: every structured event the app emits (HTTP requests,
+// email dispatch, storage, panel verification, rate-limit hits, unhandled errors).
+// AuditLog above stays the security trail ("who did what"); LogEvent is telemetry.
+model LogEvent {
+  id           String   @id @default(uuid())
+  ts           DateTime @default(now())
+  level        String // "debug" | "info" | "warn" | "error" | "fatal"
+  category     String // "http" | "auth" | "db" | "mail" | "storage" | "panel" | "cubicon" | "security" | "system"
+  event        String // dotted name, e.g. "http.request.error", "mail.send.failed"
+  message      String?
+  requestId    String?
+  route        String?
+  method       String?
+  status       Int?
+  durationMs   Int?
+  actorEmail   String?
+  ip           String?
+  userAgent    String?
+  entityId     String? // session id, client id, record id the event is about
+  errorName    String?
+  errorMessage String?
+  stack        String?
+  context      String? // JSON string with extra redacted context
+
+  @@index([ts])
+  @@index([level, ts])
+  @@index([category, ts])
+  @@index([requestId])
+  @@index([route])
 }
 
 // 2. Contact Form (Main Page & Contact Us)
@@ -54,44 +123,61 @@ model NotificationSubscription {
 
 // 4. Interactive Dashboard Buttons configuration
 model DashboardButton {
-  id        String   @id @default(uuid())
-  label     String
-  mediaUrl  String
-  seeItUrl  String?  // Video link for SEE IT
+  id              String   @id @default(uuid())
+  label           String
+  descriptionText String   @default("") // Renamed from mediaUrl: description text displayed in player
+  seeItUrl        String?  // Video link for SEE IT
   hearItUrl String?  // Audio link for HEAR IT
   readItUrl String?  // Document/PDF link for READ IT
-  mediaType String   @default("video") // e.g. "video", "image", "audio", "pdf"
   subtitle  String?
+  description String?  // Detailed button description for media player overlay and reader
   category  String   @default("Services") // e.g. "Services", "Thought Leadership"
   color     String?  // Optional visual color configuration
   updatedAt DateTime @updatedAt
 }
 
-// 5. Uploaded Assets history log
+// 5. Assets in MinIO Bucket Table
 model MediaAsset {
   id         String   @id @default(uuid())
-  publicUrl  String
+  objectKey  String?
+  folder     String?  @default("uploads")
   fileName   String
   fileType   String
   fileSize   Int
+  publicUrl  String
   uploadedAt DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([objectKey])
+  @@index([folder])
 }
 
 // 6. ResearchLib / Research Lib Embedded Survey Platform
 model ResearchLibSurvey {
-  id            Int      @id @default(autoincrement())
-  userId        String   @default("system_default")
-  heading       String
-  instruction   String
-  widget        String
-  story         String
-  combo         String
-  blanks        String   // JSON string of blanks and choices
-  durationInMin String?  @default("30")
-  pauseDuration String?  @default("3")
-  timeCounter   String?  @default("down")
-  isFollowup    Int?     @default(1)
-  createdAt     DateTime @default(now())
+  id            Int                 @id @default(autoincrement())
+  userId        String              @default("system_default")
+  title         String?             @default("AI Marketing Directional Measurement")
+  timeCounter   String?             @default("down") // time direction: "down" | "up"
+  pauseDuration String?             @default("3")    // pause duration (minutes)
+  durationInMin String?             @default("30")   // total duration (minutes)
+  combo         String              @default("narWid") // combination rule: narWid, tradWid, narList, tradList
+  createdAt     DateTime            @default(now())
+  tasks         ResearchLibTask[]
+}
+
+model ResearchLibTask {
+  id          Int               @id @default(autoincrement())
+  surveyId    Int
+  survey      ResearchLibSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  taskIndex   Int               @default(0)
+  heading     String
+  instruction String
+  widget      String            // triad, bar, ring, barrel
+  question    String            // chunk of the story
+  story       String?           // chunk of the story
+  blanks      String            // JSON string of blanks and choices with questionType
+  isFollowup  Int               @default(1) // 1 for intermediate, 0 for final task (follow up set to false)
+  createdAt   DateTime          @default(now())
 }
 
 model ResearchLibResponse {
@@ -103,27 +189,6 @@ model ResearchLibResponse {
   createdAt DateTime @default(now())
 }
 
-model ResearchLibTimer {
-  id           Int      @id @default(autoincrement())
-  userId       String   @unique
-  sessionTimer String?  @default("{}")
-  pauseTimer   String?  @default("{}")
-  updatedAt    DateTime @default(now()) @updatedAt
-}
-
-model ResearchLibElement {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  state     String?  @default("{}")
-  updatedAt DateTime @default(now()) @updatedAt
-}
-
-model ResearchLibAppState {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  state     String?  @default("{}")
-  updatedAt DateTime @default(now()) @updatedAt
-}
 
 // 7. Cubicon 3D Interactive Survey & Verification Platform
 model CubiconSequence {
@@ -177,6 +242,10 @@ model CubiconSession {
   previousResult        String?          @default("")
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @default(now()) @updatedAt
+  clientId              String?                              // links to FoundingClient.clientId
+  respondentId          String?                              // 8-digit respondent ID from query param
+  sessionMode           String           @default("trial")   // "trial" | "panel"
+  foundingClient        FoundingClient?  @relation("FoundingClientSessions", fields: [clientId], references: [clientId])
 }
 
 model CubiconAttempt {
@@ -202,6 +271,24 @@ model CubiconRegistration {
   notes     String?
   isUsBased Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+// 8. Founding Client Panel — issued after payment
+model FoundingClient {
+  id                     String           @id @default(cuid())
+  clientId               String           @unique           // e.g. "BF-A1B2C3D4"
+  registrationId         String?          @unique           // FK to CubiconRegistration.id (string UUID)
+  name                   String
+  email                  String
+  company                String?
+  allowedCallbackDomains String           @default("[]")    // JSON array of approved domain strings
+  paymentStatus          String           @default("pending") // "pending" | "paid"
+  paymentTransactionId   String?
+  paidAt                 DateTime?
+  isActive               Boolean          @default(false)   // activated only after successful payment
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @default(now()) @updatedAt
+  sessions               CubiconSession[] @relation("FoundingClientSessions")
 }
 
 model CubiconShare {
@@ -263,3 +350,36 @@ model Topic {
   createdAt   DateTime     @default(now())
 }
 
+
+// 8. Great Eight Articles & Media
+model GreatEightItem {
+  id          Int      @id @default(autoincrement())
+  orderIndex  Int      @default(1)
+  slug        String   @unique
+  title       String
+  tagline     String?  @default("")
+  description String?  @default("")
+  seeItUrl    String?  // Video link for SEE IT
+  hearItUrl   String?  // Audio link for HEAR IT
+  readItUrl   String?  // Document/PDF/DOCX CDN link for READ IT
+  iconUrl     String?  // Icon CDN URL
+  iconColor   String?  // Accent color (e.g. #14a38b)
+  bgColor     String?  // Background tint (e.g. rgba(20, 163, 139, 0.08))
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+// Shared throttle counters (Section 13: distributed / multi-instance rate limiting).
+// One row per (key, window); the route handler increments it with a single
+// INSERT ... ON CONFLICT DO UPDATE, so every instance counts against one budget.
+model ThrottleCounter {
+  key           String   // "<namespace>:<action>:<identifier>"
+  windowStart   DateTime // fixed bucket start; identical on every instance
+  windowSeconds Int
+  count         Int      @default(0)
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+}

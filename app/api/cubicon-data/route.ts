@@ -16,12 +16,12 @@ export const COMPLETION_MESSAGES = {
   success: {
     heading: "Congratulations! You are human.",
     description:
-      "Next we offer you a number of choices below. Please make a selection and we thank you for considering Cubicon and BuyFacts.",
+      "Next we offer you a number of choices above. Please make a selection and we thank you for considering Cubicon and BuyFacts.",
   },
   rejection: {
     heading: "Thank you for participating",
     description:
-      "Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices below.",
+      "Sorry our survey has exceeded the number of desired respondents. We hope to see you again when we reach out again. Please select from the choices above.",
   },
 };
 
@@ -209,7 +209,7 @@ export function parseClicksList(clicks: unknown): Array<{ x: number; y: number; 
 export function normalizePuzzleType(type: unknown): "click" | "drag" | "double_click" {
   if (!type) return "click";
   const normalized = String(type).trim().toLowerCase();
-  if (["drag", "anticipation", "drawing", "sequence"].includes(normalized)) {
+  if (["drag", "anticipation", "drawing", "sequence", "multi-point", "multipoint"].includes(normalized)) {
     return "drag";
   }
   if (["double_click", "doubleclick", "double-click"].includes(normalized)) {

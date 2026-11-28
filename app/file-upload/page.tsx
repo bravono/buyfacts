@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FileUploader, UploadSuccessResult } from "@/components/FileUploader";
 import { FilePreview } from "@/components/FilePreview";
+import GreatEightSection from "./GreatEightSection";
 import {
   STORAGE_FOLDERS,
   MinioObjectItem,
@@ -55,12 +56,14 @@ interface SavedRecord {
   fileType: string;
   fileSize: number;
   uploadedAt: string;
+  objectKey?: string | null;
+  folder?: string | null;
 }
 
 interface DatabaseButton {
   id: string;
   label: string;
-  mediaUrl: string;
+  descriptionText: string;
   seeItUrl?: string | null;
   hearItUrl?: string | null;
   readItUrl?: string | null;
@@ -72,10 +75,23 @@ interface DatabaseButton {
 export default function FileUploadDemoPage() {
   const [savedRecords, setSavedRecords] = useState<SavedRecord[]>([]);
   const [lastUploadedUrl, setLastUploadedUrl] = useState<string | null>(null);
-  const [assigningButtonId, setAssigningButtonId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewName, setPreviewName] = useState<string>("");
   const [mockButtons, setMockButtons] = useState<DatabaseButton[]>([]);
+
+  // Map of objectKey / publicUrl -> database asset ID
+  const assetIdByObjectKey = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const record of savedRecords) {
+      if (record.objectKey) {
+        map.set(record.objectKey, record.id);
+      }
+      if (record.publicUrl) {
+        map.set(record.publicUrl, record.id);
+      }
+    }
+    return map;
+  }, [savedRecords]);
 
   // Storage Explorer State
   const [storageFiles, setStorageFiles] = useState<MinioObjectItem[]>([]);
@@ -223,6 +239,8 @@ export default function FileUploadDemoPage() {
           fileType: item.fileType,
           fileSize: item.fileSize,
           uploadedAt: new Date(item.uploadedAt).toLocaleTimeString(),
+          objectKey: item.objectKey ?? null,
+          folder: item.folder ?? null,
         }));
         setSavedRecords(records);
       }
@@ -323,6 +341,10 @@ export default function FileUploadDemoPage() {
   // Callback when a single file is successfully uploaded
   const handleUploadSuccess = async (result: UploadSuccessResult) => {
     try {
+      const folder = result.objectKey && result.objectKey.includes("/")
+        ? result.objectKey.split("/").slice(0, -1).join("/")
+        : null;
+
       const res = await fetch("/api/media-assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -331,6 +353,8 @@ export default function FileUploadDemoPage() {
           fileName: result.fileName,
           fileType: result.fileType,
           fileSize: result.fileSize,
+          objectKey: result.objectKey ?? null,
+          folder,
         }),
       });
 
@@ -349,6 +373,7 @@ export default function FileUploadDemoPage() {
         fileType: result.fileType,
         fileSize: result.fileSize,
         uploadedAt: new Date().toLocaleTimeString(),
+        objectKey: result.objectKey ?? null,
       };
       setSavedRecords((prev) => [newRecord, ...prev]);
       setLastUploadedUrl(result.publicUrl);
@@ -363,12 +388,19 @@ export default function FileUploadDemoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assets: results.map((r) => ({
-            publicUrl: r.publicUrl,
-            fileName: r.fileName,
-            fileType: r.fileType,
-            fileSize: r.fileSize,
-          })),
+          assets: results.map((r) => {
+            const folder = r.objectKey && r.objectKey.includes("/")
+              ? r.objectKey.split("/").slice(0, -1).join("/")
+              : null;
+            return {
+              publicUrl: r.publicUrl,
+              fileName: r.fileName,
+              fileType: r.fileType,
+              fileSize: r.fileSize,
+              objectKey: r.objectKey ?? null,
+              folder,
+            };
+          }),
         }),
       });
 
@@ -388,10 +420,12 @@ export default function FileUploadDemoPage() {
   };
 
   const [savingButtonSubLinkId, setSavingButtonSubLinkId] = useState<string | null>(null);
+  // Collapsible state for the Interactive Component Grid cards (null = all collapsed).
+  const [expandedGridButtonId, setExpandedGridButtonId] = useState<string | null>(null);
 
   const handleUpdateSubLink = async (
     buttonId: string,
-    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "descriptionText",
     url: string
   ) => {
     const key = `${buttonId}-${field}`;
@@ -421,37 +455,12 @@ export default function FileUploadDemoPage() {
 
   const handleLocalSubLinkChange = (
     buttonId: string,
-    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "mediaUrl",
+    field: "seeItUrl" | "hearItUrl" | "readItUrl" | "descriptionText",
     val: string
   ) => {
     setMockButtons((prev) =>
       prev.map((btn) => (btn.id === buttonId ? { ...btn, [field]: val } : btn))
     );
-  };
-
-  const handleAssignUrl = async (buttonId: string, url: string) => {
-    setAssigningButtonId(buttonId);
-    try {
-      const res = await fetch("/api/buttons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: buttonId,
-          mediaUrl: url,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setMockButtons((prev) =>
-          prev.map((btn) => (btn.id === buttonId ? { ...btn, mediaUrl: url } : btn))
-        );
-      }
-    } catch (err) {
-      console.error("Failed to assign URL to button:", err);
-    } finally {
-      setTimeout(() => setAssigningButtonId(null), 1500);
-    }
   };
 
   const handleClearHistory = async () => {
@@ -779,77 +788,87 @@ export default function FileUploadDemoPage() {
                   .filter((btn) => btn.category === category)
                   .map((btn) => {
                     const BtnIcon = getIconForType(btn.mediaType);
+                    const isOpen = expandedGridButtonId === btn.id;
+                    const linkedCount = [btn.seeItUrl, btn.hearItUrl, btn.readItUrl].filter(
+                      Boolean
+                    ).length;
                     return (
-                      <div key={btn.id} className={styles.card}>
-                        <div className={styles.cardHeader}>
-                          <div className={styles.cardIcon}>
-                            <BtnIcon className="w-4 h-4" />
+                      <div
+                        key={btn.id}
+                        className={`${styles.card} ${styles.collapsibleCard} ${
+                          isOpen ? styles.cardOpen : ""
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          className={styles.cardToggle}
+                          aria-expanded={isOpen}
+                          onClick={() =>
+                            setExpandedGridButtonId(isOpen ? null : btn.id)
+                          }
+                          title={isOpen ? "Collapse card" : "Expand card"}
+                        >
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardIcon}>
+                              <BtnIcon className="w-4 h-4" />
+                            </div>
+                            <div className={styles.cardTitleGroup}>
+                              <span className={styles.cardLabel}>{btn.label}</span>
+                              {btn.subtitle && (
+                                <span className={styles.cardSubtitle}>{btn.subtitle}</span>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <span className={styles.cardLabel}>{btn.label}</span>
-                            {btn.subtitle && (
-                              <span className={styles.cardSubtitle}>{btn.subtitle}</span>
-                            )}
+                          <div className={styles.cardToggleMeta}>
+                            <span className={styles.cardBadge}>{linkedCount}/3 linked</span>
+                            <svg
+                              className={`${styles.cardChevron} ${
+                                isOpen ? styles.cardChevronOpen : ""
+                              }`}
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Four Media Action Rows: Button Link, SEE IT, HEAR IT, READ IT */}
+                        {isOpen && (
                         <div className={styles.subLinksSection}>
-                          {/* 1. BUTTON LINK (Primary Default Link) */}
+                          {/* 1. DESCRIPTION (text shown in the player) */}
                           <div className={styles.subLinkRow}>
                             <div className={styles.subLinkHeader}>
                               <div className={styles.subLinkLabel}>
                                 <LinkIcon className="w-3.5 h-3.5 text-[var(--interactive-blue)]" />
-                                <span>BUTTON LINK (Primary)</span>
+                                <span>DESCRIPTION</span>
                               </div>
                               <div className={styles.subLinkActions}>
-                                <button
-                                  type="button"
-                                  disabled={!lastUploadedUrl}
-                                  onClick={() =>
-                                    handleUpdateSubLink(btn.id, "mediaUrl", lastUploadedUrl!)
-                                  }
-                                  className={styles.subLinkPasteBtn}
-                                  title={
-                                    lastUploadedUrl
-                                      ? `Link staged URL: ${lastUploadedUrl}`
-                                      : "No staged URL"
-                                  }
-                                >
-                                  {savingButtonSubLinkId === `${btn.id}-mediaUrl` ? (
-                                    <>
-                                      <Check className="w-3 h-3 text-emerald-500" /> Linked!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <LinkIcon className="w-3 h-3" /> Link Staged
-                                    </>
-                                  )}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={!btn.mediaUrl}
-                                  onClick={() =>
-                                    triggerPreview(btn.mediaUrl, `${btn.label} - Button Link`)
-                                  }
-                                  className={styles.previewIconBtn}
-                                  title="Preview Button Link"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
+                                {savingButtonSubLinkId === `${btn.id}-descriptionText` && (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-500" /> Saved!
+                                  </>
+                                )}
                               </div>
                             </div>
                             <div className={styles.subLinkInputWrapper}>
-                              <input
-                                type="text"
-                                value={btn.mediaUrl ?? ""}
+                              <textarea
+                                rows={6}
+                                value={btn.descriptionText ?? ""}
                                 onChange={(e) =>
-                                  handleLocalSubLinkChange(btn.id, "mediaUrl", e.target.value)
+                                  handleLocalSubLinkChange(btn.id, "descriptionText", e.target.value)
                                 }
                                 onBlur={(e) =>
-                                  handleUpdateSubLink(btn.id, "mediaUrl", e.target.value)
+                                  handleUpdateSubLink(btn.id, "descriptionText", e.target.value)
                                 }
-                                placeholder="Paste or type main button link (e.g. S3 URL, video, doc, web)..."
+                                placeholder="Description text shown in the media player (blank line = new paragraph)..."
                                 className={styles.subLinkInput}
                               />
                             </div>
@@ -888,10 +907,10 @@ export default function FileUploadDemoPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  disabled={!btn.seeItUrl && !btn.mediaUrl}
+                                  disabled={!btn.seeItUrl}
                                   onClick={() =>
                                     triggerPreview(
-                                      btn.seeItUrl || btn.mediaUrl,
+                                      btn.seeItUrl!,
                                       `${btn.label} - SEE IT`
                                     )
                                   }
@@ -1037,6 +1056,7 @@ export default function FileUploadDemoPage() {
                             </div>
                           </div>
                         </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1045,7 +1065,18 @@ export default function FileUploadDemoPage() {
           ))}
         </div>
 
-        {/* Section 4: Storage Explorer & File Manager */}
+        {/* Section 4: The Great Eight (collapsed by default) */}
+        <GreatEightSection
+          buttons={mockButtons}
+          category="Research Imperatives"
+          stagedUrl={lastUploadedUrl}
+          onLocalChange={handleLocalSubLinkChange}
+          onSave={handleUpdateSubLink}
+          onPreview={triggerPreview}
+          savingKey={savingButtonSubLinkId}
+        />
+
+        {/* Section 5: Storage Explorer & File Manager */}
         <div className={styles.stagerCard}>
           <div
             className={styles.stagerHeader}
@@ -1056,7 +1087,7 @@ export default function FileUploadDemoPage() {
           >
             <div className={styles.stagerTitle}>
               <FolderTree className="w-4 h-4 text-[var(--interactive-orange)]" />
-              4. Storage Explorer & Hierarchical File Manager
+              5. Storage Explorer & Hierarchical File Manager
             </div>
             <button
               type="button"
@@ -1300,6 +1331,20 @@ export default function FileUploadDemoPage() {
                       </div>
                       <div className={styles.storageItemDetails}>
                         <span className={styles.folderBadge}>{file.folder}</span>
+                        {assetIdByObjectKey.has(file.objectKey) && (
+                          <span
+                            className={styles.folderBadge}
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "0.7rem",
+                              background: "rgba(59, 130, 246, 0.15)",
+                              color: "var(--interactive-blue, #60a5fa)",
+                            }}
+                            title={`Database Asset ID: ${assetIdByObjectKey.get(file.objectKey)}`}
+                          >
+                            ID: {assetIdByObjectKey.get(file.objectKey)!.slice(0, 8)}...
+                          </span>
+                        )}
                         <span>•</span>
                         <span>{formatBytes(file.size)}</span>
                         <span>•</span>
@@ -1411,7 +1456,21 @@ export default function FileUploadDemoPage() {
                   title="Click to stage this URL for button linking"
                 >
                   <div className={styles.historyInfo}>
-                    <span className={styles.historyName}>{record.fileName}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span className={styles.historyName}>{record.fileName}</span>
+                      <span
+                        className={styles.folderBadge}
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "0.7rem",
+                          background: "rgba(59, 130, 246, 0.15)",
+                          color: "var(--interactive-blue, #60a5fa)",
+                        }}
+                        title={`Asset ID: ${record.id}`}
+                      >
+                        ID: {record.id.length > 12 ? `${record.id.slice(0, 8)}...` : record.id}
+                      </span>
+                    </div>
                     <span className={styles.historyUrl}>{record.publicUrl}</span>
                   </div>
                   <span className={styles.historyTime}>{record.uploadedAt}</span>

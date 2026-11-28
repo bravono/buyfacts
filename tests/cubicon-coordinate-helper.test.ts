@@ -10,6 +10,9 @@ import {
   project3DToScreenUV,
   parseCoordinateInput,
   extractWaypoints,
+  normalizeQuestionType,
+  questionTypeToInteractionMode,
+  interactionModeToQuestionType,
   FACE_SPAN,
 } from "../lib/cubicon/coordinateHelper";
 
@@ -162,7 +165,32 @@ test("Cubicon Coordinate Helper Test Suite", async (t) => {
     assert.equal(wp3.endPoint, JSON.stringify(p3[2]));
   });
 
-  await t.test("6. Zero-Emoji Compliance", async () => {
+  await t.test("6. questionType normalization and interactionMode conversion", async () => {
+    assert.equal(normalizeQuestionType(undefined), "Selection");
+    assert.equal(normalizeQuestionType(null), "Selection");
+    assert.equal(normalizeQuestionType(""), "Selection");
+    assert.equal(normalizeQuestionType("Selection"), "Selection");
+    assert.equal(normalizeQuestionType("click"), "Selection");
+    assert.equal(normalizeQuestionType("CLICK"), "Selection");
+
+    assert.equal(normalizeQuestionType("Anticipation"), "Anticipation");
+    assert.equal(normalizeQuestionType("drag"), "Anticipation");
+    assert.equal(normalizeQuestionType("DRAG"), "Anticipation");
+    assert.equal(normalizeQuestionType("Drawing"), "Anticipation");
+    assert.equal(normalizeQuestionType("Multi-point"), "Anticipation");
+    assert.equal(normalizeQuestionType("sequence"), "Anticipation");
+
+    assert.equal(questionTypeToInteractionMode("Selection"), "click");
+    assert.equal(questionTypeToInteractionMode("click"), "click");
+    assert.equal(questionTypeToInteractionMode("Anticipation"), "drag");
+    assert.equal(questionTypeToInteractionMode("drag"), "drag");
+
+    assert.equal(interactionModeToQuestionType("click"), "Selection");
+    assert.equal(interactionModeToQuestionType("drag"), "Anticipation");
+    assert.equal(interactionModeToQuestionType(undefined), "Selection");
+  });
+
+  await t.test("7. Zero-Emoji Compliance", async () => {
     const helperFile = path.resolve(__dirname, "../lib/cubicon/coordinateHelper.ts");
     const testFile = __filename;
 

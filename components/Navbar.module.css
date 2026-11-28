@@ -223,7 +223,7 @@
   font-weight: 500;
   color: var(--interactive-orange); /* Brand Orange (#ff9900) */
   letter-spacing: 0.08em;
-  margin-top: 1px;
+  margin-top: 6px;
   text-transform: uppercase;
   white-space: nowrap;
   text-wrap: nowrap;

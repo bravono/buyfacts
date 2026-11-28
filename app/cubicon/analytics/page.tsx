@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import styles from "./analytics.module.css";
-import CubiconCoordinatePicker, { CoordinatePickerApplyResult } from "@/components/CubiconCoordinatePicker";
+import CubiconCoordinatePicker, { CoordinatePickerApplyResult, CoordinateDataSync } from "@/components/CubiconCoordinatePicker";
+import { normalizeQuestionType, CanonicalQuestionType } from "@/lib/cubicon/coordinateHelper";
 import { Crosshair, Plus, Trash2, ArrowRight } from "lucide-react";
 
 interface OverviewKPIs {
@@ -20,6 +21,26 @@ interface OverviewKPIs {
   avgSolveTimeSeconds: number;
   avgRating: string;
   totalFeedback: number;
+}
+
+export interface SequenceTaskConfig {
+  id?: number;
+  sequenceId?: number;
+  taskIndex: number;
+  taskNumber: number;
+  heading: string;
+  description: string;
+  screen: string;
+  image: string;
+  questionType: string;
+  correctCoordinates: string;
+  startPoint: string;
+  midPoint: string;
+  endPoint: string;
+  rotation: string;
+  rotationInterval: number;
+  tolerance: number;
+  isFinal?: boolean;
 }
 
 interface Participant {
@@ -102,15 +123,10 @@ interface SequenceItem {
   title: string;
   description: string;
   passThreshold?: number;
-  pass_threshold?: number;
   rotationDirection?: string;
-  rotation_direction?: string;
   defaultRotationInterval?: number;
-  default_rotation_interval?: number;
   isActive?: boolean;
-  is_active?: boolean;
   createdBy?: string;
-  created_by?: string;
   tasks?: Array<{
     id: number;
     taskIndex: number;
@@ -155,11 +171,12 @@ export default function CubiconAnalyticsPage() {
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
   // Helper to generate default tasks for sequences
-  const generateDefaultTasks = (count: number, rotationDir = "left", rotationInterval = 15) => {
+  const generateDefaultTasks = (count: number, rotationDir = "left", rotationInterval = 15): SequenceTaskConfig[] => {
     const screens = ["Active_front", "Active_side_r", "Active_back", "Active_side_l"];
     const arts = ["/cubicon-app/arts/Puzzle1.webp", "/cubicon-app/arts/Puzzle2.webp", "/cubicon-app/arts/Puzzle3.webp"];
-    const tasks = [];
+    const tasks: SequenceTaskConfig[] = [];
     for (let i = 0; i < count; i++) {
+      const qType = i === 2 ? "Anticipation" : "Selection";
       tasks.push({
         taskIndex: i,
         taskNumber: i + 1,
@@ -167,7 +184,7 @@ export default function CubiconAnalyticsPage() {
         description: i === 2 ? "Trace the path across waypoints (Drag to solve)." : "Click the correct target on screen.",
         screen: screens[i % screens.length],
         image: arts[i % arts.length],
-        questionType: i === 2 ? "Anticipation" : "Selection",
+        questionType: qType,
         correctCoordinates: "",
         startPoint: "",
         midPoint: "",
@@ -185,14 +202,24 @@ export default function CubiconAnalyticsPage() {
   const [isSeqLoading, setIsSeqLoading] = useState<boolean>(false);
   const [seqMessage, setSeqMessage] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
-  const [newSeq, setNewSeq] = useState({
+  const [newSeq, setNewSeq] = useState<{
+    title: string;
+    slug: string;
+    description: string;
+    passThreshold: number;
+    rotationDirection: string;
+    defaultRotationInterval: number;
+    isActive: boolean;
+    tasksCount: number;
+    tasks: SequenceTaskConfig[];
+  }>({
     title: "",
     slug: "",
     description: "",
-    pass_threshold: 0.66,
-    rotation_direction: "left",
-    default_rotation_interval: 15,
-    is_active: false,
+    passThreshold: 0.66,
+    rotationDirection: "left",
+    defaultRotationInterval: 15,
+    isActive: false,
     tasksCount: 3,
     tasks: generateDefaultTasks(3),
   });
@@ -214,6 +241,66 @@ export default function CubiconAnalyticsPage() {
     return editingTasks?.[pickerTarget.taskIndex] || null;
   }, [pickerTarget, newSeq.tasks, editingTasks]);
 
+  const handlePickerQuestionTypeChange = (nextType: CanonicalQuestionType) => {
+    if (!pickerTarget) return;
+    if (pickerTarget.source === "create") {
+      setNewSeq((prev) => {
+        const nextTasks = [...(prev.tasks || [])];
+        if (nextTasks[pickerTarget.taskIndex]) {
+          nextTasks[pickerTarget.taskIndex] = {
+            ...nextTasks[pickerTarget.taskIndex],
+            questionType: nextType,
+          };
+        }
+        return { ...prev, tasks: nextTasks };
+      });
+    } else if (pickerTarget.source === "edit") {
+      setEditingTasks((prev) => {
+        const next = [...prev];
+        if (next[pickerTarget.taskIndex]) {
+          next[pickerTarget.taskIndex] = {
+            ...next[pickerTarget.taskIndex],
+            questionType: nextType,
+          };
+        }
+        return next;
+      });
+    }
+  };
+
+  const handlePickerDataChange = (syncData: CoordinateDataSync) => {
+    if (!pickerTarget) return;
+
+    const updater = (task: any) => ({
+      ...task,
+      ...(syncData.screen !== undefined ? { screen: syncData.screen } : {}),
+      ...(syncData.image !== undefined ? { image: syncData.image } : {}),
+      ...(syncData.questionType !== undefined ? { questionType: syncData.questionType } : {}),
+      ...(syncData.correctCoordinates !== undefined ? { correctCoordinates: syncData.correctCoordinates } : {}),
+      ...(syncData.startPoint !== undefined ? { startPoint: syncData.startPoint } : {}),
+      ...(syncData.midPoint !== undefined ? { midPoint: syncData.midPoint } : {}),
+      ...(syncData.endPoint !== undefined ? { endPoint: syncData.endPoint } : {}),
+    });
+
+    if (pickerTarget.source === "create") {
+      setNewSeq((prev) => {
+        const nextTasks = [...(prev.tasks || [])];
+        if (nextTasks[pickerTarget.taskIndex]) {
+          nextTasks[pickerTarget.taskIndex] = updater(nextTasks[pickerTarget.taskIndex]);
+        }
+        return { ...prev, tasks: nextTasks };
+      });
+    } else if (pickerTarget.source === "edit") {
+      setEditingTasks((prev) => {
+        const next = [...prev];
+        if (next[pickerTarget.taskIndex]) {
+          next[pickerTarget.taskIndex] = updater(next[pickerTarget.taskIndex]);
+        }
+        return next;
+      });
+    }
+  };
+
   const handlePickerApply = (result: CoordinatePickerApplyResult) => {
     if (!pickerTarget) return;
 
@@ -229,6 +316,7 @@ export default function CubiconAnalyticsPage() {
             endPoint: result.endPoint,
             ...(result.image ? { image: result.image } : {}),
             ...(result.screen ? { screen: result.screen } : {}),
+            ...(result.questionType ? { questionType: result.questionType } : {}),
           };
         }
         return { ...prev, tasks: nextTasks };
@@ -245,6 +333,7 @@ export default function CubiconAnalyticsPage() {
             endPoint: result.endPoint,
             ...(result.image ? { image: result.image } : {}),
             ...(result.screen ? { screen: result.screen } : {}),
+            ...(result.questionType ? { questionType: result.questionType } : {}),
           };
         }
         return next;
@@ -315,10 +404,10 @@ export default function CubiconAnalyticsPage() {
         title: newSeq.title,
         slug: newSeq.slug,
         description: newSeq.description,
-        passThreshold: newSeq.pass_threshold,
-        rotationDirection: newSeq.rotation_direction,
-        defaultRotationInterval: newSeq.default_rotation_interval,
-        isActive: newSeq.is_active,
+        passThreshold: newSeq.passThreshold,
+        rotationDirection: newSeq.rotationDirection,
+        defaultRotationInterval: newSeq.defaultRotationInterval,
+        isActive: newSeq.isActive,
         tasks: newSeq.tasks,
       };
 
@@ -335,10 +424,10 @@ export default function CubiconAnalyticsPage() {
           title: "",
           slug: "",
           description: "",
-          pass_threshold: 0.66,
-          rotation_direction: "left",
-          default_rotation_interval: 15,
-          is_active: false,
+          passThreshold: 0.66,
+          rotationDirection: "left",
+          defaultRotationInterval: 15,
+          isActive: false,
           tasksCount: 3,
           tasks: generateDefaultTasks(3),
         });
@@ -356,7 +445,10 @@ export default function CubiconAnalyticsPage() {
   const handleOpenEditTasks = (seq: any) => {
     setEditingSeq(seq);
     const existingTasks = Array.isArray(seq.tasks) && seq.tasks.length > 0
-      ? JSON.parse(JSON.stringify(seq.tasks))
+      ? JSON.parse(JSON.stringify(seq.tasks)).map((t: any) => {
+          const qt = normalizeQuestionType(t.questionType);
+          return { ...t, questionType: qt };
+        })
       : generateDefaultTasks(3, seq.rotationDirection || "left", seq.defaultRotationInterval || 15);
     setEditingTasks(existingTasks);
   };
@@ -373,7 +465,7 @@ export default function CubiconAnalyticsPage() {
           passThreshold: editingSeq.passThreshold,
           rotationDirection: editingSeq.rotationDirection,
           defaultRotationInterval: editingSeq.defaultRotationInterval,
-          isActive: editingSeq.isActive !== undefined ? editingSeq.isActive : editingSeq.is_active,
+          isActive: editingSeq.isActive !== undefined ? editingSeq.isActive : true,
           tasks: editingTasks,
         }),
       });
@@ -1125,7 +1217,7 @@ export default function CubiconAnalyticsPage() {
                       <tr key={seq.id}>
                         <td>
                           {(() => {
-                            const isAct = seq.isActive !== undefined ? seq.isActive : seq.is_active;
+                            const isAct = !!seq.isActive;
                             return (
                               <span
                                 style={{
@@ -1151,7 +1243,7 @@ export default function CubiconAnalyticsPage() {
                         </td>
                         <td>
                           {(() => {
-                            const threshold = seq.passThreshold !== undefined ? seq.passThreshold : (seq.pass_threshold ?? 0.66);
+                            const threshold = seq.passThreshold ?? 0.66;
                             return (
                               <span style={{ fontWeight: 600, color: "#cbd5e1" }}>
                                 {threshold > 1
@@ -1163,10 +1255,10 @@ export default function CubiconAnalyticsPage() {
                         </td>
                         <td>
                           <div style={{ textTransform: "capitalize", color: "#ffffff" }}>
-                            Direction: <strong>{seq.rotationDirection || seq.rotation_direction || "left"}</strong>
+                            Direction: <strong>{seq.rotationDirection || "left"}</strong>
                           </div>
                           <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                            Interval: {seq.defaultRotationInterval ?? seq.default_rotation_interval ?? 15}s
+                            Interval: {seq.defaultRotationInterval ?? 15}s
                           </div>
                         </td>
                         <td>
@@ -1179,7 +1271,7 @@ export default function CubiconAnalyticsPage() {
                         </td>
                         <td>
                           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                            {!(seq.isActive !== undefined ? seq.isActive : seq.is_active) && (
+                            {!seq.isActive && (
                               <button
                                 className={styles.btnPrimary}
                                 style={{ padding: "5px 10px", fontSize: "0.75rem" }}
@@ -1289,8 +1381,8 @@ export default function CubiconAnalyticsPage() {
                       step="0.01"
                       min="0.1"
                       max="10"
-                      value={newSeq.pass_threshold}
-                      onChange={(e) => setNewSeq({ ...newSeq, pass_threshold: parseFloat(e.target.value) || 0.66 })}
+                      value={newSeq.passThreshold}
+                      onChange={(e) => setNewSeq({ ...newSeq, passThreshold: parseFloat(e.target.value) || 0.66 })}
                       className={styles.searchInput}
                       style={{ width: "100%" }}
                     />
@@ -1304,8 +1396,8 @@ export default function CubiconAnalyticsPage() {
                       Rotation Direction
                     </label>
                     <select
-                      value={newSeq.rotation_direction}
-                      onChange={(e) => setNewSeq({ ...newSeq, rotation_direction: e.target.value })}
+                      value={newSeq.rotationDirection}
+                      onChange={(e) => setNewSeq({ ...newSeq, rotationDirection: e.target.value })}
                       className={styles.select}
                       style={{ width: "100%" }}
                     >
@@ -1324,8 +1416,8 @@ export default function CubiconAnalyticsPage() {
                       type="number"
                       min="5"
                       max="60"
-                      value={newSeq.default_rotation_interval}
-                      onChange={(e) => setNewSeq({ ...newSeq, default_rotation_interval: parseInt(e.target.value, 10) || 15 })}
+                      value={newSeq.defaultRotationInterval}
+                      onChange={(e) => setNewSeq({ ...newSeq, defaultRotationInterval: parseInt(e.target.value, 10) || 15 })}
                       className={styles.searchInput}
                       style={{ width: "100%" }}
                     />
@@ -1346,7 +1438,7 @@ export default function CubiconAnalyticsPage() {
                         setNewSeq((prev) => {
                           let tasks = [...(prev.tasks || [])];
                           if (tasks.length < clamped) {
-                            const extra = generateDefaultTasks(clamped, prev.rotation_direction, prev.default_rotation_interval).slice(tasks.length);
+                            const extra = generateDefaultTasks(clamped, prev.rotationDirection, prev.defaultRotationInterval).slice(tasks.length);
                             tasks = [...tasks, ...extra];
                           } else if (tasks.length > clamped) {
                             tasks = tasks.slice(0, clamped);
@@ -1423,6 +1515,8 @@ export default function CubiconAnalyticsPage() {
                               <option value="Active_side_r">Active_side_r</option>
                               <option value="Active_back">Active_back</option>
                               <option value="Active_side_l">Active_side_l</option>
+                              <option value="Active_top">Active_top</option>
+                              <option value="Active_bottom">Active_bottom</option>
                             </select>
                           </div>
 
@@ -1431,9 +1525,9 @@ export default function CubiconAnalyticsPage() {
                             <select
                               className={styles.select}
                               style={{ width: "100%", padding: "4px 8px", fontSize: "0.8rem" }}
-                              value={task.questionType || "Selection"}
+                              value={normalizeQuestionType(task.questionType)}
                               onChange={(e) => {
-                                const val = e.target.value;
+                                const val = normalizeQuestionType(e.target.value);
                                 setNewSeq((prev) => {
                                   const t = [...prev.tasks];
                                   t[idx] = { ...t[idx], questionType: val };
@@ -1485,8 +1579,8 @@ export default function CubiconAnalyticsPage() {
                   <input
                     type="checkbox"
                     id="seqActive"
-                    checked={newSeq.is_active}
-                    onChange={(e) => setNewSeq({ ...newSeq, is_active: e.target.checked })}
+                    checked={newSeq.isActive}
+                    onChange={(e) => setNewSeq({ ...newSeq, isActive: e.target.checked })}
                   />
                   <label htmlFor="seqActive" style={{ fontSize: "0.88rem", color: "#ffffff", cursor: "pointer" }}>
                     Activate immediately as primary challenge
@@ -1597,7 +1691,7 @@ export default function CubiconAnalyticsPage() {
                     Configure Sequence Tasks: {editingSeq.title}
                   </h3>
                   <div style={{ color: "#94a3b8", fontSize: "0.82rem" }}>
-                    Slug: {editingSeq.slug} • Direction: {editingSeq.rotationDirection || editingSeq.rotation_direction || "left"}
+                    Slug: {editingSeq.slug} • Direction: {editingSeq.rotationDirection || "left"}
                   </div>
                 </div>
                 <button className={styles.modalClose} onClick={() => setEditingSeq(null)}>
@@ -1630,8 +1724,8 @@ export default function CubiconAnalyticsPage() {
                           startPoint: "",
                           midPoint: "",
                           endPoint: "",
-                          rotation: editingSeq.rotationDirection || editingSeq.rotation_direction || "left",
-                          rotationInterval: editingSeq.defaultRotationInterval || editingSeq.default_rotation_interval || 15,
+                          rotation: editingSeq.rotationDirection || "left",
+                          rotationInterval: editingSeq.defaultRotationInterval || 15,
                           tolerance: 0.5,
                         },
                       ]);
@@ -1726,6 +1820,8 @@ export default function CubiconAnalyticsPage() {
                             <option value="Active_side_r">Active_side_r</option>
                             <option value="Active_back">Active_back</option>
                             <option value="Active_side_l">Active_side_l</option>
+                            <option value="Active_top">Active_top</option>
+                            <option value="Active_bottom">Active_bottom</option>
                           </select>
                         </div>
 
@@ -1734,12 +1830,12 @@ export default function CubiconAnalyticsPage() {
                           <select
                             className={styles.select}
                             style={{ width: "100%", padding: "5px 8px", fontSize: "0.82rem" }}
-                            value={task.questionType || task.question_type || "Selection"}
+                            value={normalizeQuestionType(task.questionType)}
                             onChange={(e) => {
-                              const val = e.target.value;
+                              const val = normalizeQuestionType(e.target.value);
                               setEditingTasks((prev) => {
                                 const next = [...prev];
-                                next[idx] = { ...next[idx], questionType: val, question_type: val };
+                                next[idx] = { ...next[idx], questionType: val };
                                 return next;
                               });
                             }}
@@ -1805,8 +1901,10 @@ export default function CubiconAnalyticsPage() {
           }}
           initialScreen={currentPickerTask?.screen || "Active_front"}
           initialImage={currentPickerTask?.image || "/cubicon-app/arts/Puzzle1.webp"}
-          initialQuestionType={currentPickerTask?.questionType || currentPickerTask?.question_type || "Selection"}
-          initialCoordinates={currentPickerTask?.correctCoordinates || currentPickerTask?.correct_coordinates || ""}
+          initialQuestionType={normalizeQuestionType(currentPickerTask?.questionType)}
+          initialCoordinates={currentPickerTask?.correctCoordinates || ""}
+          onDataChange={handlePickerDataChange}
+          onQuestionTypeChange={handlePickerQuestionTypeChange}
           onApply={handlePickerApply}
         />
       </div>

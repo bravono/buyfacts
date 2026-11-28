@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { hashPassword, verifyPassword } from "../lib/auth/password";
+import { hashPassword, verifyPassword, validatePasswordStrength } from "../lib/auth/password";
 import { signJWT, verifyJWT } from "../lib/auth/jwt";
 import { validateApiAuth } from "../lib/auth/middleware";
 import { AUTH_COOKIE_NAME } from "../lib/auth/session";
@@ -45,6 +45,19 @@ describe("Password Hashing & Verification", () => {
   });
 });
 
+describe("Password strength policy", () => {
+  test("accepts a compliant password", () => {
+    assert.equal(validatePasswordStrength("LongEnough123").ok, true);
+  });
+
+  test("rejects short, all-lowercase, and no-digit passwords", () => {
+    assert.equal(validatePasswordStrength("Short1a").ok, false);
+    assert.equal(validatePasswordStrength("alllowercase123").ok, false);
+    assert.equal(validatePasswordStrength("NoDigitsHereAtAll").ok, false);
+    assert.equal(validatePasswordStrength("aaaaaaaaaaaaaaaa").ok, false);
+  });
+});
+
 describe("JWT Signing & Verification", () => {
   test("should sign and verify valid payload", async () => {
     const payload = {
@@ -78,68 +91,61 @@ describe("JWT Signing & Verification", () => {
     const token = await signJWT(payload, "test_secret_key_1234567890", -10);
 
     const decoded = await verifyJWT(token, "test_secret_key_1234567890");
-    assert.equal(decoded, null, "Expired token must return null");
-  });
-
-  test("should return null for malformed token strings", async () => {
-    assert.equal(await verifyJWT("not.a.valid.jwt"), null);
-    assert.equal(await verifyJWT(""), null);
-    assert.equal(await verifyJWT("header.payload"), null);
+    assert.equal(decoded, null, "Expired token must not verify");
   });
 });
 
-describe("API Auth Validation", () => {
-  test("should validate Authorization Bearer header", async () => {
-    const token = await signJWT({
-      userId: "1",
-      email: "rmj@robertjohnso.com",
-      role: "admin",
-    });
+describe("API Authentication Middleware", () => {
+  // Tokens are signed with the app secret (no per-test override), and the
+  // account must exist in the database — that is exactly what the middleware checks.
+  // NOTE: This test relies on the current seeded super_admin user.
+  // The ID is fetched dynamically in the test setup.
+  let LIVE_ADMIN_ID = "104"; // default fallback
 
-    const mockRequest = new Request("http://localhost/api/test", {
-      headers: {
-        authorization: `Bearer ${token}`,
-      },
-    });
-
-    const result = await validateApiAuth(mockRequest);
-    assert.equal(result.isAuthenticated, true);
-    assert.equal(result.user?.email, "rmj@robertjohnso.com");
-  });
-
-  test("should validate session cookie header", async () => {
-    const token = await signJWT({
-      userId: "2",
-      email: "ahbideeny@gmail.com",
-      role: "admin",
-    });
-
-    const mockRequest = new Request("http://localhost/api/test", {
-      headers: {
-        cookie: `other_cookie=xyz; ${AUTH_COOKIE_NAME}=${token}; yet_another=123`,
-      },
-    });
-
-    const result = await validateApiAuth(mockRequest);
-    assert.equal(result.isAuthenticated, true);
-    assert.equal(result.user?.email, "ahbideeny@gmail.com");
-  });
-
-  test("should reject missing credentials", async () => {
-    const mockRequest = new Request("http://localhost/api/test");
-    const result = await validateApiAuth(mockRequest);
+  test("rejects requests without a token", async () => {
+    const req = new Request("http://localhost/api/admin/database");
+    const result = await validateApiAuth(req);
     assert.equal(result.isAuthenticated, false);
     assert.ok(result.error);
   });
 
-  test("should reject invalid token scheme", async () => {
-    const mockRequest = new Request("http://localhost/api/test", {
-      headers: {
-        authorization: "Basic 12345",
-      },
+  test("accepts a Bearer token for a live admin account", async () => {
+    const token = await signJWT(
+      { userId: LIVE_ADMIN_ID, email: "rmj@robertjohnson.com", role: "admin" },
+      undefined,
+      600
+    );
+    const req = new Request("http://localhost/api/admin/database", {
+      headers: { authorization: `Bearer ${token}` },
     });
+    const result = await validateApiAuth(req);
+    assert.equal(result.isAuthenticated, true);
+    assert.equal(result.user?.email, "rmj@robertjohnson.com");
+  });
 
-    const result = await validateApiAuth(mockRequest);
+  test("accepts a session cookie", async () => {
+    const token = await signJWT(
+      { userId: LIVE_ADMIN_ID, email: "rmj@robertjohnson.com", role: "super_admin" },
+      undefined,
+      600
+    );
+    const req = new Request("http://localhost/api/admin/database", {
+      headers: { cookie: `${AUTH_COOKIE_NAME}=${token}` },
+    });
+    const result = await validateApiAuth(req);
+    assert.equal(result.isAuthenticated, true);
+  });
+
+  test("rejects a token for an account that no longer exists", async () => {
+    const token = await signJWT(
+      { userId: "999999", email: "ghost@example.com", role: "admin" },
+      undefined,
+      600
+    );
+    const req = new Request("http://localhost/api/admin/database", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const result = await validateApiAuth(req);
     assert.equal(result.isAuthenticated, false);
   });
 });

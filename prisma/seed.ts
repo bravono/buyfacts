@@ -2,6 +2,8 @@ import "dotenv/config";
 import { PrismaClient, ContentFormat } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "../lib/auth/password";
+import { DEFAULT_SURVEYS } from "../app/api/narrative-data/route";
+import { DEFAULT_GREAT_EIGHT } from "../app/api/great-eight/route";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -21,9 +23,14 @@ async function main() {
   await prisma.cubiconShare.deleteMany();
   await prisma.feedbackSubmission.deleteMany();
 
+  await prisma.researchLibResponse.deleteMany();
+  await prisma.researchLibTask.deleteMany();
+  await prisma.researchLibSurvey.deleteMany();
   await prisma.vaultAsset.deleteMany();
   await prisma.topic.deleteMany();
 
+  const db = prisma as any;
+  if (db.greatEightItem) await db.greatEightItem.deleteMany();
   await prisma.dashboardButton.deleteMany();
   await prisma.mediaAsset.deleteMany();
   await prisma.user.deleteMany();
@@ -65,189 +72,247 @@ async function main() {
   // 2. Dashboard Buttons
   console.log("2. Seeding Dashboard Buttons...");
   const dashboardButtons = [
-    // Products / Services
-    {
-      id: "btn-srv-001",
-      label: "Research Planning",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
-      mediaType: "docx",
-      subtitle: "Inclusive Research Definition",
-      category: "Products & Services",
-      color: "#9b5d00",
-    },
-    {
-      id: "btn-srv-002",
-      label: "Survey Design",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
-      mediaType: "docx",
-      subtitle: "Make Each Question Actionable",
-      category: "Products & Services",
-      color: "#ea425f",
-    },
-    {
-      id: "btn-srv-003",
-      label: "Story-Based Surveys",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
-      mediaType: "docx",
-      subtitle: "Execute a Dual-Based Survey Model",
-      category: "Products & Services",
-      color: "#ff9900",
-    },
-    {
-      id: "btn-srv-004",
-      label: "Improve Surveys",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
-      mediaType: "pdf",
-      subtitle: "Increase the Return on Research",
-      category: "Products & Services",
-      color: "#006398",
-    },
-    {
-      id: "btn-srv-005",
-      label: "Participant Validation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843736-k745d3-05_Participant_Validation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Play Cubicon Puzzle Games",
-      category: "Products & Services",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-srv-006",
-      label: "Survey Fieldwork",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
-      mediaType: "docx",
-      subtitle: "Quality-Centric Survey Execution",
-      category: "Products & Services",
-      color: "#b0e843",
-    },
-    {
-      id: "btn-srv-007",
-      label: "Content Value",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844032-fg4d90-07_Content_Value_Description.docx",
-      mediaType: "docx",
-      subtitle: "Maximize the Return on Content",
-      category: "Products & Services",
-      color: "#42ea86",
-    },
-    {
-      id: "btn-srv-008",
-      label: "Pattern Insights",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844220-qnr5ue-08_Pattern_Insights_Description.docx",
-      mediaType: "docx",
-      subtitle: "Active Pattern Analytics",
-      category: "Products & Services",
-      color: "#ed40ed",
-    },
-    {
-      id: "btn-srv-009",
-      label: "Audience Validation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986844826-u389e3-09_Audience_Validation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Opportunity Validation",
-      category: "Products & Services",
-      color: "#532254",
-    },
-    // Thought Leadership
-    {
-      id: "btn-tl-001",
-      label: "Research Methods",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574239-x6ub5n-01_Research_Methods_Description.docx",
-      mediaType: "docx",
-      subtitle: "Exceed Stakeholder Wants and Needs",
-      category: "Research Imperatives",
-      color: "#006398",
-    },
-    {
-      id: "btn-tl-002",
-      label: "Cohort Research",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074574173-4b8fgs-02_Cohort_Research_Description.docx",
-      mediaType: "docx",
-      subtitle: "Smaller Groups that Know the Topic",
-      category: "Research Imperatives",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-tl-003",
-      label: "Survey Engagement",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579276-qn7un6-03_Survey_Engagement_Description.docx",
-      mediaType: "docx",
-      subtitle: "Optimize Question Value",
-      category: "Research Imperatives",
-      color: "#42ea86",
-    },
-    {
-      id: "btn-tl-004",
-      label: "Hybrid Marketing",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579402-xl20ok-04_Hybrid_Marketing_Description.docx",
-      mediaType: "docx",
-      subtitle: "Digital Reach and a Human Touch",
-      category: "Research Imperatives",
-      color: "#532254",
-    },
-    {
-      id: "btn-tl-005",
-      label: "Content Creation",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074579513-oc4n27-05_Content_Creation_Description.docx",
-      mediaType: "docx",
-      subtitle: "Assets that Engage with Thought Leadership",
-      category: "Research Imperatives",
-      color: "#ffc164",
-    },
-    {
-      id: "btn-tl-006",
-      label: "Marketing Leadership",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581455-z6tri2-06_Marketing_Leadership_Description.docx",
-      mediaType: "docx",
-      subtitle: "Best Practices by Marketing Area",
-      category: "Research Imperatives",
-      color: "#b0e843",
-    },
-    {
-      id: "btn-tl-007",
-      label: "Research Leadership",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581679-ny59f6-07_Research_Leadership_Description.docx",
-      mediaType: "docx",
-      subtitle: "Return on Primary Research",
-      category: "Research Imperatives",
-      color: "#ff9900",
-    },
-    {
-      id: "btn-tl-008",
-      label: "Early Recognition",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
-      mediaType: "docx",
-      subtitle: "Earlier Recognition for Your Time Advantage",
-      category: "Research Imperatives",
-      color: "#ea425f",
-    },
-    {
-      id: "btn-tl-009",
-      label: "Wisdom Gap",
-      mediaUrl:
-        "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074583583-b751b5-09_Wisdom_Gap_Description.docx",
-      mediaType: "docx",
-      subtitle: "Research Becomes Intellectual Currency",
-      category: "Research Imperatives",
-      color: "#9b5d00",
-    },
-  ];
+  {
+    "id": "btn-srv-000",
+    "label": "Innovations That Save Time",
+    "descriptionText": "Saving time in research begins with knowing where effort creates value and where it is wasted. BuyFacts innovations help marketers and researchers strengthen participant quality, understand the practical and emotional drivers behind decisions, and turn findings into knowledge that remains useful beyond a single report.\n\nCubicon, TRIAD, Research Libs, and Rule of Three each address a distinct challenge. Research planning, survey improvement, creation, fieldwork, and research-led content extend their value throughout the process. Together, these innovations combine rigor with efficiency, reducing avoidable effort and increasing the return on research through more useful findings, earlier recognition, and more time to make better choices.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "",
+    "description": "Saving time in research begins with knowing where effort creates value and where it is wasted. BuyFacts innovations help marketers and researchers strengthen participant quality, understand the practical and emotional drivers behind decisions, and turn findings into knowledge that remains useful beyond a single report.",
+    "category": "Products & Services",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-tl-000",
+    "label": "Roles and Topics",
+    "descriptionText": "Seeing change sooner gives people more time to make better choices. This dashboard connects nine roles and topics to practical questions about buyer behavior, research quality, and coordinated action.\n\nStart with the responsibility closest to your work: leadership, marketing, research, survey design, agency direction, or stewardship. Then ask what you need to recognize before a decision becomes urgent.\n\nBuyFacts focuses on useful evidence, not information for its own sake. Each topic helps reduce uncertainty, save time, and turn new understanding into better choices.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "",
+    "description": "Seeing change sooner gives people more time to make better choices. This dashboard connects nine roles and topics to practical questions about buyer behavior, research quality, and coordinated action.",
+    "category": "Research Imperatives",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-srv-001",
+    "label": "Cubicon",
+    "descriptionText": "Reliable research starts with genuine people. Cubicon helps validate that survey participants are human through engaging visual puzzle challenges that call for spatial reasoning and contextual interpretation. This additional validation layer helps protect surveys from bots and rogue respondents, increasing genuine participation that reflects the market's wants, needs, and experiences.\n\nWhen automated responses compromise a study, findings may be rejected, questioned, or collected again. By helping prevent that contamination before it reaches analysis, Cubicon reduces avoidable rework, saves research time, and supports more dependable findings that marketers and researchers can use with greater confidence.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842535-s0z06x-05_Participant_Validation_Description.docx",
+    "seeItUrl": "",
+    "hearItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1793176951274-bgene0-P01_Cubicon_Audio_Record_Existing_QA_Pending.mp3",
+    "subtitle": "Verify Human Engagement",
+    "description": "Reliable research starts with genuine people. Cubicon helps validate that survey participants are human through engaging visual puzzle challenges that call for spatial reasoning and contextual interpretation. This additional validation layer helps protect surveys from bots and rogue respondents, increasing genuine participation that reflects the market's wants, needs, and experiences.",
+    "category": "Products & Services",
+    "color": "#9b5d00"
+  },
+  {
+    "id": "btn-srv-002",
+    "label": "TRIAD",
+    "descriptionText": "TRIAD helps marketers recognize developing patterns sooner and understand where attention may be most valuable. It captures directional changes in the practical and emotional factors that influence buyers' affinity for particular vendors and products.\n\nKnowledgeable participants express their sentiment about the drivers shaping their perceptions and experiences, while identifying the relative importance of those drivers. Repeated measurements reveal where sentiment is strengthening, weakening, or diverging among audience groups. This continuing view moves beyond a single research snapshot to help marketers recognize changes in buyer affinity earlier, refine their priorities, and gain more time to make informed choices.",
+    "readItUrl": "",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792570971365-1vco29-Market_Changes_in_Real_Time_Triad.mp4",
+    "hearItUrl": "",
+    "subtitle": "Recognize Developing Patterns Sooner",
+    "description": "TRIAD helps marketers recognize developing patterns sooner and understand where attention may be most valuable. It captures directional changes in the practical and emotional factors that influence buyers' affinity for particular vendors and products.",
+    "category": "Products & Services",
+    "color": "#ea425f"
+  },
+  {
+    "id": "btn-srv-003",
+    "label": "Research Libs",
+    "descriptionText": "Traditional surveys make answers easy to compare, but often leave the personal experience behind each choice unexplored. Research Libs addresses that gap with a dual survey method: identical response choices support structured quantitative measurement while participants use those choices to build connected stories in their own voices. Participants can also add their own words, revealing context that fixed choices may miss.\n\nThe result is comparable research evidence alongside authentic narratives that illuminate practical needs and emotional buyer drivers. For marketers, those storylines, backed by survey findings, create opportunities for educational thought leadership and other useful content without separating the facts from the people behind them.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839478-6u694d-03_Story_Based_Surveys_Description.docx",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/uploads/1792572243537-m08z4w-BuyFacts_Research_Libs_Website_Preview_Cloned_Voice_Layout_Corrected_2026-10-16.mp4",
+    "hearItUrl": "",
+    "subtitle": "Structured Narrative Storytelling",
+    "description": "Traditional surveys make answers easy to compare, but often leave the personal experience behind each choice unexplored. Research Libs addresses that gap with a dual survey method: identical response choices support structured quantitative measurement while participants use those choices to build connected stories in their own voices. Participants can also add their own words, revealing context that fixed choices may miss.",
+    "category": "Products & Services",
+    "color": "#ff9900"
+  },
+  {
+    "id": "btn-srv-004",
+    "label": "Rule of Three",
+    "descriptionText": "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention. Each offers deeper understanding and practical guidance.\n\nFor vendors, Rule of Three assets offer white-label or shared-branding opportunities that reinforce the value of their go-to-market methods, tools, and distinctive positioning. By extending useful best practices into the fabric of daily decision-making, these engaging assets help vendors demonstrate continuing value while strengthening their relationships with the audiences they serve.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Three Actionable Perspectives",
+    "description": "BuyFacts Rule of Three transforms research-led knowledge into targeted educational assets that bring focus and clarity to everyday decisions. An Approach Rule combines three principles that guide meaningful steps, while a Focus Rule combines three principles that illuminate complementary areas of attention. Each offers deeper understanding and practical guidance.",
+    "category": "Products & Services",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-srv-005",
+    "label": "Research Planner",
+    "descriptionText": "Promising investments often stall when stakeholders disagree about priorities, expected benefits, or the uncertainties surrounding a decision. These cross-functional differences can undermine worthwhile initiatives before they gain momentum.\n\nBuyFacts Research Planner engages key stakeholders early, bringing their concerns, experience, and expectations into a shared understanding of what the research must accomplish. By examining practical needs, emotional considerations, and individual and organizational benefits, it helps clarify the value an investment should deliver. The resulting alignment reduces uncertainty, strengthens the relevance of survey questions, and provides a sounder foundation for decisions, improving the likelihood of meaningful outcomes and a greater Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986839466-0qvuw9-01_Research_Planning_Description.docx",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Align Teams Around Shared Strategy",
+    "description": "Promising investments often stall when stakeholders disagree about priorities, expected benefits, or the uncertainties surrounding a decision. These cross-functional differences can undermine worthwhile initiatives before they gain momentum.",
+    "category": "Products & Services",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-srv-006",
+    "label": "Survey Improvement",
+    "descriptionText": "A better survey creates a more engaging experience for respondents while producing answers researchers can interpret with greater clarity. Unnecessary repetition, ambiguous choices, and awkward transitions can interrupt participation and weaken the usefulness of findings.\n\nBuyFacts approaches survey improvement through careful attention to question wording, response choices, sequence, and the cadence that carries respondents naturally from one subject to the next. Each question should contribute to understanding without placing unnecessary demands on the participant. The result is stronger engagement, clearer interpretation, and more meaningful evidence, reducing wasted effort while improving research quality and the Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986842316-4d5s6l-04_Improve_Surveys_Description.docx",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Engage Respondents, Sharpen Evidence",
+    "description": "A better survey creates a more engaging experience for respondents while producing answers researchers can interpret with greater clarity. Unnecessary repetition, ambiguous choices, and awkward transitions can interrupt participation and weaken the usefulness of findings.",
+    "category": "Products & Services",
+    "color": "#b0e843"
+  },
+  {
+    "id": "btn-srv-007",
+    "label": "Survey Creation",
+    "descriptionText": "A well-created survey connects the questions people answer with the decisions the research must inform. BuyFacts approaches survey creation with careful attention to stakeholder objectives, participant understanding, and the practical and emotional factors that influence buyer behavior.\n\nThe Question Map establishes a clear relationship between what is asked, what will be learned, and how the findings will be used. Thoughtful language, response choices, and question sequencing make the survey easier to complete and its answers easier to interpret. The result is purposeful research that respects participant time and produces findings with greater usefulness and a stronger Return on Research.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986838481-n6a9ii-02_Survey_Design_Description.docx",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Custom Instruments Leaders Can Trust",
+    "description": "A well-created survey connects the questions people answer with the decisions the research must inform. BuyFacts approaches survey creation with careful attention to stakeholder objectives, participant understanding, and the practical and emotional factors that influence buyer behavior.",
+    "category": "Products & Services",
+    "color": "#42ea86"
+  },
+  {
+    "id": "btn-srv-008",
+    "label": "Survey Fieldwork",
+    "descriptionText": "A thoughtfully designed survey deserves equally thoughtful execution. Survey fieldwork must balance timely participation with the quality and relevance of the people providing answers. Rushing to complete quotas can create problems that undermine otherwise sound research.\n\nBuyFacts emphasizes knowledgeable participants, human validation, respondent engagement, and careful attention to data quality throughout fieldwork. These practices help protect the integrity of the findings while reducing avoidable delays and rework. The value extends beyond completing a survey efficiently: it lies in collecting dependable evidence that reflects the market and gives marketers greater confidence in the decisions that follow.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791986843086-eow5fo-06_Survey_Fieldwork_Description.docx",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Protect Data Quality and Speed",
+    "description": "A thoughtfully designed survey deserves equally thoughtful execution. Survey fieldwork must balance timely participation with the quality and relevance of the people providing answers. Rushing to complete quotas can create problems that undermine otherwise sound research.",
+    "category": "Products & Services",
+    "color": "#ed40ed"
+  },
+  {
+    "id": "btn-srv-009",
+    "label": "Research-Led Content",
+    "descriptionText": "Research becomes more valuable when its findings continue working long after the survey ends. BuyFacts helps transform authentic buyer experiences, practical needs, emotional drivers, and emerging patterns into educational content that audiences find useful.\n\nQuantitative evidence provides factual support, while participant stories add context, emotion, and human perspective. Together, they create opportunities for educational best-practice and thought leadership assets, social media posts, and sales force-led insights for prospects, buyers, and customers.\n\nThis gives marketing and sales valuable material throughout the customer relationship, strengthens vendor positioning, and extends the useful life of original findings, increasing both Return on Research and return on content.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Turn Evidence into Lasting Momentum",
+    "description": "Research becomes more valuable when its findings continue working long after the survey ends. BuyFacts helps transform authentic buyer experiences, practical needs, emotional drivers, and emerging patterns into educational content that audiences find useful.",
+    "category": "Products & Services",
+    "color": "#532254"
+  },
+  {
+    "id": "btn-tl-001",
+    "label": "CxO",
+    "descriptionText": "Executive decisions rarely wait for certainty. Buyer expectations, market conditions, and competitive pressures often shift before those changes appear in familiar reports. For the CxO, earlier recognition creates an advantage that speed alone cannot provide: more time to understand what is changing, explore alternatives, and choose a response with confidence.\n\nBuyFacts uses focused, directional buyer research and informed interpretation to bring emerging patterns into view while options remain open. The result is not simply more information for leadership. It is clearer direction, better choices, and the time to act before change becomes obvious.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Decision-Focused Executive Clarity",
+    "description": "Executive decisions rarely wait for certainty. Buyer expectations, market conditions, and competitive pressures often shift before those changes appear in familiar reports. For the CxO, earlier recognition creates an advantage that speed alone cannot provide: more time to understand what is changing, explore alternatives, and choose a response with confidence.",
+    "category": "Research Imperatives",
+    "color": "#006398"
+  },
+  {
+    "id": "btn-tl-002",
+    "label": "Chief Marketing Officer",
+    "descriptionText": "A Chief Marketing Officer must connect what buyers are beginning to feel and need with decisions across brand, demand generation, content, and customer relationships. Yet each function sees only part of the picture, and yesterday's research may not explain today's behavior.\n\nBuyFacts brings practical and emotional buyer drivers into a shared, evolving view through focused research repeated over time. Emerging patterns become easier to recognize, priorities easier to discuss, and marketing choices more coherent across teams. Earlier recognition helps the CMO direct resources with greater confidence and gives people more time to create meaningful market impact.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Connect Buyer Needs to Strategy",
+    "description": "A Chief Marketing Officer must connect what buyers are beginning to feel and need with decisions across brand, demand generation, content, and customer relationships. Yet each function sees only part of the picture, and yesterday's research may not explain today's behavior.",
+    "category": "Research Imperatives",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-tl-003",
+    "label": "Marketer",
+    "descriptionText": "Good marketing begins with a genuine understanding of the people it hopes to reach. But needs, expectations, and emotions shift, and familiar messages can become less relevant long before campaign results explain why.\n\nBuyFacts uses focused, directional buyer research to reveal emerging changes in what matters to audiences, including the practical considerations and personal feelings behind their choices. Beyond improving campaign relevance, these findings provide the foundation for educational thought leadership, turning authentic buyer experiences and insights into compelling stories, fresh perspectives, and useful content that informs, engages, and helps buyers make better choices.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Turn Human Understanding into Impact",
+    "description": "Good marketing begins with a genuine understanding of the people it hopes to reach. But needs, expectations, and emotions shift, and familiar messages can become less relevant long before campaign results explain why.",
+    "category": "Research Imperatives",
+    "color": "#42ea86"
+  },
+  {
+    "id": "btn-tl-004",
+    "label": "Researcher",
+    "descriptionText": "Researchers are often expected to deliver speed, accuracy, and actionable findings, even when the most important questions have yet to be fully defined. Strong methodology matters, but so does understanding whose experience can inform a decision and how the findings will be used.\n\nBuyFacts connects sponsor and stakeholder priorities with thoughtful survey design, knowledgeable participants, and disciplined interpretation. Patterns and unusual responses become opportunities for deeper understanding rather than numbers to report and forget. The result is research that reduces uncertainty, protects the time invested, and gives researchers greater confidence that their work will make a meaningful difference.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Rigor, Integrity, and Actionable Evidence",
+    "description": "Researchers are often expected to deliver speed, accuracy, and actionable findings, even when the most important questions have yet to be fully defined. Strong methodology matters, but so does understanding whose experience can inform a decision and how the findings will be used.",
+    "category": "Research Imperatives",
+    "color": "#532254"
+  },
+  {
+    "id": "btn-tl-005",
+    "label": "Early Recognition",
+    "descriptionText": "Markets rarely change all at once. New needs may first appear in an unexpected question, a shift in sentiment, or a subtle difference between what buyers say today and what they said before. What begins as an isolated occurrence may become a repeating pattern that reveals a meaningful direction.\n\nBuyFacts combines focused, directional buyer research with knowledgeable participants and repeated observation to recognize changes while choices remain open. The advantage is not predicting the future. It is gaining time to understand what is developing, explore alternatives, and take a better first step before change becomes obvious.",
+    "readItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/research-imperatives/1792074581945-r6aiws-08_Early_Recognition_Description.docx",
+    "seeItUrl": "https://s3.buyfacts.com/buyfacts-public-assets/products-services/1791397108403-8ixhpm-Affinity_Turn_Early_Recognition_into_An_Affinity_Advantage.mp4",
+    "hearItUrl": "",
+    "subtitle": "Notice Developing Signals Sooner",
+    "description": "Markets rarely change all at once. New needs may first appear in an unexpected question, a shift in sentiment, or a subtle difference between what buyers say today and what they said before. What begins as an isolated occurrence may become a repeating pattern that reveals a meaningful direction.",
+    "category": "Research Imperatives",
+    "color": "#ffc164"
+  },
+  {
+    "id": "btn-tl-006",
+    "label": "Building Great Surveys",
+    "descriptionText": "A great survey begins long before the first participant responds. Its questions must reflect what sponsors and stakeholders genuinely need to understand while remaining clear, relevant, and worthwhile for the people answering them.\n\nBuyFacts uses the Question Map to connect every survey question to three essential considerations: what is being asked, what will be learned, and how that learning will be used. This disciplined connection reveals gaps, unnecessary questions, and opportunities to improve language, response choices, and flow. It also strengthens the usefulness of the findings, giving marketers and researchers more to act upon and a greater return on research.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Intentional Design for High-Yield Data",
+    "description": "A great survey begins long before the first participant responds. Its questions must reflect what sponsors and stakeholders genuinely need to understand while remaining clear, relevant, and worthwhile for the people answering them.",
+    "category": "Research Imperatives",
+    "color": "#b0e843"
+  },
+  {
+    "id": "btn-tl-007",
+    "label": "Agency Principal",
+    "descriptionText": "As AI makes content faster to produce, agency principals face a more important challenge: creating programs and positioning grounded in genuine buyer understanding. BuyFacts Research Libs uses a dual survey method, combining comparable quantitative answers with participant-authored stories that reveal practical needs and emotional drivers.\n\nThe resulting storylines are backed by research facts, creating timely opportunities for educational thought leadership. Agencies add perspective and stewardship by translating that evidence into distinctive positioning, useful programs, relevant messaging, and calls to action that resonate with buyers. Technology can accelerate production, but informed interpretation makes the work worth producing.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Strategic Substance Over Generic AI",
+    "description": "As AI makes content faster to produce, agency principals face a more important challenge: creating programs and positioning grounded in genuine buyer understanding. BuyFacts Research Libs uses a dual survey method, combining comparable quantitative answers with participant-authored stories that reveal practical needs and emotional drivers.",
+    "category": "Research Imperatives",
+    "color": "#ff9900"
+  },
+  {
+    "id": "btn-tl-008",
+    "label": "BuyFacts Methods",
+    "descriptionText": "BuyFacts methods put sound direction ahead of speed. Inclusive Agile engages cross-functional influencers through defined roles, drawing on their observations and expertise to build research momentum. Blitz Research turns that momentum into focused questions and timely evidence, while Stewardship fosters the exchange and interpretation of ideas.\n\nA variety of tools, including Cubicon, TRIAD, and Research Libs, add rigor while saving time. Together, these methods and tools illuminate the emotional triggers, practical priorities, and individual benefits behind buyer choices. Their advantage lies in reducing uncertainty and increasing the usefulness of research, creating the velocity that comes from starting in the right direction.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Sound Direction Ahead of Speed",
+    "description": "BuyFacts methods put sound direction ahead of speed. Inclusive Agile engages cross-functional influencers through defined roles, drawing on their observations and expertise to build research momentum. Blitz Research turns that momentum into focused questions and timely evidence, while Stewardship fosters the exchange and interpretation of ideas.",
+    "category": "Research Imperatives",
+    "color": "#ea425f"
+  },
+  {
+    "id": "btn-tl-009",
+    "label": "Stewardship",
+    "descriptionText": "Stewardship helps organizations turn experience and judgment into corporate knowledge while strengthening early recognition of change. BuyFacts fosters the exchange of ideas through frameworks that encourage people to explore different ways to approach the market, recognize emerging buyer needs, and identify opportunities for meaningful innovation.\n\nBy examining observations and perspectives together, organizations can identify developing patterns earlier and preserve useful knowledge for future decisions. This process encourages fresh thinking without losing sight of the core competencies and distinctive value propositions a business can demonstrate and defend. The result is clearer direction, more time to act, and the ability to adapt without losing what makes the organization valuable.",
+    "readItUrl": "",
+    "seeItUrl": "",
+    "hearItUrl": "",
+    "subtitle": "Experience and Judgment into Corporate Knowledge",
+    "description": "Stewardship helps organizations turn experience and judgment into corporate knowledge while strengthening early recognition of change. BuyFacts fosters the exchange of ideas through frameworks that encourage people to explore different ways to approach the market, recognize emerging buyer needs, and identify opportunities for meaningful innovation.",
+    "category": "Research Imperatives",
+    "color": "#9b5d00"
+  }
+];
 
   for (const btn of dashboardButtons) {
     await prisma.dashboardButton.upsert({
@@ -268,6 +333,8 @@ async function main() {
       fileName: "puzzle1_hd.png",
       fileType: "image/png",
       fileSize: 1048576,
+      objectKey: "cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+      folder: "cubicon",
     },
     {
       id: "asset-uuid-002",
@@ -276,6 +343,8 @@ async function main() {
       fileName: "intro_video.mp4",
       fileType: "video/mp4",
       fileSize: 5242880,
+      objectKey: "cubicon/1788505110243-kde8r0-Puzzle2.webp",
+      folder: "cubicon",
     },
     {
       id: "asset-uuid-003",
@@ -284,6 +353,8 @@ async function main() {
       fileName: "whitepaper.pdf",
       fileType: "application/pdf",
       fileSize: 2097152,
+      objectKey: "cubicon/1788505110606-pcdywj-Puzzle3.webp",
+      folder: "cubicon",
     },
   ];
 
@@ -299,14 +370,9 @@ async function main() {
   // 4. Cubicon 3D Sequences and Tasks
   console.log("4. Seeding Cubicon 3D Sequences and Tasks...");
 
-  const defaultSeq = await prisma.cubiconSequence.upsert({
-    where: { slug: "default" },
-    update: {
-      title: "Default Verification Challenge",
-      passThreshold: 0.01,
-      isActive: true,
-    },
-    create: {
+  const sequences = [
+    {
+      id: 5,
       slug: "default",
       title: "Default Verification Challenge",
       description: "Standard anti-bot human verification puzzle sequence",
@@ -316,148 +382,314 @@ async function main() {
       isActive: true,
       createdBy: "system",
     },
-  });
-
-  const contactSeq = await prisma.cubiconSequence.upsert({
-    where: { slug: "contact_form" },
-    update: {
-      title: "Contact Form Human Verification",
-      passThreshold: 0.01,
-      isActive: true,
-    },
-    create: {
+    {
+      id: 6,
       slug: "contact_form",
       title: "Contact Form Human Verification",
       description: "Anti-bot spatial puzzle verification for contact inquiries",
-      passThreshold: 0.01,
+      passThreshold: 0.6,
       rotationDirection: "left",
       defaultRotationInterval: 15,
       isActive: true,
       createdBy: "system",
     },
-  });
-
-  const cubiconTasks = [
     {
-      taskIndex: 0,
-      taskNumber: 1,
-      heading: "Puzzle 1 of 3",
-      description: "Who gets concerned by howling? (Draw a circle)",
-      screen: "Active_front",
-      image:
-        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
-      rotation: "left",
-      rotationInterval: 15,
-      questionType: "Anticipation",
-      correctCoordinates: JSON.stringify([
-        {
-          x: -0.042574127848625916,
-          y: 0.2093228930009854,
-          z: 0.5976997207441973,
-        },
-        {
-          x: -0.01300874877727363,
-          y: 0.16201828672165688,
-          z: 0.5976997051073445,
-        },
-        {
-          x: -0.07213950692678825,
-          y: 0.15462694164718369,
-          z: 0.5976997226763686,
-        },
-      ]),
-      startPoint: JSON.stringify({
-        x: -0.042574127848625916,
-        y: 0.2093228930009854,
-        z: 0.5976997207441973,
-      }),
-      midPoint: JSON.stringify({
-        x: -0.01300874877727363,
-        y: 0.16201828672165688,
-        z: 0.5976997051073445,
-      }),
-      endPoint: JSON.stringify({
-        x: -0.07213950692678825,
-        y: 0.15462694164718369,
-        z: 0.5976997226763686,
-      }),
-      tolerance: 0.01,
-      isFinal: false,
-    },
-    {
-      taskIndex: 1,
-      taskNumber: 2,
-      heading: "Puzzle 2 of 3",
-      description: "Who's in line for a change of shirt? (click to choose)",
-      screen: "Active_side_l",
-      image:
-        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
-      rotation: "left",
-      rotationInterval: 15,
-      questionType: "Selection",
-      correctCoordinates: JSON.stringify([{"x": -0.18356622579331366, "y": -0.005166590317604896, "z": 0.33489561080932634}]),
-      startPoint: JSON.stringify({x: -0.18356622579331366, y: -0.005166590317604896, z: 0.33489561080932634}),
-      midPoint: "",
-      endPoint: "",
-      tolerance: 0.01,
-      isFinal: false,
-    },
-    {
-      taskIndex: 2,
-      taskNumber: 3,
-      heading: "Puzzle 3 of 3",
-      description: "Where does his next go? (click to choose)",
-      screen: "Active_back",
-      image:
-        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
-      rotation: "left",
-      rotationInterval: 15,
-      questionType: "Selection",
-      correctCoordinates: JSON.stringify([{"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}]),
-      startPoint: JSON.stringify({"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}),
-      midPoint: '',
-      endPoint: '',
-      tolerance: 0.01,
-      isFinal: false,
-    },
-    {
-      taskIndex: 3,
-      taskNumber: 4,
-      heading: "Bonus Puzzle",
-      description: "Can you see the 3rd life? (click to choose)",
-      screen: "Active_side_r",
-      image:
-        "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
-      rotation: "left",
-      rotationInterval: 15,
-      questionType: "Selection",
-      correctCoordinates: JSON.stringify([{"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}]),
-      startPoint: JSON.stringify({"x": 0.17082880041376822, "y": -0.05078693590343407, "z": 0.5976999693622778}),
-      midPoint: '',
-      endPoint: '',
-      tolerance: 0.01,
-      isFinal: true,
+      id: 7,
+      slug: "challenge_sequence_3",
+      title: "Challenge Sequence 3",
+      description: "Dynamic human verification puzzle sequence 3",
+      passThreshold: 0.66,
+      rotationDirection: "left",
+      defaultRotationInterval: 15,
+      isActive: true,
+      createdBy: "system",
     },
   ];
 
+  for (const seq of sequences) {
+    await prisma.cubiconSequence.upsert({
+      where: { id: seq.id },
+      update: seq,
+      create: seq,
+    });
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"CubiconSequence"', 'id'), coalesce((SELECT max(id) FROM "CubiconSequence"), 1));`
+    );
+  } catch {
+    // Non-fatal if sequence sync is not supported in the active environment
+  }
+
+  const cubiconTasks = [
+      {
+          id: 17,
+          "sequenceId": 5,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3  (Draw a circle)",
+          description: "Who gets concerned by howling?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505108337-1zkn2t-Puzzle1.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":-0.042574127848625916,\"y\":0.2093228930009854,\"z\":0.5976997207441973},{\"x\":-0.01300874877727363,\"y\":0.16201828672165688,\"z\":0.5976997051073445},{\"x\":-0.07213950692678825,\"y\":0.15462694164718369,\"z\":0.5976997226763686}]",
+          "startPoint": "{\"x\":-0.042574127848625916,\"y\":0.2093228930009854,\"z\":0.5976997207441973}",
+          "midPoint": "{\"x\":-0.01300874877727363,\"y\":0.16201828672165688,\"z\":0.5976997051073445}",
+          "endPoint": "{\"x\":-0.07213950692678825,\"y\":0.15462694164718369,\"z\":0.5976997226763686}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.360Z"
+      },
+      {
+          id: 18,
+          "sequenceId": 5,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3  (click to choose)",
+          description: "Who's in line for a change of shirt?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110243-kde8r0-Puzzle2.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.18356622579331366,\"y\":-0.005166590317604896,\"z\":0.33489561080932634}]",
+          "startPoint": "{\"x\":-0.18356622579331366,\"y\":-0.005166590317604896,\"z\":0.33489561080932634}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.369Z"
+      },
+      {
+          id: 19,
+          "sequenceId": 5,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (click to choose)",
+          description: "Where does his next go? ",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/1788505110606-pcdywj-Puzzle3.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.17082880041376822,\"y\":-0.05078693590343407,\"z\":0.5976999693622778}]",
+          "startPoint": "{\"x\":0.17082880041376822,\"y\":-0.05078693590343407,\"z\":0.5976999693622778}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.379Z"
+      },
+      {
+          id: 20,
+          "sequenceId": 5,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (enter multiple clicks)",
+          description: "Who sat with time over their shoulders?",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082428358-lf20q4-WOW_Grand_Central_Station_Color_No_Text.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.496,\"y\":0.187,\"z\":0.502},{\"x\":0.678,\"y\":0.187,\"z\":0.502}]",
+          "startPoint": "{\"x\":0.496,\"y\":0.187,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": "{\"x\":0.678,\"y\":0.187,\"z\":0.502}",
+          "tolerance": 0.5,
+          "isFinal": true,
+          "createdAt": "2026-10-21T09:25:52.384Z"
+      },
+      {
+          id: 21,
+          "sequenceId": 6,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3 (click to choose)",
+          description: "Who kissed the silent stone guardian?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082435451-y5oisv-WOW_Great_Pyramids_Illustration_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.412,\"y\":0.323,\"z\":0.897}]",
+          "startPoint": "{\"x\":0.412,\"y\":0.323,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.389Z"
+      },
+      {
+          id: 22,
+          "sequenceId": 6,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3 (click to choose)",
+          description: "Who stacked the pages high?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419479-0sm0h3-Benjamin_Franklin_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.192,\"y\":-0.112,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.192,\"y\":-0.112,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.396Z"
+      },
+      {
+          id: 23,
+          "sequenceId": 6,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (click to choose)",
+          description: "Who deals in chances but takes a bite between turns? ",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082472298-9m556g-WOW_Things_BermudaTriangle_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.394,\"y\":-0.081,\"z\":0.897}]",
+          "startPoint": "{\"x\":-0.394,\"y\":-0.081,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-21T09:25:52.402Z"
+      },
+      {
+          id: 24,
+          "sequenceId": 6,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (Click to choose)",
+          description: "Who took the shiny slide, not a step? ",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":0.262,\"y\":0.234,\"z\":0.502}]",
+          "startPoint": "{\"x\":0.262,\"y\":0.234,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": true,
+          "createdAt": "2026-10-21T09:25:52.413Z"
+      },
+      {
+          id: 25,
+          "sequenceId": 7,
+          "taskIndex": 1,
+          "taskNumber": 2,
+          "heading": "Puzzle 2 of 3 (Click to Choose)",
+          description: "Who chose the high stone seat where heroes stand?",
+          "screen": "Active_side_l",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792766115000-ob5kow-WOW_Festival_of_Colors_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.351,\"y\":0.08,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.351,\"y\":0.08,\"z\":0.502}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:07:51.207Z"
+      },
+      {
+          id: 26,
+          "sequenceId": 7,
+          "taskIndex": 0,
+          "taskNumber": 1,
+          "heading": "Puzzle 1 of 3 (Click to Choose)",
+          description: "Who's perfecting the face while the road rolls on?",
+          "screen": "Active_front",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082447166-7ujbit-WOW_People_Alice_Cooper_Color.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Selection",
+          "correctCoordinates": "[{\"x\":-0.14,\"y\":0.019,\"z\":0.897}]",
+          "startPoint": "{\"x\":-0.14,\"y\":0.019,\"z\":0.897}",
+          "midPoint": null,
+          "endPoint": null,
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:20:11.041Z"
+      },
+      {
+          id: 27,
+          "sequenceId": 7,
+          "taskIndex": 2,
+          "taskNumber": 3,
+          "heading": "Puzzle 3 of 3 (Draw a Circle)",
+          description: "Who came down the twisting path one step at a time?",
+          "screen": "Active_back",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082420168-v0qr3q-Beverly_Hillbillies_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":0.366,\"y\":0.14,\"z\":0.897},{\"x\":0.362,\"y\":0.14,\"z\":0.897},{\"x\":0.375,\"y\":0.171,\"z\":0.897}]",
+          "startPoint": "{\"x\":0.366,\"y\":0.14,\"z\":0.897}",
+          "midPoint": "{\"x\":0.362,\"y\":0.14,\"z\":0.897}",
+          "endPoint": "{\"x\":0.375,\"y\":0.171,\"z\":0.897}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:26:09.358Z"
+      },
+      {
+          id: 28,
+          "sequenceId": 7,
+          "taskIndex": 3,
+          "taskNumber": 4,
+          "heading": "Bonus Puzzle (Draw a Circle)",
+          description: "Who receives a royal treat without leaving his throne?",
+          "screen": "Active_side_r",
+          "image": "https://s3.buyfacts.com/buyfacts-public-assets/cubicon/Puzzle/1792082419103-hp8641-Alice_In_Wonderland_Colored.webp",
+          "rotation": "left",
+          "rotationInterval": 15,
+          "questionType": "Anticipation",
+          "correctCoordinates": "[{\"x\":-0.048,\"y\":0.178,\"z\":0.502},{\"x\":-0.038,\"y\":0.183,\"z\":0.502},{\"x\":-0.071,\"y\":0.15,\"z\":0.502}]",
+          "startPoint": "{\"x\":-0.048,\"y\":0.178,\"z\":0.502}",
+          "midPoint": "{\"x\":-0.038,\"y\":0.183,\"z\":0.502}",
+          "endPoint": "{\"x\":-0.071,\"y\":0.15,\"z\":0.502}",
+          "tolerance": 0.5,
+          "isFinal": false,
+          "createdAt": "2026-10-23T16:30:55.311Z"
+      }
+  ];
+
   for (const t of cubiconTasks) {
-    await prisma.cubiconTask.create({
-      data: {
+    await prisma.cubiconTask.upsert({
+      where: { id: t.id },
+      update: {
         ...t,
-        sequenceId: defaultSeq.id,
+        createdAt: new Date(t.createdAt),
+      },
+      create: {
+        ...t,
+        createdAt: new Date(t.createdAt),
       },
     });
   }
 
-  for (const t of cubiconTasks) {
-    await prisma.cubiconTask.create({
-      data: {
-        ...t,
-        heading: t.heading.replace("Puzzle", "Verification Puzzle"),
-        sequenceId: contactSeq.id,
-      },
-    });
+  try {
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"CubiconTask"', 'id'), coalesce((SELECT max(id) FROM "CubiconTask"), 1));`
+    );
+  } catch {
+    // Non-fatal if sequence sync is not supported in the active environment
   }
+
+  console.log(`   Seeded ${cubiconTasks.length} Cubicon Tasks across ${sequences.length} Sequences`);
+
+
   // 8. Content Vault Topics and Multi-Format Assets
   console.log("8. Seeding Content Vault Topics and Assets for Guests...");
 
@@ -676,6 +908,59 @@ async function main() {
   console.log(
     `   Seeded ${vaultAssets.length} Vault Assets across all formats for Guests\n`,
   );
+
+  console.log("6. Seeding ResearchLib Narrative Surveys & Tasks...");
+  const topSurvey = await prisma.researchLibSurvey.create({
+    data: {
+      userId: "system_default",
+      title: "AI Marketing Directional Measurement",
+      timeCounter: "down",
+      pauseDuration: "3",
+      durationInMin: "30",
+      combo: "narWid",
+    },
+  });
+
+  for (let idx = 0; idx < DEFAULT_SURVEYS.length; idx++) {
+    const task = DEFAULT_SURVEYS[idx];
+    const isFinal = idx === DEFAULT_SURVEYS.length - 1;
+    await prisma.researchLibTask.create({
+      data: {
+        surveyId: topSurvey.id,
+        taskIndex: idx,
+        heading: task.heading,
+        instruction: task.instruction,
+        widget: task.widget,
+        question: task.story,
+        story: task.story,
+        blanks: task.blanks,
+        isFollowup: isFinal ? 0 : 1,
+      },
+    });
+  }
+  console.log(`   Seeded 1 top-level Survey and ${DEFAULT_SURVEYS.length} ResearchLib Tasks\n`);
+
+  console.log("7. Seeding The Great Eight Articles and Media...");
+  for (const item of DEFAULT_GREAT_EIGHT) {
+    const db = prisma as any;
+    await db.greatEightItem.create({
+      data: {
+        orderIndex: item.orderIndex,
+        slug: item.slug,
+        title: item.title,
+        tagline: item.tagline || "",
+        description: item.description || "",
+        seeItUrl: item.seeItUrl || "",
+        hearItUrl: item.hearItUrl || "",
+        readItUrl: item.readItUrl || "",
+        iconUrl: item.iconUrl || "",
+        iconColor: item.iconColor || "#14a38b",
+        bgColor: item.bgColor || "rgba(20, 163, 139, 0.08)",
+        isActive: item.isActive !== undefined ? item.isActive : true,
+      },
+    });
+  }
+  console.log(`   Seeded ${DEFAULT_GREAT_EIGHT.length} Great Eight items\n`);
 
   console.log("\nBuyFacts Core DB seeding completed successfully!");
 }
